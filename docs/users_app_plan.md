@@ -1,8 +1,6 @@
 # Users App Follow-Up TODOs
 
 ## Immediate Next Steps
-- ✅ Async email delivery now runs through Celery + Redis with `users.tasks.send_email_task`; inline flows have been swapped over while token responses remain for backward compatibility.
-- ✅ Base stack now runs on PostgreSQL via Docker Compose; set `USE_SQLITE_FALLBACK=1` locally if you still need sqlite.
 - Wire up actual email delivery (SendGrid/Postmark/etc.) instead of returning verification/reset tokens in API responses.
 - Enforce per-endpoint throttling (DRF throttles or Redis counters) for signup, login, password-reset, and child-upgrade flows.
 - Add comprehensive automated tests (serializers, viewsets, permissions, Redis token expiration) and integrate them into CI.
