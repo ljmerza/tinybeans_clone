@@ -1,0 +1,97 @@
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    working_dir: /app/mysite
+    volumes:
+      - ./:/app
+    environment:
+      DJANGO_ALLOWED_HOSTS: "*"
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_DB: tinybeans
+      POSTGRES_USER: tinybeans
+      POSTGRES_PASSWORD: tinybeans
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - redis
+      - postgres
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+
+  celery-worker:
+    build: .
+    command: celery -A mysite worker -l INFO
+    working_dir: /app/mysite
+    volumes:
+      - ./:/app
+    environment:
+      DJANGO_SETTINGS_MODULE: mysite.settings
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_DB: tinybeans
+      POSTGRES_USER: tinybeans
+      POSTGRES_PASSWORD: tinybeans
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - redis
+      - postgres
+
+  celery-beat:
+    build: .
+    command: celery -A mysite beat -l INFO
+    working_dir: /app/mysite
+    volumes:
+      - ./:/app
+    environment:
+      DJANGO_SETTINGS_MODULE: mysite.settings
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_DB: tinybeans
+      POSTGRES_USER: tinybeans
+      POSTGRES_PASSWORD: tinybeans
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - redis
+      - postgres
+
+  flower:
+    build: .
+    command: celery -A mysite flower --url-prefix=flower --port=5555
+    working_dir: /app/mysite
+    volumes:
+      - ./:/app
+    environment:
+      DJANGO_SETTINGS_MODULE: mysite.settings
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_DB: tinybeans
+      POSTGRES_USER: tinybeans
+      POSTGRES_PASSWORD: tinybeans
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - redis
+      - postgres
+    expose:
+      - "5555"
+
+  redis:
+    image: redis:7-alpine
+    expose:
+      - "6379"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tinybeans
+      POSTGRES_USER: tinybeans
+      POSTGRES_PASSWORD: tinybeans
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+
+volumes:
+  postgres_data:

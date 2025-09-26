@@ -1,0 +1,9 @@
+django==5.2.6
+djangorestframework
+djangorestframework-simplejwt
+django-redis
+redis
+drf-spectacular
+celery[redis]==5.4.0
+flower==2.0.1
+psycopg[binary]==3.1.18

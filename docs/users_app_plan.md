@@ -1,0 +1,30 @@
+# Users App Follow-Up TODOs
+
+## Immediate Next Steps
+- ✅ Async email delivery now runs through Celery + Redis with `users.tasks.send_email_task`; inline flows have been swapped over while token responses remain for backward compatibility.
+- ✅ Base stack now runs on PostgreSQL via Docker Compose; set `USE_SQLITE_FALLBACK=1` locally if you still need sqlite.
+- Wire up actual email delivery (SendGrid/Postmark/etc.) instead of returning verification/reset tokens in API responses.
+- Enforce per-endpoint throttling (DRF throttles or Redis counters) for signup, login, password-reset, and child-upgrade flows.
+- Add comprehensive automated tests (serializers, viewsets, permissions, Redis token expiration) and integrate them into CI.
+- Add proper error/result logging and metrics (e.g., Prometheus counters for token issuances and verification success rates).
+- Add task-queue observability (Flower dashboard in dev, CloudWatch metrics in prod).
+
+## Short-Term Enhancements
+- Implement guardian consent capture when promoting a child profile to a full account (signed agreement, stored metadata, audit trail).
+- Extend email notification preferences to cover digest frequency, push notifications, and per-circle overrides.
+- Surface admin tooling to view pending child upgrades, resend invites, or revoke tokens.
+- Support richer child profile metadata (pronouns, favorite moments) and expose it through the API.
+
+## Longer-Term Ideas
+- Expand Celery-backed background processing to cover digest emails, push notifications, and other asynchronous workloads.
+- Add device push notification support with per-user channel preferences.
+- Implement audit logging for critical security events (login, password changes, upgrades) stored in an append-only log.
+- Introduce analytics endpoints/dashboard for circle engagement (uploads per week, active members, viewed albums).
+- Evaluate multi-tenancy concerns (per-organization domains), especially if circles eventually belong to larger communities.
+
+## Async Email Notes
+- Celery wiring lives in `mysite/mysite/celery.py` with eager-mode toggles in settings for tests.
+- Dev/staging: Redis broker; production: swap to SQS/RabbitMQ without rewriting tasks.
+- `users.tasks.send_email_task` handles verification, password reset, circle invitations, and child upgrades with Celery retries.
+- Docker Compose now ships optional `celery-worker`, `celery-beat`, and `flower` services so developers can observe tasks locally.
+- Next enhancements: add provider integrations, richer templates, and structured metrics (see `docs/email_queue_plan.md`).
