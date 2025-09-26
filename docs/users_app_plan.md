@@ -7,12 +7,6 @@
 - Add proper error/result logging and metrics (e.g., Prometheus counters for token issuances and verification success rates).
 - Add task-queue observability (Flower dashboard in dev, CloudWatch metrics in prod).
 
-## Short-Term Enhancements
-- Implement guardian consent capture when promoting a child profile to a full account (signed agreement, stored metadata, audit trail).
-- Extend email notification preferences to cover digest frequency, push notifications, and per-circle overrides.
-- Surface admin tooling to view pending child upgrades, resend invites, or revoke tokens.
-- Support richer child profile metadata (pronouns, favorite moments) and expose it through the API.
-
 ## Longer-Term Ideas
 - Expand Celery-backed background processing to cover digest emails, push notifications, and other asynchronous workloads.
 - Add device push notification support with per-user channel preferences.

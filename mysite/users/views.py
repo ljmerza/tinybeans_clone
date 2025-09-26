@@ -1,7 +1,4 @@
-import os
-import uuid
-
-from django.core.cache import cache
+from datetime import timedelta
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -11,10 +8,18 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    OpenApiTypes,
+    extend_schema,
+)
 
 from .models import (
+    ChildGuardianConsent,
     ChildProfile,
     ChildProfileUpgradeStatus,
+    ChildUpgradeEventType,
     Circle,
     CircleInvitation,
     CircleInvitationStatus,
@@ -29,6 +34,12 @@ from .tasks import (
     EMAIL_VERIFICATION_TEMPLATE,
     PASSWORD_RESET_TEMPLATE,
     send_email_task,
+)
+from .token_utils import (
+    DEFAULT_TOKEN_TTL_SECONDS,
+    delete_token,
+    pop_token,
+    store_token,
 )
 
 from .serializers import (
@@ -55,25 +66,7 @@ from .serializers import (
     UserSerializer,
 )
 
-TOKEN_TTL_SECONDS = int(os.environ.get('AUTH_TOKEN_TTL', 900))
-
-
-def _token_cache_key(prefix: str, token: str) -> str:
-    return f"auth:{prefix}:{token}"
-
-
-def _store_token(prefix: str, payload: dict, ttl: int | None = None) -> str:
-    token = uuid.uuid4().hex
-    cache.set(_token_cache_key(prefix, token), payload, ttl or TOKEN_TTL_SECONDS)
-    return token
-
-
-def _pop_token(prefix: str, token: str):
-    key = _token_cache_key(prefix, token)
-    payload = cache.get(key)
-    if payload is not None:
-        cache.delete(key)
-    return payload
+TOKEN_TTL_SECONDS = DEFAULT_TOKEN_TTL_SECONDS
 
 
 def _get_tokens_for_user(user: User) -> dict:
@@ -83,15 +76,27 @@ def _get_tokens_for_user(user: User) -> dict:
 
 class SignupView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = SignupSerializer
 
+    @extend_schema(
+        description='Register a new account, optionally deferring circle creation until later.',
+        request=SignupSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Signup successful; returns created user, circle (if created), tokens, and verification token.',
+            )
+        },
+    )
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user, circle = serializer.save()
 
-        verification_token = _store_token(
+        verification_token = store_token(
             'verify-email',
             {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
+            ttl=TOKEN_TTL_SECONDS,
         )
 
         send_email_task.delay(
@@ -112,7 +117,13 @@ class SignupView(APIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
 
+    @extend_schema(
+        description='Authenticate with username/password and receive JWT tokens.',
+        request=LoginSerializer,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='JWT tokens and user payload')},
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -126,14 +137,21 @@ class LoginView(APIView):
 
 class EmailVerificationResendView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = EmailVerificationSerializer
 
+    @extend_schema(
+        description='Request that a new email verification message be sent to a user.',
+        request=EmailVerificationSerializer,
+        responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Verification email scheduled')},
+    )
     def post(self, request):
         serializer = EmailVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        token = _store_token(
+        token = store_token(
             'verify-email',
             {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
+            ttl=TOKEN_TTL_SECONDS,
         )
         send_email_task.delay(
             to_email=user.email,
@@ -149,11 +167,17 @@ class EmailVerificationResendView(APIView):
 
 class EmailVerificationConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = EmailVerificationConfirmSerializer
 
+    @extend_schema(
+        description='Confirm email ownership using a verification token.',
+        request=EmailVerificationConfirmSerializer,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Email successfully verified')},
+    )
     def post(self, request):
         serializer = EmailVerificationConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = _pop_token('verify-email', serializer.validated_data['token'])
+        payload = pop_token('verify-email', serializer.validated_data['token'])
         if not payload:
             return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter(id=payload['user_id']).first()
@@ -167,15 +191,22 @@ class EmailVerificationConfirmView(APIView):
 
 class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = PasswordResetRequestSerializer
 
+    @extend_schema(
+        description='Initiate the password reset flow for a user by email or username.',
+        request=PasswordResetRequestSerializer,
+        responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password reset email scheduled')},
+    )
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         if user:
-            token = _store_token(
+            token = store_token(
                 'password-reset',
                 {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
+                ttl=TOKEN_TTL_SECONDS,
             )
             send_email_task.delay(
                 to_email=user.email,
@@ -192,11 +223,17 @@ class PasswordResetRequestView(APIView):
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
 
+    @extend_schema(
+        description='Complete a password reset using a valid reset token.',
+        request=PasswordResetConfirmSerializer,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password reset completed')},
+    )
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = _pop_token('password-reset', serializer.validated_data['token'])
+        payload = pop_token('password-reset', serializer.validated_data['token'])
         if not payload:
             return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter(id=payload['user_id']).first()
@@ -209,7 +246,13 @@ class PasswordResetConfirmView(APIView):
 
 class PasswordChangeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PasswordChangeSerializer
 
+    @extend_schema(
+        description='Allow an authenticated user to change their password and rotate tokens.',
+        request=PasswordChangeSerializer,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password changed successfully with new tokens')},
+    )
     def post(self, request):
         serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -221,11 +264,21 @@ class PasswordChangeView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
 
+    @extend_schema(
+        description='Retrieve profile metadata for the authenticated user.',
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Authenticated user profile data')},
+    )
     def get(self, request):
         serializer = UserProfileSerializer(request.user)
         return Response({'user': serializer.data})
 
+    @extend_schema(
+        description='Update selected profile fields (name, etc.) for the authenticated user.',
+        request=UserProfileSerializer,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT)},
+    )
     def patch(self, request):
         serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -235,6 +288,7 @@ class UserProfileView(APIView):
 
 class EmailPreferencesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = EmailPreferencesSerializer
 
     def get_object(self, request):
         circle_id = request.query_params.get('circle_id')
@@ -246,10 +300,37 @@ class EmailPreferencesView(APIView):
         prefs, _ = UserNotificationPreferences.objects.get_or_create(user=request.user, circle=circle)
         return prefs
 
+    @extend_schema(
+        description='Fetch notification preferences, optionally scoped to a specific circle.',
+        parameters=[
+            OpenApiParameter(
+                name='circle_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Optional circle context to fetch per-circle overrides.',
+                required=False,
+            )
+        ],
+        responses=EmailPreferencesSerializer,
+    )
     def get(self, request):
         prefs = self.get_object(request)
         return Response(EmailPreferencesSerializer(prefs).data)
 
+    @extend_schema(
+        description='Update notification preferences globally or for a specific circle.',
+        parameters=[
+            OpenApiParameter(
+                name='circle_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Optional circle context when updating per-circle overrides.',
+                required=False,
+            )
+        ],
+        request=EmailPreferencesSerializer,
+        responses=EmailPreferencesSerializer,
+    )
     def patch(self, request):
         prefs = self.get_object(request)
         serializer = EmailPreferencesSerializer(prefs, data=request.data, partial=True)
@@ -260,7 +341,17 @@ class EmailPreferencesView(APIView):
 
 class UserCircleListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleMembershipSerializer
 
+    @extend_schema(
+        description='List all circles the authenticated user belongs to, including membership roles.',
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='List of circle memberships for the authenticated user.',
+            )
+        }
+    )
     def get(self, request):
         memberships = (
             CircleMembership.objects.filter(user=request.user)
@@ -270,6 +361,16 @@ class UserCircleListView(APIView):
         serializer = CircleMembershipSerializer(memberships, many=True)
         return Response({'circles': serializer.data})
 
+    @extend_schema(
+        description='Create a new circle owned by the authenticated user.',
+        request=CircleCreateSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Circle created and returned with metadata.',
+            )
+        },
+    )
     def post(self, request):
         serializer = CircleCreateSerializer(data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
@@ -279,7 +380,18 @@ class UserCircleListView(APIView):
 
 class CircleDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleCreateSerializer
 
+    @extend_schema(
+        description='Update circle metadata (name, slug) for an owned circle.',
+        request=CircleCreateSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Circle details updated successfully.',
+            )
+        },
+    )
     def patch(self, request, circle_id):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
@@ -294,7 +406,18 @@ class CircleDetailView(APIView):
 
 class CircleInvitationCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleInvitationCreateSerializer
 
+    @extend_schema(
+        description='Invite a new member to join a circle via email.',
+        request=CircleInvitationCreateSerializer,
+        responses={
+            202: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitation created and email queued.',
+            )
+        },
+    )
     def post(self, request, circle_id):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
@@ -311,7 +434,7 @@ class CircleInvitationCreateView(APIView):
             role=serializer.validated_data['role'],
         )
 
-        token = _store_token(
+        token = store_token(
             'circle-invite',
             {
                 'invitation_id': str(invitation.id),
@@ -320,6 +443,7 @@ class CircleInvitationCreateView(APIView):
                 'role': invitation.role,
                 'issued_at': timezone.now().isoformat(),
             },
+            ttl=TOKEN_TTL_SECONDS,
         )
 
         send_email_task.delay(
@@ -340,7 +464,17 @@ class CircleInvitationCreateView(APIView):
 
 class CircleInvitationListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleInvitationSerializer
 
+    @extend_schema(
+        description='Return pending circle invitations for the authenticated user.',
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Pending invitations for the authenticated user.',
+            )
+        }
+    )
     def get(self, request):
         invitations = CircleInvitation.objects.filter(
             email__iexact=request.user.email,
@@ -352,7 +486,17 @@ class CircleInvitationListView(APIView):
 
 class CircleMemberListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleMemberSerializer
 
+    @extend_schema(
+        description='List members of a circle including their roles.',
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Members of the requested circle with roles.',
+            )
+        }
+    )
     def get(self, request, circle_id):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
@@ -363,6 +507,16 @@ class CircleMemberListView(APIView):
         serializer = CircleMemberSerializer(memberships, many=True)
         return Response({'circle': CircleSerializer(circle).data, 'members': serializer.data})
 
+    @extend_schema(
+        description='Add an existing user to a circle with an optional role override.',
+        request=CircleMemberAddSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Membership created for user in circle.',
+            )
+        },
+    )
     def post(self, request, circle_id):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
@@ -381,7 +535,12 @@ class CircleMemberListView(APIView):
 
 class CircleMemberRemoveView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleMemberSerializer
 
+    @extend_schema(
+        description='Remove a member (or yourself) from a circle.',
+        responses={204: OpenApiResponse(description='Membership removed.')},
+    )
     def delete(self, request, circle_id, user_id):
         circle = get_object_or_404(Circle, id=circle_id)
         membership_to_remove = CircleMembership.objects.filter(circle=circle, user_id=user_id).select_related('user').first()
@@ -404,7 +563,17 @@ class CircleMemberRemoveView(APIView):
 
 class CircleActivityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleSerializer
 
+    @extend_schema(
+        description='View recent membership and invitation events for a circle.',
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Aggregation of circle membership and invitation events.',
+            )
+        }
+    )
     def get(self, request, circle_id):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
@@ -443,7 +612,18 @@ class CircleActivityView(APIView):
 
 class CircleInvitationRespondView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleInvitationResponseSerializer
 
+    @extend_schema(
+        description='Accept or decline a pending invitation that belongs to the authenticated user.',
+        request=CircleInvitationResponseSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitation response processed for authenticated user.',
+            )
+        },
+    )
     def post(self, request, invitation_id):
         invitation = get_object_or_404(CircleInvitation, id=invitation_id)
         if invitation.email.lower() != request.user.email.lower():
@@ -480,11 +660,22 @@ class CircleInvitationRespondView(APIView):
 
 class CircleInvitationAcceptView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = CircleInvitationAcceptSerializer
 
+    @extend_schema(
+        description='Complete an invitation-based signup flow using a one-time token.',
+        request=CircleInvitationAcceptSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitation accepted and new member onboarded.',
+            )
+        },
+    )
     def post(self, request):
         serializer = CircleInvitationAcceptSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = _pop_token('circle-invite', serializer.validated_data['token'])
+        payload = pop_token('circle-invite', serializer.validated_data['token'])
         if not payload:
             return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -535,7 +726,19 @@ class CircleInvitationAcceptView(APIView):
 
 class ChildProfileUpgradeRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChildProfileUpgradeRequestSerializer
 
+    @extend_schema(
+        description='Trigger the guardian consent workflow to promote a child profile to a full account.',
+        request=ChildProfileUpgradeRequestSerializer,
+        responses={
+            202: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Upgrade invitation issued successfully.',
+            ),
+            400: OpenApiResponse(description='Validation error'),
+        },
+    )
     def post(self, request, child_id):
         child = get_object_or_404(ChildProfile, id=child_id)
         membership = CircleMembership.objects.filter(circle=child.circle, user=request.user).first()
@@ -546,17 +749,63 @@ class ChildProfileUpgradeRequestView(APIView):
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
+            previous_token = child.upgrade_token
+            if previous_token:
+                delete_token('child-upgrade', previous_token)
             child.pending_invite_email = serializer.validated_data['email']
             child.upgrade_status = ChildProfileUpgradeStatus.PENDING
-            child.save(update_fields=['pending_invite_email', 'upgrade_status', 'updated_at'])
+            child.upgrade_requested_by = request.user
 
-            token = _store_token(
+            ttl = TOKEN_TTL_SECONDS
+            expires_at = timezone.now() + timedelta(seconds=ttl) if ttl else None
+            token = store_token(
                 'child-upgrade',
                 {
                     'child_id': str(child.id),
                     'circle_id': child.circle_id,
                     'email': child.pending_invite_email,
                     'issued_at': timezone.now().isoformat(),
+                },
+                ttl=TOKEN_TTL_SECONDS,
+            )
+            child.upgrade_token = token
+            child.upgrade_token_expires_at = expires_at
+            child.save(
+                update_fields=[
+                    'pending_invite_email',
+                    'upgrade_status',
+                    'upgrade_requested_by',
+                    'upgrade_token',
+                    'upgrade_token_expires_at',
+                    'updated_at',
+                ]
+            )
+
+            consent = ChildGuardianConsent.objects.create(
+                child=child,
+                guardian_name=serializer.validated_data['guardian_name'],
+                guardian_relationship=serializer.validated_data['guardian_relationship'],
+                agreement_reference=serializer.validated_data.get('agreement_reference', ''),
+                consent_method=serializer.validated_data['consent_method'],
+                consent_metadata=serializer.validated_data.get('consent_metadata', {}),
+                captured_by=request.user,
+            )
+
+            if previous_token:
+                child.log_upgrade_event(
+                    ChildUpgradeEventType.TOKEN_REISSUED,
+                    performed_by=request.user,
+                    metadata={'old_token': previous_token, 'new_token': token},
+                )
+
+            child.log_upgrade_event(
+                ChildUpgradeEventType.REQUEST_INITIATED,
+                performed_by=request.user,
+                metadata={
+                    'email': child.pending_invite_email,
+                    'token': token,
+                    'consent_id': str(consent.id),
+                    'consent_method': consent.consent_method,
                 },
             )
 
@@ -575,11 +824,23 @@ class ChildProfileUpgradeRequestView(APIView):
 
 class ChildProfileUpgradeConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = ChildProfileUpgradeConfirmSerializer
 
+    @extend_schema(
+        description='Confirm a child profile upgrade using the guardian-issued token.',
+        request=ChildProfileUpgradeConfirmSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Account created and linked successfully.',
+            ),
+            400: OpenApiResponse(description='Invalid or expired token'),
+        },
+    )
     def post(self, request):
         serializer = ChildProfileUpgradeConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = _pop_token('child-upgrade', serializer.validated_data['token'])
+        payload = pop_token('child-upgrade', serializer.validated_data['token'])
         if not payload:
             return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -588,6 +849,13 @@ class ChildProfileUpgradeConfirmView(APIView):
             return Response({'detail': _('Child profile not found')}, status=status.HTTP_404_NOT_FOUND)
         if child.linked_user:
             return Response({'detail': _('Child profile already linked')}, status=status.HTTP_400_BAD_REQUEST)
+        if not child.upgrade_token:
+            return Response({'detail': _('Upgrade invitation has been revoked. Please request a new invitation.')}, status=status.HTTP_400_BAD_REQUEST)
+        provided_token = serializer.validated_data['token']
+        if child.upgrade_token != provided_token:
+            return Response({'detail': _('Upgrade invitation mismatch. Please request a new invitation.')}, status=status.HTTP_400_BAD_REQUEST)
+        if child.upgrade_token_expires_at and timezone.now() > child.upgrade_token_expires_at:
+            return Response({'detail': _('Upgrade invitation expired. Please request a new invitation.')}, status=status.HTTP_400_BAD_REQUEST)
 
         email = payload['email']
         password = serializer.validated_data['password']
@@ -607,7 +875,26 @@ class ChildProfileUpgradeConfirmView(APIView):
             child.linked_user = user
             child.upgrade_status = ChildProfileUpgradeStatus.LINKED
             child.pending_invite_email = None
-            child.save(update_fields=['linked_user', 'upgrade_status', 'pending_invite_email', 'updated_at'])
+            child.upgrade_token = None
+            child.upgrade_token_expires_at = None
+            child.upgrade_requested_by = None
+            child.save(
+                update_fields=[
+                    'linked_user',
+                    'upgrade_status',
+                    'pending_invite_email',
+                    'upgrade_token',
+                    'upgrade_token_expires_at',
+                    'upgrade_requested_by',
+                    'updated_at',
+                ]
+            )
+
+            child.log_upgrade_event(
+                ChildUpgradeEventType.UPGRADE_COMPLETED,
+                performed_by=user,
+                metadata={'email': email, 'user_id': user.id},
+            )
 
         return Response(
             {

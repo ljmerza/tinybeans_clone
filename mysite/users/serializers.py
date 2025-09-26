@@ -9,6 +9,7 @@ from .models import (
     CircleInvitation,
     CircleInvitationStatus,
     CircleMembership,
+    GuardianConsentMethod,
     User,
     UserNotificationPreferences,
     UserRole,
@@ -33,19 +34,21 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CircleMembershipSerializer(serializers.ModelSerializer):
+    membership_id = serializers.IntegerField(source='id', read_only=True)
     circle = CircleSerializer()
 
     class Meta:
         model = CircleMembership
-        fields = ['id', 'circle', 'role', 'created_at']
+        fields = ['membership_id', 'circle', 'role', 'created_at']
 
 
 class CircleMemberSerializer(serializers.ModelSerializer):
+    membership_id = serializers.IntegerField(source='id', read_only=True)
     user = UserSerializer()
 
     class Meta:
         model = CircleMembership
-        fields = ['id', 'user', 'role', 'created_at']
+        fields = ['membership_id', 'user', 'role', 'created_at']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -101,37 +104,61 @@ class SignupSerializer(serializers.ModelSerializer):
     circle_name = serializers.CharField(required=False, allow_blank=True)
     role = serializers.ChoiceField(choices=UserRole.choices, required=False)
     password = serializers.CharField(write_only=True, min_length=8)
+    create_circle = serializers.BooleanField(required=False, default=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'circle_name', 'role']
+        fields = ['username', 'email', 'password', 'circle_name', 'role', 'create_circle']
 
     def validate_role(self, value):
         if value == UserRole.CIRCLE_ADMIN:
             return value
         return value or UserRole.CIRCLE_MEMBER
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        create_circle = attrs.get('create_circle', True)
+        circle_name = (attrs.get('circle_name') or '').strip()
+        attrs['circle_name'] = circle_name
+
+        if not create_circle:
+            if circle_name:
+                raise serializers.ValidationError(
+                    {'circle_name': _('Circle name can only be provided when create_circle is true.')}
+                )
+            if attrs.get('role') == UserRole.CIRCLE_ADMIN:
+                raise serializers.ValidationError(
+                    {'role': _('Circle admin role requires creating a circle during signup.')}
+                )
+
+        return attrs
+
     def create(self, validated_data):
-        circle_name = validated_data.pop('circle_name', '').strip()
+        circle_name = validated_data.pop('circle_name', '')
         role = validated_data.pop('role', UserRole.CIRCLE_MEMBER)
+        create_circle = validated_data.pop('create_circle', True)
         password = validated_data.pop('password')
 
         user = User.objects.create_user(password=password, role=role, **validated_data)
 
-        if not circle_name:
-            circle_name = f"{user.username}'s Circle"
+        circle = None
+        if create_circle:
+            if not circle_name:
+                circle_name = f"{user.username}'s Circle"
 
-        circle = Circle.objects.create(name=circle_name, created_by=user)
-        CircleMembership.objects.create(user=user, circle=circle, role=UserRole.CIRCLE_ADMIN)
-        user.role = UserRole.CIRCLE_ADMIN
-        user.save(update_fields=['role'])
+            circle = Circle.objects.create(name=circle_name, created_by=user)
+            CircleMembership.objects.create(user=user, circle=circle, role=UserRole.CIRCLE_ADMIN)
+            if user.role != UserRole.CIRCLE_ADMIN:
+                user.role = UserRole.CIRCLE_ADMIN
+                user.save(update_fields=['role'])
 
         return user, circle
 
     def to_representation(self, instance_tuple):
         user, circle = instance_tuple
         data = UserSerializer(user).data
-        data['circle'] = CircleSerializer(circle).data
+        data['circle'] = CircleSerializer(circle).data if circle else None
+        data['pending_circle_setup'] = circle is None
         return data
 
 
@@ -206,9 +233,27 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 class EmailPreferencesSerializer(serializers.ModelSerializer):
+    circle_id = serializers.SerializerMethodField()
+    per_circle_override = serializers.SerializerMethodField()
+
     class Meta:
         model = UserNotificationPreferences
-        fields = ['notify_new_media', 'notify_weekly_digest', 'channel']
+        fields = [
+            'notify_new_media',
+            'notify_weekly_digest',
+            'digest_frequency',
+            'push_enabled',
+            'channel',
+            'circle_id',
+            'per_circle_override',
+        ]
+        read_only_fields = ['circle_id', 'per_circle_override']
+
+    def get_per_circle_override(self, obj) -> bool:
+        return obj.is_circle_override
+
+    def get_circle_id(self, obj) -> int | None:
+        return obj.circle_id
 
 
 class CircleInvitationSerializer(serializers.ModelSerializer):
@@ -268,13 +313,32 @@ class CircleInvitationAcceptSerializer(serializers.Serializer):
 class ChildProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildProfile
-        fields = ['id', 'display_name', 'birthdate', 'avatar_url', 'upgrade_status', 'pending_invite_email', 'linked_user']
+        fields = [
+            'id',
+            'display_name',
+            'birthdate',
+            'avatar_url',
+            'pronouns',
+            'favorite_moments',
+            'upgrade_status',
+            'pending_invite_email',
+            'linked_user',
+        ]
         read_only_fields = ['upgrade_status', 'pending_invite_email', 'linked_user']
 
 
 class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(required=False)
+    guardian_name = serializers.CharField()
+    guardian_relationship = serializers.CharField()
+    consent_method = serializers.ChoiceField(
+        choices=GuardianConsentMethod.choices,
+        required=False,
+        default=GuardianConsentMethod.DIGITAL_SIGNATURE,
+    )
+    agreement_reference = serializers.CharField(required=False, allow_blank=True)
+    consent_metadata = serializers.JSONField(required=False)
 
     def validate(self, attrs):
         child = self.context['child']
@@ -286,6 +350,8 @@ class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
         username = attrs.get('username')
         if username and User.objects.filter(username=username).exists():
             raise serializers.ValidationError({'username': _('Username is already taken')})
+        if 'consent_metadata' not in attrs or attrs['consent_metadata'] is None:
+            attrs['consent_metadata'] = {}
         return attrs
 
 
