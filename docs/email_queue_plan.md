@@ -107,12 +107,13 @@ Each trigger currently returns a token in the API response. We need to offload a
 
 ## Recent Enhancements
 - Celery is now part of the Django project with `mysite/mysite/celery.py` and eager-mode toggles in settings for tests.
-- `users.send_email_task` consolidates verification, password reset, circle invite, and child upgrade emails with retry-friendly Celery configuration.
+- Shared `emailing.send_email_task` consolidates verification, password reset, circle invite, and child upgrade emails with retry-friendly Celery configuration.
 - Docker Compose bundles optional `celery-worker`, `celery-beat`, and `flower` services to keep async flows observable in development.
 - Compose services now communicate via internal hostnames only; ports stay unbound so Flower/web are accessed via `docker compose exec` or reverse proxies when needed.
+- Mailjet can be enabled via `MAILJET_API_KEY`/`MAILJET_API_SECRET` environment variables; otherwise the default Django email backend is used for development.
 
 ## Enhancement Backlog
-- Build production-ready HTML/text templates and wire a real provider SDK (SendGrid/Postmark).
+- Build production-ready HTML/text templates on top of the Mailjet integration (currently text-only).
 - Expose environment-driven deep links (e.g., `FRONTEND_BASE_URL`) so emails link users directly to confirmation flows.
 - Ship metrics/logging dashboards (Flower config, Prometheus counters, Sentry breadcrumbs) for delivery success insight.
 - Add contract tests around Celery eager mode to guarantee tasks fire from critical endpoints.

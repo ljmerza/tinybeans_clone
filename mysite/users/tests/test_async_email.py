@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -17,6 +17,7 @@ from users.tasks import (
     CIRCLE_INVITATION_TEMPLATE,
     EMAIL_VERIFICATION_TEMPLATE,
     PASSWORD_RESET_TEMPLATE,
+    send_email_task,
 )
 
 
@@ -92,6 +93,19 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['template_id'], PASSWORD_RESET_TEMPLATE)
         self.assertEqual(kwargs['to_email'], user.email)
         self.assertIn('token', kwargs['context'])
+
+    @override_settings(MAILJET_ENABLED=True, MAILJET_API_KEY='key', MAILJET_API_SECRET='secret')
+    @patch('users.tasks.send_via_mailjet')
+    def test_send_email_task_uses_mailjet_when_enabled(self, mock_mailjet):
+        mock_mailjet.return_value = None
+
+        send_email_task.run(
+            to_email='mailjet@example.com',
+            template_id=EMAIL_VERIFICATION_TEMPLATE,
+            context={'token': '12345', 'username': 'mj'},
+        )
+
+        mock_mailjet.assert_called_once()
 
     @patch('users.views.send_email_task.delay')
     def test_circle_invitation_enqueues_email(self, mock_delay):

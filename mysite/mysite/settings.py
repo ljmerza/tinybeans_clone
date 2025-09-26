@@ -13,6 +13,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {'1', 'true', 'yes', 'on'}
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
+    'emailing.apps.EmailingConfig',
     'drf_spectacular',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -180,7 +188,15 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@example.com'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+
+MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY')
+MAILJET_API_SECRET = os.environ.get('MAILJET_API_SECRET')
+MAILJET_API_URL = os.environ.get('MAILJET_API_URL', 'https://api.mailjet.com/v3.1/send')
+MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL', DEFAULT_FROM_EMAIL)
+MAILJET_FROM_NAME = os.environ.get('MAILJET_FROM_NAME', 'Tinybeans Circles')
+MAILJET_USE_SANDBOX = _env_flag('MAILJET_USE_SANDBOX')
+MAILJET_ENABLED = bool(MAILJET_API_KEY and MAILJET_API_SECRET)
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Circle Sharing API',
@@ -190,12 +206,6 @@ SPECTACULAR_SETTINGS = {
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 }
 
-
-def _env_flag(name: str, default: bool = False) -> bool:
-    value = os.environ.get(name)
-    if value is None:
-        return default
-    return value.lower() in {'1', 'true', 'yes', 'on'}
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', REDIS_URL)
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', REDIS_URL)

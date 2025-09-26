@@ -1,18 +1,27 @@
+x-common-env: &django-common-env
+  DJANGO_SETTINGS_MODULE: mysite.settings
+  REDIS_URL: redis://redis:6379/0
+  POSTGRES_DB: tinybeans
+  POSTGRES_USER: tinybeans
+  POSTGRES_PASSWORD: tinybeans
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+  MAILJET_API_SECRET: ${MAILJET_API_SECRET:-}
+  MAILJET_FROM_EMAIL: ${MAILJET_FROM_EMAIL:-no-reply@example.com}
+  MAILJET_FROM_NAME: ${MAILJET_FROM_NAME:-Tinybeans Circles}
+  MAILJET_USE_SANDBOX: ${MAILJET_USE_SANDBOX:-0}
+
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: bash -lc "python manage.py migrate && python manage.py seed_demo_data && python manage.py runserver 0.0.0.0:8000"
     working_dir: /app/mysite
     volumes:
       - ./:/app
     environment:
+      <<: *django-common-env
       DJANGO_ALLOWED_HOSTS: "*"
-      REDIS_URL: redis://redis:6379/0
-      POSTGRES_DB: tinybeans
-      POSTGRES_USER: tinybeans
-      POSTGRES_PASSWORD: tinybeans
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
     depends_on:
       - redis
       - postgres
@@ -28,13 +37,7 @@ services:
     volumes:
       - ./:/app
     environment:
-      DJANGO_SETTINGS_MODULE: mysite.settings
-      REDIS_URL: redis://redis:6379/0
-      POSTGRES_DB: tinybeans
-      POSTGRES_USER: tinybeans
-      POSTGRES_PASSWORD: tinybeans
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      <<: *django-common-env
     depends_on:
       - redis
       - postgres
@@ -46,13 +49,7 @@ services:
     volumes:
       - ./:/app
     environment:
-      DJANGO_SETTINGS_MODULE: mysite.settings
-      REDIS_URL: redis://redis:6379/0
-      POSTGRES_DB: tinybeans
-      POSTGRES_USER: tinybeans
-      POSTGRES_PASSWORD: tinybeans
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      <<: *django-common-env
     depends_on:
       - redis
       - postgres
@@ -64,13 +61,7 @@ services:
     volumes:
       - ./:/app
     environment:
-      DJANGO_SETTINGS_MODULE: mysite.settings
-      REDIS_URL: redis://redis:6379/0
-      POSTGRES_DB: tinybeans
-      POSTGRES_USER: tinybeans
-      POSTGRES_PASSWORD: tinybeans
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      <<: *django-common-env
     depends_on:
       - redis
       - postgres
