@@ -26,6 +26,72 @@ class CircleSerializer(serializers.ModelSerializer):
         return obj.memberships.count()
 
 
+class CircleMembershipSerializer(serializers.ModelSerializer):
+    circle = CircleSerializer()
+
+    class Meta:
+        model = CircleMembership
+        fields = ['id', 'circle', 'role', 'created_at']
+
+
+class CircleMemberSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = CircleMembership
+        fields = ['id', 'user', 'role', 'created_at']
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'email_verified', 'date_joined']
+        read_only_fields = ['id', 'role', 'email_verified', 'date_joined']
+
+
+class CircleCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Circle
+        fields = ['id', 'name', 'slug', 'created_at']
+        read_only_fields = ['id', 'slug', 'created_at']
+
+    def create(self, validated_data):
+        user = self.context['user']
+        circle = Circle.objects.create(created_by=user, **validated_data)
+        CircleMembership.objects.create(user=user, circle=circle, role=UserRole.CIRCLE_ADMIN)
+        return circle
+
+
+class CircleMemberAddSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    role = serializers.ChoiceField(choices=UserRole.choices, required=False)
+
+    def validate(self, attrs):
+        circle = self.context['circle']
+        try:
+            user = User.objects.get(id=attrs['user_id'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError({'user_id': _('User not found')})
+
+        if CircleMembership.objects.filter(circle=circle, user=user).exists():
+            raise serializers.ValidationError({'user_id': _('User already belongs to this circle')})
+
+        attrs['user'] = user
+        attrs['role'] = attrs.get('role') or UserRole.CIRCLE_MEMBER
+        return attrs
+
+    def create(self, validated_data):
+        circle = self.context['circle']
+        invited_by = self.context.get('invited_by')
+        membership = CircleMembership.objects.create(
+            circle=circle,
+            user=validated_data['user'],
+            role=validated_data['role'],
+            invited_by=invited_by,
+        )
+        return membership
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

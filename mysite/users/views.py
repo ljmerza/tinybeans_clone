@@ -37,6 +37,10 @@ from .serializers import (
     CircleInvitationCreateSerializer,
     CircleInvitationResponseSerializer,
     CircleInvitationSerializer,
+    CircleCreateSerializer,
+    CircleMemberAddSerializer,
+    CircleMemberSerializer,
+    CircleMembershipSerializer,
     CircleSerializer,
     EmailPreferencesSerializer,
     EmailVerificationConfirmSerializer,
@@ -46,6 +50,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     SignupSerializer,
+    UserProfileSerializer,
     UserSerializer,
 )
 
@@ -213,6 +218,20 @@ class PasswordChangeView(APIView):
         return Response({'detail': _('Password changed'), 'tokens': _get_tokens_for_user(user)})
 
 
+class UserProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response({'user': serializer.data})
+
+    def patch(self, request):
+        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'user': serializer.data})
+
+
 class EmailPreferencesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -236,6 +255,40 @@ class EmailPreferencesView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class UserCircleListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        memberships = (
+            CircleMembership.objects.filter(user=request.user)
+            .select_related('circle')
+            .order_by('circle__name')
+        )
+        serializer = CircleMembershipSerializer(memberships, many=True)
+        return Response({'circles': serializer.data})
+
+    def post(self, request):
+        serializer = CircleCreateSerializer(data=request.data, context={'user': request.user})
+        serializer.is_valid(raise_exception=True)
+        circle = serializer.save()
+        return Response({'circle': CircleSerializer(circle).data}, status=status.HTTP_201_CREATED)
+
+
+class CircleDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, circle_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
+            raise permissions.PermissionDenied(_('Only circle admins can update circle details'))
+
+        serializer = CircleCreateSerializer(circle, data=request.data, partial=True, context={'user': request.user})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'circle': CircleSerializer(circle).data})
 
 
 class CircleInvitationCreateView(APIView):
@@ -294,6 +347,97 @@ class CircleInvitationListView(APIView):
         ).select_related('circle')
         data = CircleInvitationSerializer(invitations, many=True).data
         return Response({'invitations': data})
+
+
+class CircleMemberListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, circle_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
+            raise permissions.PermissionDenied(_('Only circle admins can view members'))
+
+        memberships = CircleMembership.objects.filter(circle=circle).select_related('user').order_by('user__username')
+        serializer = CircleMemberSerializer(memberships, many=True)
+        return Response({'circle': CircleSerializer(circle).data, 'members': serializer.data})
+
+    def post(self, request, circle_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
+            raise permissions.PermissionDenied(_('Only circle admins can add members'))
+
+        serializer = CircleMemberAddSerializer(
+            data=request.data,
+            context={'circle': circle, 'invited_by': request.user},
+        )
+        serializer.is_valid(raise_exception=True)
+        membership = serializer.save()
+
+        return Response({'membership': CircleMemberSerializer(membership).data}, status=status.HTTP_201_CREATED)
+
+
+class CircleMemberRemoveView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, circle_id, user_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership_to_remove = CircleMembership.objects.filter(circle=circle, user_id=user_id).select_related('user').first()
+        if not membership_to_remove:
+            return Response({'detail': _('Membership not found')}, status=status.HTTP_404_NOT_FOUND)
+
+        requester_membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        removing_self = request.user.id == user_id
+
+        if not removing_self:
+            if not (request.user.is_superuser or (requester_membership and requester_membership.role == UserRole.CIRCLE_ADMIN)):
+                raise permissions.PermissionDenied(_('Only circle admins can remove other members'))
+        else:
+            if not requester_membership and not request.user.is_superuser:
+                raise permissions.PermissionDenied(_('Not a member of this circle'))
+
+        membership_to_remove.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CircleActivityView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, circle_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
+            raise permissions.PermissionDenied(_('Only circle admins can view activity'))
+
+        events = []
+        memberships = circle.memberships.select_related('user').order_by('-created_at')
+        for member in memberships:
+            events.append(
+                {
+                    'type': 'member_joined',
+                    'created_at': member.created_at,
+                    'user': UserSerializer(member.user).data,
+                    'role': member.role,
+                }
+            )
+
+        invitations = circle.invitations.order_by('-created_at')
+        for invitation in invitations:
+            events.append(
+                {
+                    'type': 'invitation',
+                    'created_at': invitation.created_at,
+                    'email': invitation.email,
+                    'role': invitation.role,
+                    'status': invitation.status,
+                    'responded_at': invitation.responded_at,
+                }
+            )
+
+        events.sort(key=lambda item: item['created_at'] or timezone.now(), reverse=True)
+
+        return Response({'circle': CircleSerializer(circle).data, 'events': events})
 
 
 class CircleInvitationRespondView(APIView):
