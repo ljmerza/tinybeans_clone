@@ -41,6 +41,7 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['to_email'], payload['email'])
         self.assertIn('token', kwargs['context'])
         body = response.json()
+        self.assertEqual(set(body['tokens'].keys()), {'access'})
         self.assertIsNotNone(body['circle'])
         self.assertFalse(body['pending_circle_setup'])
         self.assertIsNotNone(Circle.objects.filter(created_by__username='newuser').first())
@@ -62,6 +63,7 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['template_id'], EMAIL_VERIFICATION_TEMPLATE)
         self.assertEqual(kwargs['to_email'], payload['email'])
         body = response.json()
+        self.assertEqual(set(body['tokens'].keys()), {'access'})
         self.assertIsNone(body['circle'])
         self.assertTrue(body['pending_circle_setup'])
 

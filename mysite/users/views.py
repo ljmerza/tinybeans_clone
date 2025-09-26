@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -7,7 +8,9 @@ from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
@@ -67,6 +70,26 @@ from .serializers import (
 )
 
 TOKEN_TTL_SECONDS = DEFAULT_TOKEN_TTL_SECONDS
+REFRESH_COOKIE_NAME = 'refresh_token'
+REFRESH_COOKIE_PATH = '/api/users/token/refresh/'
+
+
+def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    secure = not settings.DEBUG
+    max_age = int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        path=REFRESH_COOKIE_PATH,
+        max_age=max_age,
+        httponly=True,
+        secure=secure,
+        samesite='Strict' if secure else 'Lax',
+    )
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(key=REFRESH_COOKIE_NAME, path=REFRESH_COOKIE_PATH)
 
 
 def _get_tokens_for_user(user: User) -> dict:
@@ -79,7 +102,7 @@ class SignupView(APIView):
     serializer_class = SignupSerializer
 
     @extend_schema(
-        description='Register a new account, optionally deferring circle creation until later.',
+        description='Register a new account, optionally defer circle creation, and receive an access token (refresh token stored as an HTTP-only cookie).',
         request=SignupSerializer,
         responses={
             201: OpenApiResponse(
@@ -109,10 +132,13 @@ class SignupView(APIView):
             },
         )
 
+        tokens = _get_tokens_for_user(user)
         data = serializer.to_representation((user, circle))
-        data['tokens'] = _get_tokens_for_user(user)
+        data['tokens'] = {'access': tokens['access']}
         data['verification_token'] = verification_token
-        return Response(data, status=status.HTTP_201_CREATED)
+        response = Response(data, status=status.HTTP_201_CREATED)
+        _set_refresh_cookie(response, tokens['refresh'])
+        return response
 
 
 class LoginView(APIView):
@@ -120,7 +146,7 @@ class LoginView(APIView):
     serializer_class = LoginSerializer
 
     @extend_schema(
-        description='Authenticate with username/password and receive JWT tokens.',
+        description='Authenticate with username/password and receive an access token (refresh token stored in HTTP-only cookie).',
         request=LoginSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='JWT tokens and user payload')},
     )
@@ -128,11 +154,14 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        tokens = _get_tokens_for_user(user)
         data = {
             'user': UserSerializer(user).data,
-            'tokens': _get_tokens_for_user(user),
+            'tokens': {'access': tokens['access']},
         }
-        return Response(data)
+        response = Response(data)
+        _set_refresh_cookie(response, tokens['refresh'])
+        return response
 
 
 class EmailVerificationResendView(APIView):
@@ -163,6 +192,40 @@ class EmailVerificationResendView(APIView):
             },
         )
         return Response({'message': _('Verification email reissued'), 'token': token}, status=status.HTTP_202_ACCEPTED)
+
+
+class TokenRefreshCookieView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    @extend_schema(
+        description='Obtain a new access token using the refresh token stored in the HTTP-only cookie.',
+        request=None,
+        responses={
+            200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='New access token issued.'),
+            401: OpenApiResponse(description='Missing or invalid refresh token cookie.'),
+        },
+    )
+    def post(self, request):
+        refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
+        if not refresh_token:
+            return Response({'detail': _('Refresh token cookie missing.')}, status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = TokenRefreshSerializer(data={'refresh': refresh_token})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError:
+            response = Response({'detail': _('Invalid or expired refresh token.')}, status=status.HTTP_401_UNAUTHORIZED)
+            _clear_refresh_cookie(response)
+            return response
+
+        data = serializer.validated_data
+        access_token = data['access']
+        new_refresh = data.get('refresh', refresh_token)
+
+        response = Response({'access': access_token})
+        _set_refresh_cookie(response, new_refresh)
+        return response
 
 
 class EmailVerificationConfirmView(APIView):
@@ -249,7 +312,7 @@ class PasswordChangeView(APIView):
     serializer_class = PasswordChangeSerializer
 
     @extend_schema(
-        description='Allow an authenticated user to change their password and rotate tokens.',
+        description='Allow an authenticated user to change their password and rotate tokens (refresh token stored in HTTP-only cookie).',
         request=PasswordChangeSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password changed successfully with new tokens')},
     )
@@ -259,7 +322,10 @@ class PasswordChangeView(APIView):
         user = request.user
         user.set_password(serializer.validated_data['password'])
         user.save(update_fields=['password'])
-        return Response({'detail': _('Password changed'), 'tokens': _get_tokens_for_user(user)})
+        tokens = _get_tokens_for_user(user)
+        response = Response({'detail': _('Password changed'), 'tokens': {'access': tokens['access']}})
+        _set_refresh_cookie(response, tokens['refresh'])
+        return response
 
 
 class UserProfileView(APIView):

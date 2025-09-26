@@ -19,6 +19,7 @@ from .views import (
     PasswordResetConfirmView,
     PasswordResetRequestView,
     SignupView,
+    TokenRefreshCookieView,
     UserProfileView,
     UserCircleListView,
 )
@@ -26,6 +27,7 @@ from .views import (
 urlpatterns = [
     path('signup/', SignupView.as_view(), name='user-signup'),
     path('login/', LoginView.as_view(), name='user-login'),
+    path('token/refresh/', TokenRefreshCookieView.as_view(), name='user-token-refresh'),
     path('me/', UserProfileView.as_view(), name='user-profile'),
     path('verify-email/resend/', EmailVerificationResendView.as_view(), name='user-verify-resend'),
     path('verify-email/confirm/', EmailVerificationConfirmView.as_view(), name='user-verify-confirm'),
