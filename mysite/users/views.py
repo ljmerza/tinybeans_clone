@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -241,7 +242,7 @@ class EmailPreferencesView(APIView):
         if circle_id:
             circle = get_object_or_404(Circle, id=circle_id)
             if not CircleMembership.objects.filter(circle=circle, user=request.user).exists():
-                raise permissions.PermissionDenied(_('Not a member of this circle'))
+                raise PermissionDenied(_('Not a member of this circle'))
         prefs, _ = UserNotificationPreferences.objects.get_or_create(user=request.user, circle=circle)
         return prefs
 
@@ -283,7 +284,7 @@ class CircleDetailView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
-            raise permissions.PermissionDenied(_('Only circle admins can update circle details'))
+            raise PermissionDenied(_('Only circle admins can update circle details'))
 
         serializer = CircleCreateSerializer(circle, data=request.data, partial=True, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
@@ -298,7 +299,7 @@ class CircleInvitationCreateView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not membership or membership.role != UserRole.CIRCLE_ADMIN:
-            raise permissions.PermissionDenied(_('Only circle admins can invite members'))
+            raise PermissionDenied(_('Only circle admins can invite members'))
 
         serializer = CircleInvitationCreateSerializer(data=request.data, context={'circle': circle})
         serializer.is_valid(raise_exception=True)
@@ -356,7 +357,7 @@ class CircleMemberListView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
-            raise permissions.PermissionDenied(_('Only circle admins can view members'))
+            raise PermissionDenied(_('Only circle admins can view members'))
 
         memberships = CircleMembership.objects.filter(circle=circle).select_related('user').order_by('user__username')
         serializer = CircleMemberSerializer(memberships, many=True)
@@ -366,7 +367,7 @@ class CircleMemberListView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
-            raise permissions.PermissionDenied(_('Only circle admins can add members'))
+            raise PermissionDenied(_('Only circle admins can add members'))
 
         serializer = CircleMemberAddSerializer(
             data=request.data,
@@ -392,10 +393,10 @@ class CircleMemberRemoveView(APIView):
 
         if not removing_self:
             if not (request.user.is_superuser or (requester_membership and requester_membership.role == UserRole.CIRCLE_ADMIN)):
-                raise permissions.PermissionDenied(_('Only circle admins can remove other members'))
+                raise PermissionDenied(_('Only circle admins can remove other members'))
         else:
             if not requester_membership and not request.user.is_superuser:
-                raise permissions.PermissionDenied(_('Not a member of this circle'))
+                raise PermissionDenied(_('Not a member of this circle'))
 
         membership_to_remove.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -408,7 +409,7 @@ class CircleActivityView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
-            raise permissions.PermissionDenied(_('Only circle admins can view activity'))
+            raise PermissionDenied(_('Only circle admins can view activity'))
 
         events = []
         memberships = circle.memberships.select_related('user').order_by('-created_at')
@@ -446,7 +447,7 @@ class CircleInvitationRespondView(APIView):
     def post(self, request, invitation_id):
         invitation = get_object_or_404(CircleInvitation, id=invitation_id)
         if invitation.email.lower() != request.user.email.lower():
-            raise permissions.PermissionDenied(_('Invitation does not belong to this user'))
+            raise PermissionDenied(_('Invitation does not belong to this user'))
 
         serializer = CircleInvitationResponseSerializer(data=request.data, context={'invitation': invitation})
         serializer.is_valid(raise_exception=True)
@@ -539,7 +540,7 @@ class ChildProfileUpgradeRequestView(APIView):
         child = get_object_or_404(ChildProfile, id=child_id)
         membership = CircleMembership.objects.filter(circle=child.circle, user=request.user).first()
         if not membership or membership.role != UserRole.CIRCLE_ADMIN:
-            raise permissions.PermissionDenied(_('Only circle admins can upgrade child profiles'))
+            raise PermissionDenied(_('Only circle admins can upgrade child profiles'))
 
         serializer = ChildProfileUpgradeRequestSerializer(data=request.data, context={'child': child})
         serializer.is_valid(raise_exception=True)

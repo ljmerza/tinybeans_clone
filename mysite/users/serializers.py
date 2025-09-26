@@ -26,6 +26,12 @@ class CircleSerializer(serializers.ModelSerializer):
         return obj.memberships.count()
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'role', 'email_verified', 'date_joined']
+
+
 class CircleMembershipSerializer(serializers.ModelSerializer):
     circle = CircleSerializer()
 
@@ -90,13 +96,6 @@ class CircleMemberAddSerializer(serializers.Serializer):
             invited_by=invited_by,
         )
         return membership
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'role', 'email_verified', 'date_joined']
-
 
 class SignupSerializer(serializers.ModelSerializer):
     circle_name = serializers.CharField(required=False, allow_blank=True)
