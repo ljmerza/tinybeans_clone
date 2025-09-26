@@ -1,30 +1,33 @@
 # Project Primer for Agents
 
 ## Overview
-- Building a family-focused photo sharing app inspired by Tinybeans.
-- Core concept: **Circle** — a private space where guardians invite relatives/friends to view and contribute memories.
-- Tech stack: Django 5.2, Django REST Framework, JWT auth, Redis-backed token store, Docker-based dev environment.
+- Building a Tinybeans-inspired family photo journal where small “Circles” share memories privately.
+- Each circle has guardians (admins) and invited members; child profiles can be upgraded into full accounts once a guardian consents.
+- Tech stack highlights: Django 5.2 + DRF, SimpleJWT, Redis cache for short-lived auth tokens, Celery for async work, Mailjet (optional) for outbound email, Dockerized dev environment.
 
 ## Key Features Implemented
-- Custom `User` model with `Circle` memberships and roles (`admin` vs `member`).
-- `main` app exposes a hello-world view; `users` app delivers signup/login, email verification, password reset, invitations, child profile upgrades, and preference APIs.
-- Invitation and upgrade tokens stored in Redis; endpoints accept/resend/confirm flows.
-- OpenAPI schema exposed at `/api/schema`, Swagger UI at `/api/docs`, ReDoc at `/api/redoc`.
+- Custom `User` and `Circle` models with membership roles, invitations, and child profiles (linked, pending upgrade, unlinked).
+- `users` API covers signup/login, email verification, password reset, member invites, guardian consent + child upgrades, and notification preferences.
+- Tokens for verification/reset/upgrades live in Redis and are sent via Celery-triggered emails.
+- Refresh tokens issued exclusively via HTTP-only cookie + `/api/users/token/refresh/`; access tokens remain short-lived (30 min).
+- OpenAPI schema served at `/api/schema`; Swagger UI (`/api/docs`) and Redoc (`/api/redoc`) provide interactive reference.
+- `seed_demo_data` (auto-run on container startup) provides superuser + multiple circle scenarios for local smoke tests.
 
 ## In-Flight / Next Steps
-- Async email pipeline: Celery + Redis for dev (SQS-ready), queuing verification/reset/invite emails.
-- Swap inline token responses with real email delivery (SendGrid/Postmark planned).
-- Add throttling, observability, and automated tests for new flows.
-- Guardian consent, richer child metadata, and admin tooling on the roadmap.
+- Rate limiting: DRF throttles or Redis counters per endpoint (signup/login/password/upgrade).
+- Observability: structured logging/metrics around token issuance + email delivery, Flower dashboards in prod.
+- Harden email layer: HTML templates, provider abstraction, delivery metrics/alerts.
+- Push notifications & mobile experience exploration; eventually multi-tenancy + security audit logging.
 
 ## Useful Docs
 - `docs/users_app_plan.md` — implementation roadmap, TODOs, future ideas.
 - `docs/email_queue_plan.md` — async email design, queue options, Celery decision.
+- `DEVELOPMENT.md` — local setup, seeded accounts, testing commands.
 
 ## Dev Environment Notes
-- Docker Compose now runs Django + Redis + PostgreSQL with optional Celery worker/beat/Flower services; everything talks over internal service names (no host port publishing).
-- Recent migrations were run locally with `USE_SQLITE_FALLBACK=1`; once Postgres is available re-run `python manage.py migrate` without the flag inside the web container.
-- Virtualenv sits at `.venv`; run management commands via `../.venv/bin/python manage.py ...` from `mysite/`.
-- Default email backend is console until provider integration lands.
+- `docker compose up --build` (local only) runs DB migrations, seeds demo data, then starts Django; Celery worker/beat/Flower containers provide async email + monitoring.
+- Shared env vars (Postgres/Redis/Mailjet) live in the compose `x-common-env` block; override via `.env` or shell exports.
+- `.venv` holds deps; inside containers you can run management commands directly (`python manage.py ...`).
+- Mailjet keys are optional—without them the console backend logs outbound email content.
 
 Welcome aboard! Dive into the docs above for deeper context before shipping features.
