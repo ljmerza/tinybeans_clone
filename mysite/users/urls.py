@@ -25,25 +25,31 @@ from .views import (
 )
 
 urlpatterns = [
-    path('signup/', SignupView.as_view(), name='user-signup'),
-    path('login/', LoginView.as_view(), name='user-login'),
-    path('token/refresh/', TokenRefreshCookieView.as_view(), name='user-token-refresh'),
+    path('auth/signup/', SignupView.as_view(), name='user-signup'),
+    path('auth/login/', LoginView.as_view(), name='user-login'),
+    path('auth/token/refresh/', TokenRefreshCookieView.as_view(), name='user-token-refresh'),
+    
     path('me/', UserProfileView.as_view(), name='user-profile'),
+    path('me/email-preferences/', EmailPreferencesView.as_view(), name='user-email-preferences'),
+    
     path('verify-email/resend/', EmailVerificationResendView.as_view(), name='user-verify-resend'),
     path('verify-email/confirm/', EmailVerificationConfirmView.as_view(), name='user-verify-confirm'),
-    path('password-reset/request/', PasswordResetRequestView.as_view(), name='user-password-reset-request'),
-    path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='user-password-reset-confirm'),
+    
     path('password/change/', PasswordChangeView.as_view(), name='user-password-change'),
-    path('email-preferences/', EmailPreferencesView.as_view(), name='user-email-preferences'),
+    path('password/reset/confirm/', PasswordResetConfirmView.as_view(), name='user-password-reset-confirm'),
+    path('password/reset/request/', PasswordResetRequestView.as_view(), name='user-password-reset-request'),
+    
     path('circles/', UserCircleListView.as_view(), name='user-circle-list'),
     path('circles/<int:circle_id>/', CircleDetailView.as_view(), name='circle-detail'),
     path('circles/<int:circle_id>/invitations/', CircleInvitationCreateView.as_view(), name='circle-invitation-create'),
     path('circles/<int:circle_id>/members/', CircleMemberListView.as_view(), name='circle-member-list'),
     path('circles/<int:circle_id>/members/<int:user_id>/', CircleMemberRemoveView.as_view(), name='circle-member-remove'),
     path('circles/<int:circle_id>/activity/', CircleActivityView.as_view(), name='circle-activity'),
+    
     path('invitations/accept/', CircleInvitationAcceptView.as_view(), name='circle-invitation-accept'),
     path('invitations/pending/', CircleInvitationListView.as_view(), name='circle-invitation-list'),
     path('invitations/<uuid:invitation_id>/respond/', CircleInvitationRespondView.as_view(), name='circle-invitation-respond'),
+    
     path('child-profiles/<uuid:child_id>/upgrade/request/', ChildProfileUpgradeRequestView.as_view(), name='child-upgrade-request'),
     path('child-profiles/upgrade/confirm/', ChildProfileUpgradeConfirmView.as_view(), name='child-upgrade-confirm'),
 ]
