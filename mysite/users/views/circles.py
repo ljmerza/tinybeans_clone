@@ -34,7 +34,7 @@ from ..serializers import (
 from ..tasks import CIRCLE_INVITATION_TEMPLATE, send_email_task
 from ..token_utils import (
     TOKEN_TTL_SECONDS,
-    _get_tokens_for_user,
+    get_tokens_for_user,
     pop_token,
     store_token,
 )
@@ -420,6 +420,6 @@ class CircleInvitationAcceptView(APIView):
             'detail': _('Invitation accepted'),
             'user': UserSerializer(user).data,
             'circle': CircleSerializer(invitation.circle).data,
-            'tokens': _get_tokens_for_user(user),
+            'tokens': get_tokens_for_user(user),
         }
         return Response(response, status=status.HTTP_201_CREATED)

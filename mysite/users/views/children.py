@@ -31,7 +31,7 @@ from ..serializers import (
 from ..tasks import CHILD_UPGRADE_TEMPLATE, send_email_task
 from ..token_utils import (
     TOKEN_TTL_SECONDS,
-    _get_tokens_for_user,
+    get_tokens_for_user,
     delete_token,
     pop_token,
     store_token,
@@ -214,7 +214,7 @@ class ChildProfileUpgradeConfirmView(APIView):
             {
                 'detail': _('Account created'),
                 'user': UserSerializer(user).data,
-                'tokens': _get_tokens_for_user(user),
+                'tokens': get_tokens_for_user(user),
             },
             status=status.HTTP_201_CREATED,
         )

@@ -29,9 +29,9 @@ from ..token_utils import (
     REFRESH_COOKIE_NAME,
     REFRESH_COOKIE_PATH,
     TOKEN_TTL_SECONDS,
-    _clear_refresh_cookie,
-    _get_tokens_for_user,
-    _set_refresh_cookie,
+    clear_refresh_cookie,
+    get_tokens_for_user,
+    set_refresh_cookie,
 )
 
 __all__ = [
@@ -59,7 +59,7 @@ __all__ = [
     'REFRESH_COOKIE_NAME',
     'REFRESH_COOKIE_PATH',
     'TOKEN_TTL_SECONDS',
-    '_clear_refresh_cookie',
-    '_get_tokens_for_user',
-    '_set_refresh_cookie',
+    'clear_refresh_cookie',
+    'get_tokens_for_user',
+    'set_refresh_cookie',
 ]

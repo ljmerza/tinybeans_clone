@@ -15,7 +15,7 @@ from .models import User
 DEFAULT_TOKEN_TTL_SECONDS = int(os.environ.get('AUTH_TOKEN_TTL', 900))
 TOKEN_TTL_SECONDS = DEFAULT_TOKEN_TTL_SECONDS
 REFRESH_COOKIE_NAME = 'refresh_token'
-REFRESH_COOKIE_PATH = '/api/users/token/refresh/'
+REFRESH_COOKIE_PATH = '/api/users/auth/token/refresh/'
 
 
 def token_cache_key(prefix: str, token: str) -> str:
@@ -44,7 +44,7 @@ def delete_token(prefix: str, token: str) -> None:
     cache.delete(token_cache_key(prefix, token))
 
 
-def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+def set_refresh_cookie(response: Response, refresh_token: str) -> None:
     """Attach the refresh token as an HTTP-only cookie."""
     secure = not settings.DEBUG
     max_age = int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
@@ -59,12 +59,12 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     )
 
 
-def _clear_refresh_cookie(response: Response) -> None:
+def clear_refresh_cookie(response: Response) -> None:
     """Remove the refresh token cookie."""
     response.delete_cookie(key=REFRESH_COOKIE_NAME, path=REFRESH_COOKIE_PATH)
 
 
-def _get_tokens_for_user(user: User) -> dict[str, str]:
+def get_tokens_for_user(user: User) -> dict[str, str]:
     """Generate JWT access and refresh tokens for the given user."""
     refresh = RefreshToken.for_user(user)
     return {'refresh': str(refresh), 'access': str(refresh.access_token)}
@@ -79,7 +79,7 @@ __all__ = [
     'store_token',
     'pop_token',
     'delete_token',
-    '_set_refresh_cookie',
-    '_clear_refresh_cookie',
-    '_get_tokens_for_user',
+    'set_refresh_cookie',
+    'clear_refresh_cookie',
+    'get_tokens_for_user',
 ]

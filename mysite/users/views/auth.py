@@ -29,9 +29,9 @@ from ..tasks import (
 from ..token_utils import (
     REFRESH_COOKIE_NAME,
     TOKEN_TTL_SECONDS,
-    _clear_refresh_cookie,
-    _get_tokens_for_user,
-    _set_refresh_cookie,
+    clear_refresh_cookie,
+    get_tokens_for_user,
+    set_refresh_cookie,
     pop_token,
     store_token,
 )
@@ -72,12 +72,12 @@ class SignupView(APIView):
             },
         )
 
-        tokens = _get_tokens_for_user(user)
+        tokens = get_tokens_for_user(user)
         data = serializer.to_representation((user, circle))
         data['tokens'] = {'access': tokens['access']}
         data['verification_token'] = verification_token
         response = Response(data, status=status.HTTP_201_CREATED)
-        _set_refresh_cookie(response, tokens['refresh'])
+        set_refresh_cookie(response, tokens['refresh'])
         return response
 
 
@@ -94,13 +94,13 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        tokens = _get_tokens_for_user(user)
+        tokens = get_tokens_for_user(user)
         data = {
             'user': UserSerializer(user).data,
             'tokens': {'access': tokens['access']},
         }
         response = Response(data)
-        _set_refresh_cookie(response, tokens['refresh'])
+        set_refresh_cookie(response, tokens['refresh'])
         return response
 
 
@@ -156,7 +156,7 @@ class TokenRefreshCookieView(APIView):
             serializer.is_valid(raise_exception=True)
         except TokenError:
             response = Response({'detail': _('Invalid or expired refresh token.')}, status=status.HTTP_401_UNAUTHORIZED)
-            _clear_refresh_cookie(response)
+            clear_refresh_cookie(response)
             return response
 
         data = serializer.validated_data
@@ -164,7 +164,7 @@ class TokenRefreshCookieView(APIView):
         new_refresh = data.get('refresh', refresh_token)
 
         response = Response({'access': access_token})
-        _set_refresh_cookie(response, new_refresh)
+        set_refresh_cookie(response, new_refresh)
         return response
 
 
@@ -262,7 +262,7 @@ class PasswordChangeView(APIView):
         user = request.user
         user.set_password(serializer.validated_data['password'])
         user.save(update_fields=['password'])
-        tokens = _get_tokens_for_user(user)
+        tokens = get_tokens_for_user(user)
         response = Response({'detail': _('Password changed'), 'tokens': {'access': tokens['access']}})
-        _set_refresh_cookie(response, tokens['refresh'])
+        set_refresh_cookie(response, tokens['refresh'])
         return response

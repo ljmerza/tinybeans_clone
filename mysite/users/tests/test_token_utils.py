@@ -9,9 +9,9 @@ from users.models import User
 from users.token_utils import (
     REFRESH_COOKIE_NAME,
     TOKEN_TTL_SECONDS,
-    _clear_refresh_cookie,
-    _get_tokens_for_user,
-    _set_refresh_cookie,
+    clear_refresh_cookie,
+    get_tokens_for_user,
+    set_refresh_cookie,
     store_token,
     pop_token,
 )
@@ -25,9 +25,9 @@ class TokenUtilityTests(TestCase):
             password='password123'
         )
 
-    def test_get_tokens_for_user(self):
+    def testget_tokens_for_user(self):
         """Test getting JWT tokens for a user."""
-        tokens = _get_tokens_for_user(self.user)
+        tokens = get_tokens_for_user(self.user)
         
         self.assertIn('access', tokens)
         self.assertIn('refresh', tokens)
@@ -126,14 +126,14 @@ class CookieUtilityTests(TestCase):
             password='password123'
         )
 
-    def test_set_refresh_cookie(self):
+    def testset_refresh_cookie(self):
         """Test setting refresh cookie on response."""
         from django.http import HttpResponse
         
         response = HttpResponse()
         refresh_token = str(RefreshToken.for_user(self.user))
         
-        _set_refresh_cookie(response, refresh_token)
+        set_refresh_cookie(response, refresh_token)
         
         cookie = response.cookies[REFRESH_COOKIE_NAME]
         self.assertEqual(cookie.value, refresh_token)
@@ -142,24 +142,24 @@ class CookieUtilityTests(TestCase):
         self.assertEqual(cookie['path'], '/api/users/token/refresh/')
 
     @override_settings(DEBUG=True)
-    def test_set_refresh_cookie_debug_mode(self):
+    def testset_refresh_cookie_debug_mode(self):
         """Test that cookie is not secure in DEBUG mode."""
         from django.http import HttpResponse
         
         response = HttpResponse()
         refresh_token = str(RefreshToken.for_user(self.user))
         
-        _set_refresh_cookie(response, refresh_token)
+        set_refresh_cookie(response, refresh_token)
         
         cookie = response.cookies[REFRESH_COOKIE_NAME]
         self.assertFalse(cookie['secure'])  # Should be False in DEBUG mode
 
-    def test_clear_refresh_cookie(self):
+    def testclear_refresh_cookie(self):
         """Test clearing refresh cookie."""
         from django.http import HttpResponse
         
         response = HttpResponse()
-        _clear_refresh_cookie(response)
+        clear_refresh_cookie(response)
         
         cookie = response.cookies[REFRESH_COOKIE_NAME]
         self.assertEqual(cookie.value, '')
@@ -190,9 +190,9 @@ class TokenSecurityTests(TestCase):
 
     def test_tokens_are_unique(self):
         """Test that generated tokens are unique."""
-        tokens1 = _get_tokens_for_user(self.user1)
-        tokens2 = _get_tokens_for_user(self.user1)  # Same user
-        tokens3 = _get_tokens_for_user(self.user2)  # Different user
+        tokens1 = get_tokens_for_user(self.user1)
+        tokens2 = get_tokens_for_user(self.user1)  # Same user
+        tokens3 = get_tokens_for_user(self.user2)  # Different user
         
         # All tokens should be different
         self.assertNotEqual(tokens1['access'], tokens2['access'])
