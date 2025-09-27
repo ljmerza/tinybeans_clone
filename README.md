@@ -12,3 +12,4 @@ todo:
 - consolidate `mysite/users/views/utils.py` and `mysite/users/token_utils.py`
 - maybe make some view files smaller?
 - add more tests
+- remove pycache files
