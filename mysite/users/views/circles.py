@@ -32,8 +32,12 @@ from ..serializers import (
     UserSerializer,
 )
 from ..tasks import CIRCLE_INVITATION_TEMPLATE, send_email_task
-from ..token_utils import pop_token, store_token
-from .utils import TOKEN_TTL_SECONDS, _get_tokens_for_user
+from ..token_utils import (
+    TOKEN_TTL_SECONDS,
+    _get_tokens_for_user,
+    pop_token,
+    store_token,
+)
 
 
 class UserCircleListView(APIView):

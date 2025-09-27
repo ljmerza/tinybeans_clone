@@ -29,8 +29,13 @@ from ..serializers import (
     UserSerializer,
 )
 from ..tasks import CHILD_UPGRADE_TEMPLATE, send_email_task
-from ..token_utils import delete_token, pop_token, store_token
-from .utils import TOKEN_TTL_SECONDS, _get_tokens_for_user
+from ..token_utils import (
+    TOKEN_TTL_SECONDS,
+    _get_tokens_for_user,
+    delete_token,
+    pop_token,
+    store_token,
+)
 
 
 class ChildProfileUpgradeRequestView(APIView):

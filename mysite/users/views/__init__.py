@@ -25,7 +25,7 @@ from .circles import (
     UserCircleListView,
 )
 from .profile import EmailPreferencesView, UserProfileView
-from .utils import (
+from ..token_utils import (
     REFRESH_COOKIE_NAME,
     REFRESH_COOKIE_PATH,
     TOKEN_TTL_SECONDS,

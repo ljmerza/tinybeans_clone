@@ -26,13 +26,14 @@ from ..tasks import (
     PASSWORD_RESET_TEMPLATE,
     send_email_task,
 )
-from ..token_utils import pop_token, store_token
-from .utils import (
+from ..token_utils import (
     REFRESH_COOKIE_NAME,
     TOKEN_TTL_SECONDS,
     _clear_refresh_cookie,
     _get_tokens_for_user,
     _set_refresh_cookie,
+    pop_token,
+    store_token,
 )
 
 
