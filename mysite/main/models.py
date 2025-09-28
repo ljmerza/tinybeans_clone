@@ -1,3 +1,6 @@
-from django.db import models
+# This file maintains backwards compatibility
+# Models can be organized in the models/ directory as needed
+# Import all models from the models package when they are created
+# from .models import *
 
-# Create your models here.
+# Currently no models defined in main app

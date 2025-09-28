@@ -15,3 +15,16 @@ todo:
 - add pagination to list returning apis (ie return all members for circle)
 - add max limits to adding members to circle and whatever else
 - add more indexes to db tables for performance
+- remove logic for creating circle on signup - this is done after email validation
+- split model.py into multiple files
+- add more comments to code
+- can user decline circle invite but then accept later or admin re-invite?
+- when admin makes invite let admin choose role of invitee
+- add more logging to important actions
+- add rate limiting to important apis
+- favorite moments for each user (whats favorite for child?)
+  - make favorite moments a model not json on user
+- allow adding pictures, videos, audio, notes
+- who can add moments? admin, member, any user?
+- add more fields to moment - location, tags, etc
+- add search to moments - by tags, location, date range, text in notes

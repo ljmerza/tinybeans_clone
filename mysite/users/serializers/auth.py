@@ -13,7 +13,7 @@ class SignupSerializer(serializers.ModelSerializer):
     circle_name = serializers.CharField(required=False, allow_blank=True)
     role = serializers.ChoiceField(choices=UserRole.choices, required=False)
     password = serializers.CharField(write_only=True, min_length=8)
-    create_circle = serializers.BooleanField(required=False, default=True)
+    create_circle = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = User
@@ -26,7 +26,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        create_circle = attrs.get('create_circle', True)
+        create_circle = attrs.get('create_circle', False)
         circle_name = (attrs.get('circle_name') or '').strip()
         attrs['circle_name'] = circle_name
 

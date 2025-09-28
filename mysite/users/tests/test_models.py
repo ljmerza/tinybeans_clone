@@ -21,7 +21,7 @@ from users.models import (
     User,
     UserNotificationPreferences,
     UserRole,
-    _generate_unique_slug,
+    generate_unique_slug,
 )
 
 
@@ -420,7 +420,7 @@ class ChildGuardianConsentModelTests(TestCase):
 
 
 class UtilityFunctionTests(TestCase):
-    def test_generate_unique_slug(self):
+    def testgenerate_unique_slug(self):
         """Test the unique slug generation utility."""
         # Create a circle to test against
         user = User.objects.create_user(
@@ -431,16 +431,16 @@ class UtilityFunctionTests(TestCase):
         Circle.objects.create(name='Test', created_by=user, slug='test')
         
         # Test unique slug generation
-        slug = _generate_unique_slug('Test', Circle.objects)
+        slug = generate_unique_slug('Test', Circle.objects)
         self.assertEqual(slug, 'test-1')
         
         # Create another with the same base
         Circle.objects.create(name='Test', created_by=user, slug='test-1')
-        slug2 = _generate_unique_slug('Test', Circle.objects)
+        slug2 = generate_unique_slug('Test', Circle.objects)
         self.assertEqual(slug2, 'test-2')
 
-    def test_generate_unique_slug_empty_value(self):
+    def testgenerate_unique_slug_empty_value(self):
         """Test slug generation with empty value."""
-        slug = _generate_unique_slug('', Circle.objects)
+        slug = generate_unique_slug('', Circle.objects)
         self.assertEqual(len(slug), 12)
         self.assertTrue(all(c in '0123456789abcdef' for c in slug))
