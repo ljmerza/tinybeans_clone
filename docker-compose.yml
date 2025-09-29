@@ -88,5 +88,36 @@ services:
     ports:
       - "5432:5432"
 
+  # MinIO - S3-compatible object storage for local development
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9020"
+      - "9021"
+    ports:
+      - "9020:9000"  # API
+      - "9021:9001"  # Console
+
+  # Initialize MinIO bucket
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/tinybeans-media || true;
+      /usr/bin/mc policy set public myminio/tinybeans-media || true;
+      echo 'MinIO bucket setup complete';
+      "
+
 volumes:
   postgres_data:
+  minio_data:
