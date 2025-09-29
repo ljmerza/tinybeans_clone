@@ -36,7 +36,6 @@ class ChildProfile(models.Model):
         birthdate: Child's date of birth (optional)
         avatar_url: URL to child's profile picture (optional)
         pronouns: Child's preferred pronouns (optional)
-        favorite_moments: JSON list of favorited content IDs
         linked_user: Full user account if child has been upgraded
         pending_invite_email: Email for pending upgrade invitation
         upgrade_status: Current status of account upgrade process
@@ -52,7 +51,6 @@ class ChildProfile(models.Model):
     birthdate = models.DateField(blank=True, null=True)
     avatar_url = models.URLField(blank=True, null=True)
     pronouns = models.CharField(max_length=64, blank=True)
-    favorite_moments = models.JSONField(default=list, blank=True)
     linked_user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

@@ -227,7 +227,6 @@ class ChildProfileModelTests(TestCase):
         self.assertEqual(child.birthdate, date(2015, 5, 10))
         self.assertEqual(child.pronouns, 'they/them')
         self.assertEqual(child.upgrade_status, ChildProfileUpgradeStatus.UNLINKED)
-        self.assertEqual(child.favorite_moments, [])
         self.assertIsNone(child.linked_user)
 
     def test_child_profile_str_representation(self):

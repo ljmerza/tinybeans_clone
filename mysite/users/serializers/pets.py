@@ -24,7 +24,6 @@ class PetProfileSerializer(serializers.ModelSerializer):
             'birthdate',
             'avatar_url',
             'bio',
-            'favorite_moments',
             'is_active',
             'age_in_days',
             'display_age',

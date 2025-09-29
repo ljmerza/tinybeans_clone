@@ -14,7 +14,6 @@ todo:
 - add pagination to list returning apis (ie return all members for circle)
 - add max limits to adding members to circle and whatever else
 - add more indexes to db tables for performance
-- remove logic for creating circle on signup - this is done after email validation
 - add more logging to important actions
 - add rate limiting to important apis
 - favorite moments for each user (whats favorite for child?)
@@ -23,3 +22,5 @@ todo:
 - who can add moments? admin, member, any user?
 - add more fields to moment - location, tags, etc
 - add search to moments - by tags, location, date range, text in notes
+- a moment can have users in it - tagged users
+- user can have favorite moments

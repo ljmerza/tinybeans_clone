@@ -416,7 +416,6 @@ class ChildProfileSerializerTests(TestCase):
         self.assertEqual(data['birthdate'], '2015-05-10')
         self.assertEqual(data['pronouns'], 'they/them')
         self.assertEqual(data['upgrade_status'], 'unlinked')
-        self.assertEqual(data['favorite_moments'], [])
         self.assertIsNone(data['linked_user'])
 
     def test_child_profile_deserialization(self):
@@ -425,7 +424,6 @@ class ChildProfileSerializerTests(TestCase):
             'display_name': 'New Name',
             'birthdate': '2020-01-01',
             'pronouns': 'she/her',
-            'favorite_moments': ['moment1', 'moment2']
         }
         
         serializer = ChildProfileSerializer(self.child, data=data, partial=True)
@@ -435,7 +433,6 @@ class ChildProfileSerializerTests(TestCase):
         self.assertEqual(updated_child.display_name, 'New Name')
         self.assertEqual(updated_child.birthdate, date(2020, 1, 1))
         self.assertEqual(updated_child.pronouns, 'she/her')
-        self.assertEqual(updated_child.favorite_moments, ['moment1', 'moment2'])
 
     def test_read_only_fields(self):
         """Test that read-only fields cannot be updated."""

@@ -115,7 +115,7 @@ class Command(BaseCommand):
         linked_child, _ = ChildProfile.objects.get_or_create(
             circle=circle,
             display_name='Avery',
-            defaults={'pronouns': 'they/them', 'favorite_moments': ['First steps', 'Won art contest']},
+            defaults={'pronouns': 'they/them'},
         )
         linked_child.linked_user = teenager
         linked_child.upgrade_status = ChildProfileUpgradeStatus.LINKED
@@ -125,7 +125,7 @@ class Command(BaseCommand):
         pending_child, _ = ChildProfile.objects.get_or_create(
             circle=circle,
             display_name='Milo',
-            defaults={'pronouns': 'he/him', 'favorite_moments': ['Built a rocket model']},
+            defaults={'pronouns': 'he/him'},
         )
         pending_child.upgrade_status = ChildProfileUpgradeStatus.PENDING
         pending_child.pending_invite_email = 'milo.guardian@example.com'
@@ -135,7 +135,7 @@ class Command(BaseCommand):
         young_child, _ = ChildProfile.objects.get_or_create(
             circle=circle,
             display_name='Luna',
-            defaults={'pronouns': 'she/her', 'favorite_moments': ['Started preschool', 'Painted a mural']},
+            defaults={'pronouns': 'she/her'},
         )
         young_child.upgrade_status = ChildProfileUpgradeStatus.UNLINKED
         young_child.pending_invite_email = None

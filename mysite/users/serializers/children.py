@@ -21,7 +21,6 @@ class ChildProfileSerializer(serializers.ModelSerializer):
             'birthdate',
             'avatar_url',
             'pronouns',
-            'favorite_moments',
             'upgrade_status',
             'pending_invite_email',
             'linked_user',

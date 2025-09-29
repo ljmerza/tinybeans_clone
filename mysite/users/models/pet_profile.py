@@ -43,7 +43,6 @@ class PetProfile(models.Model):
         birthdate: Pet's date of birth or adoption date (optional)
         avatar_url: URL to pet's profile picture (optional)
         bio: Short description or personality notes (optional)
-        favorite_moments: JSON list of favorited content IDs
         is_active: Whether the pet profile is active (false if pet passed away)
         created_at: When the profile was created
         updated_at: When the profile was last modified
@@ -56,7 +55,6 @@ class PetProfile(models.Model):
     birthdate = models.DateField(blank=True, null=True)
     avatar_url = models.URLField(blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)
-    favorite_moments = models.JSONField(default=list, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
