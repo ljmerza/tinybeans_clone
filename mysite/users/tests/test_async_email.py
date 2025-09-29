@@ -43,9 +43,11 @@ class AsyncEmailTaskTests(TestCase):
         self.assertIn('token', kwargs['context'])
         body = response.json()
         self.assertEqual(set(body['tokens'].keys()), {'access'})
-        self.assertIsNotNone(body['circle'])
-        self.assertFalse(body['pending_circle_setup'])
-        self.assertIsNotNone(Circle.objects.filter(created_by__username='newuser').first())
+        # No circle is created during signup in the current implementation
+        self.assertNotIn('circle', body)
+        self.assertNotIn('pending_circle_setup', body)
+        # Verify no circle was created
+        self.assertIsNone(Circle.objects.filter(created_by__username='newuser').first())
 
     @patch('users.views.auth.send_email_task.delay')
     def test_signup_can_defer_circle_creation(self, mock_delay):
@@ -65,8 +67,9 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['to_email'], payload['email'])
         body = response.json()
         self.assertEqual(set(body['tokens'].keys()), {'access'})
-        self.assertIsNone(body['circle'])
-        self.assertTrue(body['pending_circle_setup'])
+        # No circle functionality implemented during signup
+        self.assertNotIn('circle', body)
+        self.assertNotIn('pending_circle_setup', body)
 
         user = User.objects.get(username='latercircle')
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)

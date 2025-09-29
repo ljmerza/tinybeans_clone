@@ -9,7 +9,7 @@
 - Custom `User` and `Circle` models with membership roles, invitations, and child profiles (linked, pending upgrade, unlinked).
 - `users` API covers signup/login, email verification, password reset, member invites, guardian consent + child upgrades, and notification preferences.
 - Tokens for verification/reset/upgrades live in Redis and are sent via Celery-triggered emails.
-- Refresh tokens issued exclusively via HTTP-only cookie + `/api/users/token/refresh/`; access tokens remain short-lived (30 min).
+- Refresh tokens issued exclusively via HTTP-only cookie + `/api/users/auth/token/refresh/`; access tokens remain short-lived (30 min).
 - OpenAPI schema served at `/api/schema`; Swagger UI (`/api/docs`) and Redoc (`/api/redoc`) provide interactive reference.
 - `seed_demo_data` (auto-run on container startup) provides superuser + multiple circle scenarios for local smoke tests.
 

@@ -139,7 +139,7 @@ class CookieUtilityTests(TestCase):
         self.assertEqual(cookie.value, refresh_token)
         self.assertTrue(cookie['httponly'])
         self.assertTrue(cookie['secure'])  # Assuming not in DEBUG mode
-        self.assertEqual(cookie['path'], '/api/users/token/refresh/')
+        self.assertEqual(cookie['path'], '/api/users/auth/token/refresh/')
 
     @override_settings(DEBUG=True)
     def testset_refresh_cookie_debug_mode(self):
