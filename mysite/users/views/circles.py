@@ -63,12 +63,15 @@ class UserCircleListView(APIView):
         return Response({'circles': serializer.data})
 
     @extend_schema(
-        description='Create a new circle owned by the authenticated user.',
+        description='Create a new circle owned by the authenticated user. Email verification is required.',
         request=CircleCreateSerializer,
         responses={
             201: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
                 description='Circle created and returned with metadata.',
+            ),
+            400: OpenApiResponse(
+                description='Email verification required or validation error.',
             )
         },
     )

@@ -39,6 +39,14 @@ class CircleCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'created_at']
         read_only_fields = ['id', 'slug', 'created_at']
 
+    def validate(self, attrs):
+        user = self.context['user']
+        if not user.email_verified:
+            raise serializers.ValidationError(
+                _('Email verification is required before creating circles. Please verify your email first.')
+            )
+        return attrs
+
     def create(self, validated_data):
         user = self.context['user']
         circle = Circle.objects.create(created_by=user, **validated_data)

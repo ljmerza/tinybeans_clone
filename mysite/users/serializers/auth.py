@@ -10,65 +10,16 @@ from .core import CircleSerializer, UserSerializer
 
 
 class SignupSerializer(serializers.ModelSerializer):
-    circle_name = serializers.CharField(required=False, allow_blank=True)
-    role = serializers.ChoiceField(choices=UserRole.choices, required=False)
     password = serializers.CharField(write_only=True, min_length=8)
-    create_circle = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'circle_name', 'role', 'create_circle']
-
-    def validate_role(self, value):
-        if value == UserRole.CIRCLE_ADMIN:
-            return value
-        return value or UserRole.CIRCLE_MEMBER
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        create_circle = attrs.get('create_circle', False)
-        circle_name = (attrs.get('circle_name') or '').strip()
-        attrs['circle_name'] = circle_name
-
-        if not create_circle:
-            if circle_name:
-                raise serializers.ValidationError(
-                    {'circle_name': _('Circle name can only be provided when create_circle is true.')}
-                )
-            if attrs.get('role') == UserRole.CIRCLE_ADMIN:
-                raise serializers.ValidationError(
-                    {'role': _('Circle admin role requires creating a circle during signup.')}
-                )
-
-        return attrs
+        fields = ['username', 'email', 'password']
 
     def create(self, validated_data):
-        circle_name = validated_data.pop('circle_name', '')
-        role = validated_data.pop('role', UserRole.CIRCLE_MEMBER)
-        create_circle = validated_data.pop('create_circle', True)
         password = validated_data.pop('password')
-
-        user = User.objects.create_user(password=password, role=role, **validated_data)
-
-        circle = None
-        if create_circle:
-            if not circle_name:
-                circle_name = f"{user.username}'s Circle"
-
-            circle = Circle.objects.create(name=circle_name, created_by=user)
-            CircleMembership.objects.create(user=user, circle=circle, role=UserRole.CIRCLE_ADMIN)
-            if user.role != UserRole.CIRCLE_ADMIN:
-                user.role = UserRole.CIRCLE_ADMIN
-                user.save(update_fields=['role'])
-
-        return user, circle
-
-    def to_representation(self, instance_tuple):
-        user, circle = instance_tuple
-        data = UserSerializer(user).data
-        data['circle'] = CircleSerializer(circle).data if circle else None
-        data['pending_circle_setup'] = circle is None
-        return data
+        user = User.objects.create_user(password=password, **validated_data)
+        return user
 
 
 class LoginSerializer(serializers.Serializer):

@@ -15,6 +15,10 @@ class CircleMembershipViewTests(TestCase):
             password='password123',
             role=UserRole.CIRCLE_ADMIN,
         )
+        # Mark admin as email verified for circle creation
+        self.admin.email_verified = True
+        self.admin.save()
+        
         self.circle = Circle.objects.create(name='Admin Circle', created_by=self.admin)
         CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
 

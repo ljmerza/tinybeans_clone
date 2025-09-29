@@ -42,19 +42,19 @@ class SignupView(APIView):
     serializer_class = SignupSerializer
 
     @extend_schema(
-        description='Register a new account, optionally defer circle creation, and receive an access token (refresh token stored as an HTTP-only cookie).',
+        description='Register a new account and receive an access token (refresh token stored as an HTTP-only cookie). Email verification is required before creating circles.',
         request=SignupSerializer,
         responses={
             201: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
-                description='Signup successful; returns created user, circle (if created), tokens, and verification token.',
+                description='Signup successful; returns created user, tokens, and verification token.',
             )
         },
     )
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, circle = serializer.save()
+        user = serializer.save()
 
         verification_token = store_token(
             'verify-email',
@@ -73,7 +73,7 @@ class SignupView(APIView):
         )
 
         tokens = get_tokens_for_user(user)
-        data = serializer.to_representation((user, circle))
+        data = UserSerializer(user).data
         data['tokens'] = {'access': tokens['access']}
         data['verification_token'] = verification_token
         response = Response(data, status=status.HTTP_201_CREATED)

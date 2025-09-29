@@ -54,31 +54,37 @@ class SignupSerializerTests(TestCase):
         data = {
             'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'securepassword123',
-            'circle_name': 'My Family'
+            'password': 'securepassword123'
         }
         
         serializer = SignupSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         
-        # SignupSerializer.save() returns a tuple (user, circle)
-        user, circle = serializer.save()
+        # SignupSerializer.save() now returns only the user
+        user = serializer.save()
         self.assertEqual(user.username, 'newuser')
         self.assertEqual(user.email, 'new@example.com')
         self.assertTrue(user.check_password('securepassword123'))
-        self.assertIsNotNone(circle)
+        self.assertFalse(user.email_verified)  # Email should not be verified initially
 
     def test_signup_without_circle(self):
-        """Test signup with create_circle=False."""
+        """Test signup creates user without circle (circles created separately)."""
         data = {
             'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'securepassword123',
-            'create_circle': False
+            'password': 'securepassword123'
         }
         
         serializer = SignupSerializer(data=data)
         self.assertTrue(serializer.is_valid())
+        
+        user = serializer.save()
+        self.assertEqual(user.username, 'newuser')
+        self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
+        
+        # No circles should be created during signup
+        from users.models import CircleMembership
+        self.assertEqual(CircleMembership.objects.filter(user=user).count(), 0)
 
     def test_signup_password_too_short(self):
         """Test signup with password that's too short."""
@@ -93,7 +99,7 @@ class SignupSerializerTests(TestCase):
         self.assertIn('password', serializer.errors)
 
     def test_role_validation(self):
-        """Test role validation in signup."""
+        """Test that role field is no longer accepted in signup."""
         data = {
             'username': 'newuser',
             'email': 'new@example.com',
@@ -103,10 +109,12 @@ class SignupSerializerTests(TestCase):
         
         serializer = SignupSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['role'], UserRole.CIRCLE_ADMIN)
+        # Role field should be ignored since it's not in the model fields
+        user = serializer.save()
+        self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
 
     def test_empty_role_defaults_to_member(self):
-        """Test that empty role defaults to CIRCLE_MEMBER."""
+        """Test that users are created with default CIRCLE_MEMBER role."""
         data = {
             'username': 'newuser',
             'email': 'new@example.com',
@@ -116,29 +124,15 @@ class SignupSerializerTests(TestCase):
         
         serializer = SignupSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        # The role should be set to CIRCLE_MEMBER by default when creating circle
-        user, circle = serializer.save()
-        # When creating circle, user becomes admin
-        self.assertEqual(user.role, UserRole.CIRCLE_ADMIN)
+        user = serializer.save()
+        self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
 
-    def test_circle_name_validation(self):
-        """Test circle name validation logic."""
-        # Test with create_circle=False and no circle_name (should be valid)
+    def test_circle_creation_removed_from_signup(self):
+        """Test that circle creation fields are no longer supported in signup."""
+        # Circle-related fields should be ignored since they're not in the serializer
         data = {
             'username': 'newuser_unique',
             'email': 'new_unique@example.com',
-            'password': 'securepassword123',
-            'create_circle': False,
-            # Don't provide circle_name when create_circle is False
-        }
-        
-        serializer = SignupSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
-
-        # Test with create_circle=True and circle_name provided
-        data = {
-            'username': 'newuser2_unique',
-            'email': 'new2_unique@example.com',
             'password': 'securepassword123',
             'create_circle': True,
             'circle_name': 'My Family Circle'
@@ -146,10 +140,12 @@ class SignupSerializerTests(TestCase):
         
         serializer = SignupSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        # Test that it creates the user and circle
-        user, circle = serializer.save()
-        self.assertIsNotNone(circle)
-        self.assertEqual(circle.name, 'My Family Circle')
+        user = serializer.save()
+        
+        # User should be created but no circles
+        from users.models import CircleMembership
+        self.assertEqual(CircleMembership.objects.filter(user=user).count(), 0)
+        self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
 
 
 class LoginSerializerTests(TestCase):
@@ -350,18 +346,40 @@ class CircleSerializerTests(TestCase):
 
 
 class CircleCreateSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='password123',
+            email_verified=True
+        )
+        self.unverified_user = User.objects.create_user(
+            username='unverified',
+            email='unverified@example.com',
+            password='password123',
+            email_verified=False
+        )
+
     def test_valid_circle_creation(self):
-        """Test creating a circle with valid data."""
+        """Test creating a circle with valid data and verified email."""
         data = {'name': 'New Family Circle'}
         
-        serializer = CircleCreateSerializer(data=data)
+        serializer = CircleCreateSerializer(data=data, context={'user': self.user})
         self.assertTrue(serializer.is_valid())
+
+    def test_email_verification_required(self):
+        """Test that email verification is required for circle creation."""
+        data = {'name': 'New Family Circle'}
+        
+        serializer = CircleCreateSerializer(data=data, context={'user': self.unverified_user})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Email verification is required', str(serializer.errors))
 
     def test_empty_name_validation(self):
         """Test that empty name is rejected."""
         data = {'name': ''}
         
-        serializer = CircleCreateSerializer(data=data)
+        serializer = CircleCreateSerializer(data=data, context={'user': self.user})
         self.assertFalse(serializer.is_valid())
         self.assertIn('name', serializer.errors)
 
@@ -369,7 +387,7 @@ class CircleCreateSerializerTests(TestCase):
         """Test that whitespace-only name is rejected."""
         data = {'name': '   '}
         
-        serializer = CircleCreateSerializer(data=data)
+        serializer = CircleCreateSerializer(data=data, context={'user': self.user})
         self.assertFalse(serializer.is_valid())
         self.assertIn('name', serializer.errors)
 
