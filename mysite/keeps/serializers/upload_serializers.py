@@ -1,5 +1,6 @@
 """Serializers for media upload functionality."""
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from ..models import MediaUpload, KeepMedia
 
 
@@ -70,12 +71,18 @@ class MediaUploadStatusSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
     
+    @extend_schema_field({'type': 'object', 'properties': {
+        'original': {'type': 'string', 'format': 'uri'},
+        'thumbnail': {'type': 'string', 'format': 'uri'},
+        'gallery': {'type': 'string', 'format': 'uri'},
+    }, 'nullable': True})
     def get_media_urls(self, obj):
         """Get URLs for completed media file."""
         if obj.status == 'completed' and obj.media_file:
             return obj.media_file.get_all_urls()
         return None
     
+    @extend_schema_field({'type': 'integer', 'minimum': 0, 'maximum': 100})
     def get_progress_percentage(self, obj):
         """Get upload progress as percentage."""
         status_progress = {

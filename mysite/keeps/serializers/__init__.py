@@ -1,26 +1,27 @@
-"""Serializers for the keeps app."""
-from .keep_serializers import (
-    KeepSerializer,
+"""Public interface for the keeps.serializers package."""
+from .comments import KeepCommentSerializer
+from .core import KeepMediaSerializer, MilestoneSerializer
+from .keeps import (
     KeepCreateSerializer,
     KeepDetailSerializer,
-    KeepMediaSerializer,
-    MilestoneSerializer,
-    KeepReactionSerializer,
-    KeepCommentSerializer,
+    KeepSerializer,
+    KeepUpdateSerializer,
 )
+from .reactions import KeepReactionSerializer
 from .upload_serializers import (
     MediaUploadSerializer,
     MediaUploadStatusSerializer,
 )
 
 __all__ = [
-    'KeepSerializer',
-    'KeepCreateSerializer', 
-    'KeepDetailSerializer',
+    'KeepCommentSerializer',
     'KeepMediaSerializer',
     'MilestoneSerializer',
+    'KeepCreateSerializer',
+    'KeepDetailSerializer',
+    'KeepSerializer',
+    'KeepUpdateSerializer',
     'KeepReactionSerializer',
-    'KeepCommentSerializer',
     'MediaUploadSerializer',
     'MediaUploadStatusSerializer',
 ]

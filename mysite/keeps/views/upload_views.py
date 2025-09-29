@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from ..models import Keep, MediaUpload, MediaUploadStatus
 from ..tasks import validate_media_file
 from ..serializers import MediaUploadSerializer, MediaUploadStatusSerializer
-from .keep_views import IsCircleMember
+from .permissions import IsCircleMember
 
 
 class MediaUploadView(APIView):

@@ -1,32 +1,48 @@
-"""Views for the keeps app."""
-from .keep_views import (
-    KeepListCreateView,
-    KeepDetailView,
+"""Public interface for the keeps.views package."""
+from .comments import (
+    KeepCommentDetailView,
+    KeepCommentListCreateView,
+)
+from .keeps import (
     KeepByCircleView,
     KeepByTypeView,
-    KeepReactionListCreateView,
-    KeepReactionDetailView,
-    KeepCommentListCreateView,
-    KeepCommentDetailView,
-    KeepMediaListCreateView,
+    KeepDetailView,
+    KeepListCreateView,
+)
+from .media import (
     KeepMediaDetailView,
+    KeepMediaListCreateView,
+)
+from .permissions import (
+    IsCircleAdminOrOwner,
+    IsCircleMember,
+    can_user_post_in_circle,
+    is_circle_admin,
+)
+from .reactions import (
+    KeepReactionDetailView,
+    KeepReactionListCreateView,
 )
 from .upload_views import (
-    MediaUploadView,
     MediaUploadStatusView,
+    MediaUploadView,
 )
 
 __all__ = [
-    'KeepListCreateView',
-    'KeepDetailView',
+    'KeepCommentDetailView',
+    'KeepCommentListCreateView',
     'KeepByCircleView',
     'KeepByTypeView',
-    'KeepReactionListCreateView',
-    'KeepReactionDetailView',
-    'KeepCommentListCreateView',
-    'KeepCommentDetailView',
-    'KeepMediaListCreateView',
+    'KeepDetailView',
+    'KeepListCreateView',
     'KeepMediaDetailView',
-    'MediaUploadView',
+    'KeepMediaListCreateView',
+    'IsCircleAdminOrOwner',
+    'IsCircleMember',
+    'can_user_post_in_circle',
+    'is_circle_admin',
+    'KeepReactionDetailView',
+    'KeepReactionListCreateView',
     'MediaUploadStatusView',
+    'MediaUploadView',
 ]

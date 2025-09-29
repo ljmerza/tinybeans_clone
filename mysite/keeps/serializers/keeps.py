@@ -1,119 +1,14 @@
-"""Serializers for Keep models and related functionality.
+"""Serializers for Keep models.
 
 This module provides serializers for creating, updating, and retrieving
-family memories (keeps) with their associated media, milestones, reactions, and comments.
+family memories (keeps) with their associated data.
 """
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema_field
 
-from ..models import (
-    Keep,
-    KeepMedia,
-    Milestone,
-    KeepReaction,
-    KeepComment,
-    KeepType,
-    MilestoneType,
-)
+from ..models import Keep, KeepType, KeepMedia, Milestone
 from users.models import CircleMembership, UserRole
-
-User = get_user_model()
-
-
-class KeepMediaSerializer(serializers.ModelSerializer):
-    """Serializer for keep media files."""
-    
-    urls = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = KeepMedia
-        fields = [
-            'id',
-            'media_type',
-            'caption',
-            'upload_order',
-            'file_size',
-            'original_filename',
-            'content_type',
-            'width',
-            'height',
-            'thumbnails_generated',
-            'urls',
-            'created_at',
-        ]
-        read_only_fields = [
-            'id',
-            'file_size',
-            'original_filename',
-            'content_type',
-            'width',
-            'height',
-            'thumbnails_generated',
-            'urls',
-            'created_at'
-        ]
-    
-    @extend_schema_field({'type': 'object', 'properties': {
-        'original': {'type': 'string', 'format': 'uri'},
-        'thumbnail': {'type': 'string', 'format': 'uri'},
-        'gallery': {'type': 'string', 'format': 'uri'},
-    }})
-    def get_urls(self, obj):
-        """Get URLs for all available sizes."""
-        return obj.get_all_urls()
-
-
-class MilestoneSerializer(serializers.ModelSerializer):
-    """Serializer for milestone information."""
-    
-    child_name = serializers.CharField(source='child_profile.name', read_only=True)
-    
-    class Meta:
-        model = Milestone
-        fields = [
-            'milestone_type',
-            'child_profile',
-            'child_name',
-            'age_at_milestone',
-            'notes',
-            'is_first_time',
-        ]
-
-
-class KeepReactionSerializer(serializers.ModelSerializer):
-    """Serializer for keep reactions."""
-    
-    user_username = serializers.CharField(source='user.username', read_only=True)
-    
-    class Meta:
-        model = KeepReaction
-        fields = [
-            'id',
-            'user',
-            'user_username',
-            'reaction_type',
-            'created_at',
-        ]
-        read_only_fields = ['id', 'user', 'created_at']
-
-
-class KeepCommentSerializer(serializers.ModelSerializer):
-    """Serializer for keep comments."""
-    
-    user_username = serializers.CharField(source='user.username', read_only=True)
-    
-    class Meta:
-        model = KeepComment
-        fields = [
-            'id',
-            'user',
-            'user_username',
-            'comment',
-            'created_at',
-            'updated_at',
-        ]
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+from .core import KeepMediaSerializer, MilestoneSerializer
 
 
 class KeepSerializer(serializers.ModelSerializer):
@@ -182,6 +77,9 @@ class KeepSerializer(serializers.ModelSerializer):
 
 class KeepDetailSerializer(KeepSerializer):
     """Detailed serializer for keeps - includes related objects."""
+    
+    from .reactions import KeepReactionSerializer
+    from .comments import KeepCommentSerializer
     
     media_files = KeepMediaSerializer(many=True, read_only=True)
     milestone = MilestoneSerializer(read_only=True)
