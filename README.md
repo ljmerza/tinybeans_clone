@@ -16,7 +16,6 @@ todo:
 - add max limits to adding members to circle and whatever else
 - add more indexes to db tables for performance
 - remove logic for creating circle on signup - this is done after email validation
-- can user decline circle invite but then accept later or admin re-invite?
 - when admin makes invite let admin choose role of invitee
 - add more logging to important actions
 - add rate limiting to important apis
@@ -26,3 +25,4 @@ todo:
 - who can add moments? admin, member, any user?
 - add more fields to moment - location, tags, etc
 - add search to moments - by tags, location, date range, text in notes
+- add pets to circle

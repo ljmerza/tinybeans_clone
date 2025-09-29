@@ -24,6 +24,7 @@ from .circles import (
     CircleMembershipSerializer,
 )
 from .core import CircleSerializer, UserSerializer
+from .pets import PetProfileSerializer, PetProfileCreateSerializer
 from .profile import EmailPreferencesSerializer, UserProfileSerializer
 
 __all__ = [
@@ -47,6 +48,8 @@ __all__ = [
     'CircleMembershipSerializer',
     'CircleSerializer',
     'UserSerializer',
+    'PetProfileSerializer',
+    'PetProfileCreateSerializer',
     'EmailPreferencesSerializer',
     'UserProfileSerializer',
 ]

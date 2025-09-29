@@ -24,6 +24,7 @@ from .circles import (
     CircleMemberRemoveView,
     UserCircleListView,
 )
+from .pets import CirclePetListView, PetProfileDetailView
 from .profile import EmailPreferencesView, UserProfileView
 from ..token_utils import (
     REFRESH_COOKIE_NAME,
@@ -54,6 +55,8 @@ __all__ = [
     'CircleMemberListView',
     'CircleMemberRemoveView',
     'UserCircleListView',
+    'CirclePetListView',
+    'PetProfileDetailView',
     'EmailPreferencesView',
     'UserProfileView',
     'REFRESH_COOKIE_NAME',

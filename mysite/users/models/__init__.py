@@ -9,6 +9,7 @@ from .child_profile import (
     ChildUpgradeAuditLog, 
     ChildUpgradeEventType
 )
+from .pet_profile import PetProfile, PetType
 from .notifications import UserNotificationPreferences, NotificationChannel, DigestFrequency
 from .utils import generate_unique_slug
 
@@ -20,6 +21,7 @@ __all__ = [
     'Circle', 'CircleMembership', 'CircleInvitation', 'CircleInvitationStatus',
     'ChildProfile', 'ChildProfileUpgradeStatus', 'ChildGuardianConsent', 
     'GuardianConsentMethod', 'ChildUpgradeAuditLog', 'ChildUpgradeEventType',
+    'PetProfile', 'PetType',
     'UserNotificationPreferences', 'NotificationChannel', 'DigestFrequency',
     'generate_unique_slug', 'generate_unique_slug'
 ]
