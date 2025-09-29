@@ -20,6 +20,7 @@ from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .custom_tokens import CustomRefreshToken
 from .models import User
 
 
@@ -127,13 +128,16 @@ def clear_refresh_cookie(response: Response) -> None:
 def get_tokens_for_user(user: User) -> dict[str, str]:
     """Generate JWT access and refresh tokens for the given user.
     
+    Uses CustomRefreshToken to include circle membership information
+    in both the refresh and access tokens.
+    
     Args:
         user: The User instance to generate tokens for
         
     Returns:
         Dictionary containing 'refresh' and 'access' token strings
     """
-    refresh = RefreshToken.for_user(user)
+    refresh = CustomRefreshToken.for_user(user)
     return {'refresh': str(refresh), 'access': str(refresh.access_token)}
 
 
