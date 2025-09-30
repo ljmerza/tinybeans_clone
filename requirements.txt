@@ -2,6 +2,7 @@ django==5.2.6
 djangorestframework
 djangorestframework-simplejwt
 django-redis
+django-cors-headers
 redis
 drf-spectacular
 django-filter

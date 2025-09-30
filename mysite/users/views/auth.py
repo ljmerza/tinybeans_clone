@@ -266,3 +266,17 @@ class PasswordChangeView(APIView):
         response = Response({'detail': _('Password changed'), 'tokens': {'access': tokens['access']}})
         set_refresh_cookie(response, tokens['refresh'])
         return response
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @extend_schema(
+        description='Clear the refresh token cookie to log out the user.',
+        request=None,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Logged out successfully')},
+    )
+    def post(self, request):
+        response = Response({'detail': _('Logged out successfully')})
+        clear_refresh_cookie(response)
+        return response
