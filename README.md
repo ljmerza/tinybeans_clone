@@ -1,16 +1,28 @@
-docker compose exec web python manage.py test
-docker compose exec web python manage.py test --settings=mysite.test_settings
+# Tinybeans Copy
 
-docker compose exec web python manage.py migrate
+## Quick Start
 
+```bash
+# Start all services (web, postgres, redis, celery, flower)
 docker compose up --build
 
+# Run migrations (if needed)
+docker compose exec web python manage.py migrate
 
-http://192.168.1.76:8000/api/docs
-http://192.168.1.76:5556/flower
+# Run tests (no external services required - uses in-memory cache/broker)
+docker compose exec web python manage.py test --settings=mysite.test_settings
 
-todo:
-- maybe make some view files smaller?
+# Or run tests locally without Docker
+python manage.py test --settings=mysite.test_settings
+```
+
+## API Documentation
+- http://192.168.1.76:8000/api/docs
+- http://192.168.1.76:5556/flower
+
+## Development Notes
+
+### TODO:
 - add pagination to list returning apis (ie return all members for circle)
 - add max limits to adding members to circle and whatever else
 - add more indexes to db tables for performance

@@ -39,13 +39,26 @@ All seeded accounts share the password `password123` (update as needed after log
 
 ## Running Tests
 
-All tests target the local PostgreSQL instance specified in `docker-compose.yml`. After starting the services, run:
+Tests are configured to run without external services like Redis. They use:
+- In-memory cache (instead of Redis)
+- In-memory email backend (instead of actual email service)
+- Synchronous Celery execution (instead of Redis broker)
+- SQLite or PostgreSQL for the database
+
+To run tests:
 
 ```bash
-python manage.py test
+# Using Django's test runner (automatically uses test_settings)
+python manage.py test --settings=mysite.test_settings
+
+# Or using pytest (test_settings configured in pytest.ini)
+pytest
+
+# Run specific test files
+python manage.py test users.tests.test_models --settings=mysite.test_settings
 ```
 
-Set `CELERY_TASK_ALWAYS_EAGER=1` in the environment when you need Celery tasks (including email dispatch) to execute synchronously during debugging or testing.
+The test settings (`mysite/test_settings.py`) override the production settings to ensure tests run quickly and don't depend on external services.
 
 ## Useful Commands
 

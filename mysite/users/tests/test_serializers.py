@@ -15,16 +15,16 @@ from users.models import (
 from users.serializers import (
     CircleCreateSerializer,
     CircleSerializer,
-    LoginSerializer,
-    SignupSerializer,
     UserSerializer,
     ChildProfileSerializer,
     ChildProfileUpgradeRequestSerializer,
 )
-from users.serializers.auth import (
+from auth.serializers import (
     EmailVerificationSerializer,
+    LoginSerializer,
     PasswordChangeSerializer,
     PasswordResetRequestSerializer,
+    SignupSerializer,
 )
 
 

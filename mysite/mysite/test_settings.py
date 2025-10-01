@@ -12,13 +12,27 @@ MAILJET_ENABLED = False
 MAILJET_API_KEY = None
 MAILJET_API_SECRET = None
 
-# Use in-memory cache for tests
+# Use SQLite for tests (no PostgreSQL needed)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+}
+
+# Use in-memory cache for tests (instead of Redis)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
     }
 }
+
+# Configure Celery to run tasks synchronously in tests (no Redis needed)
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_BROKER_URL = 'memory://'
+CELERY_RESULT_BACKEND = 'cache+memory://'
 
 # Use faster password hashers for tests
 PASSWORD_HASHERS = [

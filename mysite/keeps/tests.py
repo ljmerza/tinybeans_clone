@@ -127,7 +127,10 @@ class KeepModelTest(TestCase):
             keep=keep,
             media_type='photo',
             caption='Beautiful family moment',
-            upload_order=1
+            upload_order=1,
+            storage_key_original='test/photo.jpg',
+            original_filename='photo.jpg',
+            content_type='image/jpeg',
         )
         
         self.assertEqual(media.keep, keep)
@@ -159,7 +162,10 @@ class KeepModelTest(TestCase):
             keep=keep,
             media_type='photo',
             caption='A photo',
-            upload_order=1
+            upload_order=1,
+            storage_key_original='test/photo.jpg',
+            original_filename='photo.jpg',
+            content_type='image/jpeg',
         )
         
         # Refresh from database
@@ -175,7 +181,10 @@ class KeepModelTest(TestCase):
             keep=keep,
             media_type='video',
             caption='A video',
-            upload_order=2
+            upload_order=2,
+            storage_key_original='test/video.mp4',
+            original_filename='video.mp4',
+            content_type='video/mp4',
         )
         
         # Refresh from database

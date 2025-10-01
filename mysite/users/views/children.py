@@ -13,6 +13,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
+from auth.token_utils import (
+    TOKEN_TTL_SECONDS,
+    get_tokens_for_user,
+    delete_token,
+    pop_token,
+    store_token,
+)
 from ..models import (
     ChildGuardianConsent,
     ChildProfile,
@@ -29,13 +36,6 @@ from ..serializers import (
     UserSerializer,
 )
 from ..tasks import CHILD_UPGRADE_TEMPLATE, send_email_task
-from ..token_utils import (
-    TOKEN_TTL_SECONDS,
-    get_tokens_for_user,
-    delete_token,
-    pop_token,
-    store_token,
-)
 
 
 class ChildProfileUpgradeRequestView(APIView):

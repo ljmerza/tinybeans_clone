@@ -11,6 +11,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
+from auth.token_utils import (
+    TOKEN_TTL_SECONDS,
+    get_tokens_for_user,
+    pop_token,
+    store_token,
+)
 from ..models import (
     Circle,
     CircleInvitation,
@@ -32,12 +38,6 @@ from ..serializers import (
     UserSerializer,
 )
 from ..tasks import CIRCLE_INVITATION_TEMPLATE, send_email_task
-from ..token_utils import (
-    TOKEN_TTL_SECONDS,
-    get_tokens_for_user,
-    pop_token,
-    store_token,
-)
 
 
 class UserCircleListView(APIView):

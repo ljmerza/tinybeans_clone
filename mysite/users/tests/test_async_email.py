@@ -25,7 +25,7 @@ class AsyncEmailTaskTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    @patch('users.views.auth.send_email_task.delay')
+    @patch('auth.views.send_email_task.delay')
     def test_signup_enqueues_verification_email(self, mock_delay):
         payload = {
             'username': 'newuser',
@@ -33,7 +33,7 @@ class AsyncEmailTaskTests(TestCase):
             'password': 'supersecret',
         }
 
-        response = self.client.post(reverse('user-signup'), payload, format='json')
+        response = self.client.post(reverse('auth-signup'), payload, format='json')
 
         self.assertEqual(response.status_code, 201)
         mock_delay.assert_called_once()
@@ -49,7 +49,7 @@ class AsyncEmailTaskTests(TestCase):
         # Verify no circle was created
         self.assertIsNone(Circle.objects.filter(created_by__username='newuser').first())
 
-    @patch('users.views.auth.send_email_task.delay')
+    @patch('auth.views.send_email_task.delay')
     def test_signup_can_defer_circle_creation(self, mock_delay):
         payload = {
             'username': 'latercircle',
@@ -58,7 +58,7 @@ class AsyncEmailTaskTests(TestCase):
             'create_circle': False,
         }
 
-        response = self.client.post(reverse('user-signup'), payload, format='json')
+        response = self.client.post(reverse('auth-signup'), payload, format='json')
 
         self.assertEqual(response.status_code, 201)
         mock_delay.assert_called_once()
@@ -76,7 +76,7 @@ class AsyncEmailTaskTests(TestCase):
         self.assertFalse(Circle.objects.filter(created_by=user).exists())
         self.assertFalse(CircleMembership.objects.filter(user=user).exists())
 
-    @patch('users.views.auth.send_email_task.delay')
+    @patch('auth.views.send_email_task.delay')
     def test_password_reset_request_enqueues_email(self, mock_delay):
         user = User.objects.create_user(
             username='existing',
@@ -85,7 +85,7 @@ class AsyncEmailTaskTests(TestCase):
         )
 
         response = self.client.post(
-            reverse('user-password-reset-request'),
+            reverse('auth-password-reset-request'),
             {'identifier': user.email},
             format='json',
         )

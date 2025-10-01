@@ -34,7 +34,7 @@ class AuthViewEdgeCaseTests(TestCase):
             password='password123'
         )
         
-        response = self.client.post(reverse('user-signup'), {
+        response = self.client.post(reverse('auth-signup'), {
             'username': 'existing',
             'email': 'new@example.com',
             'password': 'password123'
@@ -51,7 +51,7 @@ class AuthViewEdgeCaseTests(TestCase):
             password='password123'
         )
         
-        response = self.client.post(reverse('user-signup'), {
+        response = self.client.post(reverse('auth-signup'), {
             'username': 'newuser',
             'email': 'existing@example.com',
             'password': 'password123'
@@ -62,7 +62,7 @@ class AuthViewEdgeCaseTests(TestCase):
 
     def test_password_reset_nonexistent_user(self):
         """Test password reset for non-existent user."""
-        response = self.client.post(reverse('user-password-reset-request'), {
+        response = self.client.post(reverse('auth-password-reset-request'), {
             'identifier': 'nonexistent@example.com'
         }, format='json')
         
@@ -79,7 +79,7 @@ class AuthViewEdgeCaseTests(TestCase):
         user.is_active = False
         user.save()
         
-        response = self.client.post(reverse('user-login'), {
+        response = self.client.post(reverse('auth-login'), {
             'username': 'inactive',
             'password': 'password123'
         }, format='json')
@@ -95,7 +95,7 @@ class AuthViewEdgeCaseTests(TestCase):
         )
         
         # Login to get initial tokens
-        login_response = self.client.post(reverse('user-login'), {
+        login_response = self.client.post(reverse('auth-login'), {
             'username': 'tokentest',
             'password': 'password123'
         }, format='json')
@@ -110,7 +110,7 @@ class AuthViewEdgeCaseTests(TestCase):
         
         # Use refresh token
         self.client.cookies['refresh_token'] = initial_refresh_value
-        refresh_response = self.client.post(reverse('user-token-refresh'))
+        refresh_response = self.client.post(reverse('auth-token-refresh'))
         
         self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
         new_refresh = refresh_response.cookies.get('refresh_token')
