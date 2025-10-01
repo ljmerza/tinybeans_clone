@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'main.apps.MainConfig',
-    'emailing.apps.EmailingConfig',
+    'emails.apps.EmailingConfig',
+    'messaging.apps.MessagingConfig',
     'drf_spectacular',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -267,3 +268,36 @@ if DEBUG:
         'x-csrftoken',
         'x-requested-with',
     ]
+
+# 2FA Settings
+TWOFA_ENABLED = _env_flag('TWOFA_ENABLED', default=True)
+TWOFA_CODE_LENGTH = 6
+TWOFA_CODE_EXPIRY_MINUTES = 10
+TWOFA_MAX_ATTEMPTS = 5
+TWOFA_RATE_LIMIT_WINDOW = 900  # 15 minutes in seconds
+TWOFA_RATE_LIMIT_MAX = 3
+TWOFA_RECOVERY_CODE_COUNT = 10
+TWOFA_ISSUER_NAME = os.environ.get('TWOFA_ISSUER_NAME', 'Tinybeans')
+
+# 2FA Security - Encryption Key for TOTP Secrets
+# SECURITY WARNING: Keep this secret! Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+TWOFA_ENCRYPTION_KEY = os.environ.get(
+    'TWOFA_ENCRYPTION_KEY',
+    '5pK6Bm8rEICTnaRJvv0eQilwcmHeuTU1dRYrI-4VvEc='  # Change this in production!
+)
+
+# 2FA Account Lockout
+TWOFA_LOCKOUT_ENABLED = _env_flag('TWOFA_LOCKOUT_ENABLED', default=True)
+TWOFA_LOCKOUT_DURATION_MINUTES = int(os.environ.get('TWOFA_LOCKOUT_DURATION_MINUTES', 30))
+TWOFA_LOCKOUT_THRESHOLD = int(os.environ.get('TWOFA_LOCKOUT_THRESHOLD', 5))
+
+# Trusted Devices (Remember Me)
+TWOFA_TRUSTED_DEVICE_ENABLED = _env_flag('TWOFA_TRUSTED_DEVICE_ENABLED', default=True)
+TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS = int(os.environ.get('TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS', 30))
+TWOFA_TRUSTED_DEVICE_MAX_COUNT = int(os.environ.get('TWOFA_TRUSTED_DEVICE_MAX_COUNT', 5))
+
+# SMS Provider Settings
+SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'twilio')
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')

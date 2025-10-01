@@ -22,17 +22,56 @@ services:
     environment:
       <<: *django-common-env
       DJANGO_ALLOWED_HOSTS: "*"
+      TWOFA_ENCRYPTION_KEY: GCMlol1TrcGkRhSN0uW_22q9mJ0Fz8-Gjswh0UYz4mE=
     depends_on:
       - redis
       - postgres
     expose:
       - "8000"
     ports:
-      - "8000:8000"
+      - "8100:8000"
 
-  celery-worker:
+  # Vite dev server for React frontend
+  web-frontend:
+    image: node:20-alpine
+    command: sh -c "npm install && npm run dev"
+    working_dir: /app
+    volumes:
+      - ./web:/app
+    ports:
+      - "3053:3000"
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+
+  celery-worker-1:
     build: .
-    command: celery -A mysite worker -l INFO
+    command: celery -A mysite worker -l INFO -n worker1@%h
+    working_dir: /app/mysite
+    volumes:
+      - ./:/app
+    environment:
+      <<: *django-common-env
+    depends_on:
+      - redis
+      - postgres
+
+  celery-worker-2:
+    build: .
+    command: celery -A mysite worker -l INFO -n worker2@%h
+    working_dir: /app/mysite
+    volumes:
+      - ./:/app
+    environment:
+      <<: *django-common-env
+    depends_on:
+      - redis
+      - postgres
+
+  celery-worker-3:
+    build: .
+    command: celery -A mysite worker -l INFO -n worker3@%h
     working_dir: /app/mysite
     volumes:
       - ./:/app
@@ -68,12 +107,21 @@ services:
     expose:
       - "5555"
     ports:
-      - "5556:5555"
+      - "5656:5555"
 
   redis:
     image: redis:7-alpine
     expose:
       - "6379"
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    ports:
+      - "8182:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      - redis
 
   postgres:
     image: postgres:16-alpine
@@ -86,7 +134,20 @@ services:
     expose:
       - "5432"
     ports:
-      - "5432:5432"
+      - "5532:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tinybeans.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5150:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
   # MinIO - S3-compatible object storage for local development
   minio:
@@ -101,8 +162,8 @@ services:
       - "9020"
       - "9021"
     ports:
-      - "9020:9000"  # API
-      - "9021:9001"  # Console
+      - "9220:9000"  # API
+      - "9221:9001"  # Console
 
   # Initialize MinIO bucket
   minio-init:
@@ -118,6 +179,19 @@ services:
       echo 'MinIO bucket setup complete';
       "
 
+  # Dashy - Dashboard for all services
+  dashy:
+    image: lissy93/dashy:latest
+    ports:
+      - "4100:8080"
+    volumes:
+      - ./dashy-config.yml:/app/user-data/conf.yml
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  pgadmin_data:
+  redisinsight_data:
   minio_data:

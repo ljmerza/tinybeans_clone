@@ -68,5 +68,5 @@ LOGGING = {
 }
 
 # Ensure templates are loaded for tests
-# This forces Django to import the emailing templates module
-import emailing.templates.users  # This will register the email templates
+# This forces Django to import the emails templates module
+import emails.templates.users  # This will register the email templates

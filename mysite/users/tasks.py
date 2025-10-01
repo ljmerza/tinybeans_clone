@@ -1,7 +1,7 @@
 """Backward-compatible re-export of shared emailing task utilities."""
 
-from emailing.tasks import register_email_template, send_email_task
-from emailing.templates import (  # noqa: F401  (ensures templates register via emailing app)
+from emails.tasks import register_email_template, send_email_task
+from emails.templates import (  # noqa: F401  (ensures templates register via email app)
     CIRCLE_INVITATION_TEMPLATE,
     CHILD_UPGRADE_TEMPLATE,
     EMAIL_VERIFICATION_TEMPLATE,

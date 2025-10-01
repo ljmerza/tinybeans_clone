@@ -98,12 +98,12 @@ class AsyncEmailTaskTests(TestCase):
         self.assertIn('token', kwargs['context'])
 
     @override_settings(MAILJET_ENABLED=True, MAILJET_API_KEY='key', MAILJET_API_SECRET='secret')
-    @patch('emailing.mailers.send_via_mailjet')
+    @patch('emails.mailers.send_via_mailjet')
     def test_send_email_task_uses_mailjet_when_enabled(self, mock_mailjet):
         mock_mailjet.return_value = None
         
         # Register a test template since the real ones might not be loaded
-        from emailing.tasks import register_email_template
+        from emails.tasks import register_email_template
         def test_renderer(context):
             return f"Subject: {context.get('token', 'test')}", f"Body: {context.get('username', 'test')}"
         register_email_template(EMAIL_VERIFICATION_TEMPLATE, test_renderer)
