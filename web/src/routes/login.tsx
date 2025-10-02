@@ -1,3 +1,4 @@
+import { PublicOnlyRoute } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +101,15 @@ function LoginPage() {
 						)}
 					</form.Field>
 
+					<div className="flex justify-end">
+						<Link
+							to="/password/reset/request"
+							className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+						>
+							Forgot password?
+						</Link>
+					</div>
+
 					<Button type="submit" className="w-full" disabled={login.isPending}>
 						{login.isPending ? (
 							<span className="flex items-center justify-center gap-2">
@@ -136,5 +146,9 @@ function LoginPage() {
 }
 
 export const Route = createFileRoute("/login")({
-	component: LoginPage,
+	component: () => (
+		<PublicOnlyRoute redirectTo="/">
+			<LoginPage />
+		</PublicOnlyRoute>
+	),
 });

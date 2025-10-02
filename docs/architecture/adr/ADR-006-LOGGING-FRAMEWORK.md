@@ -20,7 +20,7 @@ Tinybeans spans a Django REST API, asynchronous workers, a React frontend, and t
 - Cost is a material consideration; Tinybeans wants optionality between self-hosted OSS and commercial SaaS
 
 ## Decision
-Adopt an **OpenTelemetry-first, agent-based logging pipeline** that produces structured JSON logs in code, forwards them to a local OpenTelemetry Collector (OTel Collector) for development, and routes production logs through the same collector pattern to downstream providers (Grafana Loki, Elastic, Datadog, New Relic, or Loggly).
+Adopt an **OpenTelemetry-first logging pipeline** that produces structured JSON logs in code, forwards them directly to a shared OpenTelemetry Collector (OTel Collector) in every environment, and routes those logs to downstream providers (Grafana Loki locally; Datadog or AWS CloudWatch in production).
 
 ### Key Elements
 1. **Application Instrumentation**
@@ -29,16 +29,16 @@ Adopt an **OpenTelemetry-first, agent-based logging pipeline** that produces str
    - Logging configuration driven by environment variables (`LOG_LEVEL`, `LOG_FORMAT`, `OTEL_EXPORTER_ENDPOINT`).
 
 2. **Collector Layer**
-   - Standard OpenTelemetry Collector Docker service shared by all apps; receives OTLP over gRPC/HTTP, applies processors (redaction, sampling, attribute mapping), and forwards to sinks.
-   - Include `Vector` (timber.io) or Fluent Bit as lightweight sidecar in cases where legacy stdout tailing is required; both forward to the OTel Collector.
+   - Shared OpenTelemetry Collector instances receive OTLP (HTTP/gRPC) log exports and container stdout (via the `filelog` receiver), applying processors (redaction, sampling, attribute mapping) before routing.
+   - Collector pipelines map logs to environment-specific exporters (Loki, Datadog, CloudWatch) without additional hop services.
 
 3. **Local Developer Experience**
-   - Extend `docker-compose.yml` with `otel-collector`, `grafana`, and `loki` services.
+   - Extend `docker-compose.yml` with `otel-collector`, `grafana`, and `loki` services to form a self-contained logging stack.
    - Developers view logs in Grafana Explore and can export JSON; no external credentials needed.
-   - Optional `make logs` helper streams formatted output from the collector for quick CLI inspection.
+   - Optional `make logs` helper streams formatted results from the collector for quick CLI inspection.
 
 4. **Production Targets**
-   - Support Datadog and AWS CloudWatch as first-class managed sinks, selectable via environment flag (for example `LOG_DESTINATION=datadog|cloudwatch`).
+   - Support Datadog and AWS CloudWatch as first-class managed sinks, selectable via environment flag (for example `LOG_DESTINATION=datadog|cloudwatch`). Collector exporters (Datadog OTLP HTTP, AWS CloudWatch Logs) handle the final delivery.
    - Maintain a nightly batch export to object storage (S3) for long-term retention and compliance.
    - Keep other SaaS providers (Elastic, New Relic, Loggly) as optional future destinations via additional environment-driven routing rules.
 
@@ -48,13 +48,14 @@ Adopt an **OpenTelemetry-first, agent-based logging pipeline** that produces str
 │   Application Services   │        │     Frontend Clients      │
 │ (Django API, Celery, etc.)│       │ (Browser, Mobile Bridge) │
 └──────────────┬───────────┘        └──────────────┬────────────┘
-               │ OTLP (gRPC/HTTP)                               
+               │ OTLP / STDOUT / HTTP                              
                ▼                                                
         ┌──────────────────────┐                                
         │ OpenTelemetry Collector│                              
-        │  • Attribute processors │                              
-        │  • PII redaction        │                              
-        │  • Routing rules        │                              
+        │  • Receivers (OTLP, filelog) │                         
+        │  • Attribute processors      │                         
+        │  • Redaction / sampling      │                         
+        │  • Exporters (sink routing)  │                         
         └────────────┬─────────┘                                
                      │                                           
       ┌──────────────┼──────────────────────────────┐          
@@ -92,22 +93,33 @@ Adopt an **OpenTelemetry-first, agent-based logging pipeline** that produces str
 1. **Foundations (Sprint 1)**
    - Add `structlog` (backend) and OpenTelemetry logging exporter dependencies.
    - Define logging schema contract (levels, required attributes, PI rules).
-   - Update Docker Compose with `otel-collector`, `loki`, `grafana` containers.
+   - Provide a shared collector configuration (`collector.yaml`) with receivers for OTLP and container file logs, plus Loki exporter for local dev.
+   - Update Docker Compose with `otel-collector`, `loki`, `grafana` containers and default `LOG_DESTINATION=local`.
 
 2. **Pipeline Hardening (Sprint 2-3)**
-   - Configure collector processors (batching, attributes, redaction, tail sampling).
+   - Configure collector processors (batching, attributes, redaction, tail sampling) and exporters for Datadog/CloudWatch.
    - Instrument Celery workers, request middleware, and frontend gateway for correlation IDs.
-   - Build CI smoke tests validating log emission via ephemeral collector.
+   - Build CI smoke tests validating log emission via ephemeral collector stack.
 
 3. **Production Rollout (Sprint 4+)**
-   - Enable Datadog and CloudWatch exporters in the collector; route based on `LOG_DESTINATION` (env flag) with fallbacks for multi-sink fan-out.
+   - Extend collector configuration to support Datadog and CloudWatch exporters, routing based on `LOG_DESTINATION` (env flag) with optional fan-out for multi-sink scenarios.
+   - Validate buffering/backpressure settings for OTLP exporters and ensure retries/queue limits match SLAs.
    - Wire secrets (API keys, endpoints, AWS credentials) via environment configs and secrets manager (no Terraform dependency).
    - Enable S3 archival sink and retention policies; document runbooks and failure modes.
 
 4. **Continuous Improvement**
    - Add alerting on collector queue depth and exporter failures.
-   - Train developers on LogQL/Log Search;
+   - Train developers on LogQL/Log Search practices.
    - Periodically review ingestion costs and adjust sampling strategies.
+
+## Logging Coverage Audit
+- **Authentication Flow Updates** (`mysite/auth/views.py`): instrument login, signup, password reset/change, token refresh, logout, and email verification endpoints with structured logs capturing anonymized user identifiers, request metadata, and branch outcomes (e.g., 2FA required, rate-limited, invalid token).
+- **Two-Factor Authentication Lifecycle** (`mysite/auth/views_2fa.py`, `mysite/auth/services/twofa_service.py`, `mysite/auth/services/trusted_device_service.py`): ensure every setup/verification/disable event, recovery-code usage, trusted-device mutation, and OTP verification failure emits structured logs aligned with existing `TwoFactorAuditLog` records, including success flags, methods, IPs, and device identifiers.
+- **Circle Management Activities** (`mysite/users/views/circles.py`): add info/warn logs around circle creation, updates, invitation issuance/acceptance, membership changes, and permission denials to surface collaboration workflow issues and security probes.
+- **Profile & Notification Preferences** (`mysite/users/views/profile.py`): log profile edits and email preference changes with user and circle context to aid debugging of personalization issues.
+- **Media & Comment Workflows** (`mysite/keeps/views/upload_views.py`, `mysite/keeps/views/media.py`, `mysite/keeps/views/comments.py`): track upload validations, async processing kickoff, unauthorized access attempts, and comment moderation actions with keep/circle identifiers and sanitized file metadata.
+- **Token Utilities** (`mysite/auth/token_utils.py`): log cache operations (store/pop/delete) and cookie writes/clears with correlation IDs to diagnose token replay and cookie configuration errors.
+- Apply ADR‑006 logging schema (JSON fields for `request_id`, `user_id`, `circle_id`, `keep_id`, `auth_context`, `outcome`) and avoid leaking secrets/PII while preserving enough context for downstream Datadog/CloudWatch analysis.
 
 ## Consequences
 - **Positive**: Unified logging improves MTTR, compliance response, and developer experience; easier cross-environment debugging.
@@ -119,4 +131,3 @@ Adopt an **OpenTelemetry-first, agent-based logging pipeline** that produces str
 - Prototype sensitive-field redaction rules using OpenTelemetry `transform` processor.
 - Investigate browser log sampling strategies to control client-side volume.
 - Assess cost forecasts for Datadog vs. Elastic Cloud using projected daily log volume.
-- Explore querying logs alongside metrics in Tempo/Prometheus for end-to-end observability.

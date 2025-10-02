@@ -3,6 +3,11 @@ import { authStore, setAccessToken } from "./store";
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
+type RequestOptions = {
+	suppressSuccessToast?: boolean;
+	suppressErrorToast?: boolean;
+};
+
 // Get CSRF token from cookie
 function getCsrfToken(): string | null {
 	const name = "csrftoken";
@@ -12,7 +17,11 @@ function getCsrfToken(): string | null {
 	return null;
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function request<T>(
+	path: string,
+	init: RequestInit = {},
+	options: RequestOptions = {},
+): Promise<T> {
 	const headers = new Headers(init.headers);
 	if (
 		!headers.has("Content-Type") &&
@@ -65,12 +74,14 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 	if (res.status === 401 && !skipRetry) {
 		const refreshed = await refreshAccessToken();
 		if (refreshed) {
-			return request<T>(path, init);
+			return request<T>(path, init, options);
 		}
 	}
 
 	if (!res.ok) {
-		showApiToast(data, res.status, { fallbackMessage: res.statusText });
+		if (!options.suppressErrorToast) {
+			showApiToast(data, res.status, { fallbackMessage: res.statusText });
+		}
 		const message = extractMessage(data) ?? res.statusText;
 		throw Object.assign(new Error(message), {
 			status: res.status,
@@ -78,7 +89,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 		});
 	}
 
-	showApiToast(data, res.status);
+	if (!options.suppressSuccessToast) {
+		showApiToast(data, res.status);
+	}
 	return data as T;
 }
 
@@ -102,20 +115,34 @@ export async function refreshAccessToken(): Promise<boolean> {
 }
 
 export const api = {
-	get: <T>(path: string) => request<T>(path),
-	post: <T>(path: string, body?: any) =>
-		request<T>(path, {
-			method: "POST",
-			body: body ? JSON.stringify(body) : undefined,
-		}),
-	patch: <T>(path: string, body?: any) =>
-		request<T>(path, {
-			method: "PATCH",
-			body: body ? JSON.stringify(body) : undefined,
-		}),
-	delete: <T>(path: string, body?: any) =>
-		request<T>(path, {
-			method: "DELETE",
-			body: body ? JSON.stringify(body) : undefined,
-		}),
+	get: <T>(path: string, options?: RequestOptions) => request<T>(path, {}, options),
+	post: <T>(path: string, body?: any, options?: RequestOptions) =>
+		request<T>(
+			path,
+			{
+				method: "POST",
+				body: body ? JSON.stringify(body) : undefined,
+			},
+			options,
+		),
+	patch: <T>(path: string, body?: any, options?: RequestOptions) =>
+		request<T>(
+			path,
+			{
+				method: "PATCH",
+				body: body ? JSON.stringify(body) : undefined,
+			},
+			options,
+		),
+	delete: <T>(path: string, body?: any, options?: RequestOptions) =>
+		request<T>(
+			path,
+			{
+				method: "DELETE",
+				body: body ? JSON.stringify(body) : undefined,
+			},
+			options,
+		),
 };
+
+export type { RequestOptions };

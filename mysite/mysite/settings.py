@@ -215,6 +215,11 @@ EMAIL_USE_TLS = _env_flag('EMAIL_USE_TLS', default=False)
 EMAIL_USE_SSL = _env_flag('EMAIL_USE_SSL', default=False)
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
 
+ACCOUNT_FRONTEND_BASE_URL = os.environ.get(
+    'ACCOUNT_FRONTEND_BASE_URL',
+    os.environ.get('FRONTEND_BASE_URL', 'http://localhost:3000'),
+)
+
 MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY', '')
 MAILJET_API_SECRET = os.environ.get('MAILJET_API_SECRET', '')
 MAILJET_API_URL = os.environ.get('MAILJET_API_URL', 'https://api.mailjet.com/v3.1/send')

@@ -1,3 +1,4 @@
+import { PublicOnlyRoute } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSignup } from "@/modules/login/hooks";
@@ -190,5 +191,9 @@ function SignupPage() {
 }
 
 export const Route = createFileRoute("/signup")({
-	component: SignupPage,
+	component: () => (
+		<PublicOnlyRoute redirectTo="/">
+			<SignupPage />
+		</PublicOnlyRoute>
+	),
 });

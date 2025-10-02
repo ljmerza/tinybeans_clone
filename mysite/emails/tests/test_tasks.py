@@ -1,16 +1,18 @@
 """Tests for emailing tasks and template system."""
 from unittest.mock import Mock, patch
-from django.test import TestCase, override_settings
-from django.core import mail
 
-from emails.tasks import register_email_template, send_email_task, _TEMPLATE_REGISTRY
+from django.core import mail
+from django.test import TestCase, override_settings
+
 from emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
+from emails.services.email_dispatch import email_dispatch_service
+from emails.tasks import register_email_template, send_email_task
 
 
 class EmailTaskTests(TestCase):
     def setUp(self):
         # Clear any existing templates to avoid interference
-        _TEMPLATE_REGISTRY.clear()
+        email_dispatch_service.clear_templates()
         # Clear django mail outbox
         mail.outbox = []
         
@@ -20,7 +22,7 @@ class EmailTaskTests(TestCase):
         register_email_template('test_template', test_template_renderer)
 
     def tearDown(self):
-        _TEMPLATE_REGISTRY.clear()
+        email_dispatch_service.clear_templates()
 
     def test_register_email_template(self):
         """Test registering an email template."""
@@ -28,9 +30,11 @@ class EmailTaskTests(TestCase):
             return f"Subject for {context['name']}", f"Body for {context['name']}"
         
         register_email_template('test_template_2', mock_renderer)
-        
-        self.assertIn('test_template_2', _TEMPLATE_REGISTRY)
-        self.assertEqual(_TEMPLATE_REGISTRY['test_template_2'], mock_renderer)
+
+        template = email_dispatch_service.get_template('test_template_2')
+        self.assertIsNotNone(template)
+        assert template is not None
+        self.assertIs(template.renderer, mock_renderer)
 
     def test_template_replacement(self):
         """Test that registering a template with the same ID replaces the old one."""
@@ -42,10 +46,13 @@ class EmailTaskTests(TestCase):
         
         register_email_template('test_template_replace', renderer1)
         register_email_template('test_template_replace', renderer2)
-        
-        self.assertEqual(_TEMPLATE_REGISTRY['test_template_replace'], renderer2)
 
-    @patch('emails.tasks.logger')
+        template = email_dispatch_service.get_template('test_template_replace')
+        self.assertIsNotNone(template)
+        assert template is not None
+        self.assertIs(template.renderer, renderer2)
+
+    @patch('emails.services.email_dispatch.email_dispatch_service._logger')
     def test_send_email_task_unknown_template(self, mock_logger):
         """Test sending email with unknown template logs error and returns early."""
         result = send_email_task.run(
@@ -83,7 +90,7 @@ class EmailTaskTests(TestCase):
         MAILJET_API_KEY='test_key',
         MAILJET_API_SECRET='test_secret'
     )
-    @patch('emails.mailers.send_via_mailjet')
+    @patch('emails.services.email_dispatch.send_via_mailjet')
     def test_send_email_task_with_mailjet(self, mock_mailjet):
         """Test sending email using Mailjet when enabled."""
         mock_mailjet.return_value = None
@@ -109,7 +116,7 @@ class EmailTaskTests(TestCase):
         MAILJET_API_SECRET='test_secret',
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'
     )
-    @patch('emails.mailers.send_via_mailjet')
+    @patch('emails.services.email_dispatch.send_via_mailjet')
     def test_send_email_task_mailjet_config_error_fallback(self, mock_mailjet):
         """Test fallback to Django mail when Mailjet is misconfigured."""
         mock_mailjet.side_effect = MailerConfigurationError("Mailjet not configured")
@@ -131,8 +138,8 @@ class EmailTaskTests(TestCase):
         MAILJET_API_KEY='test_key',
         MAILJET_API_SECRET='test_secret'
     )
-    @patch('emails.mailers.send_via_mailjet')
-    @patch('emails.tasks.logger')
+    @patch('emails.services.email_dispatch.send_via_mailjet')
+    @patch('emails.services.email_dispatch.logger')
     def test_send_email_task_mailjet_send_error(self, mock_logger, mock_mailjet):
         """Test handling Mailjet send errors."""
         mock_mailjet.side_effect = MailerSendError("HTTP 500")
@@ -152,7 +159,7 @@ class EmailTaskTests(TestCase):
         DEFAULT_FROM_EMAIL='test@example.com',
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'
     )
-    @patch('emails.tasks.logger')
+    @patch('emails.services.email_dispatch.email_dispatch_service._logger')
     def test_send_email_task_success_logging(self, mock_logger):
         """Test success logging for email sending."""
         send_email_task.run(
@@ -170,8 +177,8 @@ class EmailTaskTests(TestCase):
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
         DEFAULT_FROM_EMAIL='test@example.com'
     )
-    @patch('emails.tasks.send_mail')
-    @patch('emails.tasks.logger')
+    @patch('emails.services.email_dispatch.send_mail')
+    @patch('emails.services.email_dispatch.logger')
     def test_send_email_task_django_send_error(self, mock_logger, mock_send_mail):
         """Test handling Django email send errors."""
         mock_send_mail.side_effect = Exception("SMTP Error")

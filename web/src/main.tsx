@@ -46,7 +46,12 @@ if (rootElement && !rootElement.innerHTML) {
 				<StrictMode>
 					<TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
 						<RouterProvider router={router} />
-						<Toaster richColors position="top-right" />
+						<Toaster
+							richColors
+							position="top-right"
+							duration={3000}
+							closeButton
+						/>
 					</TanStackQueryProvider.Provider>
 				</StrictMode>,
 			);

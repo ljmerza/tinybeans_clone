@@ -25,7 +25,10 @@ export function useLogin() {
 			// Clear any existing auth token before attempting login
 			// This prevents 403 errors when user already has a valid token but wants to re-login
 			setAccessToken(null);
-			return api.post<any>("/auth/login/", body);
+			return api.post<any>("/auth/login/", body, {
+				suppressErrorToast: true,
+				suppressSuccessToast: true,
+			});
 		},
 		onSuccess: (data) => {
 			console.log("Login response:", data); // Debug log
@@ -84,5 +87,60 @@ export function useLogout() {
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: ["auth"] });
 		},
+	});
+}
+
+type PasswordResetRequestBody = {
+	identifier: string;
+};
+
+type PasswordResetRequestResponse = {
+	message?: string;
+	detail?: string;
+};
+
+export function usePasswordResetRequest() {
+	return useMutation<
+		PasswordResetRequestResponse,
+		Error,
+		PasswordResetRequestBody
+	>({
+		mutationFn: (body) =>
+			api.post<PasswordResetRequestResponse>(
+				"/auth/password/reset/request/",
+				body,
+				{
+					suppressErrorToast: true,
+					suppressSuccessToast: true,
+				},
+			),
+	});
+}
+
+type PasswordResetConfirmBody = {
+	token: string;
+	password: string;
+	password_confirm: string;
+};
+
+type PasswordResetConfirmResponse = {
+	detail?: string;
+};
+
+export function usePasswordResetConfirm() {
+	return useMutation<
+		PasswordResetConfirmResponse,
+		Error,
+		PasswordResetConfirmBody
+	>({
+		mutationFn: (body) =>
+			api.post<PasswordResetConfirmResponse>(
+				"/auth/password/reset/confirm/",
+				body,
+				{
+					suppressErrorToast: true,
+					suppressSuccessToast: true,
+				},
+			),
 	});
 }

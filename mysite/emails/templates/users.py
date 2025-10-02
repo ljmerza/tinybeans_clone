@@ -29,16 +29,43 @@ def _verification_email(context: dict[str, Any]) -> Tuple[str, str]:
 def _password_reset_email(context: dict[str, Any]) -> Tuple[str, str]:
     token = context['token']
     subject = 'Password reset instructions'
+    reset_link = context.get('reset_link')
+    expires_in_minutes = context.get('expires_in_minutes')
+    username = context.get('username') or 'there'
+
     body_lines = [
+        f"Hi {username},",
         'We received a request to reset your password.',
-        'Use the token below to set a new password:',
-        '',
-        token,
+    ]
+
+    if reset_link:
+        if isinstance(expires_in_minutes, int) and expires_in_minutes > 0:
+            expiry_notice = f'This secure link expires in {expires_in_minutes} minutes.'
+        else:
+            expiry_notice = 'This secure link expires soon.'
+
+        body_lines.extend([
+            'To keep your account safe, use the link below to choose a new password:',
+            '',
+            reset_link,
+            '',
+            expiry_notice,
+            '',
+            'Need to enter a code manually? Use this one-time token:',
+            '',
+            token,
+        ])
+    else:
+        body_lines.extend([
+            'Use the token below to set a new password:',
+            '',
+            token,
+        ])
+
+    body_lines.extend([
         '',
         'If you did not request a password reset, you can safely ignore this message.',
-    ]
-    if context.get('reset_link'):
-        body_lines.insert(3, f"Reset link: {context['reset_link']}")
+    ])
     return subject, '\n'.join(body_lines)
 
 

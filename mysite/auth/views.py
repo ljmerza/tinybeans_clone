@@ -1,6 +1,10 @@
 """Authentication and account lifecycle views."""
 from __future__ import annotations
 
+import math
+from urllib.parse import urlencode
+
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -279,6 +283,9 @@ class PasswordResetRequestView(APIView):
                 {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
                 ttl=TOKEN_TTL_SECONDS,
             )
+            base_url = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
+            reset_link = f"{base_url}/password/reset/confirm?{urlencode({'token': token})}"
+            expires_in_minutes = max(1, math.ceil(TOKEN_TTL_SECONDS / 60))
             send_email_task.delay(
                 to_email=user.email,
                 template_id=PASSWORD_RESET_TEMPLATE,
@@ -286,6 +293,8 @@ class PasswordResetRequestView(APIView):
                     'token': token,
                     'email': user.email,
                     'username': user.username,
+                    'reset_link': reset_link,
+                    'expires_in_minutes': expires_in_minutes,
                 },
             )
             return Response({'message': _('Password reset sent')}, status=status.HTTP_202_ACCEPTED)

@@ -86,3 +86,10 @@ class AuthViewSecurityTests(TestCase):
         body = response.json()
         self.assertEqual(body, {'message': 'Password reset sent'})
         mock_delay.assert_called_once()
+        _, kwargs = mock_delay.call_args
+        context = kwargs['context']
+        self.assertIn('reset_link', context)
+        self.assertIn('token', context)
+        self.assertIn(context['token'], context['reset_link'])
+        self.assertTrue(context['reset_link'].startswith('http://localhost:3000/password/reset/confirm?'))
+        self.assertGreaterEqual(context.get('expires_in_minutes', 0), 1)
