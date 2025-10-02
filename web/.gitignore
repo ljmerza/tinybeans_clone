@@ -1,0 +1,12 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+count.txt
+.env
+.nitro
+.tanstack
+.env.local\n.env.*.local
+# TanStack Router generated files
+routeTree.gen.ts

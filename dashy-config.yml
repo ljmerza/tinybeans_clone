@@ -1,0 +1,118 @@
+---
+pageInfo:
+  title: Tinybeans Development Dashboard
+  description: Quick access to all development services
+  navLinks:
+    - title: GitHub
+      path: https://github.com
+    - title: Documentation
+      path: /docs
+
+appConfig:
+  theme: colorful
+  layout: auto
+  iconSize: medium
+  language: en
+  startingView: default
+  defaultOpeningMethod: newtab
+  statusCheck: true
+  statusCheckInterval: 60
+
+sections:
+  - name: Main Application
+    icon: fas fa-rocket
+    items:
+      - title: Django Web App
+        description: Main Tinybeans application
+        icon: hl-django
+        url: http://localhost:8100
+        statusCheck: true
+        id: 0_webapp
+
+      - title: Flower (Celery Monitor)
+        description: Celery task monitoring
+        icon: hl-celery
+        url: http://localhost:5656/flower
+        statusCheck: true
+        id: 1_flower
+
+  - name: Database & Cache Management
+    icon: fas fa-database
+    items:
+      - title: pgAdmin
+        description: PostgreSQL database administration
+        icon: hl-postgresql
+        url: http://localhost:5150
+        statusCheck: true
+        id: 2_pgadmin
+        statusCheckAcceptCodes: '200,302'
+
+      - title: RedisInsight
+        description: Redis data browser & management (Official Redis GUI)
+        icon: hl-redis
+        url: http://localhost:8182
+        statusCheck: true
+        id: 3_redis
+
+  - name: Storage & Media
+    icon: fas fa-cloud
+    items:
+      - title: MinIO Console
+        description: S3-compatible object storage
+        icon: hl-minio
+        url: http://localhost:9221
+        statusCheck: true
+        id: 4_minio
+
+      - title: MinIO API
+        description: S3 API endpoint
+        icon: fas fa-server
+        url: http://localhost:9220
+        statusCheck: true
+        id: 5_minio_api
+
+  - name: Service Credentials
+    icon: fas fa-key
+    displayData:
+      collapsed: true
+      hideForGuests: false
+    items:
+      - title: pgAdmin Login
+        description: Email:admin@tinybeans.com | Password:admin
+        icon: fas fa-user-lock
+        id: 6_pgadmin_creds
+
+      - title: PostgreSQL Connection
+        description: Host:postgres | Port:5432 | DB:tinybeans | User:tinybeans | Pass:tinybeans
+        icon: fas fa-database
+        id: 7_postgres_creds
+
+      - title: MinIO Login
+        description: Username:minioadmin | Password:minioadmin
+        icon: fas fa-key
+        id: 8_minio_creds
+
+      - title: Redis Connection
+        description: Host:redis | Port:6379 | No password required
+        icon: fas fa-memory
+        id: 9_redis_creds
+
+  - name: Quick Actions
+    icon: fas fa-bolt
+    displayData:
+      collapsed: false
+    items:
+      - title: View Logs
+        description: docker compose logs -f
+        icon: fas fa-file-alt
+        id: 10_logs
+
+      - title: Restart Services
+        description: docker compose restart
+        icon: fas fa-sync
+        id: 11_restart
+
+      - title: Stop Services
+        description: docker compose down
+        icon: fas fa-stop
+        id: 12_stop
