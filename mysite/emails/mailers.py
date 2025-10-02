@@ -5,6 +5,7 @@ from typing import Any
 
 import requests
 from django.conf import settings
+from django.core.mail import send_mail
 from requests import Response
 
 logger = logging.getLogger(__name__)
@@ -91,12 +92,22 @@ Best regards,
 The Tinybeans Team
 """
         try:
-            send_via_mailjet(
-                to_email=email,
-                subject=subject,
-                body=body,
-                template_id='2fa_code'
-            )
+            if settings.MAILJET_ENABLED:
+                send_via_mailjet(
+                    to_email=email,
+                    subject=subject,
+                    body=body,
+                    template_id='2fa_code'
+                )
+            else:
+                send_mail(
+                    subject,
+                    body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                logger.info('Sent 2FA code email to %s via Django backend', email)
         except Exception as e:
             logger.error(f"Failed to send 2FA code email: {e}")
     
@@ -213,4 +224,3 @@ The Tinybeans Team
             )
         except Exception as e:
             logger.error(f"Failed to send recovery code alert: {e}")
-

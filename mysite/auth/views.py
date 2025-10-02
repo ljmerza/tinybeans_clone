@@ -40,6 +40,7 @@ from .token_utils import (
     store_token,
     generate_partial_token,
 )
+from .response_utils import rate_limit_response
 
 
 class SignupView(APIView):
@@ -80,6 +81,7 @@ class SignupView(APIView):
         tokens = get_tokens_for_user(user)
         data = UserSerializer(user).data
         data['tokens'] = {'access': tokens['access']}
+        data['message'] = _('Account created successfully')
         response = Response(data, status=status.HTTP_201_CREATED)
         set_refresh_cookie(response, tokens['refresh'])
         return response
@@ -112,9 +114,8 @@ class LoginView(APIView):
             if twofa_settings.is_enabled:
                 # Check if account is locked
                 if twofa_settings.is_locked():
-                    return Response(
-                        {'error': 'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'},
-                        status=status.HTTP_429_TOO_MANY_REQUESTS
+                    return rate_limit_response(
+                        'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'
                     )
                 
                 # Check if device is trusted (Remember Me feature)
@@ -128,16 +129,14 @@ class LoginView(APIView):
                         'tokens': {'access': tokens['access']},
                         'trusted_device': True,
                     }
+                    data['message'] = _('Logged in successfully')
                     response = Response(data)
                     set_refresh_cookie(response, tokens['refresh'])
                     return response
                 
                 # 2FA required - check rate limiting
                 if TwoFactorService.is_rate_limited(user):
-                    return Response(
-                        {'error': 'Too many 2FA requests. Please try again later.'},
-                        status=status.HTTP_429_TOO_MANY_REQUESTS
-                    )
+                    return rate_limit_response('Too many 2FA requests. Please try again later.')
                 
                 # Send 2FA code based on preferred method
                 if twofa_settings.preferred_method in ['email', 'sms']:
@@ -167,6 +166,7 @@ class LoginView(APIView):
             'user': UserSerializer(user).data,
             'tokens': {'access': tokens['access']},
         }
+        data['message'] = _('Logged in successfully')
         response = Response(data)
         set_refresh_cookie(response, tokens['refresh'])
         return response
@@ -345,7 +345,8 @@ class LogoutView(APIView):
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Logged out successfully')},
     )
     def post(self, request):
-        response = Response({'detail': _('Logged out successfully')})
+        message = _('Logged out successfully')
+        response = Response({'detail': message, 'message': message})
         clear_refresh_cookie(response)
         return response
 

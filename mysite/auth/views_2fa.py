@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_ratelimit.decorators import ratelimit
 
 from .models import TwoFactorSettings, TwoFactorAuditLog
@@ -17,10 +17,13 @@ from .serializers_2fa import (
     RecoveryCodeSerializer,
     TrustedDeviceSerializer,
     TwoFactorDisableSerializer,
+    TwoFactorPreferredMethodSerializer,
+    TwoFactorMethodRemoveSerializer,
 )
 from .services.twofa_service import TwoFactorService
 from .services.trusted_device_service import TrustedDeviceService
 from .services.recovery_code_service import RecoveryCodeService
+from .response_utils import rate_limit_response
 
 
 class TwoFactorSetupView(APIView):
@@ -45,6 +48,9 @@ class TwoFactorSetupView(APIView):
             user=user,
             defaults={'preferred_method': method}
         )
+
+        # Update preferred method to reflect the user's selection
+        settings_obj.preferred_method = method
         
         if method == 'totp':
             # Generate TOTP secret and QR code
@@ -59,10 +65,12 @@ class TwoFactorSetupView(APIView):
                 'secret': secret,
                 'qr_code': qr_data['uri'],
                 'qr_code_image': qr_data['qr_code_image'],
-                'message': 'Scan QR code with your authenticator app'
+                'message': 'Scan QR code with your authenticator app',
             })
         
         elif method in ['email', 'sms']:
+            update_fields = ['preferred_method']
+
             if method == 'sms':
                 if not phone_number:
                     return Response(
@@ -70,14 +78,14 @@ class TwoFactorSetupView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 settings_obj.phone_number = phone_number
-                settings_obj.save()
+                settings_obj.sms_verified = False
+                update_fields.extend(['phone_number', 'sms_verified'])
+
+            settings_obj.save(update_fields=update_fields)
             
             # Check rate limiting
             if TwoFactorService.is_rate_limited(user):
-                return Response(
-                    {'error': 'Too many requests. Please try again later.'},
-                    status=status.HTTP_429_TOO_MANY_REQUESTS
-                )
+                return rate_limit_response()
             
             # Send OTP
             code_obj = TwoFactorService.send_otp(user, method=method, purpose='setup')
@@ -85,7 +93,7 @@ class TwoFactorSetupView(APIView):
             return Response({
                 'method': method,
                 'message': f'Verification code sent to your {method}',
-                'expires_in': 600
+                'expires_in': 600,
             })
         
         return Response(
@@ -131,9 +139,13 @@ class TwoFactorVerifySetupView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Enable 2FA
+        # Enable 2FA and mark verification state
+        update_fields = ['is_enabled']
         settings_obj.is_enabled = True
-        settings_obj.save()
+        if settings_obj.preferred_method == 'sms':
+            settings_obj.sms_verified = True
+            update_fields.append('sms_verified')
+        settings_obj.save(update_fields=update_fields)
         
         # Generate recovery codes (returns plain text codes)
         recovery_codes = TwoFactorService.generate_recovery_codes(user)
@@ -163,7 +175,7 @@ class TwoFactorVerifySetupView(APIView):
 class TwoFactorStatusView(APIView):
     """Get current 2FA settings"""
     permission_classes = [permissions.IsAuthenticated]
-    
+
     @extend_schema(responses={200: TwoFactorStatusSerializer})
     def get(self, request):
         """Get 2FA status for current user"""
@@ -175,8 +187,194 @@ class TwoFactorStatusView(APIView):
             return Response({
                 'is_enabled': False,
                 'preferred_method': None,
+                'phone_number': None,
+                'backup_email': None,
+                'has_totp': False,
+                'has_sms': False,
+                'sms_verified': False,
                 'message': '2FA not configured'
             })
+
+
+class TwoFactorPreferredMethodView(APIView):
+    """Update preferred 2FA method"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        request=TwoFactorPreferredMethodSerializer,
+        responses={200: dict},
+    )
+    def post(self, request):
+        serializer = TwoFactorPreferredMethodSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        method = serializer.validated_data['method']
+        user = request.user
+
+        try:
+            settings_obj = user.twofa_settings
+        except TwoFactorSettings.DoesNotExist:
+            return Response(
+                {'error': '2FA not configured'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not settings_obj.is_enabled:
+            return Response(
+                {'error': 'Enable 2FA before changing the default method'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if method == 'totp' and not getattr(settings_obj, '_totp_secret_encrypted', None):
+            return Response(
+                {
+                    'error': 'Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if method == 'sms':
+            if not settings_obj.phone_number:
+                return Response(
+                    {'error': 'Add a phone number via SMS setup before using SMS as default'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not settings_obj.sms_verified:
+                return Response(
+                    {'error': 'Verify your phone number via SMS setup before choosing it as default'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        settings_obj.preferred_method = method
+        settings_obj.save(update_fields=['preferred_method'])
+
+        TwoFactorAuditLog.objects.create(
+            user=user,
+            action='2fa_preferred_method_updated',
+            method=method,
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            success=True,
+        )
+
+        return Response({
+            'preferred_method': method,
+            'message': f'Default 2FA method updated to {method.upper()}',
+        })
+
+
+class TwoFactorMethodRemoveView(APIView):
+    """Remove a configured 2FA method"""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        responses={200: dict},
+        parameters=[
+            OpenApiParameter(
+                name='method',
+                location=OpenApiParameter.PATH,
+                description='2FA method to remove',
+                required=True,
+                enum=['totp', 'sms', 'email'],
+            )
+        ],
+    )
+    def delete(self, request, method: str):
+        validator = TwoFactorMethodRemoveSerializer(data={'method': (method or '').lower()})
+        validator.is_valid(raise_exception=True)
+        method = validator.validated_data['method']
+
+        try:
+            settings_obj = request.user.twofa_settings
+        except TwoFactorSettings.DoesNotExist:
+            return Response(
+                {'error': '2FA not configured'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if method == 'email':
+            return Response(
+                {
+                    'error': 'Email-based 2FA cannot be removed. Choose another preferred method or disable 2FA.',
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        update_fields = set()
+        previously_enabled = settings_obj.is_enabled
+        previous_preferred = settings_obj.preferred_method
+
+        if method == 'totp':
+            if not getattr(settings_obj, '_totp_secret_encrypted', None):
+                return Response(
+                    {'error': 'Authenticator app 2FA is not configured'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            settings_obj.totp_secret = None
+            update_fields.add('_totp_secret_encrypted')
+
+        elif method == 'sms':
+            if not settings_obj.phone_number:
+                return Response(
+                    {'error': 'SMS 2FA is not configured'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            settings_obj.phone_number = None
+            settings_obj.sms_verified = False
+            update_fields.update({'phone_number', 'sms_verified'})
+
+        if settings_obj.preferred_method == method:
+            fallback_preferred = None
+            if method == 'totp':
+                if settings_obj.phone_number and settings_obj.sms_verified:
+                    fallback_preferred = 'sms'
+            elif method == 'sms':
+                if getattr(settings_obj, '_totp_secret_encrypted', None):
+                    fallback_preferred = 'totp'
+
+            if fallback_preferred:
+                settings_obj.preferred_method = fallback_preferred
+                update_fields.add('preferred_method')
+            elif settings_obj.is_enabled:
+                settings_obj.is_enabled = False
+                update_fields.add('is_enabled')
+
+        if update_fields:
+            settings_obj.save(update_fields=list(update_fields))
+        else:
+            settings_obj.save()
+
+        became_disabled = previously_enabled and not settings_obj.is_enabled
+        preferred_changed = settings_obj.preferred_method != previous_preferred
+
+        TwoFactorAuditLog.objects.create(
+            user=request.user,
+            action='2fa_method_removed',
+            method=method,
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            success=True,
+        )
+
+        status_payload = TwoFactorStatusSerializer(settings_obj).data
+
+        message = f"{method.upper()} 2FA method removed."
+        if became_disabled:
+            message += ' Two-factor authentication has been disabled because no other verified methods are available.'
+        elif preferred_changed:
+            message += f" Preferred method updated to {settings_obj.preferred_method.upper()}."
+
+        return Response(
+            {
+                'message': message,
+                'method_removed': method,
+                'preferred_method_changed': preferred_changed,
+                'twofa_disabled': became_disabled,
+                'status': status_payload,
+            }
+        )
 
 
 class TwoFactorDisableView(APIView):
@@ -432,9 +630,8 @@ class TwoFactorVerifyLoginView(APIView):
         
         # Check if account is locked
         if settings_obj.is_locked():
-            return Response(
-                {'error': 'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'},
-                status=status.HTTP_429_TOO_MANY_REQUESTS
+            return rate_limit_response(
+                'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'
             )
         
         # Verify 2FA code

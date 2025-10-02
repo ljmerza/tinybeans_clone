@@ -35,6 +35,7 @@ class TwoFactorSettings(models.Model):
         db_column='totp_secret'
     )
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+    sms_verified = models.BooleanField(default=False)
     backup_email = models.EmailField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -225,4 +226,3 @@ class TwoFactorAuditLog(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.action} - {'Success' if self.success else 'Failed'}"
-

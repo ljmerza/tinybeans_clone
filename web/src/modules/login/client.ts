@@ -1,3 +1,4 @@
+import { showApiToast, extractMessage } from "@/lib/toast";
 import { authStore, setAccessToken } from "./store";
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
@@ -46,6 +47,16 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 		headers,
 	});
 
+	const rawBody = await res.text().catch(() => "");
+	let data: unknown = undefined;
+	if (rawBody) {
+		try {
+			data = JSON.parse(rawBody);
+		} catch (error) {
+			data = rawBody;
+		}
+	}
+
 	// Don't retry on 401 for login, signup, or token refresh endpoints
 	const skipRetry =
 		path === "/auth/login/" ||
@@ -57,19 +68,18 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 			return request<T>(path, init);
 		}
 	}
+
 	if (!res.ok) {
-		const data = await res.json().catch(() => ({}) as any);
-		throw Object.assign(
-			new Error(
-				(data as any).detail || (data as any).message || res.statusText,
-			),
-			{
-				status: res.status,
-				data,
-			},
-		);
+		showApiToast(data, res.status, { fallbackMessage: res.statusText });
+		const message = extractMessage(data) ?? res.statusText;
+		throw Object.assign(new Error(message), {
+			status: res.status,
+			data,
+		});
 	}
-	return res.json();
+
+	showApiToast(data, res.status);
+	return data as T;
 }
 
 export async function refreshAccessToken(): Promise<boolean> {
@@ -101,6 +111,11 @@ export const api = {
 	patch: <T>(path: string, body?: any) =>
 		request<T>(path, {
 			method: "PATCH",
+			body: body ? JSON.stringify(body) : undefined,
+		}),
+	delete: <T>(path: string, body?: any) =>
+		request<T>(path, {
+			method: "DELETE",
 			body: body ? JSON.stringify(body) : undefined,
 		}),
 };

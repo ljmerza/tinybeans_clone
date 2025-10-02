@@ -1,12 +1,14 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { Toaster } from "sonner";
 import { ensureCsrfToken } from "./lib/csrf.ts";
 import { refreshAccessToken } from "./modules/login/client.ts";
 
 import * as TanStackQueryProvider from "./integrations/tanstack-query/root-provider.tsx";
 
 import "./styles.css";
+import "sonner/dist/styles.css";
 import reportWebVitals from "./reportWebVitals.ts";
 
 // Import the generated route tree
@@ -44,6 +46,7 @@ if (rootElement && !rootElement.innerHTML) {
 				<StrictMode>
 					<TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
 						<RouterProvider router={router} />
+						<Toaster richColors position="top-right" />
 					</TanStackQueryProvider.Provider>
 				</StrictMode>,
 			);

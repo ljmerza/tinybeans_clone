@@ -6,6 +6,7 @@ x-common-env: &django-common-env
   POSTGRES_PASSWORD: tinybeans
   POSTGRES_HOST: postgres
   POSTGRES_PORT: 5432
+  DJANGO_DEBUG: "1"
   MAILJET_API_KEY: ${MAILJET_API_KEY:-}
   MAILJET_API_SECRET: ${MAILJET_API_SECRET:-}
   MAILJET_FROM_EMAIL: ${MAILJET_FROM_EMAIL:-no-reply@example.com}
@@ -14,6 +15,12 @@ x-common-env: &django-common-env
   TWOFA_RATE_LIMIT_MAX: 0
   TWOFA_RATE_LIMIT_WINDOW: 0
   RATELIMIT_ENABLE: 0
+  SMS_PROVIDER: console
+  EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+  EMAIL_HOST: mailpit
+  EMAIL_PORT: 1025
+  EMAIL_USE_TLS: "0"
+  EMAIL_USE_SSL: "0"
 
 services:
   web:
@@ -24,8 +31,6 @@ services:
       - ./:/app
     environment:
       <<: *django-common-env
-      DJANGO_ALLOWED_HOSTS: "*"
-      TWOFA_ENCRYPTION_KEY: GCMlol1TrcGkRhSN0uW_22q9mJ0Fz8-Gjswh0UYz4mE=
     depends_on:
       - redis
       - postgres
@@ -50,7 +55,7 @@ services:
 
   celery-worker-1:
     build: .
-    command: celery -A mysite worker -l INFO -n worker1@%h
+    command: celery -A mysite worker -l INFO -n worker1@%h -Q email,sms,media,maintenance
     working_dir: /app/mysite
     volumes:
       - ./:/app
@@ -62,7 +67,7 @@ services:
 
   celery-worker-2:
     build: .
-    command: celery -A mysite worker -l INFO -n worker2@%h
+    command: celery -A mysite worker -l INFO -n worker2@%h -Q email,sms,media,maintenance
     working_dir: /app/mysite
     volumes:
       - ./:/app
@@ -74,7 +79,7 @@ services:
 
   celery-worker-3:
     build: .
-    command: celery -A mysite worker -l INFO -n worker3@%h
+    command: celery -A mysite worker -l INFO -n worker3@%h -Q email,sms,media,maintenance
     working_dir: /app/mysite
     volumes:
       - ./:/app
@@ -98,10 +103,11 @@ services:
 
   flower:
     build: .
-    command: celery -A mysite flower --url-prefix=flower --port=5555 --address=0.0.0.0
+    command: celery -A mysite flower --url-prefix=flower --port=5555 --address=0.0.0.0 --persistent --db=/data/flower.db
     working_dir: /app/mysite
     volumes:
       - ./:/app
+      - flower_data:/data
     environment:
       <<: *django-common-env
     depends_on:
@@ -193,8 +199,17 @@ services:
       - NODE_ENV=production
     restart: unless-stopped
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP server
+
 volumes:
   postgres_data:
   pgadmin_data:
   redisinsight_data:
   minio_data:
+  flower_data:

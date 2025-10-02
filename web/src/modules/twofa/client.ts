@@ -4,10 +4,10 @@
  */
 
 import { API_BASE, api } from "../login/client";
-import { authStore } from "../login/store";
 import type {
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,
+	TwoFactorMethodRemovalResponse,
 	TwoFactorSetupResponse,
 	TwoFactorStatusResponse,
 	TwoFactorVerifyLoginResponse,
@@ -78,24 +78,25 @@ export const twoFactorApi = {
 
 	/**
 	 */
-	removeTrustedDevice: async (
-		device_id: string,
-	): Promise<{ message: string }> => {
-		const token = authStore.state.accessToken;
-		const res = await fetch(
-			`${API_BASE}/auth/2fa/trusted-devices/${device_id}/`,
-			{
-				method: "DELETE",
-				credentials: "include",
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			},
-		);
-		if (!res.ok) {
-			const data = await res.json().catch(() => ({}));
-			throw new Error(data.error || data.detail || "Failed to remove device");
-		}
-		return res.json();
-	},
+	removeTrustedDevice: (device_id: string) =>
+		api.delete<{ message?: string }>(
+			`/auth/2fa/trusted-devices/${device_id}/`,
+		),
+
+	/**
+	 * Update preferred 2FA method
+	 */
+	setPreferredMethod: (method: "totp" | "email" | "sms") =>
+		api.post<{ preferred_method: string; message: string }>(
+			"/auth/2fa/preferred-method/",
+			{ method },
+		),
+
+	/**
+	 * Remove a configured 2FA method
+	 */
+	removeMethod: (method: "totp" | "sms" | "email") =>
+		api.delete<TwoFactorMethodRemovalResponse>(
+			`/auth/2fa/methods/${method}/`,
+		),
 };

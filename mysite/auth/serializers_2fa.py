@@ -45,6 +45,10 @@ class TwoFactorVerifySerializer(serializers.Serializer):
 
 class TwoFactorStatusSerializer(serializers.ModelSerializer):
     """Serializer for 2FA settings status"""
+
+    has_totp = serializers.SerializerMethodField()
+    has_sms = serializers.SerializerMethodField()
+
     class Meta:
         model = TwoFactorSettings
         fields = [
@@ -53,9 +57,18 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
             'phone_number',
             'backup_email',
             'created_at',
-            'updated_at'
+            'updated_at',
+            'has_totp',
+            'has_sms',
+            'sms_verified',
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_has_totp(self, obj):
+        return bool(getattr(obj, '_totp_secret_encrypted', None))
+
+    def get_has_sms(self, obj):
+        return bool(obj.phone_number)
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):
@@ -105,4 +118,24 @@ class TwoFactorVerifyLoginSerializer(serializers.Serializer):
         default=False,
         required=False,
         help_text="Trust this device for 30 days"
+    )
+
+
+class TwoFactorPreferredMethodSerializer(serializers.Serializer):
+    """Serializer for updating the preferred 2FA method"""
+
+    method = serializers.ChoiceField(
+        choices=['totp', 'email', 'sms'],
+        required=True,
+        help_text="Method to make the default for future verifications",
+    )
+
+
+class TwoFactorMethodRemoveSerializer(serializers.Serializer):
+    """Serializer for validating removable 2FA method names"""
+
+    method = serializers.ChoiceField(
+        choices=['totp', 'sms', 'email'],
+        required=True,
+        help_text="2FA method to remove",
     )

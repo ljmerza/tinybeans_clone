@@ -45,6 +45,17 @@ export interface TwoFactorStatusResponse {
 	created_at?: string;
 	updated_at?: string;
 	message?: string;
+	has_totp?: boolean;
+	has_sms?: boolean;
+	sms_verified?: boolean;
+}
+
+export interface TwoFactorMethodRemovalResponse {
+	message: string;
+	method_removed: TwoFactorMethod;
+	preferred_method_changed: boolean;
+	twofa_disabled: boolean;
+	status: TwoFactorStatusResponse;
 }
 
 export interface RecoveryCodesResponse {

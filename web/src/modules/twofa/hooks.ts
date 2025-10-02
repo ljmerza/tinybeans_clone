@@ -142,3 +142,33 @@ export function useRemoveTrustedDevice() {
 		},
 	});
 }
+
+/**
+ * Update preferred 2FA method
+ */
+export function useSetPreferredMethod() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (method: TwoFactorMethod) =>
+			twoFactorApi.setPreferredMethod(method),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
+		},
+	});
+}
+
+/**
+ * Remove a configured 2FA method
+ */
+export function useRemoveTwoFactorMethod() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (method: TwoFactorMethod) =>
+			twoFactorApi.removeMethod(method),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
+		},
+	});
+}

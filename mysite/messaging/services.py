@@ -1,6 +1,7 @@
 """SMS service"""
 from django.conf import settings
 from .providers.base import BaseSMSProvider
+from .providers.console import ConsoleSMSProvider
 from .providers.twilio import TwilioProvider
 import logging
 
@@ -20,6 +21,8 @@ class SMSService:
             
             if provider_name == 'twilio':
                 cls._provider = TwilioProvider()
+            elif provider_name == 'console':
+                cls._provider = ConsoleSMSProvider()
             else:
                 raise ValueError(f"Unknown SMS provider: {provider_name}")
         

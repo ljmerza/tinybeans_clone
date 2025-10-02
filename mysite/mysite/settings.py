@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from kombu import Queue
 from django.core.exceptions import ImproperlyConfigured
 
 
@@ -40,7 +41,7 @@ if not SECRET_KEY:
     else:
         raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is False')
 
-_default_allowed_hosts = "localhost,127.0.0.1,[::1]"
+_default_allowed_hosts = "localhost,127.0.0.1,[::1],web"
 allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', _default_allowed_hosts)
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
 
@@ -205,15 +206,21 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 25))
+EMAIL_USE_TLS = _env_flag('EMAIL_USE_TLS', default=False)
+EMAIL_USE_SSL = _env_flag('EMAIL_USE_SSL', default=False)
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
 
-MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY')
-MAILJET_API_SECRET = os.environ.get('MAILJET_API_SECRET')
+MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY', '')
+MAILJET_API_SECRET = os.environ.get('MAILJET_API_SECRET', '')
 MAILJET_API_URL = os.environ.get('MAILJET_API_URL', 'https://api.mailjet.com/v3.1/send')
-MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL', DEFAULT_FROM_EMAIL)
+MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL') or DEFAULT_FROM_EMAIL
 MAILJET_FROM_NAME = os.environ.get('MAILJET_FROM_NAME', 'Tinybeans Circles')
-MAILJET_USE_SANDBOX = _env_flag('MAILJET_USE_SANDBOX')
+MAILJET_USE_SANDBOX = _env_flag('MAILJET_USE_SANDBOX', default=False)
 MAILJET_ENABLED = bool(MAILJET_API_KEY and MAILJET_API_SECRET)
 
 SPECTACULAR_SETTINGS = {
@@ -231,7 +238,24 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_DEFAULT_QUEUE = 'maintenance'
+CELERY_TASK_QUEUES = (
+    Queue('email'),
+    Queue('sms'),
+    Queue('media'),
+    Queue('maintenance'),
+)
+CELERY_TASK_ROUTES = {
+    'emails.tasks.send_email_task': {'queue': 'email'},
+    'messaging.tasks.send_sms_async': {'queue': 'sms'},
+    'messaging.tasks.send_2fa_sms': {'queue': 'sms'},
+    'keeps.tasks.process_media_upload': {'queue': 'media'},
+    'keeps.tasks.generate_image_sizes': {'queue': 'media'},
+    'keeps.tasks.cleanup_failed_uploads': {'queue': 'media'},
+    'keeps.tasks.validate_media_file': {'queue': 'media'},
+    'auth.tasks.cleanup_expired_trusted_devices': {'queue': 'maintenance'},
+    'mysite.celery.debug_task': {'queue': 'maintenance'},
+}
 CELERY_WORKER_SEND_TASK_EVENTS = True
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_ALWAYS_EAGER = _env_flag('CELERY_TASK_ALWAYS_EAGER')

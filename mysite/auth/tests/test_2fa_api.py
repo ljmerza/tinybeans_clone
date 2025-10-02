@@ -12,6 +12,7 @@ from auth.models import (
     TwoFactorCode,
     RecoveryCode,
     TrustedDevice,
+    TwoFactorAuditLog,
 )
 
 User = get_user_model()
@@ -336,6 +337,163 @@ class TestTwoFactorDisableAPI:
         })
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestTwoFactorMethodRemovalAPI:
+    """Test removing individual 2FA methods"""
+
+    def setup_method(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='methoduser',
+            email='method@example.com',
+            password='testpass',
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_remove_totp_with_sms_fallback(self):
+        settings_obj = TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method='totp',
+            totp_secret='JBSWY3DPEHPK3PXP',
+            phone_number='+1234567890',
+            sms_verified=True,
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/totp/')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['status']['preferred_method'] == 'sms'
+        assert response.data['status']['has_totp'] is False
+        assert response.data['status']['has_sms'] is True
+        assert response.data['preferred_method_changed'] is True
+        assert response.data['twofa_disabled'] is False
+
+        settings_obj.refresh_from_db()
+        assert settings_obj.totp_secret is None
+        assert settings_obj.preferred_method == 'sms'
+        assert settings_obj.is_enabled is True
+        assert TwoFactorAuditLog.objects.filter(
+            user=self.user,
+            action='2fa_method_removed',
+            method='totp',
+        ).exists()
+
+    def test_remove_totp_without_fallback_disables(self):
+        settings_obj = TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method='totp',
+            totp_secret='JBSWY3DPEHPK3PXP',
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/totp/')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['twofa_disabled'] is True
+        assert response.data['status']['is_enabled'] is False
+        assert response.data['status']['has_totp'] is False
+
+        settings_obj.refresh_from_db()
+        assert settings_obj.totp_secret is None
+        assert settings_obj.is_enabled is False
+
+    def test_remove_sms_with_totp_fallback(self):
+        settings_obj = TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method='sms',
+            totp_secret='JBSWY3DPEHPK3PXP',
+            phone_number='+1234567890',
+            sms_verified=True,
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/sms/')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['status']['preferred_method'] == 'totp'
+        assert response.data['status']['has_sms'] is False
+        assert response.data['preferred_method_changed'] is True
+        assert response.data['twofa_disabled'] is False
+
+        settings_obj.refresh_from_db()
+        assert settings_obj.phone_number is None
+        assert settings_obj.sms_verified is False
+        assert settings_obj.preferred_method == 'totp'
+        assert settings_obj.is_enabled is True
+
+    def test_remove_sms_without_fallback_disables(self):
+        settings_obj = TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method='sms',
+            phone_number='+1234567890',
+            sms_verified=True,
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/sms/')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['twofa_disabled'] is True
+        assert response.data['status']['is_enabled'] is False
+        assert response.data['status']['has_sms'] is False
+
+        settings_obj.refresh_from_db()
+        assert settings_obj.phone_number is None
+        assert settings_obj.sms_verified is False
+        assert settings_obj.is_enabled is False
+
+    def test_remove_totp_not_configured(self):
+        TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=False,
+            preferred_method='sms',
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/totp/')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'not configured' in response.data['error'].lower()
+
+    def test_remove_sms_not_configured(self):
+        TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method='totp',
+            totp_secret='JBSWY3DPEHPK3PXP',
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/sms/')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'not configured' in response.data['error'].lower()
+
+    def test_remove_method_without_settings(self):
+        self.client.force_authenticate(user=None)
+        # ensure authentication is required
+        response = self.client.delete('/api/auth/2fa/methods/totp/')
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+        # Re-authenticate and try without settings
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete('/api/auth/2fa/methods/totp/')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'not configured' in response.data['error'].lower()
+
+    def test_remove_email_not_supported(self):
+        TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method='email',
+        )
+
+        response = self.client.delete('/api/auth/2fa/methods/email/')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'cannot be removed' in response.data['error'].lower()
 
 
 @pytest.mark.django_db
