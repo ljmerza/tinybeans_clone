@@ -3,7 +3,6 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
 import { twoFactorApi } from './client'
 import { setAccessToken } from '../login/store'
 import type { TwoFactorMethod } from './types'
@@ -48,7 +47,6 @@ export function use2FAStatus() {
  */
 export function useVerify2FALogin() {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
 
   return useMutation({
     mutationFn: ({
@@ -60,15 +58,16 @@ export function useVerify2FALogin() {
       code: string
       remember_me?: boolean
     }) => twoFactorApi.verifyLogin(partial_token, code, remember_me),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log('2FA verify success:', data) // Debug log
       
-      // Store access token
+      // Store access token FIRST
       if (data.tokens && data.tokens.access) {
         console.log('Setting access token:', data.tokens.access.substring(0, 20) + '...') // Debug log
         setAccessToken(data.tokens.access)
       } else {
         console.error('No access token in response:', data) // Debug log
+        return
       }
 
       // Device ID cookie is set by backend automatically
@@ -76,15 +75,20 @@ export function useVerify2FALogin() {
         console.log('Device marked as trusted') // Debug log
       }
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['user'] })
-      queryClient.invalidateQueries({ queryKey: ['auth'] })
+      // Invalidate queries and wait for them to settle
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['user'] }),
+        queryClient.invalidateQueries({ queryKey: ['auth'] }),
+      ])
 
-      // Navigate to home - use setTimeout to ensure navigation happens after state update
-      console.log('Navigating to home page') // Debug log
-      setTimeout(() => {
-        navigate({ to: '/' })
-      }, 0)
+      // Small delay to ensure store updates propagate
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Navigate to home after state has been updated
+      console.log('Navigating to home page, current path:', window.location.pathname) // Debug log
+      
+      // Use window.location for a full page load to ensure fresh state
+      window.location.href = '/'
     },
     onError: (error) => {
       console.error('2FA verify error:', error) // Debug log

@@ -32,17 +32,12 @@ export function useLogin() {
       
       // Check if 2FA is required
       if (data.requires_2fa) {
-        console.log('2FA required, navigating to /2fa/verify with state')
         const verifyData = {
           partialToken: data.partial_token,
           method: data.method,
           message: data.message,
         }
         
-        // Store in sessionStorage as backup (in case of page refresh)
-        sessionStorage.setItem('2fa_verify_data', JSON.stringify(verifyData))
-        
-        // Navigate with state (primary method)
         navigate({ 
           to: '/2fa/verify',
           state: verifyData,

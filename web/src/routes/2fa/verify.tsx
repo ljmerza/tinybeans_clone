@@ -4,7 +4,7 @@
  */
 
 import { createFileRoute, useNavigate, useLocation, Navigate } from '@tanstack/react-router'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useVerify2FALogin } from '@/modules/twofa/hooks'
 import { VerificationInput } from '@/modules/twofa/components/VerificationInput'
 import { Button } from '@/components/ui/button'
@@ -15,37 +15,15 @@ import type { TwoFactorVerifyState } from '@/modules/twofa/types'
 function TwoFactorVerifyPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const hasLoadedData = useRef(false)
   
-  // Initialize verify data state
-  const [verifyData, setVerifyData] = useState<TwoFactorVerifyState | null>(null)
-  
-  // Load verify data once on mount
-  useEffect(() => {
-    if (hasLoadedData.current) return
-    hasLoadedData.current = true
-    
-    // Check location state first
+  // Read verify data directly from location state (no useEffect needed)
+  const verifyData = useMemo<TwoFactorVerifyState | null>(() => {
     const state = location.state as any as TwoFactorVerifyState | undefined
     if (state?.partialToken && state?.method) {
       console.log('2FA Verify Data from location state:', state)
-      setVerifyData(state)
-      return
+      return state
     }
-    
-    // Fallback to sessionStorage
-    const stored = sessionStorage.getItem('2fa_verify_data')
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        console.log('2FA Verify Data from sessionStorage:', data)
-        setVerifyData(data)
-        // Clean up after reading
-        sessionStorage.removeItem('2fa_verify_data')
-      } catch (error) {
-        console.error('Failed to parse 2FA verify data:', error)
-      }
-    }
+    return null
   }, [location.state])
   
   const [code, setCode] = useState('')
@@ -53,12 +31,10 @@ function TwoFactorVerifyPage() {
   const [useRecoveryCode, setUseRecoveryCode] = useState(false)
 
   const verify = useVerify2FALogin()
-  console.log('2FA Verify State:', { verifyData, code, rememberMe, useRecoveryCode, isPending: verify.isPending, error: verify.error })
 
   // Redirect if no partial token (direct access or page refresh)
   if (!verifyData?.partialToken || !verifyData?.method) {
-    return null;
-    // return <Navigate to="/login" />
+    return <Navigate to="/login" />
   }
 
   const { partialToken, method, message } = verifyData

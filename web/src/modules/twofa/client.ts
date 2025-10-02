@@ -73,7 +73,6 @@ export const twoFactorApi = {
     api.get<TrustedDevicesResponse>('/auth/2fa/trusted-devices/'),
 
   /**
-   * Remove a trusted device (CORRECTED: uses DELETE method)
    */
   removeTrustedDevice: async (device_id: string): Promise<{ message: string }> => {
     const token = authStore.state.accessToken
