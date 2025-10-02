@@ -171,10 +171,16 @@ class TwoFactorService:
         rate_limit_window = getattr(settings, 'TWOFA_RATE_LIMIT_WINDOW', 900)  # 15 minutes
         rate_limit_max = getattr(settings, 'TWOFA_RATE_LIMIT_MAX', 3)
         
+        if rate_limit_max <= 0:
+            return False
+
+        if rate_limit_window <= 0:
+            return False
+
         since = timezone.now() - timedelta(seconds=rate_limit_window)
         recent_codes = TwoFactorCode.objects.filter(
             user=user,
             created_at__gte=since
         ).count()
-        
+
         return recent_codes >= rate_limit_max

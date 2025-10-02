@@ -286,8 +286,8 @@ TWOFA_ENABLED = _env_flag('TWOFA_ENABLED', default=True)
 TWOFA_CODE_LENGTH = 6
 TWOFA_CODE_EXPIRY_MINUTES = 10
 TWOFA_MAX_ATTEMPTS = 5
-TWOFA_RATE_LIMIT_WINDOW = 900  # 15 minutes in seconds
-TWOFA_RATE_LIMIT_MAX = 3
+TWOFA_RATE_LIMIT_WINDOW = int(os.environ.get('TWOFA_RATE_LIMIT_WINDOW', 900))
+TWOFA_RATE_LIMIT_MAX = int(os.environ.get('TWOFA_RATE_LIMIT_MAX', 3))
 TWOFA_RECOVERY_CODE_COUNT = 10
 TWOFA_ISSUER_NAME = os.environ.get('TWOFA_ISSUER_NAME', 'Tinybeans')
 
@@ -315,3 +315,6 @@ SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'twilio')
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
+
+# Rate limiting (django-ratelimit)
+RATELIMIT_ENABLE = _env_flag('RATELIMIT_ENABLE', default=not DEBUG)
