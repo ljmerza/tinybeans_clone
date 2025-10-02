@@ -1,17 +1,16 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import QueryDevtools from '@/integrations/tanstack-query/devtools'
-import AuthStoreDevtools from '@/modules/login/devtools'
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 function RootComponent() {
-  return (
-    <>
-      <Outlet />
-      <TanStackRouterDevtools plugins={[QueryDevtools, AuthStoreDevtools]} />
-    </>
-  )
+	return (
+		<ErrorBoundary>
+			<Outlet />
+			<TanStackRouterDevtools />
+		</ErrorBoundary>
+	);
 }
 
 export const Route = createRootRoute({
-  component: RootComponent,
-})
+	component: RootComponent,
+});

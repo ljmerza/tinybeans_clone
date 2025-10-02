@@ -1,6 +1,7 @@
+import { LoadingPage } from "@/components/LoadingSpinner";
+import { useLogout } from "@/modules/login/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { useLogout } from "@/modules/login/hooks";
 
 function LogoutPage() {
 	const logout = useLogout();
@@ -12,20 +13,20 @@ function LogoutPage() {
 		hasLoggedOut.current = true;
 
 		const doLogout = async () => {
-			await logout.mutateAsync();
-			navigate({ to: "/" });
+			try {
+				await logout.mutateAsync();
+				navigate({ to: "/" });
+			} catch (error) {
+				console.error("Logout error:", error);
+				// Navigate to home even if logout fails
+				navigate({ to: "/" });
+			}
 		};
 		doLogout();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	return (
-		<div className="mx-auto max-w-sm p-6">
-			<div className="text-center">
-				<p className="text-lg">Logging out...</p>
-			</div>
-		</div>
-	);
+	return <LoadingPage message="Logging out..." />;
 }
 
 export const Route = createFileRoute("/logout")({

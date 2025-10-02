@@ -80,7 +80,6 @@ class SignupView(APIView):
         tokens = get_tokens_for_user(user)
         data = UserSerializer(user).data
         data['tokens'] = {'access': tokens['access']}
-        data['verification_token'] = verification_token
         response = Response(data, status=status.HTTP_201_CREATED)
         set_refresh_cookie(response, tokens['refresh'])
         return response
@@ -95,8 +94,8 @@ class LoginView(APIView):
         request=LoginSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='JWT tokens and user payload or 2FA required response')},
     )
-    # @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
-    # @method_decorator(ratelimit(key='post:username', rate='5/h', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
+    @method_decorator(ratelimit(key='post:username', rate='5/h', method='POST', block=True))
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -200,7 +199,7 @@ class EmailVerificationResendView(APIView):
                 'username': user.username,
             },
         )
-        return Response({'message': _('Verification email reissued'), 'token': token}, status=status.HTTP_202_ACCEPTED)
+        return Response({'message': _('Verification email reissued')}, status=status.HTTP_202_ACCEPTED)
 
 
 class TokenRefreshCookieView(APIView):
@@ -289,7 +288,7 @@ class PasswordResetRequestView(APIView):
                     'username': user.username,
                 },
             )
-            return Response({'message': _('Password reset sent'), 'token': token}, status=status.HTTP_202_ACCEPTED)
+            return Response({'message': _('Password reset sent')}, status=status.HTTP_202_ACCEPTED)
         return Response({'message': _('Password reset sent')}, status=status.HTTP_202_ACCEPTED)
 
 

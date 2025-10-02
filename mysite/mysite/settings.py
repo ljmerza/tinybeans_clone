@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -27,13 +28,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i@gm65z6a6396b+n+h+3q)*@cmf$^q-3@bq0&y8!d=gn^%i^fj'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+_default_debug = os.environ.get('DJANGO_SECRET_KEY') is None
+DEBUG = _env_flag('DJANGO_DEBUG', default=_default_debug)
 
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(',') if host.strip()]
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-i@gm65z6a6396b+n+h+3q)*@cmf$^q-3@bq0&y8!d=gn^%i^fj'
+    else:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is False')
+
+_default_allowed_hosts = "localhost,127.0.0.1,[::1]"
+allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', _default_allowed_hosts)
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+
+if not DEBUG and ('*' in ALLOWED_HOSTS or not ALLOWED_HOSTS):
+    raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS must be defined without wildcards when DEBUG is False')
 
 
 # Application definition
@@ -281,10 +293,12 @@ TWOFA_ISSUER_NAME = os.environ.get('TWOFA_ISSUER_NAME', 'Tinybeans')
 
 # 2FA Security - Encryption Key for TOTP Secrets
 # SECURITY WARNING: Keep this secret! Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-TWOFA_ENCRYPTION_KEY = os.environ.get(
-    'TWOFA_ENCRYPTION_KEY',
-    '5pK6Bm8rEICTnaRJvv0eQilwcmHeuTU1dRYrI-4VvEc='  # Change this in production!
-)
+TWOFA_ENCRYPTION_KEY = os.environ.get('TWOFA_ENCRYPTION_KEY')
+if not TWOFA_ENCRYPTION_KEY:
+    if DEBUG:
+        TWOFA_ENCRYPTION_KEY = '5pK6Bm8rEICTnaRJvv0eQilwcmHeuTU1dRYrI-4VvEc='
+    else:
+        raise ImproperlyConfigured('TWOFA_ENCRYPTION_KEY must be set when DEBUG is False')
 
 # 2FA Account Lockout
 TWOFA_LOCKOUT_ENABLED = _env_flag('TWOFA_LOCKOUT_ENABLED', default=True)

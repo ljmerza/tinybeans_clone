@@ -17,7 +17,7 @@ The current backend uses JWT via djangorestframework-simplejwt with this behavio
 - The cookie path is /api/auth/token/refresh/
 
 Endpoints (all under /api/users/):
-- POST auth/signup/ -> { user, tokens: { access }, verification_token } and sets refresh cookie
+- POST auth/signup/ -> { user, tokens: { access } } and sets refresh cookie
   - Request body: { username, email, password }
 - POST auth/login/ -> { user, tokens: { access } } and sets refresh cookie
   - Request body: { username, password }
@@ -27,7 +27,7 @@ Endpoints (all under /api/users/):
 
 Notes
 - There is no logout endpoint. “Logout” on the client means clearing the in-memory access token. The refresh cookie will remain until expiry; users will be issued a new access token if the client calls refresh again.
-- Email verification exists: verify-email/resend/ and verify-email/confirm/. The signup response includes verification_token for convenience (useful for testing).
+- Email verification exists: verify-email/resend/ and verify-email/confirm/. Verification tokens are delivered by email only.
 
 
 ## Packages and project wiring
