@@ -15,21 +15,21 @@ import {
 	useLocation,
 	useNavigate,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 function TwoFactorVerifyPage() {
 	const navigate = useNavigate();
 	const location = useLocation();
 
 	// Read verify data directly from location state (no useEffect needed)
-	const verifyData = useMemo<TwoFactorVerifyState | null>(() => {
+	const [verifyData] = useState<TwoFactorVerifyState | null>(() => {
 		const state = location.state as any as TwoFactorVerifyState | undefined;
 		if (state?.partialToken && state?.method) {
 			console.log("2FA Verify Data from location state:", state);
 			return state;
 		}
 		return null;
-	}, [location.state]);
+	});
 
 	const [code, setCode] = useState("");
 	const [rememberMe, setRememberMe] = useState(false);
@@ -40,7 +40,7 @@ function TwoFactorVerifyPage() {
 	// Navigate to home on successful verification
 	useEffect(() => {
 		if (verify.isSuccess) {
-			navigate({ to: "/" });
+			navigate({ to: "/", replace: true });
 		}
 	}, [verify.isSuccess, navigate]);
 
