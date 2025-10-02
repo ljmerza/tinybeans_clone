@@ -3,6 +3,8 @@
  * Manage 2FA configuration, recovery codes, and trusted devices
  */
 
+import { Layout } from "@/components/Layout";
+import { LoadingPage } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { RecoveryCodeList } from "@/modules/twofa/components/RecoveryCodeList";
 import { VerificationInput } from "@/modules/twofa/components/VerificationInput";
@@ -46,34 +48,36 @@ function TwoFactorSettingsPage() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<p>Loading...</p>
-			</div>
+			<Layout>
+				<LoadingPage message="Loading 2FA settings..." fullScreen={false} />
+			</Layout>
 		);
 	}
 
 	if (!status?.is_enabled) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50">
-				<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center space-y-4">
-					<h1 className="text-2xl font-semibold">Two-Factor Authentication</h1>
-					<p className="text-gray-600">
-						2FA is not enabled for your account. Enable it to add an extra layer
-						of security.
-					</p>
-					<Button
-						onClick={() => navigate({ to: "/2fa/setup" })}
-						className="w-full"
-					>
-						Enable 2FA
-					</Button>
+			<Layout>
+				<div className="flex justify-center py-16">
+					<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center space-y-4">
+						<h1 className="text-2xl font-semibold">Two-Factor Authentication</h1>
+						<p className="text-gray-600">
+							2FA is not enabled for your account. Enable it to add an extra layer of
+							security.
+						</p>
+						<Button
+							onClick={() => navigate({ to: "/2fa/setup" })}
+							className="w-full"
+						>
+							Enable 2FA
+						</Button>
+					</div>
 				</div>
-			</div>
+			</Layout>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50 py-12 px-4">
+		<Layout>
 			<div className="max-w-3xl mx-auto space-y-6">
 				{/* Header */}
 				<div className="bg-white rounded-lg shadow-md p-6">
@@ -241,7 +245,7 @@ function TwoFactorSettingsPage() {
 					</button>
 				</div>
 			</div>
-		</div>
+		</Layout>
 	);
 }
 

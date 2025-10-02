@@ -30,9 +30,14 @@ export function Layout({ children, showHeader = true }: LayoutProps) {
 							</div>
 							<nav className="flex items-center gap-4">
 								{accessToken ? (
-									<Link to="/logout" className="btn-ghost">
-										Logout
-									</Link>
+									<>
+										<Link to="/2fa/setup" className="btn-ghost">
+											2FA Setup
+										</Link>
+										<Link to="/logout" className="btn-ghost">
+											Logout
+										</Link>
+									</>
 								) : (
 									<>
 										<Link to="/login" className="btn-ghost">

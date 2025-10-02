@@ -2,6 +2,8 @@
  * Trusted Devices Management Page
  */
 
+import { Layout } from "@/components/Layout";
+import { LoadingPage } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
 	useRemoveTrustedDevice,
@@ -26,16 +28,16 @@ function TrustedDevicesPage() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<p>Loading...</p>
-			</div>
+			<Layout>
+				<LoadingPage message="Loading trusted devices..." fullScreen={false} />
+			</Layout>
 		);
 	}
 
 	const devices = data?.devices || [];
 
 	return (
-		<div className="min-h-screen bg-gray-50 py-12 px-4">
+		<Layout>
 			<div className="max-w-4xl mx-auto">
 				<div className="bg-white rounded-lg shadow-md p-6">
 					<div className="mb-6">
@@ -125,7 +127,7 @@ function TrustedDevicesPage() {
 					</div>
 				</div>
 			</div>
-		</div>
+		</Layout>
 	);
 }
 

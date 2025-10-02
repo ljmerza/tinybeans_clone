@@ -3,6 +3,7 @@
  * Choose and configure 2FA method
  */
 
+import { Layout } from "@/components/Layout";
 import { LoadingPage } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { TotpSetup } from "@/modules/twofa/components/TotpSetup";
@@ -34,19 +35,28 @@ function TwoFactorSetupPage() {
 	};
 
 	if (isLoading) {
-		return <LoadingPage message="Loading 2FA settings..." />;
+		return (
+			<Layout>
+				<LoadingPage
+					message="Loading 2FA settings..."
+					fullScreen={false}
+				/>
+			</Layout>
+		);
 	}
 
 	if (error) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-				<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-					<p className="text-red-600">Failed to load 2FA settings</p>
-					<Button onClick={() => navigate({ to: "/" })} className="mt-4">
-						Go Home
-					</Button>
+			<Layout>
+				<div className="flex justify-center py-16">
+					<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+						<p className="text-red-600">Failed to load 2FA settings</p>
+						<Button onClick={() => navigate({ to: "/" })} className="mt-4">
+							Go Home
+						</Button>
+					</div>
 				</div>
-			</div>
+			</Layout>
 		);
 	}
 
@@ -56,7 +66,7 @@ function TwoFactorSetupPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50 py-12 px-4">
+		<Layout>
 			<div className="max-w-2xl mx-auto">
 				<div className="bg-white rounded-lg shadow-md p-6">
 					{!selectedMethod ? (
@@ -193,7 +203,7 @@ function TwoFactorSetupPage() {
 					)}
 				</div>
 			</div>
-		</div>
+		</Layout>
 	);
 }
 
