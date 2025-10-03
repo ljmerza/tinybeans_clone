@@ -3,11 +3,13 @@
  * Manage 2FA configuration, recovery codes, and trusted devices
  */
 
-import { ButtonGroup, Layout, StatusMessage } from "@/components";
+import { ButtonGroup, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { verificationCodeSchema } from "@/lib/validations";
-import { RecoveryCodeList } from "@/modules/twofa/components/RecoveryCodeList";
-import { VerificationInput } from "@/modules/twofa/components/VerificationInput";
+import { DisableTwoFactorSection } from "@/modules/twofa/components/DisableTwoFactorSection";
+import { RecoveryCodesSection } from "@/modules/twofa/components/RecoveryCodesSection";
+import { TrustedDevicesSection } from "@/modules/twofa/components/TrustedDevicesSection";
+import { TwoFactorStatusHeader } from "@/modules/twofa/components/TwoFactorStatusHeader";
 import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
 import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
 import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
@@ -17,10 +19,9 @@ import {
 	useGenerateRecoveryCodes,
 	useRemoveTwoFactorMethod,
 } from "@/modules/twofa/hooks";
-import type { TwoFactorMethod, TwoFactorStatusResponse } from "@/modules/twofa/types";
+import type { TwoFactorMethod } from "@/modules/twofa/types";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-
 
 // Labels and removal messages from setup page
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {
@@ -36,196 +37,6 @@ const REMOVAL_CONFIRMATION: Record<RemovableMethod, string> = {
 	"sms":
 		"Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
 };
-
-
-
-function TwoFactorStatusHeader({ status }: { status: TwoFactorStatusResponse }) {
-	return (
-		<div className="bg-white rounded-lg shadow-md p-6">
-			<div className="flex items-start justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold mb-2">Two-Factor Authentication</h1>
-					<div className="flex items-center gap-2">
-						{status.is_enabled ? (
-							<>
-								<span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-									✓ Enabled
-								</span>
-								<span className="text-sm text-gray-600">
-									Method:{" "}
-									<span className="font-semibold">
-										{status.preferred_method?.toUpperCase()}
-									</span>
-								</span>
-							</>
-						) : (
-							<span className="inline-flex items-center bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
-								⚠️ Not enabled
-							</span>
-						)}
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-// Removed old PreferredMethodSection in favor of consolidated method cards
-
-interface RecoveryCodesSectionProps {
-	showNewCodes: boolean;
-	isGenerating: boolean;
-	errMessage?: string;
-	codes?: string[];
-	onGenerate: () => void;
-	onViewCurrent: () => void;
-	onHideCodes: () => void;
-}
-
-function RecoveryCodesSection({
-	showNewCodes,
-	isGenerating,
-	errMessage,
-	codes,
-	onGenerate,
-	onViewCurrent,
-	onHideCodes,
-}: RecoveryCodesSectionProps) {
-	return (
-		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4">Recovery Codes</h2>
-
-			{!showNewCodes ? (
-				<div className="space-y-4">
-					<p className="text-gray-600 text-sm">
-						Recovery codes can be used to access your account if you lose access to your authenticator device. Each code can only be used once.
-					</p>
-
-					<div className="flex gap-2">
-						<Button onClick={onGenerate} disabled={isGenerating} variant="outline">
-							{isGenerating ? "Generating..." : "Generate New Recovery Codes"}
-						</Button>
-
-						<Button onClick={onViewCurrent} variant="outline">
-							View Current Codes
-						</Button>
-					</div>
-
-					{errMessage && (
-						<StatusMessage variant="error">{errMessage}</StatusMessage>
-					)}
-				</div>
-			) : (
-				<div className="space-y-4">
-					{codes && <RecoveryCodeList codes={codes} />}
-					<Button onClick={onHideCodes} variant="outline">
-						Done
-					</Button>
-				</div>
-			)}
-		</div>
-	);
-}
-
-function TrustedDevicesSection({ onManage }: { onManage: () => void }) {
-	return (
-		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4">Trusted Devices</h2>
-			<p className="text-gray-600 text-sm mb-4">
-				Manage devices that can skip 2FA verification for 30 days.
-			</p>
-			<Button onClick={onManage} variant="outline">
-				Manage Trusted Devices
-			</Button>
-		</div>
-	);
-}
-
-interface DisableTwoFactorSectionProps {
-	showDisableConfirm: boolean;
-	canDisable: boolean;
-	disableCode: string;
-	isDisabling: boolean;
-	errMessage?: string;
-	onRequestDisable: () => void;
-	onCancelDisable: () => void;
-	onCodeChange: (value: string) => void;
-	onConfirmDisable: () => void;
-}
-
-function DisableTwoFactorSection({
-	showDisableConfirm,
-	canDisable,
-	disableCode,
-	isDisabling,
-	errMessage,
-	onRequestDisable,
-	onCancelDisable,
-	onCodeChange,
-	onConfirmDisable,
-}: DisableTwoFactorSectionProps) {
-	return (
-		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4 text-red-600">
-				Disable Two-Factor Authentication
-			</h2>
-
-			{!showDisableConfirm ? (
-				<div className="space-y-4">
-					<p className="text-gray-600 text-sm">
-						Disabling 2FA will make your account less secure. You'll only need your password to log in.
-					</p>
-					<Button
-						onClick={onRequestDisable}
-						variant="outline"
-						className="text-red-600 border-red-300 hover:bg-red-50"
-					>
-						Disable 2FA
-					</Button>
-				</div>
-			) : (
-				<div className="space-y-4">
-					<div className="bg-red-50 border border-red-200 rounded p-4">
-						<p className="text-sm text-red-800 font-semibold mb-2">⚠️ Are you sure?</p>
-						<p className="text-sm text-red-800">
-							Enter your 6-digit verification code to confirm disabling 2FA.
-						</p>
-					</div>
-
-					<VerificationInput
-						value={disableCode}
-						onChange={onCodeChange}
-						onComplete={onConfirmDisable}
-						disabled={isDisabling}
-					/>
-
-					<div className="flex gap-2">
-						<Button
-							onClick={onConfirmDisable}
-							disabled={!canDisable || isDisabling}
-							variant="outline"
-							className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-						>
-							{isDisabling ? "Disabling..." : "Confirm Disable"}
-						</Button>
-						<Button
-							onClick={onCancelDisable}
-							variant="outline"
-							className="flex-1"
-							disabled={isDisabling}
-						>
-							Cancel
-						</Button>
-					</div>
-
-					{errMessage && (
-						<StatusMessage variant="error" align="center">{errMessage}</StatusMessage>
-					)}
-				</div>
-			)}
-		</div>
-	);
-}
 
 function TwoFactorSettingsPage() {
 	const navigate = useNavigate();
@@ -291,9 +102,7 @@ function TwoFactorSettingsPage() {
 	const preferredMethod = status?.preferred_method ?? null;
 	const totpConfigured = Boolean(status?.has_totp);
 	const smsConfigured = Boolean(status?.has_sms);
-	// Email is configured if has_email is true, or if 2FA is enabled with email as preferred method
-	const emailConfigured = Boolean(status?.has_email) || 
-		(Boolean(status?.is_enabled) && status?.preferred_method === "email");
+	const emailConfigured = Boolean(status?.has_email);
 	const phoneNumber = status?.phone_number;
 
 	if (isLoading) {

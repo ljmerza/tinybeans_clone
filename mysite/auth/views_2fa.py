@@ -145,6 +145,9 @@ class TwoFactorVerifySetupView(APIView):
         if settings_obj.preferred_method == 'sms':
             settings_obj.sms_verified = True
             update_fields.append('sms_verified')
+        elif settings_obj.preferred_method == 'email':
+            settings_obj.email_verified = True
+            update_fields.append('email_verified')
         settings_obj.save(update_fields=update_fields)
         
         # Generate recovery codes (returns plain text codes)
@@ -191,6 +194,7 @@ class TwoFactorStatusView(APIView):
                 'backup_email': None,
                 'has_totp': False,
                 'has_sms': False,
+                'has_email': False,
                 'sms_verified': False
             })
 

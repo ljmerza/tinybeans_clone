@@ -48,6 +48,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
 
     has_totp = serializers.SerializerMethodField()
     has_sms = serializers.SerializerMethodField()
+    has_email = serializers.SerializerMethodField()
 
     class Meta:
         model = TwoFactorSettings
@@ -60,6 +61,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
             'updated_at',
             'has_totp',
             'has_sms',
+            'has_email',
             'sms_verified',
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -71,6 +73,10 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
     def get_has_sms(self, obj):
         # Consider SMS configured only after phone number verification
         return bool(obj.phone_number) and bool(obj.sms_verified)
+
+    def get_has_email(self, obj):
+        # Consider email configured only after verification
+        return bool(obj.email_verified)
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):
