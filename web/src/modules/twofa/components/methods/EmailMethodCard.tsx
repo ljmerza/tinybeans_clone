@@ -1,3 +1,4 @@
+import type { TwoFactorMethod } from "@/modules/twofa/types";
 import {
 	Card,
 	CardContent,
@@ -15,12 +16,22 @@ interface EmailMethodCardProps {
 	isCurrent: boolean;
 	configured: boolean;
 	onSetup: () => void;
+	onSetAsDefault?: () => void;
+	setAsDefaultInProgress?: boolean;
+	onRequestRemoval?: () => void;
+	removalInProgress?: boolean;
+	methodToRemove?: TwoFactorMethod | null;
 }
 
 export function EmailMethodCard({
 	isCurrent,
 	configured,
 	onSetup,
+	onSetAsDefault,
+	setAsDefaultInProgress = false,
+	onRequestRemoval,
+	removalInProgress = false,
+	methodToRemove = null,
 }: EmailMethodCardProps) {
 	return (
 		<Card className="border-2 border-gray-200">
@@ -45,9 +56,34 @@ export function EmailMethodCard({
 			<CardContent className="pt-4">
 				<ButtonGroup>
 					{configured ? (
-						<StatusMessage variant="success" className="text-sm">
-							✓ Configured
-						</StatusMessage>
+						<>
+							{!isCurrent && onSetAsDefault && (
+								<Button
+									onClick={onSetAsDefault}
+									disabled={setAsDefaultInProgress}
+									className="bg-green-600 hover:bg-green-700 text-white"
+								>
+									{setAsDefaultInProgress ? "Setting..." : "Set as Default"}
+								</Button>
+							)}
+							{onRequestRemoval && (
+								<Button
+									variant="outline"
+									onClick={onRequestRemoval}
+									disabled={removalInProgress}
+									className="border-red-200 text-red-600 hover:bg-red-50"
+								>
+									{removalInProgress && methodToRemove === "email"
+										? "Removing..."
+										: "Remove"}
+								</Button>
+							)}
+							{!onRequestRemoval && (
+								<StatusMessage variant="success" className="text-sm">
+									✓ Configured
+								</StatusMessage>
+							)}
+						</>
 					) : (
 						<Button
 							onClick={onSetup}

@@ -9,7 +9,7 @@ import { TwoFactorStatusHeader } from "@/modules/twofa/components/TwoFactorStatu
 import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
 import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
 import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
-import { use2FAStatus, useRemoveTwoFactorMethod } from "@/modules/twofa/hooks";
+import { use2FAStatus, useRemoveTwoFactorMethod, useSetPreferredMethod } from "@/modules/twofa/hooks";
 import type { TwoFactorMethod } from "@/modules/twofa/types";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -32,18 +32,24 @@ function TwoFactorSettingsPage() {
 	const navigate = useNavigate();
 	const { data: status, isLoading } = use2FAStatus();
 	const removeMethod = useRemoveTwoFactorMethod();
+	const setPreferredMethod = useSetPreferredMethod();
 
 	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(
 		null,
 	);
 	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
 	const [removalError, setRemovalError] = useState<string | null>(null);
+	const [switchMessage, setSwitchMessage] = useState<string | null>(null);
+	const [switchError, setSwitchError] = useState<string | null>(null);
 
 	const removalInProgress = removeMethod.isPending;
+	const switchInProgress = setPreferredMethod.isPending;
 
 	const handleRemovalRequest = (method: TwoFactorMethod) => {
 		setRemovalError(null);
 		setRemovalMessage(null);
+		setSwitchError(null);
+		setSwitchMessage(null);
 		setMethodToRemove(method);
 	};
 
@@ -64,6 +70,23 @@ function TwoFactorSettingsPage() {
 			const fallback =
 				err instanceof Error ? err.message : "Failed to remove 2FA method.";
 			setRemovalError(apiMessage ?? fallback);
+		}
+	};
+
+	const handleSetAsDefault = async (method: TwoFactorMethod) => {
+		setSwitchError(null);
+		setSwitchMessage(null);
+		setRemovalError(null);
+		setRemovalMessage(null);
+		
+		try {
+			const result = await setPreferredMethod.mutateAsync(method);
+			setSwitchMessage(result?.message ?? "Default method updated successfully.");
+		} catch (err) {
+			const apiMessage = (err as { data?: { error?: string } })?.data?.error;
+			const fallback =
+				err instanceof Error ? err.message : "Failed to update default method.";
+			setSwitchError(apiMessage ?? fallback);
 		}
 	};
 
@@ -136,6 +159,18 @@ function TwoFactorSettingsPage() {
 						</p>
 					)}
 
+					{switchMessage && (
+						<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
+							{switchMessage}
+						</p>
+					)}
+
+					{switchError && (
+						<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+							{switchError}
+						</p>
+					)}
+
 					<div className="space-y-4">
 						<TotpMethodCard
 							isCurrent={preferredMethod === "totp"}
@@ -144,12 +179,19 @@ function TwoFactorSettingsPage() {
 							methodToRemove={methodToRemove}
 							onSetup={() => navigate({ to: "/2fa/setup/totp" })}
 							onRequestRemoval={() => handleRemovalRequest("totp")}
+							onSetAsDefault={() => handleSetAsDefault("totp")}
+							setAsDefaultInProgress={switchInProgress}
 						/>
 
 						<EmailMethodCard
 							isCurrent={preferredMethod === "email"}
 							configured={emailConfigured}
 							onSetup={() => navigate({ to: "/2fa/setup/email" })}
+							onSetAsDefault={() => handleSetAsDefault("email")}
+							setAsDefaultInProgress={switchInProgress}
+							onRequestRemoval={() => handleRemovalRequest("email")}
+							removalInProgress={removalInProgress}
+							methodToRemove={methodToRemove}
 						/>
 
 						<SmsMethodCard
@@ -160,6 +202,8 @@ function TwoFactorSettingsPage() {
 							methodToRemove={methodToRemove}
 							onSetup={() => navigate({ to: "/2fa/setup/sms" })}
 							onRequestRemoval={() => handleRemovalRequest("sms")}
+							onSetAsDefault={() => handleSetAsDefault("sms")}
+							setAsDefaultInProgress={switchInProgress}
 						/>
 					</div>
 				</div>

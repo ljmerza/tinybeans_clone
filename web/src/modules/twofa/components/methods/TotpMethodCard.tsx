@@ -19,6 +19,8 @@ interface TotpMethodCardProps {
 	methodToRemove: TwoFactorMethod | null;
 	onSetup: () => void;
 	onRequestRemoval: () => void;
+	onSetAsDefault?: () => void;
+	setAsDefaultInProgress?: boolean;
 }
 
 export function TotpMethodCard({
@@ -28,6 +30,8 @@ export function TotpMethodCard({
 	methodToRemove,
 	onSetup,
 	onRequestRemoval,
+	onSetAsDefault,
+	setAsDefaultInProgress = false,
 }: TotpMethodCardProps) {
 	return (
 		<Card className="border-2 border-gray-200">
@@ -54,16 +58,27 @@ export function TotpMethodCard({
 			<CardContent className="pt-4">
 				<ButtonGroup>
 					{configured ? (
-						<Button
-							variant="outline"
-							onClick={onRequestRemoval}
-							disabled={removalInProgress}
-							className="border-red-200 text-red-600 hover:bg-red-50"
-						>
-							{removalInProgress && methodToRemove === "totp"
-								? "Removing..."
-								: "Remove"}
-						</Button>
+						<>
+							{!isCurrent && onSetAsDefault && (
+								<Button
+									onClick={onSetAsDefault}
+									disabled={setAsDefaultInProgress}
+									className="bg-green-600 hover:bg-green-700 text-white"
+								>
+									{setAsDefaultInProgress ? "Setting..." : "Set as Default"}
+								</Button>
+							)}
+							<Button
+								variant="outline"
+								onClick={onRequestRemoval}
+								disabled={removalInProgress}
+								className="border-red-200 text-red-600 hover:bg-red-50"
+							>
+								{removalInProgress && methodToRemove === "totp"
+									? "Removing..."
+									: "Remove"}
+							</Button>
+						</>
 					) : (
 						<Button
 							onClick={onSetup}

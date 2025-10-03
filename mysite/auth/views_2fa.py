@@ -314,14 +314,6 @@ class TwoFactorMethodRemoveView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if method == 'email':
-            return Response(
-                {
-                    'error': 'Email-based 2FA cannot be removed. Choose another preferred method or disable 2FA.',
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         update_fields = set()
         previously_enabled = settings_obj.is_enabled
         previous_preferred = settings_obj.preferred_method
@@ -345,6 +337,15 @@ class TwoFactorMethodRemoveView(APIView):
             settings_obj.phone_number = None
             settings_obj.sms_verified = False
             update_fields.update({'phone_number', 'sms_verified'})
+
+        elif method == 'email':
+            if not settings_obj.email_verified:
+                return Response(
+                    {'error': 'Email 2FA is not configured'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            settings_obj.email_verified = False
+            update_fields.add('email_verified')
 
         if settings_obj.preferred_method == method:
             fallback_preferred = None
