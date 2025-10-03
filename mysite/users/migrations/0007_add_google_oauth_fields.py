@@ -6,7 +6,6 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0013_security_improvements'),
         ('users', '0006_remove_favorite_moments'),
     ]
 

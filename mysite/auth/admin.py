@@ -6,6 +6,7 @@ from .models import (
     TrustedDevice,
     TwoFactorAuditLog,
     MagicLoginToken,
+    GoogleOAuthState,
 )
 
 
@@ -69,3 +70,53 @@ class MagicLoginTokenAdmin(admin.ModelAdmin):
     token_preview.short_description = 'Token'
 
 
+@admin.register(GoogleOAuthState)
+class GoogleOAuthStateAdmin(admin.ModelAdmin):
+    """Admin interface for Google OAuth state tokens.
+    
+    Provides security monitoring and debugging capabilities for OAuth flows.
+    """
+    list_display = [
+        'state_token_preview',
+        'created_at',
+        'expires_at',
+        'used_at',
+        'is_expired',
+        'ip_address',
+        'redirect_uri'
+    ]
+    list_filter = ['created_at', 'expires_at', 'used_at']
+    search_fields = ['state_token', 'ip_address', 'redirect_uri']
+    readonly_fields = [
+        'state_token',
+        'code_verifier',
+        'nonce',
+        'created_at',
+        'used_at',
+        'ip_address',
+        'user_agent',
+        'expires_at',
+        'redirect_uri'
+    ]
+    date_hierarchy = 'created_at'
+    ordering = ['-created_at']
+    
+    def state_token_preview(self, obj):
+        """Show first 16 characters of state token for identification."""
+        return f"{obj.state_token[:16]}..." if obj.state_token else "-"
+    state_token_preview.short_description = 'State Token'
+    
+    def is_expired(self, obj):
+        """Show if state token is expired."""
+        from django.utils import timezone
+        return obj.expires_at < timezone.now()
+    is_expired.boolean = True
+    is_expired.short_description = 'Expired'
+    
+    def has_add_permission(self, request):
+        """Prevent manual creation of OAuth states."""
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """Prevent modification of OAuth states."""
+        return False
