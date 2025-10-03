@@ -188,34 +188,34 @@ Data, filtering, and grouping
 - Range-driven fetching: robust onRangeChange (start/end UTC), with debounced notifications. [P1]
 
 Accessibility and localization
-- ARIA live region announcements for month changes and filter changes.
-- Localized formats and firstDayOfWeek per locale.
-- Reduced-motion variants for image transitions; high-contrast-safe overlays.
+- ARIA live region announcements for month changes and filter changes. [P2]
+- Localized formats and firstDayOfWeek per locale. [P1]
+- Reduced-motion variants for image transitions; high-contrast-safe overlays. [P1]
 
 Performance and media handling
-- Avoid CLS: require or infer aspect ratio for thumbnails; helpers to maintain boxes.
-- CDN helpers: build srcset/sizes; optional transform hook for URL params.
-- Priority prefetch: prefetch current-week heroes; hover/focus preloads day detail images.
-- Image error handling: broken-image fallback component and onImageError callback.
+- Avoid CLS: require or infer aspect ratio for thumbnails; helpers to maintain boxes. [P1]
+- CDN helpers: build srcset/sizes; optional transform hook for URL params. [P2]
+- Priority prefetch: prefetch current-week heroes; hover/focus preloads day detail images. [P2]
+- Image error handling: broken-image fallback component and onImageError callback. [P1]
 
 API and developer experience
-- Headless slots: DayBadge, DayFooter, DayCorner, EmptyState, WeekHeader, MonthHeader.
-- Imperative handle: ref methods openDay(date), focusDay(date), scrollToMonth(date).
-- Strong TypeScript types; discriminated unions for layout modes.
-- Event hooks: onDayFocus, onDayKeyDown, onMonthChange, onRangeChange, onOpenDetail.
-- Optional state adapter to persist last viewed month.
+- Headless slots: DayBadge, DayFooter, DayCorner, EmptyState, WeekHeader, MonthHeader. [P1]
+- Imperative handle: ref methods openDay(date), focusDay(date), scrollToMonth(date). [P2]
+- Strong TypeScript types; discriminated unions for layout modes. [P1]
+- Event hooks: onDayFocus, onDayKeyDown, onMonthChange, onRangeChange, onOpenDetail. [P1]
+- Optional state adapter to persist last viewed month. [P2]
 
 Integrations
-- TanStack Query example: wire onRangeChange to query keys and cache prefetch.
+- TanStack Query example: wire onRangeChange to query keys and cache prefetch. [P2]
 
 Printing and export
-- Print-friendly CSS for the month grid.
-- Optional “export month as image” helper via html-to-canvas (kept external and opt-in).
+- Print-friendly CSS for the month grid. [P2]
+- Optional “export month as image” helper via html-to-canvas (kept external and opt-in). [P3]
 
 Testing and quality
-- Storybook stories covering empty/overflow/a11y states.
-- A11y tests for keyboard nav and screen reader labels.
-- Visual regression test for the month grid with varied content.
+- Storybook stories covering empty/overflow/a11y states. [P1]
+- A11y tests for keyboard nav and screen reader labels. [P1]
+- Visual regression test for the month grid with varied content. [P2]
 
 Safety and privacy
 - Default alt text uses count summaries (e.g., "Oct 12, 3 photos"); never embeds PII by default.

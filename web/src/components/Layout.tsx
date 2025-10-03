@@ -8,6 +8,9 @@ import { StandardLoading } from "./StandardLoading";
 function AuthenticatedHeaderActions() {
     return (
         <>
+            <Link to="/2fa/settings" className="btn-ghost">
+                2FA Settings
+            </Link>
             <Link to="/2fa/setup" className="btn-ghost">
                 2FA Setup
             </Link>

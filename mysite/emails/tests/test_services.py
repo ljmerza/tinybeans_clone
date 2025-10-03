@@ -201,11 +201,16 @@ class EmailTemplateLoaderTests(SimpleTestCase):
         self.assertIsNotNone(template)
         assert template is not None
 
-        rendered = template.render({'token': '123456', 'verification_link': 'https://example.com/verify'})
+        rendered = template.render({
+            'token': '123456',
+            'verification_link': 'https://example.com/verify',
+            'verification_expires_in_minutes': 15,
+        })
 
         self.assertEqual(rendered.subject, 'Verify your Tinybeans-inspired account')
         self.assertIn('123456', rendered.text_body)
         self.assertIn('https://example.com/verify', rendered.text_body)
+        self.assertIn('This link expires in 15 minutes.', rendered.text_body)
         self.assertIsNotNone(rendered.html_body)
         assert rendered.html_body is not None
         self.assertIn('<html>', rendered.html_body)
@@ -224,7 +229,11 @@ class EmailTemplateLoaderTests(SimpleTestCase):
         dispatched = email_dispatch_service.send_email(
             to_email='recipient@example.com',
             template_id=EMAIL_VERIFICATION_TEMPLATE,
-            context={'token': '654321', 'verification_link': 'https://example.com/verify'},
+            context={
+                'token': '654321',
+                'verification_link': 'https://example.com/verify',
+                'verification_expires_in_minutes': 20,
+            },
         )
 
         self.assertTrue(dispatched)
@@ -236,8 +245,10 @@ class EmailTemplateLoaderTests(SimpleTestCase):
             lines,
             [
                 'Hi there,',
-                'Thanks for signing up! Please use the code below to verify your email address:',
-                'Verification link: https://example.com/verify',
+                'Thanks for signing up! Confirm your email using the link below:',
+                'https://example.com/verify',
+                'This link expires in 20 minutes.',
+                'If you prefer to enter the code manually, use this verification token:',
                 '654321',
                 'Enter this code in the app to activate your account. If you did not create an account, you can ignore this email.',
             ],

@@ -72,6 +72,10 @@ class SignupView(APIView):
             ttl=TOKEN_TTL_SECONDS,
         )
 
+        base_url = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
+        verification_link = f"{base_url}/verify-email?{urlencode({'token': verification_token})}"
+        expires_in_minutes = max(1, math.ceil(TOKEN_TTL_SECONDS / 60))
+
         send_email_task.delay(
             to_email=user.email,
             template_id=EMAIL_VERIFICATION_TEMPLATE,
@@ -79,6 +83,8 @@ class SignupView(APIView):
                 'token': verification_token,
                 'email': user.email,
                 'username': user.username,
+                'verification_link': verification_link,
+                'verification_expires_in_minutes': expires_in_minutes,
             },
         )
 
@@ -194,6 +200,10 @@ class EmailVerificationResendView(APIView):
             {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
             ttl=TOKEN_TTL_SECONDS,
         )
+        base_url = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
+        verification_link = f"{base_url}/verify-email?{urlencode({'token': token})}"
+        expires_in_minutes = max(1, math.ceil(TOKEN_TTL_SECONDS / 60))
+
         send_email_task.delay(
             to_email=user.email,
             template_id=EMAIL_VERIFICATION_TEMPLATE,
@@ -201,6 +211,8 @@ class EmailVerificationResendView(APIView):
                 'token': token,
                 'email': user.email,
                 'username': user.username,
+                'verification_link': verification_link,
+                'verification_expires_in_minutes': expires_in_minutes,
             },
         )
         return Response({'message': _('Verification email reissued')}, status=status.HTTP_202_ACCEPTED)
