@@ -49,6 +49,15 @@ export const twoFactorApi = {
 		}),
 
 	/**
+	 * Request a code to disable 2FA (for email/SMS methods)
+	 */
+	requestDisableCode: () =>
+		api.post<{ method: string; message: string; expires_in?: number }>(
+			"/auth/2fa/disable/request/",
+			{},
+		),
+
+	/**
 	 * Disable 2FA
 	 */
 	disable: (code: string) =>

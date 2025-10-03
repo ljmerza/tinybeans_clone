@@ -1,7 +1,7 @@
 /**
  * @fileoverview Confirmation dialog with custom content area.
  * Provides a pre-built dialog for confirmations that need additional UI elements.
- * 
+ *
  * @module components/ui/confirm-dialog-with-content
  */
 
@@ -49,11 +49,11 @@ export interface ConfirmDialogWithContentProps {
 
 /**
  * Confirmation dialog with custom content area.
- * 
+ *
  * Similar to ConfirmDialog but allows custom content between the description
  * and action buttons. Useful for confirmations that require additional input
  * (e.g., verification codes, checkboxes, or form fields).
- * 
+ *
  * @example Basic usage with form input
  * ```tsx
  * <ConfirmDialogWithContent
@@ -72,7 +72,7 @@ export interface ConfirmDialogWithContentProps {
  *   />
  * </ConfirmDialogWithContent>
  * ```
- * 
+ *
  * @example With error message
  * ```tsx
  * <ConfirmDialogWithContent

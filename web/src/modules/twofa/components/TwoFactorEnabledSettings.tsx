@@ -8,18 +8,32 @@ import { verificationCodeSchema } from "@/lib/validations";
 import { DisableTwoFactorSection } from "@/modules/twofa/components/DisableTwoFactorSection";
 import { RecoveryCodesSection } from "@/modules/twofa/components/RecoveryCodesSection";
 import { TrustedDevicesSection } from "@/modules/twofa/components/TrustedDevicesSection";
-import { useDisable2FA, useGenerateRecoveryCodes } from "@/modules/twofa/hooks";
+import {
+	useDisable2FA,
+	useGenerateRecoveryCodes,
+	useRequestDisableCode,
+} from "@/modules/twofa/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 export function TwoFactorEnabledSettings() {
 	const navigate = useNavigate();
 	const disable2FA = useDisable2FA();
+	const requestDisableCode = useRequestDisableCode();
 	const generateCodes = useGenerateRecoveryCodes();
 
 	const [showDisableConfirm, setShowDisableConfirm] = useState(false);
 	const [disableCode, setDisableCode] = useState("");
 	const [showNewCodes, setShowNewCodes] = useState(false);
+
+	const handleRequestDisable = async () => {
+		try {
+			await requestDisableCode.mutateAsync();
+			setShowDisableConfirm(true);
+		} catch (error) {
+			console.error("Failed to request disable code:", error);
+		}
+	};
 
 	const handleDisable = async () => {
 		const validation = verificationCodeSchema.safeParse(disableCode);
@@ -65,8 +79,10 @@ export function TwoFactorEnabledSettings() {
 				canDisable={canDisable}
 				disableCode={disableCode}
 				isDisabling={disable2FA.isPending}
-				errMessage={disable2FA.error?.message}
-				onRequestDisable={() => setShowDisableConfirm(true)}
+				errMessage={
+					disable2FA.error?.message || requestDisableCode.error?.message
+				}
+				onRequestDisable={handleRequestDisable}
 				onCancelDisable={() => {
 					setShowDisableConfirm(false);
 					setDisableCode("");

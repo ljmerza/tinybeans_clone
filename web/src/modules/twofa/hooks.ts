@@ -102,6 +102,18 @@ export function useVerify2FALogin() {
 }
 
 /**
+ * Request a code to disable 2FA
+ */
+export function useRequestDisableCode() {
+	return useMutation<
+		{ method: string; message: string; expires_in?: number },
+		Error
+	>({
+		mutationFn: () => twoFactorApi.requestDisableCode(),
+	});
+}
+
+/**
  * Disable 2FA
  */
 export function useDisable2FA() {

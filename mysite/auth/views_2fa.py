@@ -407,6 +407,50 @@ class TwoFactorMethodRemoveView(APIView):
         )
 
 
+class TwoFactorDisableRequestView(APIView):
+    """Request a code to disable 2FA"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @extend_schema(responses={200: dict})
+    def post(self, request):
+        """Send verification code for disabling 2FA"""
+        user = request.user
+        
+        try:
+            settings_obj = user.twofa_settings
+        except TwoFactorSettings.DoesNotExist:
+            return Response(
+                {'error': '2FA not enabled'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not settings_obj.is_enabled:
+            return Response(
+                {'error': '2FA is already disabled'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # For TOTP, no code needs to be sent
+        if settings_obj.preferred_method == 'totp':
+            return Response({
+                'method': 'totp',
+                'message': 'Enter your authenticator code to disable 2FA',
+            })
+        
+        # For email/SMS, check rate limiting
+        if TwoFactorService.is_rate_limited(user):
+            return rate_limit_response()
+        
+        # Send OTP for disable purpose
+        code_obj = TwoFactorService.send_otp(user, method=settings_obj.preferred_method, purpose='disable')
+        
+        return Response({
+            'method': settings_obj.preferred_method,
+            'message': f'Verification code sent to your {settings_obj.preferred_method}',
+            'expires_in': 600,
+        })
+
+
 class TwoFactorDisableView(APIView):
     """Disable 2FA"""
     permission_classes = [permissions.IsAuthenticated]
@@ -454,8 +498,13 @@ class TwoFactorDisableView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Disable 2FA
+        # Disable 2FA and clear all verified methods
         settings_obj.is_enabled = False
+        settings_obj.totp_secret = None
+        settings_obj.totp_verified = False
+        settings_obj.phone_number = None
+        settings_obj.sms_verified = False
+        settings_obj.email_verified = False
         settings_obj.save()
         
         # Log the action

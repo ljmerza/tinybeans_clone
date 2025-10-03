@@ -1,7 +1,7 @@
 /**
  * @fileoverview Simple confirmation dialog component.
  * Provides a pre-built dialog for simple yes/no confirmations.
- * 
+ *
  * @module components/ui/confirm-dialog
  */
 
@@ -46,14 +46,14 @@ export interface ConfirmDialogProps {
 
 /**
  * Simple confirmation dialog component.
- * 
+ *
  * Provides a modal dialog with title, description, and confirm/cancel buttons.
  * Handles loading states and prevents closing while loading.
- * 
+ *
  * @example
  * ```tsx
  * const [isOpen, setIsOpen] = useState(false);
- * 
+ *
  * <ConfirmDialog
  *   open={isOpen}
  *   onOpenChange={setIsOpen}
@@ -67,11 +67,11 @@ export interface ConfirmDialogProps {
  *   }}
  * />
  * ```
- * 
+ *
  * @example Destructive action with loading state
  * ```tsx
  * const [isDeleting, setIsDeleting] = useState(false);
- * 
+ *
  * <ConfirmDialog
  *   open={showDialog}
  *   onOpenChange={setShowDialog}
