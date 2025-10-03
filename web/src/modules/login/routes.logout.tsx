@@ -1,4 +1,5 @@
 import { createRoute, useNavigate } from "@tanstack/react-router";
+import type { AnyRoute } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useLogout } from "./hooks";
 
@@ -11,13 +12,15 @@ function LogoutPage() {
 		if (hasLoggedOut.current) return;
 		hasLoggedOut.current = true;
 
-		const doLogout = async () => {
-			await logout.mutateAsync();
-			navigate({ to: "/" });
-		};
-		doLogout();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+		void logout
+			.mutateAsync()
+			.catch((error) => {
+				console.error("Logout error:", error);
+			})
+			.finally(() => {
+				navigate({ to: "/" });
+			});
+	}, [logout, navigate]);
 
 	return (
 		<div className="mx-auto max-w-sm p-6">
@@ -28,7 +31,7 @@ function LogoutPage() {
 	);
 }
 
-export default (parentRoute: any) =>
+export default (parentRoute: AnyRoute) =>
 	createRoute({
 		path: "/logout",
 		component: LogoutPage,

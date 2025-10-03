@@ -3,12 +3,14 @@
  * Used during login when 2FA is required
  */
 
+import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { verificationCodeSchema } from "@/lib/validations";
 import { VerificationInput } from "@/modules/twofa/components/VerificationInput";
 import { useVerify2FALogin } from "@/modules/twofa/hooks";
-import type { TwoFactorVerifyState } from "@/modules/twofa/types";
+import type { TwoFactorMethod, TwoFactorVerifyState } from "@/modules/twofa/types";
 import {
 	Navigate,
 	createFileRoute,
@@ -16,6 +18,19 @@ import {
 	useNavigate,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { z } from "zod";
+
+const TWO_FACTOR_METHODS: ReadonlyArray<TwoFactorMethod> = ["totp", "email", "sms"];
+
+function isValidTwoFactorMethod(value: unknown): value is TwoFactorMethod {
+	return typeof value === "string" && TWO_FACTOR_METHODS.includes(value as TwoFactorMethod);
+}
+
+// Used in 2FA verify for recovery codes
+const recoveryCodeSchema = z
+	.string()
+	.min(14, "Recovery code must be at least 14 characters");
+
 
 function TwoFactorVerifyPage() {
 	const navigate = useNavigate();
@@ -23,12 +38,24 @@ function TwoFactorVerifyPage() {
 
 	// Read verify data directly from location state (no useEffect needed)
 	const [verifyData] = useState<TwoFactorVerifyState | null>(() => {
-		const state = location.state as any as TwoFactorVerifyState | undefined;
-		if (state?.partialToken && state?.method) {
-			console.log("2FA Verify Data from location state:", state);
-			return state;
+		const state = location.state;
+		if (!state || typeof state !== "object") {
+			return null;
 		}
-		return null;
+
+		const candidate = state as Partial<TwoFactorVerifyState>;
+		const partialToken = candidate.partialToken;
+		const method = candidate.method;
+		if (typeof partialToken !== "string" || !isValidTwoFactorMethod(method)) {
+			return null;
+		}
+		const parsed: TwoFactorVerifyState = {
+			partialToken,
+			method,
+			message: typeof candidate.message === "string" ? candidate.message : undefined,
+		};
+		console.log("2FA Verify Data from location state:", parsed);
+		return parsed;
 	});
 
 	const [code, setCode] = useState("");
@@ -52,8 +79,12 @@ function TwoFactorVerifyPage() {
 	const { partialToken, method, message } = verifyData;
 
 	const handleVerify = () => {
-		if (useRecoveryCode && code.length < 14) return;
-		if (!useRecoveryCode && code.length !== 6) return;
+		// Validate code based on type
+		const validation = useRecoveryCode 
+			? recoveryCodeSchema.safeParse(code)
+			: verificationCodeSchema.safeParse(code);
+		
+		if (!validation.success) return;
 
 		console.log("Verifying 2FA code..."); // Debug log
 		verify.mutate({
@@ -147,7 +178,9 @@ function TwoFactorVerifyPage() {
 					<Button
 						onClick={handleVerify}
 						disabled={
-							(useRecoveryCode ? code.length < 14 : code.length !== 6) ||
+							(useRecoveryCode 
+								? !recoveryCodeSchema.safeParse(code).success 
+								: !verificationCodeSchema.safeParse(code).success) ||
 							verify.isPending
 						}
 						className="w-full"
@@ -155,14 +188,15 @@ function TwoFactorVerifyPage() {
 						{verify.isPending ? "Verifying..." : "Verify"}
 					</Button>
 
-					{verify.error && (
-						<div className="bg-red-50 border border-red-200 rounded p-3">
-							<p className="text-sm text-red-600 text-center">
-								{(verify.error as any)?.message ||
-									"Invalid code. Please try again."}
-							</p>
-						</div>
-					)}
+				{verify.error && (
+					<div className="bg-red-50 border border-red-200 rounded p-3">
+						<StatusMessage variant="error" align="center">
+							{verify.error instanceof Error
+								? verify.error.message
+								: "Invalid code. Please try again."}
+						</StatusMessage>
+					</div>
+				)}
 
 					<div className="text-center">
 						<button

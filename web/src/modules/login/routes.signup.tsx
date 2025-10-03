@@ -1,23 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { confirmPasswordSchema, passwordSchema } from "@/lib/validations";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
+import type { AnyRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useSignup } from "./hooks";
 
 const baseSchema = z.object({
 	username: z.string().min(1, "Username is required"),
 	email: z.string().email("Valid email required"),
-	password: z.string().min(8, "Password must be at least 8 characters"),
-	password_confirm: z.string().min(8, "Confirm password"),
+	password: passwordSchema,
+	password_confirm: confirmPasswordSchema,
 });
+
+type SignupFormValues = z.infer<typeof baseSchema>;
 
 function SignupPage() {
 	const signup = useSignup();
 	const navigate = useNavigate();
 
-	const form = useForm({
+	const form = useForm<SignupFormValues>({
 		defaultValues: {
 			username: "",
 			email: "",
@@ -25,7 +29,7 @@ function SignupPage() {
 			password_confirm: "",
 		},
 		onSubmit: async ({ value }) => {
-			const { password_confirm, ...payload } = value as any;
+			const { password_confirm: _ignored, ...payload } = value;
 			await signup.mutateAsync(payload);
 			navigate({ to: "/" });
 		},
@@ -171,7 +175,7 @@ function SignupPage() {
 
 				{signup.error && (
 					<p className="form-error">
-						{(signup.error as any)?.message ?? "Signup failed"}
+						{signup.error.message ?? "Signup failed"}
 					</p>
 				)}
 
@@ -189,7 +193,7 @@ function SignupPage() {
 	);
 }
 
-export default (parentRoute: any) =>
+export default (parentRoute: AnyRoute) =>
 	createRoute({
 		path: "/signup",
 		component: SignupPage,

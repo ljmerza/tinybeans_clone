@@ -16,6 +16,10 @@ export class ErrorBoundary extends Component<Props, State> {
 		this.state = { hasError: false };
 	}
 
+	private handleGoHome = () => {
+		window.location.assign("/");
+	};
+
 	static getDerivedStateFromError(error: Error): State {
 		return { hasError: true, error };
 	}
@@ -40,7 +44,8 @@ export class ErrorBoundary extends Component<Props, State> {
 							{this.state.error?.message || "An unexpected error occurred"}
 						</p>
 						<button
-							onClick={() => (window.location.href = "/")}
+							type="button"
+							onClick={this.handleGoHome}
 							className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
 						>
 							Go to Home

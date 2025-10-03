@@ -4,7 +4,14 @@
  */
 
 import { Input } from "@/components/ui/input";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+	type KeyboardEvent,
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 interface VerificationInputProps {
 	length?: number;
@@ -25,12 +32,21 @@ export function VerificationInput({
 }: VerificationInputProps) {
 	const [digits, setDigits] = useState<string[]>(Array(length).fill(""));
 	const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+	const componentId = useId();
+	const slotIndices = useMemo(
+		() => Array.from({ length }, (_, index) => index),
+		[length],
+	);
 
 	// Sync external value to internal digits
 	useEffect(() => {
 		const newDigits = value.padEnd(length, "").slice(0, length).split("");
 		setDigits(newDigits);
 	}, [value, length]);
+
+	useEffect(() => {
+		inputRefs.current = inputRefs.current.slice(0, length);
+	}, [length]);
 
 	// Auto-focus first input on mount
 	useEffect(() => {
@@ -104,9 +120,9 @@ export function VerificationInput({
 
 	return (
 		<div className="flex gap-2 justify-center" onPaste={handlePaste}>
-			{Array.from({ length }).map((_, index) => (
+			{slotIndices.map((index) => (
 				<Input
-					key={index}
+					key={`${componentId}-${index}`}
 					ref={(el) => {
 						inputRefs.current[index] = el;
 					}}

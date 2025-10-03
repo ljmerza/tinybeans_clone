@@ -1,7 +1,8 @@
-import { PublicOnlyRoute } from "@/components";
+import { PublicOnlyRoute, StatusMessage } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { passwordSchema } from "@/lib/validations";
 import { useLogin } from "@/modules/login/hooks";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -10,17 +11,19 @@ import { z } from "zod";
 
 const schema = z.object({
 	username: z.string().min(1, "Username is required"),
-	password: z.string().min(8, "Password must be at least 8 characters"),
+	password: passwordSchema,
 });
+
+type LoginFormValues = z.infer<typeof schema>;
 
 function LoginPage() {
 	const login = useLogin();
 
-	const form = useForm({
+	const form = useForm<LoginFormValues>({
 		defaultValues: { username: "", password: "" },
 		onSubmit: async ({ value }) => {
 			try {
-				await login.mutateAsync(value as any);
+				await login.mutateAsync(value);
 			} catch (error) {
 				// Error is already handled by the mutation
 				console.error("Login submission error:", error);
@@ -123,10 +126,9 @@ function LoginPage() {
 
 					{login.error && (
 						<div className="bg-red-50 border border-red-200 rounded p-3">
-							<p className="text-sm text-red-600 text-center">
-								{(login.error as any)?.message ??
-									"Login failed. Please try again."}
-							</p>
+							<StatusMessage variant="error" align="center">
+								{login.error.message || "Login failed. Please try again."}
+							</StatusMessage>
 						</div>
 					)}
 

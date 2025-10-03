@@ -19,7 +19,7 @@ function PasswordResetRequestPage() {
 	const resetRequest = usePasswordResetRequest();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-	const form = useForm<FormValues>({
+	const form = useForm({
 		defaultValues: { identifier: "" },
 		onSubmit: async ({ value }) => {
 			setSuccessMessage(null);

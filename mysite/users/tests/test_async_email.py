@@ -98,7 +98,7 @@ class AsyncEmailTaskTests(TestCase):
         self.assertIn('token', kwargs['context'])
 
     @override_settings(MAILJET_ENABLED=True, MAILJET_API_KEY='key', MAILJET_API_SECRET='secret')
-    @patch('emails.services.email_dispatch.send_via_mailjet')
+    @patch('emails.services.send_via_mailjet')
     def test_send_email_task_uses_mailjet_when_enabled(self, mock_mailjet):
         mock_mailjet.return_value = None
         

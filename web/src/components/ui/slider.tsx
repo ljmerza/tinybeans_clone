@@ -22,6 +22,14 @@ function Slider({
 					: [min, max],
 		[value, defaultValue, min, max],
 	);
+	const sliderInstanceId = React.useId();
+	const thumbIdsRef = React.useRef<string[]>([]);
+
+	if (thumbIdsRef.current.length !== _values.length) {
+		thumbIdsRef.current = Array.from({ length: _values.length }, (_, index) =>
+			thumbIdsRef.current[index] ?? `${sliderInstanceId}-${index}`,
+		);
+	}
 
 	return (
 		<SliderPrimitive.Root
@@ -49,13 +57,16 @@ function Slider({
 					)}
 				/>
 			</SliderPrimitive.Track>
-			{Array.from({ length: _values.length }, (_, index) => (
-				<SliderPrimitive.Thumb
-					data-slot="slider-thumb"
-					key={index}
-					className="border-primary bg-background ring-ring/50 block size-4 shrink-0 rounded-full border shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
-				/>
-			))}
+			{_values.map((_, index) => {
+				const thumbId = thumbIdsRef.current[index];
+				return (
+					<SliderPrimitive.Thumb
+						data-slot="slider-thumb"
+						key={thumbId}
+						className="border-primary bg-background ring-ring/50 block size-4 shrink-0 rounded-full border shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
+					/>
+				);
+			})}
 		</SliderPrimitive.Root>
 	);
 }

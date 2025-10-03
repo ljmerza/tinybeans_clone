@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Protocol
 
-from emails.domain import EmailTemplate
+from emails.models import EmailTemplate
 
 
 class EmailTemplateRepository(Protocol):

@@ -1,0 +1,28 @@
+{% block subject %}Verify your Tinybeans-inspired account{% endblock %}
+
+{% block text_body %}
+Hi {{ username|default:"there" }},
+
+Thanks for signing up! Please use the code below to verify your email address:
+{% if verification_link %}
+Verification link: {{ verification_link }}
+{% endif %}
+{{ token }}
+
+Enter this code in the app to activate your account. If you did not create an account, you can ignore this email.
+{% endblock %}
+
+{% block html_body %}
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>Hi {{ username|default:"there" }},</p>
+    <p>Thanks for signing up! Please use the code below to verify your email address:</p>
+    {% if verification_link %}
+    <p><a href="{{ verification_link }}">Click here to verify your email</a></p>
+    {% endif %}
+    <p style="font-size: 20px; font-weight: bold;">{{ token }}</p>
+    <p>Enter this code in the app to activate your account. If you did not create an account, you can ignore this email.</p>
+  </body>
+</html>
+{% endblock %}

@@ -1,4 +1,4 @@
-import { LoadingPage } from "@/components/LoadingSpinner";
+import { LoadingPage } from "@/components/LoadingPage";
 import { useLogout } from "@/modules/login/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
@@ -12,19 +12,15 @@ function LogoutPage() {
 		if (hasLoggedOut.current) return;
 		hasLoggedOut.current = true;
 
-		const doLogout = async () => {
-			try {
-				await logout.mutateAsync();
-				navigate({ to: "/" });
-			} catch (error) {
+		void logout
+			.mutateAsync()
+			.catch((error) => {
 				console.error("Logout error:", error);
-				// Navigate to home even if logout fails
+			})
+			.finally(() => {
 				navigate({ to: "/" });
-			}
-		};
-		doLogout();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+			});
+	}, [logout, navigate]);
 
 	return <LoadingPage message="Logging out..." />;
 }

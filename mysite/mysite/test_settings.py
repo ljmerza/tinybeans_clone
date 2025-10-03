@@ -67,6 +67,5 @@ LOGGING = {
     }
 }
 
-# Ensure templates are loaded for tests
-# This forces Django to import the emails templates module
-import emails.templates.users  # This will register the email templates
+# Ensure template metadata is available during tests
+import emails.templates  # noqa: F401  (exposes EMAIL_TEMPLATE_FILES for loader)

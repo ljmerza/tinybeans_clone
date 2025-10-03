@@ -191,8 +191,7 @@ class TwoFactorStatusView(APIView):
                 'backup_email': None,
                 'has_totp': False,
                 'has_sms': False,
-                'sms_verified': False,
-                'message': '2FA not configured'
+                'sms_verified': False
             })
 
 

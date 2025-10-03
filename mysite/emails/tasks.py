@@ -4,8 +4,8 @@ from typing import Any
 
 from celery import shared_task
 
-from emails.domain import TemplateRenderer
-from emails.services.email_dispatch import email_dispatch_service, register_email_template
+from emails.models import TemplateRenderer
+from emails.services import email_dispatch_service, register_email_template
 
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_jitter=True, retry_kwargs={'max_retries': 5})

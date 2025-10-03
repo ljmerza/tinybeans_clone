@@ -1,0 +1,27 @@
+{% block subject %}Upgrade to a full account{% endblock %}
+
+{% block text_body %}
+A guardian from '{{ circle_name|default:"your circle" }}' invited you to upgrade {{ child_name|default:"your child" }}'s profile to a full account.
+Use the token below to finish setting up the account:
+{% if upgrade_link %}
+Complete upgrade: {{ upgrade_link }}
+{% endif %}
+{{ token }}
+
+If you do not wish to proceed, simply ignore this email.
+{% endblock %}
+
+{% block html_body %}
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>A guardian from '{{ circle_name|default:"your circle" }}' invited you to upgrade {{ child_name|default:"your child" }}'s profile to a full account.</p>
+    <p>Use the token below to finish setting up the account:</p>
+    {% if upgrade_link %}
+    <p><a href="{{ upgrade_link }}">Complete upgrade</a></p>
+    {% endif %}
+    <p style="font-size: 20px; font-weight: bold;">{{ token }}</p>
+    <p>If you do not wish to proceed, simply ignore this email.</p>
+  </body>
+</html>
+{% endblock %}

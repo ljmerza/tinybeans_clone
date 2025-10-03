@@ -1,5 +1,6 @@
-import { showApiToast, extractMessage } from "@/lib/toast";
+import { extractMessage, showApiToast } from "@/lib/toast";
 import { authStore, setAccessToken } from "./store";
+import type { RefreshAccessTokenResponse } from "./types";
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
@@ -106,7 +107,9 @@ export async function refreshAccessToken(): Promise<boolean> {
 		headers,
 	});
 	if (!res.ok) return false;
-	const data = (await res.json().catch(() => null)) as any;
+	const data: RefreshAccessTokenResponse | null = await res
+		.json()
+		.catch(() => null);
 	if (data?.access) {
 		setAccessToken(data.access);
 		return true;
@@ -115,31 +118,44 @@ export async function refreshAccessToken(): Promise<boolean> {
 }
 
 export const api = {
-	get: <T>(path: string, options?: RequestOptions) => request<T>(path, {}, options),
-	post: <T>(path: string, body?: any, options?: RequestOptions) =>
-		request<T>(
+	get: <TResponse>(path: string, options?: RequestOptions) =>
+		request<TResponse>(path, {}, options),
+	post: <TResponse, TBody = unknown>(
+		path: string,
+		body?: TBody,
+		options?: RequestOptions,
+	) =>
+		request<TResponse>(
 			path,
 			{
 				method: "POST",
-				body: body ? JSON.stringify(body) : undefined,
+				body: body === undefined ? undefined : JSON.stringify(body),
 			},
 			options,
 		),
-	patch: <T>(path: string, body?: any, options?: RequestOptions) =>
-		request<T>(
+	patch: <TResponse, TBody = unknown>(
+		path: string,
+		body?: TBody,
+		options?: RequestOptions,
+	) =>
+		request<TResponse>(
 			path,
 			{
 				method: "PATCH",
-				body: body ? JSON.stringify(body) : undefined,
+				body: body === undefined ? undefined : JSON.stringify(body),
 			},
 			options,
 		),
-	delete: <T>(path: string, body?: any, options?: RequestOptions) =>
-		request<T>(
+	delete: <TResponse, TBody = unknown>(
+		path: string,
+		body?: TBody,
+		options?: RequestOptions,
+	) =>
+		request<TResponse>(
 			path,
 			{
 				method: "DELETE",
-				body: body ? JSON.stringify(body) : undefined,
+				body: body === undefined ? undefined : JSON.stringify(body),
 			},
 			options,
 		),

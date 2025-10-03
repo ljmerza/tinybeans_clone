@@ -2,8 +2,7 @@
  * Trusted Devices Management Page
  */
 
-import { Layout } from "@/components/Layout";
-import { LoadingPage } from "@/components/LoadingSpinner";
+import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import {
 	useRemoveTrustedDevice,
@@ -28,9 +27,10 @@ function TrustedDevicesPage() {
 
 	if (isLoading) {
 		return (
-			<Layout>
-				<LoadingPage message="Loading trusted devices..." fullScreen={false} />
-			</Layout>
+			<Layout.Loading
+				message="Loading trusted devices..."
+				description="Fetching the devices that have been marked as trusted."
+			/>
 		);
 	}
 
@@ -114,6 +114,7 @@ function TrustedDevicesPage() {
 
 					<div className="mt-6 pt-6 border-t flex justify-between">
 						<button
+							type="button"
 							onClick={() => navigate({ to: "/2fa/settings" })}
 							className="text-sm text-gray-600 hover:text-gray-800"
 						>

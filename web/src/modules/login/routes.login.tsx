@@ -1,7 +1,10 @@
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
+import type { AnyRoute } from "@tanstack/react-router";
 
+import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { passwordSchema } from "@/lib/validations";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
@@ -9,19 +12,20 @@ import { useLogin } from "./hooks";
 
 const schema = z.object({
 	username: z.string().min(1, "Username is required"),
-	password: z.string().min(8, "Password must be at least 8 characters"),
+	password: passwordSchema,
 });
+
+type LoginFormValues = z.infer<typeof schema>;
 
 function LoginPage() {
 	const login = useLogin();
 	const navigate = useNavigate();
-	const search = {} as any as { redirect?: string };
 
-	const form = useForm({
+	const form = useForm<LoginFormValues>({
 		defaultValues: { username: "", password: "" },
 		onSubmit: async ({ value }) => {
-			await login.mutateAsync(value as any);
-			navigate({ to: search?.redirect || "/" });
+			await login.mutateAsync(value);
+			navigate({ to: "/" });
 		},
 	});
 
@@ -99,9 +103,7 @@ function LoginPage() {
 					{login.isPending ? "Signing in…" : "Sign in"}
 				</Button>
 				{login.error && (
-					<p className="text-sm text-red-600">
-						{(login.error as any)?.message ?? "Login failed"}
-					</p>
+					<StatusMessage variant="error">{login.error.message ?? "Login failed"}</StatusMessage>
 				)}
 
 				<div className="text-center text-sm">
@@ -118,7 +120,7 @@ function LoginPage() {
 	);
 }
 
-export default (parentRoute: any) =>
+export default (parentRoute: AnyRoute) =>
 	createRoute({
 		path: "/login",
 		component: LoginPage,

@@ -6,6 +6,8 @@ class EmailingConfig(AppConfig):
     name = 'emails'
 
     def ready(self):
-        from . import templates  # noqa: F401 -- ensure templates register on startup
+        from .template_loader import load_email_templates
+
+        load_email_templates()
 
         return super().ready()

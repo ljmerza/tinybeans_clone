@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives, send_mail
 
-from emails.domain import EmailContent, EmailTemplate, TemplateRenderer
+from emails.models import EmailTemplate, RenderedEmail, TemplateRenderer
 from emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
-from emails.repositories import EmailTemplateRepository, InMemoryEmailTemplateRepository
+from emails.repository import EmailTemplateRepository, InMemoryEmailTemplateRepository
 
 logger = logging.getLogger(__name__)
 
@@ -27,39 +27,59 @@ class UnknownEmailTemplateError(EmailServiceError):
 class EmailTransport:
     """Handles the actual dispatching of rendered email content."""
 
-    def send(self, *, to_email: str, template_id: str, content: EmailContent) -> None:
+    def send(self, *, to_email: str, template_id: str, content: RenderedEmail) -> None:
         try:
             if getattr(settings, 'MAILJET_ENABLED', False):
                 try:
                     send_via_mailjet(
                         to_email=to_email,
                         subject=content.subject,
-                        body=content.body,
+                        text_body=content.text_body,
+                        html_body=content.html_body,
                         template_id=template_id,
                     )
                     return
                 except MailerConfigurationError:
-                    send_mail(
-                        content.subject,
-                        content.body,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [to_email],
-                        fail_silently=False,
+                    _send_via_django_backend(
+                        to_email=to_email,
+                        subject=content.subject,
+                        text_body=content.text_body,
+                        html_body=content.html_body,
                     )
                 except MailerSendError:
                     # Propagate Mailjet errors so Celery can retry
                     raise
             else:
-                send_mail(
-                    content.subject,
-                    content.body,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [to_email],
-                    fail_silently=False,
+                _send_via_django_backend(
+                    to_email=to_email,
+                    subject=content.subject,
+                    text_body=content.text_body,
+                    html_body=content.html_body,
                 )
         except Exception as exc:
             logger.warning('Email send failed for %s (%s): %s', template_id, to_email, exc)
             raise
+
+
+def _send_via_django_backend(*, to_email: str, subject: str, text_body: str, html_body: str | None) -> None:
+    if html_body:
+        message = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        message.attach_alternative(html_body, 'text/html')
+        message.send(fail_silently=False)
+        return
+
+    send_mail(
+        subject,
+        text_body,
+        settings.DEFAULT_FROM_EMAIL,
+        [to_email],
+        fail_silently=False,
+    )
 
 
 class EmailDispatchService:

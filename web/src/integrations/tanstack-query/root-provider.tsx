@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+declare global {
+	interface Window {
+		__TANSTACK_QUERY_CLIENT__?: QueryClient;
+	}
+}
+
 export function getContext() {
 	const queryClient = new QueryClient({
 		defaultOptions: {
@@ -12,7 +18,7 @@ export function getContext() {
 
 	// Expose queryClient for TanStack Store Devtools
 	if (typeof window !== "undefined") {
-		(window as any).__TANSTACK_QUERY_CLIENT__ = queryClient;
+		window.__TANSTACK_QUERY_CLIENT__ = queryClient;
 	}
 
 	return {

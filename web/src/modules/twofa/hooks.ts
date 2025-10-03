@@ -5,17 +5,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { setAccessToken } from "../login/store";
 import { twoFactorApi } from "./client";
-import type { TwoFactorMethod } from "./types";
+import type {
+	RecoveryCodesResponse,
+	TrustedDevicesResponse,
+	TwoFactorMethod,
+	TwoFactorMethodRemovalResponse,
+	TwoFactorSetupResponse,
+	TwoFactorStatusResponse,
+	TwoFactorVerifyLoginResponse,
+} from "./types";
 
 /**
  * Initialize 2FA setup
  */
 export function useInitialize2FASetup() {
-	return useMutation({
-		mutationFn: ({
-			method,
-			phone_number,
-		}: { method: TwoFactorMethod; phone_number?: string }) =>
+	return useMutation<
+		TwoFactorSetupResponse,
+		Error,
+		{ method: TwoFactorMethod; phone_number?: string }
+	>({
+		mutationFn: ({ method, phone_number }) =>
 			twoFactorApi.initializeSetup(method, phone_number),
 	});
 }
@@ -26,8 +35,8 @@ export function useInitialize2FASetup() {
 export function useVerify2FASetup() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: (code: string) => twoFactorApi.verifySetup(code),
+	return useMutation<RecoveryCodesResponse, Error, string>({
+		mutationFn: (code) => twoFactorApi.verifySetup(code),
 		onSuccess: () => {
 			// Invalidate status to refresh
 			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
@@ -39,7 +48,7 @@ export function useVerify2FASetup() {
  * Get 2FA status
  */
 export function use2FAStatus() {
-	return useQuery({
+	return useQuery<TwoFactorStatusResponse>({
 		queryKey: ["2fa", "status"],
 		queryFn: () => twoFactorApi.getStatus(),
 	});
@@ -51,24 +60,21 @@ export function use2FAStatus() {
 export function useVerify2FALogin() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: ({
-			partial_token,
-			code,
-			remember_me,
-		}: {
-			partial_token: string;
-			code: string;
-			remember_me?: boolean;
-		}) => twoFactorApi.verifyLogin(partial_token, code, remember_me),
+	return useMutation<
+		TwoFactorVerifyLoginResponse,
+		Error,
+		{ partial_token: string; code: string; remember_me?: boolean }
+	>({
+		mutationFn: ({ partial_token, code, remember_me }) =>
+			twoFactorApi.verifyLogin(partial_token, code, remember_me),
 		onSuccess: async (data) => {
 			console.log("2FA verify success:", data); // Debug log
 
 			// Store access token
-			if (data.tokens && data.tokens.access) {
+			if (data.tokens?.access) {
 				console.log(
 					"Setting access token:",
-					data.tokens.access.substring(0, 20) + "...",
+					`${data.tokens.access.substring(0, 20)}...`,
 				); // Debug log
 				setAccessToken(data.tokens.access);
 			} else {
@@ -101,8 +107,8 @@ export function useVerify2FALogin() {
 export function useDisable2FA() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: (code: string) => twoFactorApi.disable(code),
+	return useMutation<{ enabled: boolean; message: string }, Error, string>({
+		mutationFn: (code) => twoFactorApi.disable(code),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
 		},
@@ -113,7 +119,7 @@ export function useDisable2FA() {
  * Generate new recovery codes
  */
 export function useGenerateRecoveryCodes() {
-	return useMutation({
+	return useMutation<RecoveryCodesResponse, Error>({
 		mutationFn: () => twoFactorApi.generateRecoveryCodes(),
 	});
 }
@@ -122,7 +128,7 @@ export function useGenerateRecoveryCodes() {
  * Get trusted devices
  */
 export function useTrustedDevices() {
-	return useQuery({
+	return useQuery<TrustedDevicesResponse>({
 		queryKey: ["2fa", "trusted-devices"],
 		queryFn: () => twoFactorApi.getTrustedDevices(),
 	});
@@ -134,9 +140,8 @@ export function useTrustedDevices() {
 export function useRemoveTrustedDevice() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: (device_id: string) =>
-			twoFactorApi.removeTrustedDevice(device_id),
+	return useMutation<{ message?: string }, Error, string>({
+		mutationFn: (device_id) => twoFactorApi.removeTrustedDevice(device_id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["2fa", "trusted-devices"] });
 		},
@@ -149,9 +154,8 @@ export function useRemoveTrustedDevice() {
 export function useSetPreferredMethod() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: (method: TwoFactorMethod) =>
-			twoFactorApi.setPreferredMethod(method),
+	return useMutation<{ preferred_method: string; message: string }, Error, TwoFactorMethod>({
+		mutationFn: (method) => twoFactorApi.setPreferredMethod(method),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
 		},
@@ -164,9 +168,8 @@ export function useSetPreferredMethod() {
 export function useRemoveTwoFactorMethod() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: (method: TwoFactorMethod) =>
-			twoFactorApi.removeMethod(method),
+	return useMutation<TwoFactorMethodRemovalResponse, Error, TwoFactorMethod>({
+		mutationFn: (method) => twoFactorApi.removeMethod(method),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
 		},

@@ -19,7 +19,9 @@ class MailerSendError(RuntimeError):
     """Raised when Mailjet responds with a non-successful status."""
 
 
-def _build_payload(*, to_email: str, subject: str, body: str, template_id: str) -> dict[str, Any]:
+def _build_payload(
+    *, to_email: str, subject: str, text_body: str, html_body: str | None, template_id: str
+) -> dict[str, Any]:
     message: dict[str, Any] = {
         'From': {
             'Email': settings.MAILJET_FROM_EMAIL,
@@ -27,20 +29,30 @@ def _build_payload(*, to_email: str, subject: str, body: str, template_id: str) 
         },
         'To': [{'Email': to_email}],
         'Subject': subject,
-        'TextPart': body,
+        'TextPart': text_body,
         'CustomID': template_id,
     }
+    if html_body:
+        message['HTMLPart'] = html_body
     payload: dict[str, Any] = {'Messages': [message]}
     if settings.MAILJET_USE_SANDBOX:
         payload['SandboxMode'] = True
     return payload
 
 
-def send_via_mailjet(*, to_email: str, subject: str, body: str, template_id: str) -> None:
+def send_via_mailjet(
+    *, to_email: str, subject: str, text_body: str, html_body: str | None = None, template_id: str
+) -> None:
     if not settings.MAILJET_ENABLED:
         raise MailerConfigurationError('Mailjet is not configured')
 
-    payload = _build_payload(to_email=to_email, subject=subject, body=body, template_id=template_id)
+    payload = _build_payload(
+        to_email=to_email,
+        subject=subject,
+        text_body=text_body,
+        html_body=html_body,
+        template_id=template_id,
+    )
     try:
         response: Response = requests.post(
             settings.MAILJET_API_URL,
@@ -96,8 +108,9 @@ The Tinybeans Team
                 send_via_mailjet(
                     to_email=email,
                     subject=subject,
-                    body=body,
-                    template_id='2fa_code'
+                    text_body=body,
+                    html_body=None,
+                    template_id='2fa_code',
                 )
             else:
                 send_mail(
@@ -132,8 +145,9 @@ The Tinybeans Team
             send_via_mailjet(
                 to_email=email,
                 subject=subject,
-                body=body,
-                template_id='2fa_enabled'
+                text_body=body,
+                html_body=None,
+                template_id='2fa_enabled',
             )
         except Exception as e:
             logger.error(f"Failed to send 2FA enabled notification: {e}")
@@ -157,8 +171,9 @@ The Tinybeans Team
             send_via_mailjet(
                 to_email=email,
                 subject=subject,
-                body=body,
-                template_id='2fa_disabled'
+                text_body=body,
+                html_body=None,
+                template_id='2fa_disabled',
             )
         except Exception as e:
             logger.error(f"Failed to send 2FA disabled notification: {e}")
@@ -188,8 +203,9 @@ The Tinybeans Team
             send_via_mailjet(
                 to_email=email,
                 subject=subject,
-                body=body,
-                template_id='trusted_device_added'
+                text_body=body,
+                html_body=None,
+                template_id='trusted_device_added',
             )
         except Exception as e:
             logger.error(f"Failed to send trusted device notification: {e}")

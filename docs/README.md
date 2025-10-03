@@ -20,6 +20,7 @@ Architecture Decision Records (ADRs)
 - [ADR-003-TWO-FACTOR-AUTHENTICATION.md](./architecture/adr/ADR-003-TWO-FACTOR-AUTHENTICATION.md)
 - [ADR-004-2FA-FRONTEND-IMPLEMENTATION.md](./architecture/adr/ADR-004-2FA-FRONTEND-IMPLEMENTATION.md)
 - [ADR-005-CSRF-TOKEN-MANAGEMENT.md](./architecture/adr/ADR-005-CSRF-TOKEN-MANAGEMENT.md)
+- [ADR-009-PHOTO-CALENDAR-REACT-LIBRARY.md](./architecture/adr/ADR-009-PHOTO-CALENDAR-REACT-LIBRARY.md)
 
 #### [architecture/api/](./architecture/api/)
 API schemas and documentation

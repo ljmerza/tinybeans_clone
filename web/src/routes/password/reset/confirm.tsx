@@ -2,15 +2,12 @@ import { PublicOnlyRoute } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { confirmPasswordSchema, passwordSchema } from "@/lib/validations";
 import { usePasswordResetConfirm } from "@/modules/login/hooks";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { z } from "zod";
-
-const passwordSchema = z.string().min(8, "Password must be at least 8 characters");
-const confirmPasswordSchema = z.string().min(8, "Confirm password");
 
 const schema = z
 	.object({
@@ -29,53 +26,30 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-export const Route = createFileRoute("/password/reset/confirm")({
-	validateSearch: (search) => z.object({ token: z.string().optional() }).parse(search),
-	component: () => (
-		<PublicOnlyRoute redirectTo="/">
-			<PasswordResetConfirmPage />
-		</PublicOnlyRoute>
-	),
-});
-
 function PasswordResetConfirmPage() {
 	const { token } = useSearch({ from: "/password/reset/confirm" });
 	const confirmReset = usePasswordResetConfirm();
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const navigate = useNavigate();
 
-	const form = useForm<FormValues>({
+	const form = useForm({
 		defaultValues: { password: "", password_confirm: "" },
 		onSubmit: async ({ value }) => {
 			if (!token) {
 				return;
 			}
-			setSuccessMessage(null);
 			try {
-				const response = await confirmReset.mutateAsync({
+				await confirmReset.mutateAsync({
 					token,
 					password: value.password,
 					password_confirm: value.password_confirm,
 				});
-				setSuccessMessage(response.detail ?? "Password updated. You can now log in.");
 				form.reset();
+				navigate({ to: "/login" });
 			} catch (error) {
 				// Inline error state handled below
 			}
 		},
 	});
-
-	useEffect(() => {
-		if (!successMessage) {
-			return;
-		}
-		const timeout = window.setTimeout(() => {
-			navigate({ to: "/login" });
-		}, 2500);
-		return () => window.clearTimeout(timeout);
-	}, [successMessage, navigate]);
-
-	const errorMessage = confirmReset.error instanceof Error ? confirmReset.error.message : null;
 
 	if (!token) {
 		return (
@@ -107,18 +81,6 @@ function PasswordResetConfirmPage() {
 						Choose a new password for your account.
 					</p>
 				</div>
-
-				{successMessage && (
-					<div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded p-3">
-						{successMessage}
-					</div>
-				)}
-
-				{errorMessage && (
-					<div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded p-3">
-						{errorMessage}
-					</div>
-				)}
 
 				<form
 					onSubmit={(event) => {
@@ -219,3 +181,12 @@ function PasswordResetConfirmPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/password/reset/confirm")({
+	validateSearch: (search) => z.object({ token: z.string().optional() }).parse(search),
+	component: () => (
+		<PublicOnlyRoute redirectTo="/">
+			<PasswordResetConfirmPage />
+		</PublicOnlyRoute>
+	),
+});
