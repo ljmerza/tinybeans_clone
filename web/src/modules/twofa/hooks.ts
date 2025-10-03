@@ -154,7 +154,11 @@ export function useRemoveTrustedDevice() {
 export function useSetPreferredMethod() {
 	const queryClient = useQueryClient();
 
-	return useMutation<{ preferred_method: string; message: string }, Error, TwoFactorMethod>({
+	return useMutation<
+		{ preferred_method: string; message: string },
+		Error,
+		TwoFactorMethod
+	>({
 		mutationFn: (method) => twoFactorApi.setPreferredMethod(method),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });

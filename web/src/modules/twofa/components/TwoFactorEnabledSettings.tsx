@@ -56,7 +56,9 @@ export function TwoFactorEnabledSettings() {
 				onHideCodes={() => setShowNewCodes(false)}
 			/>
 
-			<TrustedDevicesSection onManage={() => navigate({ to: "/2fa/trusted-devices" })} />
+			<TrustedDevicesSection
+				onManage={() => navigate({ to: "/2fa/trusted-devices" })}
+			/>
 
 			<DisableTwoFactorSection
 				showDisableConfirm={showDisableConfirm}

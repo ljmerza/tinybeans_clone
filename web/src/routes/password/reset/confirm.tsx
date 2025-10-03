@@ -6,7 +6,12 @@ import { confirmPasswordSchema, passwordSchema } from "@/lib/validations";
 import { usePasswordResetConfirm } from "@/modules/login/hooks";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
-import { Link, createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import {
+	Link,
+	createFileRoute,
+	useNavigate,
+	useSearch,
+} from "@tanstack/react-router";
 import { z } from "zod";
 
 const schema = z
@@ -55,9 +60,12 @@ function PasswordResetConfirmPage() {
 		return (
 			<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 				<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
-					<h1 className="text-2xl font-semibold text-center">Invalid or expired link</h1>
+					<h1 className="text-2xl font-semibold text-center">
+						Invalid or expired link
+					</h1>
 					<p className="text-sm text-muted-foreground text-center">
-						We could not find a valid password reset token. Please request a new reset link.
+						We could not find a valid password reset token. Please request a new
+						reset link.
 					</p>
 					<div className="text-center">
 						<Link
@@ -93,13 +101,13 @@ function PasswordResetConfirmPage() {
 					<form.Field
 						name="password"
 						validators={{
-								onBlur: ({ value }) => {
-									const result = passwordSchema.safeParse(value);
-									if (!result.success) {
-										return result.error.errors[0].message;
-									}
-									return undefined;
-								},
+							onBlur: ({ value }) => {
+								const result = passwordSchema.safeParse(value);
+								if (!result.success) {
+									return result.error.errors[0].message;
+								}
+								return undefined;
+							},
 						}}
 					>
 						{(field) => (
@@ -157,7 +165,11 @@ function PasswordResetConfirmPage() {
 						)}
 					</form.Field>
 
-					<Button type="submit" className="w-full" disabled={confirmReset.isPending}>
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={confirmReset.isPending}
+					>
 						{confirmReset.isPending ? (
 							<span className="flex items-center justify-center gap-2">
 								<LoadingSpinner size="sm" />
@@ -183,7 +195,8 @@ function PasswordResetConfirmPage() {
 }
 
 export const Route = createFileRoute("/password/reset/confirm")({
-	validateSearch: (search) => z.object({ token: z.string().optional() }).parse(search),
+	validateSearch: (search) =>
+		z.object({ token: z.string().optional() }).parse(search),
 	component: () => (
 		<PublicOnlyRoute redirectTo="/">
 			<PasswordResetConfirmPage />

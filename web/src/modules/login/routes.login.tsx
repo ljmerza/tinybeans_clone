@@ -103,7 +103,9 @@ function LoginPage() {
 					{login.isPending ? "Signing in…" : "Sign in"}
 				</Button>
 				{login.error && (
-					<StatusMessage variant="error">{login.error.message ?? "Login failed"}</StatusMessage>
+					<StatusMessage variant="error">
+						{login.error.message ?? "Login failed"}
+					</StatusMessage>
 				)}
 
 				<div className="text-center text-sm">

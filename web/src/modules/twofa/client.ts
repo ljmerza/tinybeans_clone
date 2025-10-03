@@ -79,9 +79,7 @@ export const twoFactorApi = {
 	/**
 	 */
 	removeTrustedDevice: (device_id: string) =>
-		api.delete<{ message?: string }>(
-			`/auth/2fa/trusted-devices/${device_id}/`,
-		),
+		api.delete<{ message?: string }>(`/auth/2fa/trusted-devices/${device_id}/`),
 
 	/**
 	 * Update preferred 2FA method
@@ -96,7 +94,5 @@ export const twoFactorApi = {
 	 * Remove a configured 2FA method
 	 */
 	removeMethod: (method: "totp" | "sms" | "email") =>
-		api.delete<TwoFactorMethodRemovalResponse>(
-			`/auth/2fa/methods/${method}/`,
-		),
+		api.delete<TwoFactorMethodRemovalResponse>(`/auth/2fa/methods/${method}/`),
 };

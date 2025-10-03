@@ -10,7 +10,10 @@ import { Label } from "@/components/ui/label";
 import { verificationCodeSchema } from "@/lib/validations";
 import { VerificationInput } from "@/modules/twofa/components/VerificationInput";
 import { useVerify2FALogin } from "@/modules/twofa/hooks";
-import type { TwoFactorMethod, TwoFactorVerifyState } from "@/modules/twofa/types";
+import type {
+	TwoFactorMethod,
+	TwoFactorVerifyState,
+} from "@/modules/twofa/types";
 import {
 	Navigate,
 	createFileRoute,
@@ -20,17 +23,23 @@ import {
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-const TWO_FACTOR_METHODS: ReadonlyArray<TwoFactorMethod> = ["totp", "email", "sms"];
+const TWO_FACTOR_METHODS: ReadonlyArray<TwoFactorMethod> = [
+	"totp",
+	"email",
+	"sms",
+];
 
 function isValidTwoFactorMethod(value: unknown): value is TwoFactorMethod {
-	return typeof value === "string" && TWO_FACTOR_METHODS.includes(value as TwoFactorMethod);
+	return (
+		typeof value === "string" &&
+		TWO_FACTOR_METHODS.includes(value as TwoFactorMethod)
+	);
 }
 
 // Used in 2FA verify for recovery codes
 const recoveryCodeSchema = z
 	.string()
 	.min(14, "Recovery code must be at least 14 characters");
-
 
 function TwoFactorVerifyPage() {
 	const navigate = useNavigate();
@@ -52,7 +61,8 @@ function TwoFactorVerifyPage() {
 		const parsed: TwoFactorVerifyState = {
 			partialToken,
 			method,
-			message: typeof candidate.message === "string" ? candidate.message : undefined,
+			message:
+				typeof candidate.message === "string" ? candidate.message : undefined,
 		};
 		console.log("2FA Verify Data from location state:", parsed);
 		return parsed;
@@ -80,10 +90,10 @@ function TwoFactorVerifyPage() {
 
 	const handleVerify = () => {
 		// Validate code based on type
-		const validation = useRecoveryCode 
+		const validation = useRecoveryCode
 			? recoveryCodeSchema.safeParse(code)
 			: verificationCodeSchema.safeParse(code);
-		
+
 		if (!validation.success) return;
 
 		console.log("Verifying 2FA code..."); // Debug log
@@ -178,8 +188,8 @@ function TwoFactorVerifyPage() {
 					<Button
 						onClick={handleVerify}
 						disabled={
-							(useRecoveryCode 
-								? !recoveryCodeSchema.safeParse(code).success 
+							(useRecoveryCode
+								? !recoveryCodeSchema.safeParse(code).success
 								: !verificationCodeSchema.safeParse(code).success) ||
 							verify.isPending
 						}
@@ -188,15 +198,15 @@ function TwoFactorVerifyPage() {
 						{verify.isPending ? "Verifying..." : "Verify"}
 					</Button>
 
-				{verify.error && (
-					<div className="bg-red-50 border border-red-200 rounded p-3">
-						<StatusMessage variant="error" align="center">
-							{verify.error instanceof Error
-								? verify.error.message
-								: "Invalid code. Please try again."}
-						</StatusMessage>
-					</div>
-				)}
+					{verify.error && (
+						<div className="bg-red-50 border border-red-200 rounded p-3">
+							<StatusMessage variant="error" align="center">
+								{verify.error instanceof Error
+									? verify.error.message
+									: "Invalid code. Please try again."}
+							</StatusMessage>
+						</div>
+					)}
 
 					<div className="text-center">
 						<button

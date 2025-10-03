@@ -65,7 +65,8 @@ export function useLogin() {
 export function useSignup() {
 	const qc = useQueryClient();
 	return useMutation<SignupResponse, Error, SignupRequest>({
-		mutationFn: (body) => api.post<SignupResponse, SignupRequest>("/auth/signup/", body),
+		mutationFn: (body) =>
+			api.post<SignupResponse, SignupRequest>("/auth/signup/", body),
 		onSuccess: (data) => {
 			setAccessToken(data.tokens.access);
 			qc.invalidateQueries({ queryKey: ["auth"] });

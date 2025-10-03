@@ -3,34 +3,29 @@
  * Manage 2FA configuration, recovery codes, and trusted devices
  */
 
-import { ButtonGroup, Layout } from "@/components";
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog, Layout } from "@/components";
 import { TwoFactorEnabledSettings } from "@/modules/twofa/components/TwoFactorEnabledSettings";
 import { TwoFactorStatusHeader } from "@/modules/twofa/components/TwoFactorStatusHeader";
 import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
 import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
 import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
-import {
-	use2FAStatus,
-	useRemoveTwoFactorMethod,
-} from "@/modules/twofa/hooks";
+import { use2FAStatus, useRemoveTwoFactorMethod } from "@/modules/twofa/hooks";
 import type { TwoFactorMethod } from "@/modules/twofa/types";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 // Labels and removal messages from setup page
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {
-	"totp": "Authenticator App",
-	"email": "Email",
-	"sms": "SMS",
+	totp: "Authenticator App",
+	email: "Email",
+	sms: "SMS",
 };
 
-type RemovableMethod = Exclude<TwoFactorMethod, "email">;
-const REMOVAL_CONFIRMATION: Record<RemovableMethod, string> = {
-	"totp":
-		"Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
-	"sms":
-		"Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
+const REMOVAL_CONFIRMATION: Record<TwoFactorMethod, string> = {
+	totp: "Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
+	sms: "Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
+	email:
+		"Removing email verification will disable receiving verification codes via email. You can set it up again at any time.",
 };
 
 function TwoFactorSettingsPage() {
@@ -38,22 +33,25 @@ function TwoFactorSettingsPage() {
 	const { data: status, isLoading } = use2FAStatus();
 	const removeMethod = useRemoveTwoFactorMethod();
 
-	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(null);
+	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(
+		null,
+	);
 	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
 	const [removalError, setRemovalError] = useState<string | null>(null);
 
 	const removalInProgress = removeMethod.isPending;
-	const handleRemovalRequest = (method: Exclude<TwoFactorMethod, "email">) => {
+
+	const handleRemovalRequest = (method: TwoFactorMethod) => {
 		setRemovalError(null);
 		setRemovalMessage(null);
 		setMethodToRemove(method);
 	};
+
 	const handleRemovalCancel = () => {
-		if (!removalInProgress) {
-			setMethodToRemove(null);
-		}
+		setMethodToRemove(null);
 		setRemovalError(null);
 	};
+
 	const handleRemovalConfirm = async () => {
 		if (!methodToRemove) return;
 		setRemovalError(null);
@@ -63,7 +61,8 @@ function TwoFactorSettingsPage() {
 			setMethodToRemove(null);
 		} catch (err) {
 			const apiMessage = (err as { data?: { error?: string } })?.data?.error;
-			const fallback = err instanceof Error ? err.message : "Failed to remove 2FA method.";
+			const fallback =
+				err instanceof Error ? err.message : "Failed to remove 2FA method.";
 			setRemovalError(apiMessage ?? fallback);
 		}
 	};
@@ -86,7 +85,6 @@ function TwoFactorSettingsPage() {
 	// Always show consolidated setup on settings page. If 2FA is not enabled, show an inline callout instead of routing to a separate /2fa/setup page.
 	// This ensures there is no dependency on a non-existent setup route.
 
-
 	if (!status) {
 		return (
 			<Layout.Error
@@ -106,9 +104,12 @@ function TwoFactorSettingsPage() {
 				<div className="bg-white rounded-lg shadow-md p-6 space-y-6">
 					<div className="flex items-start justify-between">
 						<div>
-							<h2 className="text-xl font-semibold mb-1">Setup and Manage Methods</h2>
+							<h2 className="text-xl font-semibold mb-1">
+								Setup and Manage Methods
+							</h2>
 							<p className="text-sm text-gray-600">
-								Choose your default method by setting up and configuring available options below.
+								Choose your default method by setting up and configuring
+								available options below.
 							</p>
 						</div>
 					</div>
@@ -116,7 +117,10 @@ function TwoFactorSettingsPage() {
 					{!status.is_enabled && (
 						<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-4">
 							<p className="font-semibold">2FA is not enabled.</p>
-							<p>Start by setting up a method below. This will also generate fresh recovery codes.</p>
+							<p>
+								Start by setting up a method below. This will also generate
+								fresh recovery codes.
+							</p>
 						</div>
 					)}
 
@@ -130,32 +134,6 @@ function TwoFactorSettingsPage() {
 						<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
 							{removalError}
 						</p>
-					)}
-
-					{methodToRemove && (
-						<div className="border border-red-200 bg-red-50 rounded-md p-4 space-y-3">
-							<p className="text-sm text-red-800 font-semibold">
-								Confirm removal of {METHOD_LABELS[methodToRemove]}?
-							</p>
-							<p className="text-xs text-red-700">{REMOVAL_CONFIRMATION[methodToRemove as Exclude<TwoFactorMethod, "email">]}</p>
-							<ButtonGroup className="flex-col sm:flex-row">
-								<Button
-									onClick={handleRemovalConfirm}
-									disabled={removalInProgress}
-									className="sm:flex-1 bg-red-600 hover:bg-red-700 text-white"
-								>
-									{removalInProgress ? "Removing..." : "Confirm removal"}
-								</Button>
-								<Button
-									variant="outline"
-									onClick={handleRemovalCancel}
-									disabled={removalInProgress}
-									className="sm:flex-1"
-								>
-									Cancel
-								</Button>
-							</ButtonGroup>
-						</div>
 					)}
 
 					<div className="space-y-4">
@@ -198,6 +176,19 @@ function TwoFactorSettingsPage() {
 					</button>
 				</div>
 			</div>
+
+			<ConfirmDialog
+				open={!!methodToRemove}
+				onOpenChange={(open) => !open && handleRemovalCancel()}
+				title={`Remove ${methodToRemove ? METHOD_LABELS[methodToRemove] : ""}?`}
+				description={methodToRemove ? REMOVAL_CONFIRMATION[methodToRemove] : ""}
+				confirmLabel="Remove"
+				cancelLabel="Cancel"
+				variant="destructive"
+				isLoading={removalInProgress}
+				onConfirm={handleRemovalConfirm}
+				onCancel={handleRemovalCancel}
+			/>
 		</Layout>
 	);
 }

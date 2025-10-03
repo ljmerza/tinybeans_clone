@@ -35,7 +35,8 @@ function PasswordResetRequestPage() {
 		},
 	});
 
-	const errorMessage = resetRequest.error instanceof Error ? resetRequest.error.message : null;
+	const errorMessage =
+		resetRequest.error instanceof Error ? resetRequest.error.message : null;
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -43,7 +44,8 @@ function PasswordResetRequestPage() {
 				<div className="space-y-2 text-center">
 					<h1 className="text-2xl font-semibold">Forgot password</h1>
 					<p className="text-sm text-muted-foreground">
-						Enter your email address or username and we'll send you a reset link.
+						Enter your email address or username and we'll send you a reset
+						link.
 					</p>
 				</div>
 
@@ -98,7 +100,11 @@ function PasswordResetRequestPage() {
 						)}
 					</form.Field>
 
-					<Button type="submit" className="w-full" disabled={resetRequest.isPending}>
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={resetRequest.isPending}
+					>
 						{resetRequest.isPending ? (
 							<span className="flex items-center justify-center gap-2">
 								<LoadingSpinner size="sm" />

@@ -26,8 +26,10 @@ function Slider({
 	const thumbIdsRef = React.useRef<string[]>([]);
 
 	if (thumbIdsRef.current.length !== _values.length) {
-		thumbIdsRef.current = Array.from({ length: _values.length }, (_, index) =>
-			thumbIdsRef.current[index] ?? `${sliderInstanceId}-${index}`,
+		thumbIdsRef.current = Array.from(
+			{ length: _values.length },
+			(_, index) =>
+				thumbIdsRef.current[index] ?? `${sliderInstanceId}-${index}`,
 		);
 	}
 

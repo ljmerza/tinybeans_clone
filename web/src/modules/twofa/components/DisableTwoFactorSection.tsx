@@ -5,6 +5,7 @@
 
 import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialogWithContent } from "@/components/ui/confirm-dialog-with-content";
 import { VerificationInput } from "./VerificationInput";
 
 interface DisableTwoFactorSectionProps {
@@ -36,28 +37,34 @@ export function DisableTwoFactorSection({
 				Disable Two-Factor Authentication
 			</h2>
 
-			{!showDisableConfirm ? (
-				<div className="space-y-4">
-					<p className="text-gray-600 text-sm">
-						Disabling 2FA will make your account less secure. You'll only need your password to log in.
-					</p>
-					<Button
-						onClick={onRequestDisable}
-						variant="outline"
-						className="text-red-600 border-red-300 hover:bg-red-50"
-					>
-						Disable 2FA
-					</Button>
-				</div>
-			) : (
-				<div className="space-y-4">
-					<div className="bg-red-50 border border-red-200 rounded p-4">
-						<p className="text-sm text-red-800 font-semibold mb-2">⚠️ Are you sure?</p>
-						<p className="text-sm text-red-800">
-							Enter your 6-digit verification code to confirm disabling 2FA.
-						</p>
-					</div>
+			<div className="space-y-4">
+				<p className="text-gray-600 text-sm">
+					Disabling 2FA will make your account less secure. You'll only need
+					your password to log in.
+				</p>
+				<Button
+					onClick={onRequestDisable}
+					variant="outline"
+					className="text-red-600 border-red-300 hover:bg-red-50"
+				>
+					Disable 2FA
+				</Button>
+			</div>
 
+			<ConfirmDialogWithContent
+				open={showDisableConfirm}
+				onOpenChange={(open) => !open && onCancelDisable()}
+				title="Disable Two-Factor Authentication"
+				description="Enter your 6-digit verification code to confirm disabling 2FA. This will make your account less secure."
+				confirmLabel={isDisabling ? "Disabling..." : "Confirm Disable"}
+				cancelLabel="Cancel"
+				variant="destructive"
+				isLoading={isDisabling}
+				disabled={!canDisable}
+				onConfirm={onConfirmDisable}
+				onCancel={onCancelDisable}
+			>
+				<div className="space-y-4">
 					<VerificationInput
 						value={disableCode}
 						onChange={onCodeChange}
@@ -65,30 +72,13 @@ export function DisableTwoFactorSection({
 						disabled={isDisabling}
 					/>
 
-					<div className="flex gap-2">
-						<Button
-							onClick={onConfirmDisable}
-							disabled={!canDisable || isDisabling}
-							variant="outline"
-							className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-						>
-							{isDisabling ? "Disabling..." : "Confirm Disable"}
-						</Button>
-						<Button
-							onClick={onCancelDisable}
-							variant="outline"
-							className="flex-1"
-							disabled={isDisabling}
-						>
-							Cancel
-						</Button>
-					</div>
-
 					{errMessage && (
-						<StatusMessage variant="error" align="center">{errMessage}</StatusMessage>
+						<StatusMessage variant="error" align="center">
+							{errMessage}
+						</StatusMessage>
 					)}
 				</div>
-			)}
+			</ConfirmDialogWithContent>
 		</div>
 	);
 }

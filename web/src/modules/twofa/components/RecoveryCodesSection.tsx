@@ -33,11 +33,16 @@ export function RecoveryCodesSection({
 			{!showNewCodes ? (
 				<div className="space-y-4">
 					<p className="text-gray-600 text-sm">
-						Recovery codes can be used to access your account if you lose access to your authenticator device. Each code can only be used once.
+						Recovery codes can be used to access your account if you lose access
+						to your authenticator device. Each code can only be used once.
 					</p>
 
 					<div className="flex gap-2">
-						<Button onClick={onGenerate} disabled={isGenerating} variant="outline">
+						<Button
+							onClick={onGenerate}
+							disabled={isGenerating}
+							variant="outline"
+						>
 							{isGenerating ? "Generating..." : "Generate New Recovery Codes"}
 						</Button>
 
