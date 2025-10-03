@@ -76,14 +76,16 @@ def _collect_blocks(template) -> Dict[str, BlockNode]:
 
 
 def _build_renderer(template, block_map: Dict[str, BlockNode], template_id: str):
+    compiled = getattr(template, 'template', template)
+
     def renderer(context: dict[str, Any]) -> RenderedEmail:
         ctx_data = context or {}
-        subject = _render_block(block_map.get(_BLOCK_SUBJECT), ctx_data).strip()
+        subject = _render_block(compiled, block_map.get(_BLOCK_SUBJECT), ctx_data).strip()
         if not subject:
             raise ValueError(f'Email template {template_id} rendered empty subject')
 
-        text_body = _render_block(block_map.get(_BLOCK_TEXT), ctx_data).strip()
-        html_body = _render_block(block_map.get(_BLOCK_HTML), ctx_data).strip() or None
+        text_body = _render_block(compiled, block_map.get(_BLOCK_TEXT), ctx_data).strip()
+        html_body = _render_block(compiled, block_map.get(_BLOCK_HTML), ctx_data).strip() or None
 
         if not text_body:
             if html_body:
@@ -96,8 +98,9 @@ def _build_renderer(template, block_map: Dict[str, BlockNode], template_id: str)
     return renderer
 
 
-def _render_block(block: BlockNode | None, context_data: dict[str, Any]) -> str:
+def _render_block(compiled_template, block: BlockNode | None, context_data: dict[str, Any]) -> str:
     if block is None:
         return ''
     render_context = Context(context_data)
+    render_context.template = compiled_template
     return block.render(render_context)

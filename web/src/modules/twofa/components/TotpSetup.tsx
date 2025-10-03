@@ -15,7 +15,7 @@ interface TotpSetupProps {
 
 export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
     const [step, setStep] = useState<SetupStep>("intro");
-    const [code, setCode] = useState("" );
+    const [code, setCode] = useState("");
 
     const initSetup = useInitialize2FASetup();
     const verifySetup = useVerify2FASetup();
@@ -61,7 +61,7 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
                             setStep("recovery");
                         } catch (error) {
                             console.error("Verification failed:", error);
-                            setCode("" );
+                            setCode("");
                         }
                     }}
                     onBack={() => setStep("scan")}

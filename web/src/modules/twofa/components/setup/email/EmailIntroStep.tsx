@@ -1,4 +1,4 @@
-import { InfoPanel, StatusMessage, WizardFooter, WizardSection, ButtonGroup } from "@/components";
+import { InfoPanel, StatusMessage, WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
 
 interface EmailIntroStepProps {

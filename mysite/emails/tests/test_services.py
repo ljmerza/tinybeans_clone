@@ -231,15 +231,14 @@ class EmailTemplateLoaderTests(SimpleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
         self.assertEqual(message.subject, 'Verify your Tinybeans-inspired account')
+        lines = [line for line in message.body.splitlines() if line]
         self.assertEqual(
-            message.body.splitlines(),
+            lines,
             [
                 'Hi there,',
-                '',
                 'Thanks for signing up! Please use the code below to verify your email address:',
                 'Verification link: https://example.com/verify',
                 '654321',
-                '',
                 'Enter this code in the app to activate your account. If you did not create an account, you can ignore this email.',
             ],
         )

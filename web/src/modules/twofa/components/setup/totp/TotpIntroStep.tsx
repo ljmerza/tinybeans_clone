@@ -1,4 +1,4 @@
-import { InfoPanel, StatusMessage, Wizard, WizardFooter, WizardSection } from "@/components";
+import { InfoPanel, StatusMessage, WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
 
 interface TotpIntroStepProps {
@@ -9,21 +9,8 @@ interface TotpIntroStepProps {
 }
 
 export function TotpIntroStep({ isInitializing, errorMessage, onStart, onCancel }: TotpIntroStepProps) {
-    const footer = (
-        <WizardFooter align={onCancel ? "between" : "end"}>
-            <Button onClick={onStart} disabled={isInitializing} className="flex-1">
-                {isInitializing ? "Setting up..." : "Start Setup"}
-            </Button>
-            {onCancel && (
-                <Button variant="outline" onClick={onCancel} className="flex-1">
-                    Cancel
-                </Button>
-            )}
-        </WizardFooter>
-    );
-
     return (
-        <Wizard footer={footer}>
+        <>
             <WizardSection
                 title="Set up Authenticator App"
                 description="Use an authenticator app to generate verification codes for enhanced security."
@@ -37,6 +24,16 @@ export function TotpIntroStep({ isInitializing, errorMessage, onStart, onCancel 
                 </InfoPanel>
                 {errorMessage && <StatusMessage variant="error">{errorMessage}</StatusMessage>}
             </WizardSection>
-        </Wizard>
+            <WizardFooter align={onCancel ? "between" : "end"}>
+                <Button onClick={onStart} disabled={isInitializing} className="flex-1">
+                    {isInitializing ? "Setting up..." : "Start Setup"}
+                </Button>
+                {onCancel && (
+                    <Button variant="outline" onClick={onCancel} className="flex-1">
+                        Cancel
+                    </Button>
+                )}
+            </WizardFooter>
+        </>
     );
 }

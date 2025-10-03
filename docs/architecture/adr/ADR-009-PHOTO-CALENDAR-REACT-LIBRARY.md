@@ -12,7 +12,7 @@ We want a reusable React library that renders a month-view calendar where each d
 - Smooth navigation across months (swipe on mobile, buttons/keyboard on desktop).
 - Fast rendering and scrolling with lazy-loaded images, LQIP/blurhash placeholders, and virtualization for multi-month views.
 - Headless/unstyled by default, with render-prop or slot APIs for full UI control.
-- Works with any data source (REST/GraphQL/TanStack Query), SSR-friendly.
+- Works with any data source (REST/GraphQL/TanStack Query).
 - Strong accessibility (keyboard navigation, ARIA semantics, readable counts/labels).
 
 ### Non-Goals (initial)
@@ -30,7 +30,7 @@ We want a reusable React library that renders a month-view calendar where each d
 
 2. Day Cell & Thumbnails
    - Display first N thumbnails per day (configurable), with a "+X" overflow badge.
-   - Support multiple children/streams (e.g., per kid) with subtle indicators (color/ring/badge).
+   - Support multiple categories/streams (e.g., per tag or album) with subtle indicators (color/ring/badge).
    - Day detail view (popover/modal) to browse all items for the day.
    - Optional drag & drop between days (re-dating photos) with callbacks.
 
@@ -168,6 +168,84 @@ Library groups items by day; consumers pass `itemsByDate` or `items` and a `grou
 // Optional collage
 <Calendar maxThumbnailsPerDay={3} thumbnailLayout="grid" ... />
 ```
+
+
+## Additional Ideas (Future Enhancements)
+
+User experience and interactions
+- Day detail navigation: keyboard left/right and touch swipe to previous/next day within the detail view. [P2]
+- Quick-jump controls: Today button [P1], jump-to-month/year picker [P2], optional year grid [P3].
+- Overflow indicator: configurable +X badge position and tooltip/label; click/tap opens day detail. [P1]
+- Status overlays: weekend shading [P2], holiday/anniversary markers via a badges slot [P3].
+- Streaks/heatmap: indicate activity streaks or density shading for days with more photos. [P3]
+- Selection: controlled selectedDate/range props; onDayClick/onOpenDetail callbacks. [P1]
+- Context menu: actions like share link, copy date, pin as hero (via callback). [P2]
+
+Data, filtering, and grouping
+- Filters: tags, albums, favorites; header shows active filters. [P2]
+- Grouping: monthly summaries per tag/album; aggregate counts by group. [P3]
+- Empty-day states: customizable placeholders (dot/icon/label) via a slot. [P1]
+- Range-driven fetching: robust onRangeChange (start/end UTC), with debounced notifications. [P1]
+
+Accessibility and localization
+- ARIA live region announcements for month changes and filter changes.
+- Localized formats and firstDayOfWeek per locale.
+- Reduced-motion variants for image transitions; high-contrast-safe overlays.
+
+Performance and media handling
+- Avoid CLS: require or infer aspect ratio for thumbnails; helpers to maintain boxes.
+- CDN helpers: build srcset/sizes; optional transform hook for URL params.
+- Priority prefetch: prefetch current-week heroes; hover/focus preloads day detail images.
+- Image error handling: broken-image fallback component and onImageError callback.
+
+API and developer experience
+- Headless slots: DayBadge, DayFooter, DayCorner, EmptyState, WeekHeader, MonthHeader.
+- Imperative handle: ref methods openDay(date), focusDay(date), scrollToMonth(date).
+- Strong TypeScript types; discriminated unions for layout modes.
+- Event hooks: onDayFocus, onDayKeyDown, onMonthChange, onRangeChange, onOpenDetail.
+- Optional state adapter to persist last viewed month.
+
+Integrations
+- TanStack Query example: wire onRangeChange to query keys and cache prefetch.
+
+Printing and export
+- Print-friendly CSS for the month grid.
+- Optional “export month as image” helper via html-to-canvas (kept external and opt-in).
+
+Testing and quality
+- Storybook stories covering empty/overflow/a11y states.
+- A11y tests for keyboard nav and screen reader labels.
+- Visual regression test for the month grid with varied content.
+
+Safety and privacy
+- Default alt text uses count summaries (e.g., "Oct 12, 3 photos"); never embeds PII by default.
+- Library does not perform network calls; images are loaded only from provided URLs.
+
+
+### MVP vs. Later Phases
+
+MVP (Phase 1)
+- Month grid with weekday headers and locale/firstDayOfWeek
+- Controlled/uncontrolled month navigation with min/max bounds
+- Day cell with single hero thumbnail and +X overflow indicator
+- Day detail view (headless container) and open/close callbacks
+- Range reporting via onRangeChange(start/end UTC)
+- Keyboard navigation (roving tabindex, arrows) and basic ARIA roles
+- Lazy-loaded images with srcset/sizes helpers and aspect ratio to avoid CLS
+- Render hooks/slots (renderDay, WeekHeader, MonthHeader, EmptyState)
+- Browserslist-defined targets; no bundled polyfills
+
+Later Phases (Phase 2+)
+- Optional collage/stacked thumbnails per day (maxThumbnailsPerDay, thumbnailLayout)
+- Streaks/heatmap overlays and status/badges slots
+- Quick-jump picker and year grid
+- Drag & drop between days with callbacks
+- Filters and grouping summaries (tags/albums/favorites)
+- Imperative methods (openDay, focusDay, scrollToMonth)
+- Priority prefetching and image error handling hooks
+- Print-friendly CSS and optional export-as-image utility
+- TanStack Query integration example
+- Visual regression tests and enhanced a11y test coverage
 
   maxThumbnailsPerDay?: number // e.g., 1 (default), 2, 3, 4
   thumbnailLayout?: 'hero' | 'stack' | 'grid' // default 'hero'

@@ -1,4 +1,4 @@
-import { StatusMessage, Wizard, WizardFooter, WizardSection } from "@/components";
+import { StatusMessage, WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
 import { QRCodeDisplay } from "../../QRCodeDisplay";
 
@@ -9,16 +9,8 @@ interface TotpScanStepProps {
 }
 
 export function TotpScanStep({ qrCodeImage, secret, onContinue }: TotpScanStepProps) {
-    const footer = (
-        <WizardFooter>
-            <Button onClick={onContinue} className="w-full">
-                I've Scanned the Code
-            </Button>
-        </WizardFooter>
-    );
-
     return (
-        <Wizard footer={footer}>
+        <>
             <WizardSection title="Scan QR Code" description="Open your authenticator app and scan this QR code.">
                 {qrCodeImage && secret ? (
                     <QRCodeDisplay qrCodeImage={qrCodeImage} secret={secret} />
@@ -28,6 +20,11 @@ export function TotpScanStep({ qrCodeImage, secret, onContinue }: TotpScanStepPr
                     </StatusMessage>
                 )}
             </WizardSection>
-        </Wizard>
+            <WizardFooter>
+                <Button onClick={onContinue} className="w-full">
+                    I've Scanned the Code
+                </Button>
+            </WizardFooter>
+        </>
     );
 }
