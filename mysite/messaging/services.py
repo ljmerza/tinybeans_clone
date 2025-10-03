@@ -17,7 +17,7 @@ class SMSService:
     def get_provider(cls) -> BaseSMSProvider:
         """Get configured SMS provider"""
         if cls._provider is None:
-            provider_name = getattr(settings, 'SMS_PROVIDER', 'twilio')
+            provider_name = getattr(settings, 'SMS_PROVIDER', 'console')
             
             if provider_name == 'twilio':
                 cls._provider = TwilioProvider()
