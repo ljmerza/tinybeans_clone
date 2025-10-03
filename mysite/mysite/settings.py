@@ -312,9 +312,9 @@ IMAGE_SIZES = {
 # CORS Configuration for Development
 if DEBUG:
     CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://192.168.1.76:3000",
+        "http://localhost:3053",
+        "http://127.0.0.1:3053",
+        "http://192.168.1.76:3053",
     ]
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOW_HEADERS = [

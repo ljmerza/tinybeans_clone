@@ -2,7 +2,7 @@ x-common-env: &django-common-env
   DJANGO_SETTINGS_MODULE: mysite.settings
   DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-local}
-  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],web}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],web,192.168.1.76}
   POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
   POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
