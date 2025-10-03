@@ -12,7 +12,7 @@
 
 ## Epic Goal
 
-Migrate the entire authentication feature from `src/modules/login/` to `src/features/auth/`, consolidating duplicate route files, organizing components properly, and ensuring all authentication flows work correctly with the new structure.
+Migrate the entire authentication feature from `src/features/auth/` to `src/features/auth/`, consolidating duplicate route files, organizing components properly, and ensuring all authentication flows work correctly with the new structure.
 
 ---
 
@@ -36,7 +36,7 @@ Migrate the entire authentication feature from `src/modules/login/` to `src/feat
 ### Files to Migrate
 
 ```
-src/modules/login/
+src/features/auth/
 ├── client.ts                    → features/auth/api/authClient.ts
 ├── devtools.tsx                 → features/auth/components/AuthDevtools.tsx
 ├── hooks.ts                     → features/auth/hooks/ (split into files)
@@ -57,12 +57,12 @@ src/routes/
 
 ### Import Analysis
 
-Files importing from `modules/login/`:
+Files importing from `features/auth/`:
 - `src/App.tsx` → Uses authStore
 - `src/main.tsx` → Uses refreshAccessToken
 - `src/routes/*.tsx` → Use auth components and hooks
 - `src/components/PublicOnlyRoute.tsx` → Uses authStore
-- `src/modules/twofa/` → May use auth types
+- `src/features/twofa/` → May use auth types
 
 ---
 
@@ -136,7 +136,7 @@ features/auth/
 
 ```typescript
 // features/auth/api/authClient.ts
-// Moved from modules/login/client.ts
+// Moved from features/auth/client.ts
 import { api } from '@/lib/api'
 import type { LoginCredentials, SignupData, AuthResponse } from '../types'
 
@@ -165,7 +165,7 @@ export const authClient = {
 
 ```typescript
 // features/auth/store/authStore.ts
-// Moved from modules/login/store.ts
+// Moved from features/auth/store.ts
 import { Store } from '@tanstack/react-store'
 import type { AuthUser } from '../types'
 
@@ -462,10 +462,10 @@ export function useLogout() {
 
 **Acceptance Criteria:**
 1. All imports updated across entire codebase
-2. No references to `modules/login/*` remain
+2. No references to `features/auth/*` remain
 3. All TypeScript errors resolved
 4. All linting errors resolved
-5. Old `modules/login/` directory removed
+5. Old `features/auth/` directory removed
 
 **Files Requiring Import Updates:**
 - `src/App.tsx`
@@ -485,36 +485,36 @@ echo "Updating auth imports..."
 
 # Update authStore imports
 find src -type f -name "*.tsx" -o -name "*.ts" | xargs sed -i \
-  's|from "@/modules/login/store"|from "@/features/auth"|g'
+  's|from "@/features/auth/store"|from "@/features/auth"|g'
 
 # Update authClient imports
 find src -type f -name "*.tsx" -o -name "*.ts" | xargs sed -i \
-  's|from "@/modules/login/client"|from "@/features/auth"|g'
+  's|from "@/features/auth/client"|from "@/features/auth"|g'
 
 # Update hook imports
 find src -type f -name "*.tsx" -o -name "*.ts" | xargs sed -i \
-  's|from "@/modules/login/hooks"|from "@/features/auth"|g'
+  's|from "@/features/auth/hooks"|from "@/features/auth"|g'
 
 # Update type imports
 find src -type f -name "*.tsx" -o -name "*.ts" | xargs sed -i \
-  's|from "@/modules/login/types"|from "@/features/auth"|g'
+  's|from "@/features/auth/types"|from "@/features/auth"|g'
 
 echo "✅ Imports updated. Please review changes and test!"
 ```
 
 **Validation Checklist:**
-- [ ] Run find/replace for all `modules/login` references
+- [ ] Run find/replace for all `features/auth` references
 - [ ] TypeScript compilation succeeds
 - [ ] No linting errors
 - [ ] All tests pass
 - [ ] Manual testing of all auth flows
-- [ ] Remove `src/modules/login/` directory
+- [ ] Remove `src/features/auth/` directory
 - [ ] Commit changes
 
 **Definition of Done:**
 - [ ] Import migration script executed
 - [ ] All files manually reviewed
-- [ ] No `modules/login` references remain
+- [ ] No `features/auth` references remain
 - [ ] TypeScript compiles successfully
 - [ ] All tests passing
 - [ ] All auth flows tested manually
@@ -600,7 +600,7 @@ If critical issues discovered:
 ### Epic Level
 - [ ] All 7 stories completed
 - [ ] All auth code in `features/auth/`
-- [ ] No code in `modules/login/`
+- [ ] No code in `features/auth/`
 - [ ] All imports updated
 - [ ] All auth flows working
 - [ ] All tests passing

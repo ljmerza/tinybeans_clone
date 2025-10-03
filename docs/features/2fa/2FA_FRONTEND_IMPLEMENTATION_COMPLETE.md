@@ -2,7 +2,7 @@
 
 **Date:** 2025-01-08  
 **Status:** Implemented  
-**Location:** `web/src/modules/twofa/`
+**Location:** `web/src/features/twofa/`
 
 ## Summary
 

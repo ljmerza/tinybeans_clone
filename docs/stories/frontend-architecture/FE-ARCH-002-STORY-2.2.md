@@ -18,9 +18,9 @@
 5. ✅ No functionality broken
 
 ## Tasks
-- [ ] Move `modules/login/client.ts` to `features/auth/api/authClient.ts`
-- [ ] Move `modules/login/store.ts` to `features/auth/store/authStore.ts`
-- [ ] Move `modules/login/types.ts` to `features/auth/types/auth.types.ts`
+- [ ] Move `features/auth/client.ts` to `features/auth/api/authClient.ts`
+- [ ] Move `features/auth/store.ts` to `features/auth/store/authStore.ts`
+- [ ] Move `features/auth/types.ts` to `features/auth/types/auth.types.ts`
 - [ ] Update imports in `main.tsx`
 - [ ] Update imports in `App.tsx`
 - [ ] Update imports in `PublicOnlyRoute.tsx`

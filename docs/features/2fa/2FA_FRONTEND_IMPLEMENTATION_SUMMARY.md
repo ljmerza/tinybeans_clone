@@ -25,7 +25,7 @@ This document provides a quick reference for implementing Two-Factor Authenticat
 ### Module Structure
 
 ```
-web/src/modules/twofa/
+web/src/features/twofa/
 ├── client.ts                    # API functions
 ├── hooks.ts                     # React Query hooks
 ├── store.ts                     # State management
@@ -336,7 +336,7 @@ POST   /auth/2fa/trusted-devices/remove/      - Remove device
 
 For questions or clarifications:
 1. Review the full ADR-004 document
-2. Check existing auth implementation in `web/src/modules/login/`
+2. Check existing auth implementation in `web/src/features/auth/`
 3. Refer to backend implementation docs
 4. Test with backend API endpoints
 

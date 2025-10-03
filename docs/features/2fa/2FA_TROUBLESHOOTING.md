@@ -20,7 +20,7 @@ Cannot read properties of undefined (reading 'writeText')
 - Shows alert if both methods fail
 
 **Code Location:** 
-`web/src/modules/twofa/components/RecoveryCodeList.tsx`
+`web/src/features/twofa/components/RecoveryCodeList.tsx`
 
 ---
 
@@ -52,7 +52,7 @@ const state = location.state as any as TwoFactorVerifyState | undefined
 
 **Error:**
 ```
-Cannot find module '@/modules/twofa/hooks'
+Cannot find module '@/features/twofa/hooks'
 ```
 
 **Solution:**
@@ -60,7 +60,7 @@ Ensure all route files use absolute imports:
 
 ```typescript
 // ✅ Correct
-import { useVerify2FALogin } from '@/modules/twofa/hooks'
+import { useVerify2FALogin } from '@/features/twofa/hooks'
 
 // ❌ Wrong (from routes directory)
 import { useVerify2FALogin } from '../hooks'
@@ -258,7 +258,7 @@ const mockSetup = {
 console.log(location.state)
 
 // Check store state
-import { authStore } from '@/modules/login/store'
+import { authStore } from '@/features/auth/store'
 console.log(authStore.state)
 
 // Check API responses

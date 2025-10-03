@@ -16,9 +16,9 @@ docker compose exec web python manage.py test --settings=mysite.test_settings
 python manage.py test --settings=mysite.test_settings
 ```
 
-## API Documentation
+## Links
 - http://192.168.1.76:8000/api/docs
-- http://192.168.1.76:5556/flower
+- http://192.168.1.76:4100
 
 ## Development Notes
 

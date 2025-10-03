@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { Toaster } from "sonner";
 import { ensureCsrfToken } from "./lib/csrf.ts";
-import { refreshAccessToken } from "./modules/login/client.ts";
+import { refreshAccessToken } from "@/features/auth";
 
 import * as TanStackQueryProvider from "./integrations/tanstack-query/root-provider.tsx";
 

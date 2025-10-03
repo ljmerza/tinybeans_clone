@@ -24,7 +24,7 @@ The backend implementation of Two-Factor Authentication (2FA) has been completed
 
 **Existing Auth Module Structure:**
 ```
-web/src/modules/login/
+web/src/features/auth/
 ├── client.ts              # API client with auth interceptor
 ├── hooks.ts               # useLogin, useSignup, useLogout hooks
 ├── routes.login.tsx       # Login page component
@@ -64,7 +64,7 @@ We will implement a comprehensive 2FA frontend module following the existing arc
 ### Architecture Overview
 
 ```
-web/src/modules/twofa/
+web/src/features/twofa/
 ├── client.ts                    # 2FA API client functions
 ├── hooks.ts                     # React Query hooks for 2FA operations
 ├── store.ts                     # 2FA state (partialToken, method, etc.)
@@ -1011,7 +1011,7 @@ const twoFaRoutes = [
 ## Appendix A: File Structure
 
 ```
-web/src/modules/twofa/
+web/src/features/twofa/
 ├── client.ts                        # API client functions (~150 lines)
 ├── hooks.ts                         # React Query hooks (~200 lines)
 ├── store.ts                         # TanStack Store (~50 lines)

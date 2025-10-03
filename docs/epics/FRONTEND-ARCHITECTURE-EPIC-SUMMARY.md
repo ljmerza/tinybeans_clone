@@ -94,7 +94,7 @@ src/
 **Risk**: Medium  
 **Dependencies**: FE-ARCH-001
 
-**Goal**: Migrate the entire authentication feature from `modules/login/` to `features/auth/`, consolidating all auth-related code.
+**Goal**: Migrate the entire authentication feature from `features/auth/` to `features/auth/`, consolidating all auth-related code.
 
 **Stories**:
 1. Move and refactor login components
@@ -120,7 +120,7 @@ src/
 **Risk**: Medium  
 **Dependencies**: FE-ARCH-002
 
-**Goal**: Migrate two-factor authentication feature from `modules/twofa/` to `features/twofa/`, organizing complex component hierarchy.
+**Goal**: Migrate two-factor authentication feature from `features/twofa/` to `features/twofa/`, organizing complex component hierarchy.
 
 **Stories**:
 1. Migrate 2FA components (setup, verify, settings)

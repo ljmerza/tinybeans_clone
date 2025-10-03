@@ -49,7 +49,7 @@ const { partialToken, method } = location.state || {}
 ## Updated Module Structure
 
 ```
-web/src/modules/twofa/
+web/src/features/twofa/
 ├── client.ts              # API functions ✅
 ├── hooks.ts               # React Query hooks ✅
 ├── types.ts               # TypeScript types ✅

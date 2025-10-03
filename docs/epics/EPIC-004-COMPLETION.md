@@ -22,7 +22,7 @@ Built complete React frontend for Google OAuth with "Sign in with Google" button
 
 ## 📁 Files Created
 
-### OAuth Module (`web/src/modules/oauth/`)
+### OAuth Module (`web/src/features/auth/oauth/`)
 ```
 oauth/
 ├── types.ts                    # TypeScript definitions (8 interfaces)
@@ -294,7 +294,7 @@ npm run check
 
 **1. Import the OAuth button:**
 ```typescript
-import { GoogleOAuthButton } from "@/modules/oauth";
+import { GoogleOAuthButton } from "@/features/auth";
 ```
 
 **2. Add to your page:**
@@ -308,7 +308,7 @@ import { GoogleOAuthButton } from "@/modules/oauth";
 
 **3. Use the hook directly:**
 ```typescript
-import { useGoogleOAuth } from "@/modules/oauth";
+import { useGoogleOAuth } from "@/features/auth";
 
 function MyComponent() {
   const { initiateOAuth, isLoading } = useGoogleOAuth();

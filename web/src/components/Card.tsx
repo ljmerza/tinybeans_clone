@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface CardProps {
 	children: ReactNode;
 	className?: string;
-	as?: keyof JSX.IntrinsicElements;
+	as?: ElementType;
 }
 
 export function Card({

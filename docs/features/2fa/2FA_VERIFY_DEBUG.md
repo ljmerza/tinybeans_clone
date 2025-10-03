@@ -5,7 +5,7 @@ After calling `/auth/2fa/verify-login/` with correct code, the response is succe
 
 ## Debug Logging Added ✅
 
-### Location 1: `web/src/modules/twofa/hooks.ts`
+### Location 1: `web/src/features/twofa/hooks.ts`
 **useVerify2FALogin hook now logs:**
 - ✅ Full verification response
 - ✅ Access token (first 20 chars)
@@ -125,7 +125,7 @@ curl -X POST http://localhost:8000/auth/2fa/verify-login/ \
 3. **Token Not Being Saved**
    ```javascript
    // Check in console
-   import { authStore } from '@/modules/login/store'
+   import { authStore } from '@/features/auth/store'
    console.log(authStore.state.accessToken)
    ```
 
@@ -134,7 +134,7 @@ curl -X POST http://localhost:8000/auth/2fa/verify-login/ \
 **Check Token Storage:**
 ```javascript
 // In browser console
-import { authStore } from '@/modules/login/store'
+import { authStore } from '@/features/auth/store'
 console.log('Token:', authStore.state.accessToken)
 
 // Check localStorage
@@ -179,11 +179,11 @@ console.log(data)
 ### Test 2: Check Token Storage
 ```javascript
 // After verification attempt
-import { authStore } from '@/modules/login/store'
+import { authStore } from '@/features/auth/store'
 console.log('Current token:', authStore.state.accessToken)
 
 // Try setting manually
-import { setAccessToken } from '@/modules/login/store'
+import { setAccessToken } from '@/features/auth/store'
 setAccessToken('test_token_123')
 console.log('After manual set:', authStore.state.accessToken)
 ```
@@ -205,7 +205,7 @@ window.location.href = '/'
 
 **If backend returns different format:**
 
-Update type definition in `web/src/modules/twofa/types.ts`:
+Update type definition in `web/src/features/twofa/types.ts`:
 ```typescript
 export interface TwoFactorVerifyLoginResponse {
   user: {
@@ -224,7 +224,7 @@ export interface TwoFactorVerifyLoginResponse {
 
 **Check if store is initialized:**
 
-In `web/src/modules/login/store.ts`:
+In `web/src/features/auth/store.ts`:
 ```typescript
 export const authStore = new Store({
   accessToken: null as string | null,
@@ -239,7 +239,7 @@ export function setAccessToken(token: string | null) {
 
 **Add fallback navigation:**
 
-In `web/src/modules/twofa/hooks.ts`:
+In `web/src/features/twofa/hooks.ts`:
 ```typescript
 onSuccess: (data) => {
   setAccessToken(data.tokens.access)
@@ -313,7 +313,7 @@ window.location.reload()
 ### Force Token and Navigate:
 ```javascript
 // Manually set token from backend response
-import { setAccessToken } from '@/modules/login/store'
+import { setAccessToken } from '@/features/auth/store'
 setAccessToken('YOUR_ACCESS_TOKEN_HERE')
 
 // Navigate

@@ -1,5 +1,5 @@
 import { Layout } from "@/components";
-import { TotpSetup } from "@/modules/twofa/components/TotpSetup";
+import { TotpSetup } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function TotpSetupRoute() {

@@ -1,6 +1,5 @@
 import { Layout } from "@/components";
-import { SmsSetup } from "@/modules/twofa/components/SmsSetup";
-import { use2FAStatus } from "@/modules/twofa/hooks";
+import { SmsSetup, use2FAStatus } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function SmsSetupRoute() {

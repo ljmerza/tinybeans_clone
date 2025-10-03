@@ -76,5 +76,19 @@ ACCOUNT_FRONTEND_BASE_URL = 'http://localhost:3000'
 
 TWOFA_LOCKOUT_THRESHOLD = 999999
 
+# Google OAuth test settings
+GOOGLE_OAUTH_CLIENT_ID = 'test-client-id.apps.googleusercontent.com'
+GOOGLE_OAUTH_CLIENT_SECRET = 'test-client-secret'
+GOOGLE_OAUTH_SCOPES = [
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile'
+]
+OAUTH_ALLOWED_REDIRECT_URIS = [
+    'http://localhost:3000/auth/google/callback',
+    'http://localhost:3000/settings/account/google/callback',
+]
+OAUTH_STATE_EXPIRATION = 600  # 10 minutes in seconds
+
 # Ensure template metadata is available during tests
 import emails.templates  # noqa: F401  (exposes EMAIL_TEMPLATE_FILES for loader)

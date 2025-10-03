@@ -1,5 +1,5 @@
 import { Layout } from "@/components/Layout";
-import { authStore } from "@/modules/login/store";
+import { authStore } from "@/features/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
 

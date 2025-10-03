@@ -13,7 +13,7 @@ Django requires CSRF tokens for POST requests. The frontend wasn't sending the C
 
 ### 1. Added CSRF Token Support to API Client
 
-**File:** `web/src/modules/login/client.ts`
+**File:** `web/src/features/auth/client.ts`
 
 Added CSRF token helper function:
 ```typescript

@@ -12,13 +12,13 @@
 Your current `login` module already uses this pattern:
 
 ```typescript
-// web/src/modules/login/store.ts
+// web/src/features/auth/store.ts
 // ✅ TanStack Store: Stores the ACCESS TOKEN (client state)
 export const authStore = new Store({
   accessToken: null as string | null,
 })
 
-// web/src/modules/login/hooks.ts
+// web/src/features/auth/hooks.ts
 // ✅ TanStack Query: Manages API calls and USER DATA (server state)
 export function useLogin() {
   return useMutation({

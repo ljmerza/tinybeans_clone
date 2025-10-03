@@ -1,5 +1,5 @@
 import { Layout } from "@/components";
-import { EmailSetup } from "@/modules/twofa/components/EmailSetup";
+import { EmailSetup } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function EmailSetupRoute() {

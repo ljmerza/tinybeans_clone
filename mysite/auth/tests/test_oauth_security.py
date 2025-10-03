@@ -119,8 +119,9 @@ class TestStateTokenValidator(TestCase):
     """Test state token security validation."""
     
     def test_secure_token_valid_length(self):
-        """Test that 128+ character token is secure."""
-        token = 'a' * 128
+        """Test that 128+ character token with good entropy is secure."""
+        # Token with good variety of characters (meets both length and entropy requirements)
+        token = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~' * 2
         result = StateTokenValidator.is_secure_token(token)
         self.assertTrue(result)
     
@@ -130,6 +131,13 @@ class TestStateTokenValidator(TestCase):
         token = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~' * 3
         result = StateTokenValidator.is_secure_token(token)
         self.assertTrue(result)
+    
+    def test_insecure_token_low_entropy(self):
+        """Test that token with low entropy is insecure."""
+        # Token with only one character repeated (low entropy)
+        token = 'a' * 128
+        result = StateTokenValidator.is_secure_token(token)
+        self.assertFalse(result)
     
     def test_insecure_token_too_short(self):
         """Test that token shorter than 128 chars is insecure."""
