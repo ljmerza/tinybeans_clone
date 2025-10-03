@@ -21,20 +21,23 @@ import type { TwoFactorMethod, TwoFactorStatusResponse } from "@/modules/twofa/t
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-type RemovableMethod = Exclude<TwoFactorMethod, "email">;
 
+// Labels and removal messages from setup page
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {
-	totp: "Authenticator App",
-	email: "Email",
-	sms: "SMS",
+	"totp": "Authenticator App",
+	"email": "Email",
+	"sms": "SMS",
 };
 
+type RemovableMethod = Exclude<TwoFactorMethod, "email">;
 const REMOVAL_CONFIRMATION: Record<RemovableMethod, string> = {
-	totp:
+	"totp":
 		"Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
-	sms:
+	"sms":
 		"Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
 };
+
+
 
 function TwoFactorStatusHeader({ status }: { status: TwoFactorStatusResponse }) {
 	return (
@@ -65,17 +68,6 @@ function TwoFactorStatusHeader({ status }: { status: TwoFactorStatusResponse }) 
 			</div>
 		</div>
 	);
-}
-
-interface PreferredMethodSectionProps {
-	methodOptions: MethodOption[];
-	preferredMethod: TwoFactorMethod | null;
-	pendingMethod: TwoFactorMethod | null;
-	isUpdating: boolean;
-	errorMessage?: string;
-	phoneNumber?: string;
-	onSetPreferred: (method: TwoFactorMethod) => void;
-	onConfigure: () => void;
 }
 
 // Removed old PreferredMethodSection in favor of consolidated method cards
@@ -359,6 +351,32 @@ function TwoFactorSettingsPage() {
 						<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
 							{removalError}
 						</p>
+					)}
+
+					{methodToRemove && (
+						<div className="border border-red-200 bg-red-50 rounded-md p-4 space-y-3">
+							<p className="text-sm text-red-800 font-semibold">
+								Confirm removal of {METHOD_LABELS[methodToRemove]}?
+							</p>
+							<p className="text-xs text-red-700">{REMOVAL_CONFIRMATION[methodToRemove as Exclude<TwoFactorMethod, "email">]}</p>
+							<ButtonGroup className="flex-col sm:flex-row">
+								<Button
+									onClick={handleRemovalConfirm}
+									disabled={removalInProgress}
+									className="sm:flex-1 bg-red-600 hover:bg-red-700 text-white"
+								>
+									{removalInProgress ? "Removing..." : "Confirm removal"}
+								</Button>
+								<Button
+									variant="outline"
+									onClick={handleRemovalCancel}
+									disabled={removalInProgress}
+									className="sm:flex-1"
+								>
+									Cancel
+								</Button>
+							</ButtonGroup>
+						</div>
 					)}
 
 					<div className="space-y-4">

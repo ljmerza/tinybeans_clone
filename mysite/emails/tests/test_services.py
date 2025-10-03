@@ -1,5 +1,6 @@
 """Tests for the email service layer."""
 from unittest.mock import patch
+from pathlib import Path
 
 from django.core import mail
 from django.test import SimpleTestCase, override_settings

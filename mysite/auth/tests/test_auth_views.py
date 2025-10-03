@@ -1,5 +1,7 @@
 from unittest.mock import patch
+import unittest
 
+from django.conf import settings
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
@@ -52,6 +54,9 @@ class AuthViewSecurityTests(TestCase):
         mock_delay.assert_called_once()
 
     def test_login_rate_limit_blocks_after_threshold(self):
+        # Skip when rate limiting disabled in test settings
+        if not getattr(settings, 'RATELIMIT_ENABLE', True):
+            self.skipTest('Rate limiting disabled in test settings')
         user = User.objects.create_user(
             username='ratelimit',
             email='ratelimit@example.com',

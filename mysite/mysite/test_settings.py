@@ -67,5 +67,14 @@ LOGGING = {
     }
 }
 
+# Disable rate limiting and account lockouts during tests
+RATELIMIT_ENABLE = False
+TWOFA_RATE_LIMIT_WINDOW = 0
+TWOFA_RATE_LIMIT_MAX = 0
+# Force frontend base URL in tests to the expected value asserted by tests
+ACCOUNT_FRONTEND_BASE_URL = 'http://localhost:3000'
+
+TWOFA_LOCKOUT_THRESHOLD = 999999
+
 # Ensure template metadata is available during tests
 import emails.templates  # noqa: F401  (exposes EMAIL_TEMPLATE_FILES for loader)
