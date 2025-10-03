@@ -56,6 +56,7 @@ class TwoFactorSetupView(APIView):
             # Generate TOTP secret and QR code
             secret = TwoFactorService.generate_totp_secret()
             settings_obj.totp_secret = secret
+            settings_obj.totp_verified = False  # Reset until verified
             settings_obj.save()
             
             qr_data = TwoFactorService.generate_totp_qr_code(user, secret)
@@ -142,7 +143,10 @@ class TwoFactorVerifySetupView(APIView):
         # Enable 2FA and mark verification state
         update_fields = ['is_enabled']
         settings_obj.is_enabled = True
-        if settings_obj.preferred_method == 'sms':
+        if settings_obj.preferred_method == 'totp':
+            settings_obj.totp_verified = True
+            update_fields.append('totp_verified')
+        elif settings_obj.preferred_method == 'sms':
             settings_obj.sms_verified = True
             update_fields.append('sms_verified')
         elif settings_obj.preferred_method == 'email':
@@ -228,13 +232,19 @@ class TwoFactorPreferredMethodView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if method == 'totp' and not getattr(settings_obj, '_totp_secret_encrypted', None):
-            return Response(
-                {
-                    'error': 'Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first.'
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if method == 'totp':
+            if not getattr(settings_obj, '_totp_secret_encrypted', None):
+                return Response(
+                    {
+                        'error': 'Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not settings_obj.totp_verified:
+                return Response(
+                    {'error': 'Verify your authenticator app via TOTP setup before choosing it as default'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         if method == 'sms':
             if not settings_obj.phone_number:
@@ -246,6 +256,13 @@ class TwoFactorPreferredMethodView(APIView):
             if not settings_obj.sms_verified:
                 return Response(
                     {'error': 'Verify your phone number via SMS setup before choosing it as default'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if method == 'email':
+            if not settings_obj.email_verified:
+                return Response(
+                    {'error': 'Verify email via Email setup before choosing it as default'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -316,7 +333,8 @@ class TwoFactorMethodRemoveView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             settings_obj.totp_secret = None
-            update_fields.add('_totp_secret_encrypted')
+            settings_obj.totp_verified = False
+            update_fields.update({'_totp_secret_encrypted', 'totp_verified'})
 
         elif method == 'sms':
             if not settings_obj.phone_number:
@@ -333,9 +351,18 @@ class TwoFactorMethodRemoveView(APIView):
             if method == 'totp':
                 if settings_obj.phone_number and settings_obj.sms_verified:
                     fallback_preferred = 'sms'
+                elif settings_obj.email_verified:
+                    fallback_preferred = 'email'
             elif method == 'sms':
-                if getattr(settings_obj, '_totp_secret_encrypted', None):
+                if getattr(settings_obj, '_totp_secret_encrypted', None) and settings_obj.totp_verified:
                     fallback_preferred = 'totp'
+                elif settings_obj.email_verified:
+                    fallback_preferred = 'email'
+            elif method == 'email':
+                if getattr(settings_obj, '_totp_secret_encrypted', None) and settings_obj.totp_verified:
+                    fallback_preferred = 'totp'
+                elif settings_obj.phone_number and settings_obj.sms_verified:
+                    fallback_preferred = 'sms'
 
             if fallback_preferred:
                 settings_obj.preferred_method = fallback_preferred

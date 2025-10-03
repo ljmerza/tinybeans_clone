@@ -34,6 +34,7 @@ class TwoFactorSettings(models.Model):
         null=True,
         db_column='totp_secret'
     )
+    totp_verified = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     sms_verified = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)

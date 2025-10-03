@@ -6,9 +6,7 @@
 import { ButtonGroup, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { verificationCodeSchema } from "@/lib/validations";
-import { DisableTwoFactorSection } from "@/modules/twofa/components/DisableTwoFactorSection";
-import { RecoveryCodesSection } from "@/modules/twofa/components/RecoveryCodesSection";
-import { TrustedDevicesSection } from "@/modules/twofa/components/TrustedDevicesSection";
+import { TwoFactorEnabledSettings } from "@/modules/twofa/components/TwoFactorEnabledSettings";
 import { TwoFactorStatusHeader } from "@/modules/twofa/components/TwoFactorStatusHeader";
 import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
 import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
@@ -219,32 +217,30 @@ function TwoFactorSettingsPage() {
 					</div>
 				</div>
 
-				<RecoveryCodesSection
-					showNewCodes={showNewCodes}
-					isGenerating={generateCodes.isPending}
-					errMessage={generateCodes.error?.message}
-					codes={generateCodes.data?.recovery_codes}
-					onGenerate={handleGenerateNewCodes}
-					onViewCurrent={() => navigate({ to: "/2fa/settings" })}
-					onHideCodes={() => setShowNewCodes(false)}
-				/>
-
-				<TrustedDevicesSection onManage={() => navigate({ to: "/2fa/trusted-devices" })} />
-
-				<DisableTwoFactorSection
-					showDisableConfirm={showDisableConfirm}
-					canDisable={canDisable}
-					disableCode={disableCode}
-					isDisabling={disable2FA.isPending}
-					errMessage={disable2FA.error?.message}
-					onRequestDisable={() => setShowDisableConfirm(true)}
-					onCancelDisable={() => {
-						setShowDisableConfirm(false);
-						setDisableCode("");
-					}}
-					onCodeChange={setDisableCode}
-					onConfirmDisable={handleDisable}
-				/>
+				{status.is_enabled && (
+					<TwoFactorEnabledSettings
+						showNewCodes={showNewCodes}
+						isGenerating={generateCodes.isPending}
+						generationError={generateCodes.error?.message}
+						codes={generateCodes.data?.recovery_codes}
+						onGenerate={handleGenerateNewCodes}
+						onViewCurrent={() => navigate({ to: "/2fa/settings" })}
+						onHideCodes={() => setShowNewCodes(false)}
+						onManageTrustedDevices={() => navigate({ to: "/2fa/trusted-devices" })}
+						showDisableConfirm={showDisableConfirm}
+						canDisable={canDisable}
+						disableCode={disableCode}
+						isDisabling={disable2FA.isPending}
+						disableError={disable2FA.error?.message}
+						onRequestDisable={() => setShowDisableConfirm(true)}
+						onCancelDisable={() => {
+							setShowDisableConfirm(false);
+							setDisableCode("");
+						}}
+						onCodeChange={setDisableCode}
+						onConfirmDisable={handleDisable}
+					/>
+				)}
 
 				<div className="text-center">
 					<button

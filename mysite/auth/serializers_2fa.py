@@ -49,6 +49,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
     has_totp = serializers.SerializerMethodField()
     has_sms = serializers.SerializerMethodField()
     has_email = serializers.SerializerMethodField()
+    preferred_method = serializers.SerializerMethodField()
 
     class Meta:
         model = TwoFactorSettings
@@ -67,8 +68,8 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def get_has_totp(self, obj):
-        # Consider TOTP configured only after full verification (i.e., 2FA is enabled)
-        return bool(getattr(obj, '_totp_secret_encrypted', None)) and bool(obj.is_enabled)
+        # Consider TOTP configured only after verification
+        return bool(getattr(obj, '_totp_secret_encrypted', None)) and bool(obj.totp_verified)
 
     def get_has_sms(self, obj):
         # Consider SMS configured only after phone number verification
@@ -77,6 +78,17 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
     def get_has_email(self, obj):
         # Consider email configured only after verification
         return bool(obj.email_verified)
+
+    def get_preferred_method(self, obj):
+        # If no methods are enabled, return None
+        has_any_method = (
+            self.get_has_totp(obj) or 
+            self.get_has_sms(obj) or 
+            self.get_has_email(obj)
+        )
+        if not has_any_method:
+            return None
+        return obj.preferred_method
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):
