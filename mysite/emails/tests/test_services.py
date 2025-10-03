@@ -214,7 +214,7 @@ class EmailTemplateLoaderTests(SimpleTestCase):
         self.assertIn('This link expires in 15 minutes.', rendered.text_body)
         self.assertIsNotNone(rendered.html_body)
         assert rendered.html_body is not None
-        self.assertIn('<html>', rendered.html_body)
+        self.assertIn('<html', rendered.html_body)
         self.assertIn('123456', rendered.html_body)
 
     @override_settings(

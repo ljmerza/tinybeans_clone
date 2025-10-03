@@ -5,7 +5,6 @@
 
 import { ButtonGroup, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
-import { verificationCodeSchema } from "@/lib/validations";
 import { TwoFactorEnabledSettings } from "@/modules/twofa/components/TwoFactorEnabledSettings";
 import { TwoFactorStatusHeader } from "@/modules/twofa/components/TwoFactorStatusHeader";
 import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
@@ -13,8 +12,6 @@ import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard"
 import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
 import {
 	use2FAStatus,
-	useDisable2FA,
-	useGenerateRecoveryCodes,
 	useRemoveTwoFactorMethod,
 } from "@/modules/twofa/hooks";
 import type { TwoFactorMethod } from "@/modules/twofa/types";
@@ -39,37 +36,11 @@ const REMOVAL_CONFIRMATION: Record<RemovableMethod, string> = {
 function TwoFactorSettingsPage() {
 	const navigate = useNavigate();
 	const { data: status, isLoading } = use2FAStatus();
-	const disable2FA = useDisable2FA();
-	const generateCodes = useGenerateRecoveryCodes();
 	const removeMethod = useRemoveTwoFactorMethod();
 
-	const [showDisableConfirm, setShowDisableConfirm] = useState(false);
-	const [disableCode, setDisableCode] = useState("");
-	const [showNewCodes, setShowNewCodes] = useState(false);
 	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(null);
 	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
 	const [removalError, setRemovalError] = useState<string | null>(null);
-
-	const handleDisable = async () => {
-		const validation = verificationCodeSchema.safeParse(disableCode);
-		if (!validation.success) return;
-
-		try {
-			await disable2FA.mutateAsync(disableCode);
-			navigate({ to: "/" });
-		} catch (error) {
-			setDisableCode("");
-		}
-	};
-
-	const handleGenerateNewCodes = async () => {
-		try {
-			await generateCodes.mutateAsync();
-			setShowNewCodes(true);
-		} catch (error) {
-			console.error("Failed to generate codes:", error);
-		}
-	};
 
 	const removalInProgress = removeMethod.isPending;
 	const handleRemovalRequest = (method: Exclude<TwoFactorMethod, "email">) => {
@@ -126,8 +97,6 @@ function TwoFactorSettingsPage() {
 			/>
 		);
 	}
-
-	const canDisable = verificationCodeSchema.safeParse(disableCode).success;
 
 	return (
 		<Layout>
@@ -217,30 +186,7 @@ function TwoFactorSettingsPage() {
 					</div>
 				</div>
 
-				{status.is_enabled && (
-					<TwoFactorEnabledSettings
-						showNewCodes={showNewCodes}
-						isGenerating={generateCodes.isPending}
-						generationError={generateCodes.error?.message}
-						codes={generateCodes.data?.recovery_codes}
-						onGenerate={handleGenerateNewCodes}
-						onViewCurrent={() => navigate({ to: "/2fa/settings" })}
-						onHideCodes={() => setShowNewCodes(false)}
-						onManageTrustedDevices={() => navigate({ to: "/2fa/trusted-devices" })}
-						showDisableConfirm={showDisableConfirm}
-						canDisable={canDisable}
-						disableCode={disableCode}
-						isDisabling={disable2FA.isPending}
-						disableError={disable2FA.error?.message}
-						onRequestDisable={() => setShowDisableConfirm(true)}
-						onCancelDisable={() => {
-							setShowDisableConfirm(false);
-							setDisableCode("");
-						}}
-						onCodeChange={setDisableCode}
-						onConfirmDisable={handleDisable}
-					/>
-				)}
+				{status.is_enabled && <TwoFactorEnabledSettings />}
 
 				<div className="text-center">
 					<button
