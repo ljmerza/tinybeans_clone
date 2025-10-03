@@ -2,7 +2,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from users.models import Circle, CircleMembership, UserRole
-from .models import Keep, KeepType, KeepMedia, Milestone, MilestoneType, KeepReaction, KeepComment
+from keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType, KeepReaction, KeepComment
 
 User = get_user_model()
 
