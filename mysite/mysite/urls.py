@@ -30,5 +30,4 @@ urlpatterns = [
     path('api/auth/', include('auth.urls')),
     path('api/users/', include('users.urls')),
     path('api/keeps/', include('keeps.urls')),
-    path('', include('main.urls')),
 ]

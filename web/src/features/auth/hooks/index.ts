@@ -3,16 +3,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { api, refreshAccessToken } from "../api/authClient";
 import { authStore, setAccessToken } from "../store/authStore";
 import type {
-  LoginRequest,
-  LoginResponse,
-  MeResponse,
-  SignupRequest,
-  SignupResponse,
-  TwoFactorNavigateState,
-  MagicLoginRequest,
-  MagicLoginRequestResponse,
-  MagicLoginVerifyRequest,
-  MagicLoginVerifyResponse,
+	LoginRequest,
+	LoginResponse,
+	MagicLoginRequest,
+	MagicLoginRequestResponse,
+	MagicLoginVerifyRequest,
+	MagicLoginVerifyResponse,
+	MeResponse,
+	SignupRequest,
+	SignupResponse,
+	TwoFactorNavigateState,
 } from "../types";
 
 export function useMe() {
@@ -148,20 +148,12 @@ export function usePasswordResetConfirm() {
 }
 
 export function useMagicLoginRequest() {
-	return useMutation<
-		MagicLoginRequestResponse,
-		Error,
-		MagicLoginRequest
-	>({
+	return useMutation<MagicLoginRequestResponse, Error, MagicLoginRequest>({
 		mutationFn: (body) =>
-			api.post<MagicLoginRequestResponse>(
-				"/auth/magic-login/request/",
-				body,
-				{
-					suppressErrorToast: true,
-					suppressSuccessToast: true,
-				},
-			),
+			api.post<MagicLoginRequestResponse>("/auth/magic-login/request/", body, {
+				suppressErrorToast: true,
+				suppressSuccessToast: true,
+			}),
 	});
 }
 

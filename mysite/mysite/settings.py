@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'main.apps.MainConfig',
     'emails.apps.EmailingConfig',
     'messaging.apps.MessagingConfig',
     'drf_spectacular',

@@ -1,7 +1,7 @@
-import { authStore } from "../store/authStore";
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
 import { useCallback } from "react";
+import { authStore } from "../store/authStore";
 
 /**
  * Custom hook to check authentication status and navigate

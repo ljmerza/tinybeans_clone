@@ -1,13 +1,13 @@
-import { cloneElement, type ReactElement } from "react";
+import { type ReactElement, cloneElement } from "react";
 import type { ReactNode } from "react";
 import { ButtonGroup } from "./ButtonGroup";
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-	CardDescription,
 } from "./Card";
 
 export interface WizardStepProps<TStep extends string = string> {

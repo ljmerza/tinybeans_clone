@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
 import { useGoogleOAuth } from "./hooks";
 import type { OAuthErrorInfo } from "./types";
 import { getOAuthErrorMessage } from "./utils";

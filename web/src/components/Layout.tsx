@@ -1,6 +1,5 @@
-import { authStore } from "@/features/auth";
+import { useAuthSession } from "@/features/auth/context/AuthSessionProvider";
 import { Link } from "@tanstack/react-router";
-import { useStore } from "@tanstack/react-store";
 import type { ReactElement, ReactNode } from "react";
 import { StandardError } from "./StandardError";
 import { StandardLoading } from "./StandardLoading";
@@ -40,7 +39,7 @@ interface LayoutProps {
  * Main layout component with header navigation
  */
 function LayoutBase({ children, showHeader = true }: LayoutProps) {
-	const { accessToken } = useStore(authStore);
+	const session = useAuthSession();
 
 	return (
 		<div className="min-h-screen bg-gray-50">
@@ -57,7 +56,7 @@ function LayoutBase({ children, showHeader = true }: LayoutProps) {
 								</Link>
 							</div>
 							<nav className="flex items-center gap-4">
-								{accessToken ? (
+								{session.isAuthenticated ? (
 									<AuthenticatedHeaderActions />
 								) : (
 									<GuestHeaderActions />

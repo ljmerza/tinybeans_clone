@@ -8,12 +8,9 @@ import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { verificationCodeSchema } from "@/lib/validations";
-import {
-	VerificationInput,
-	useVerify2FALogin,
-} from "@/features/twofa";
+import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
 import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
+import { verificationCodeSchema } from "@/lib/validations";
 import {
 	Navigate,
 	createFileRoute,
@@ -120,7 +117,7 @@ function TwoFactorVerifyPage() {
 
 	const headerDescription = useRecoveryCode
 		? "Enter one of your recovery codes"
-		: message ?? `Enter the 6-digit code from your ${getMethodDisplay()}`;
+		: (message ?? `Enter the 6-digit code from your ${getMethodDisplay()}`);
 
 	return (
 		<AuthCard
@@ -187,7 +184,8 @@ function TwoFactorVerifyPage() {
 				disabled={
 					(useRecoveryCode
 						? !recoveryCodeSchema.safeParse(code).success
-						: !verificationCodeSchema.safeParse(code).success) || verify.isPending
+						: !verificationCodeSchema.safeParse(code).success) ||
+					verify.isPending
 				}
 				className="w-full"
 			>

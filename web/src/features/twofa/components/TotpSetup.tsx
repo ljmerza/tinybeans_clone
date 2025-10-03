@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { Wizard, WizardStep } from "@/components";
+import { useState } from "react";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { TotpIntroStep } from "./setup/totp/TotpIntroStep";
+import { TotpRecoveryStep } from "./setup/totp/TotpRecoveryStep";
 import { TotpScanStep } from "./setup/totp/TotpScanStep";
 import { TotpVerifyStep } from "./setup/totp/TotpVerifyStep";
-import { TotpRecoveryStep } from "./setup/totp/TotpRecoveryStep";
 
 type SetupStep = "intro" | "scan" | "verify" | "recovery";
 

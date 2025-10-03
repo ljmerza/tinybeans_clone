@@ -1,7 +1,4 @@
-import type {
-	TwoFactorMethod,
-	TwoFactorVerifyState,
-} from "@/features/twofa";
+import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
 
 export interface AuthTokens {
 	access: string;

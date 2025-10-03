@@ -1,7 +1,7 @@
-import { setAccessToken } from "../store/authStore";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { setAccessToken } from "../store/authStore";
 import { oauthApi } from "./client";
 import type { OAuthCallbackRequest } from "./types";
 import {

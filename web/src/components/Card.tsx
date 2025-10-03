@@ -1,5 +1,5 @@
-import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import type { ElementType, ReactNode } from "react";
 
 interface CardProps {
 	children: ReactNode;

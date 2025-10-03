@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Wizard, WizardStep } from "@/components";
+import { useState } from "react";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { SmsIntroStep } from "./setup/sms/SmsIntroStep";
-import { SmsVerifyStep } from "./setup/sms/SmsVerifyStep";
 import { SmsRecoveryStep } from "./setup/sms/SmsRecoveryStep";
+import { SmsVerifyStep } from "./setup/sms/SmsVerifyStep";
 
 type SetupStep = "intro" | "verify" | "recovery";
 

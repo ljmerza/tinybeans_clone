@@ -1,17 +1,16 @@
 import { Layout } from "@/components/Layout";
-import { authStore } from "@/features/auth";
+import { useAuthSession } from "@/features/auth";
 import { createFileRoute } from "@tanstack/react-router";
-import { useStore } from "@tanstack/react-store";
 
 function IndexPage() {
-	const { accessToken } = useStore(authStore);
+	const session = useAuthSession();
 
 	return (
 		<Layout>
 			<div className="text-center">
 				<h1 className="heading-1 mb-4">Welcome</h1>
 				<p className="text-subtitle mb-8">
-					{accessToken
+					{session.isAuthenticated
 						? "You are signed in!"
 						: "Get started by signing up or logging in to your account."}
 				</p>

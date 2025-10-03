@@ -1,6 +1,6 @@
+import { authStore } from "@/features/auth";
 import { Link } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
-import { authStore } from "@/features/auth";
 
 function App() {
 	const { accessToken } = useStore(authStore);

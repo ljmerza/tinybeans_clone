@@ -5,16 +5,16 @@
  */
 
 import { verificationCodeSchema } from "@/lib/validations";
-import { DisableTwoFactorSection } from "./DisableTwoFactorSection";
-import { RecoveryCodesSection } from "./RecoveryCodesSection";
-import { TrustedDevicesSection } from "./TrustedDevicesSection";
+import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import {
 	useDisable2FA,
 	useGenerateRecoveryCodes,
 	useRequestDisableCode,
 } from "../hooks";
-import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { DisableTwoFactorSection } from "./DisableTwoFactorSection";
+import { RecoveryCodesSection } from "./RecoveryCodesSection";
+import { TrustedDevicesSection } from "./TrustedDevicesSection";
 
 export function TwoFactorEnabledSettings() {
 	const navigate = useNavigate();

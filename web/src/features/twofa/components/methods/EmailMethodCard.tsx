@@ -1,5 +1,5 @@
-import type { TwoFactorMethod } from "@/features/twofa/types";
 import {
+	ButtonGroup,
 	Card,
 	CardContent,
 	CardDescription,
@@ -8,9 +8,9 @@ import {
 	Chip,
 	ChipGroup,
 	StatusMessage,
-	ButtonGroup,
 } from "@/components";
 import { Button } from "@/components/ui/button";
+import type { TwoFactorMethod } from "@/features/twofa/types";
 
 interface EmailMethodCardProps {
 	isCurrent: boolean;

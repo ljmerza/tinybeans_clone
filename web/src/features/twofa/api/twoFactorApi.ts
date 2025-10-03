@@ -69,7 +69,10 @@ export const twoFactorApi = {
 	 * Generate new recovery codes (invalidates old ones)
 	 */
 	generateRecoveryCodes: () =>
-		authApi.post<RecoveryCodesResponse>("/auth/2fa/recovery-codes/generate/", {}),
+		authApi.post<RecoveryCodesResponse>(
+			"/auth/2fa/recovery-codes/generate/",
+			{},
+		),
 
 	/**
 	 * Download recovery codes as TXT or PDF
@@ -88,7 +91,9 @@ export const twoFactorApi = {
 	/**
 	 */
 	removeTrustedDevice: (device_id: string) =>
-		authApi.delete<{ message?: string }>(`/auth/2fa/trusted-devices/${device_id}/`),
+		authApi.delete<{ message?: string }>(
+			`/auth/2fa/trusted-devices/${device_id}/`,
+		),
 
 	/**
 	 * Update preferred 2FA method
@@ -103,5 +108,7 @@ export const twoFactorApi = {
 	 * Remove a configured 2FA method
 	 */
 	removeMethod: (method: "totp" | "sms" | "email") =>
-		authApi.delete<TwoFactorMethodRemovalResponse>(`/auth/2fa/methods/${method}/`),
+		authApi.delete<TwoFactorMethodRemovalResponse>(
+			`/auth/2fa/methods/${method}/`,
+		),
 };

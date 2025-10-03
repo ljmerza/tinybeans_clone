@@ -1,8 +1,10 @@
+import { requireGuest } from "@/features/auth";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { MagicLoginHandler } from "@/features/auth";
 
 export const Route = createFileRoute("/magic-login")({
+	beforeLoad: requireGuest,
 	component: MagicLoginRoute,
 	validateSearch: (search: Record<string, unknown>) => ({
 		token: (search.token as string) || undefined,

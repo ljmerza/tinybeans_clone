@@ -1,8 +1,4 @@
-import type {
-	OAuthError,
-	OAuthErrorCode,
-	OAuthErrorInfo,
-} from "./types";
+import type { OAuthError, OAuthErrorCode, OAuthErrorInfo } from "./types";
 
 /**
  * OAuth Error Messages
@@ -18,8 +14,7 @@ export const OAUTH_ERROR_MESSAGES: Record<OAuthErrorCode, OAuthErrorInfo> = {
 	},
 	GOOGLE_API_ERROR: {
 		title: "Connection Error",
-		message:
-			"Unable to connect to Google. Please try again in a moment.",
+		message: "Unable to connect to Google. Please try again in a moment.",
 		action: "Retry",
 		severity: "error",
 	},
@@ -73,9 +68,7 @@ export const OAUTH_ERROR_MESSAGES: Record<OAuthErrorCode, OAuthErrorInfo> = {
 /**
  * Get user-friendly error message from OAuth error
  */
-export function getOAuthErrorMessage(
-	error: unknown,
-): OAuthErrorInfo {
+export function getOAuthErrorMessage(error: unknown): OAuthErrorInfo {
 	// Check if it's an OAuth error response
 	if (error && typeof error === "object" && "data" in error) {
 		const data = (error as { data: unknown }).data;

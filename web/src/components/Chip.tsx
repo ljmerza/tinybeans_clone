@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 export interface ChipProps {
 	children: ReactNode;
@@ -14,7 +14,10 @@ export interface ChipProps {
 	className?: string;
 }
 
-const variantStyles: Record<Exclude<NonNullable<ChipProps["variant"]>, "custom">, string> = {
+const variantStyles: Record<
+	Exclude<NonNullable<ChipProps["variant"]>, "custom">,
+	string
+> = {
 	neutral: "bg-gray-100 text-gray-700",
 	primary: "bg-blue-100 text-blue-800",
 	success: "bg-green-100 text-green-800",

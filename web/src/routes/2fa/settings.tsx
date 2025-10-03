@@ -82,10 +82,12 @@ function TwoFactorSettingsPage() {
 		setSwitchMessage(null);
 		setRemovalError(null);
 		setRemovalMessage(null);
-		
+
 		try {
 			const result = await setPreferredMethod.mutateAsync(method);
-			setSwitchMessage(result?.message ?? "Default method updated successfully.");
+			setSwitchMessage(
+				result?.message ?? "Default method updated successfully.",
+			);
 		} catch (err) {
 			const apiMessage = (err as { data?: { error?: string } })?.data?.error;
 			const fallback =

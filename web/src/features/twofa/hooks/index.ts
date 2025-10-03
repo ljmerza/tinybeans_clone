@@ -2,8 +2,8 @@
  * Two-Factor Authentication React Query Hooks
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { setAccessToken } from "@/features/auth";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { twoFactorApi } from "../api/twoFactorApi";
 import type {
 	RecoveryCodesResponse,

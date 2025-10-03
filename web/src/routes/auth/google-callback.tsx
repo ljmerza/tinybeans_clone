@@ -38,23 +38,24 @@ function GoogleCallbackPage() {
 		if (searchParams.error) {
 			const errorMsg = searchParams.error_description || searchParams.error;
 			toast.error("Google Sign-in Cancelled", {
-				description: errorMsg === "access_denied" 
-					? "You cancelled the Google sign-in process."
-					: errorMsg,
-			})
+				description:
+					errorMsg === "access_denied"
+						? "You cancelled the Google sign-in process."
+						: errorMsg,
+			});
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
-			return
+			return;
 		}
 
 		// Validate required parameters
 		if (!searchParams.code || !searchParams.state) {
 			toast.error("Invalid OAuth Callback", {
 				description: "Missing required OAuth parameters. Please try again.",
-			})
+			});
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
-			return
+			return;
 		}
 
 		// Validate state token (CSRF protection)
@@ -62,10 +63,10 @@ function GoogleCallbackPage() {
 		if (!validateOAuthState(searchParams.state, storedState)) {
 			toast.error("OAuth State Mismatch", {
 				description: "Security validation failed. Please try signing in again.",
-			})
+			});
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
-			return
+			return;
 		}
 
 		// Process the callback
@@ -127,7 +128,7 @@ function GoogleCallbackPage() {
 					</div>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	// Show loading state
@@ -175,5 +176,5 @@ function GoogleCallbackPage() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }

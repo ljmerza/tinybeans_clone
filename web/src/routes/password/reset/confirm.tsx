@@ -1,10 +1,11 @@
-import { PublicOnlyRoute } from "@/components";
+import { requireGuest } from "@/features/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { PasswordResetConfirmCard } from "@/features/auth";
 
 export const Route = createFileRoute("/password/reset/confirm")({
+	beforeLoad: requireGuest,
 	validateSearch: (search) =>
 		z.object({ token: z.string().optional() }).parse(search),
 	component: PasswordResetConfirmRoute,
@@ -13,9 +14,5 @@ export const Route = createFileRoute("/password/reset/confirm")({
 function PasswordResetConfirmRoute() {
 	const { token } = Route.useSearch();
 
-	return (
-		<PublicOnlyRoute redirectTo="/">
-			<PasswordResetConfirmCard token={token} />
-		</PublicOnlyRoute>
-	);
+	return <PasswordResetConfirmCard token={token} />;
 }

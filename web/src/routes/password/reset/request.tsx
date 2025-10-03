@@ -1,12 +1,9 @@
-import { PublicOnlyRoute } from "@/components";
+import { requireGuest } from "@/features/auth";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PasswordResetRequestCard } from "@/features/auth";
 
 export const Route = createFileRoute("/password/reset/request")({
-	component: () => (
-		<PublicOnlyRoute redirectTo="/">
-			<PasswordResetRequestCard />
-		</PublicOnlyRoute>
-	),
+	beforeLoad: requireGuest,
+	component: PasswordResetRequestCard,
 });
