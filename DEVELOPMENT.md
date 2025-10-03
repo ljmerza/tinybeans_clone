@@ -15,6 +15,34 @@ The primary API is served at http://localhost:8000/ and Flower (Celery monitorin
 
 > **Note**: The `web` service automatically runs database migrations and seeds demo data on startup. If you need to reseed manually, run `python manage.py seed_demo_data` after containers are up.
 
+## Google OAuth for Local Development
+
+Follow these steps to exercise Google sign-up and sign-in flows against the local stack:
+
+1. **Create credentials in Google Cloud Console**
+   - Visit <https://console.cloud.google.com/> and create/select a project.
+   - Under **APIs & Services → OAuth consent screen**, configure an Internal/External consent screen and add the `openid`, `email`, and `profile` scopes.
+   - Under **APIs & Services → Credentials**, create an **OAuth client ID** of type *Web application*.
+   - Add `http://192.168.1.76:3053` to **Authorized JavaScript origins** and `http://192.168.1.76:3053/auth/google/callback` to **Authorized redirect URIs** (swap in your host IP if different).
+   - Download or copy the generated **Client ID** and **Client secret**.
+
+2. **Populate local environment variables**
+   - Copy `.env.example` to `.env` (already done once for the project).
+   - Update these entries in `.env` with the values from Google Cloud:
+
+     ```dotenv
+     GOOGLE_OAUTH_CLIENT_ID=your-real-client-id.apps.googleusercontent.com
+     GOOGLE_OAUTH_CLIENT_SECRET=your-real-secret
+     GOOGLE_OAUTH_REDIRECT_URI=http://192.168.1.76:3053/auth/google/callback
+     ```
+
+   - If you use a standalone frontend (outside Docker), mirror the redirect URI (and host IP) in `web/.env.local`.
+
+3. **Restart the containers**
+   - Run `docker compose up --build` (or `docker compose restart web web-frontend`) so the Django API picks up the new environment variables.
+
+Once configured, the login and signup pages will render the Google OAuth button and you can complete the flow end-to-end against your local stack.
+
 ## Seeding Demo Data
 
 Demo accounts are created automatically when the `web` container starts (or you can rerun `python manage.py seed_demo_data`). The dataset includes:

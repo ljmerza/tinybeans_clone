@@ -1,22 +1,41 @@
 x-common-env: &django-common-env
   DJANGO_SETTINGS_MODULE: mysite.settings
-  REDIS_URL: redis://redis:6379/0
-  POSTGRES_DB: tinybeans
-  POSTGRES_USER: tinybeans
-  POSTGRES_PASSWORD: tinybeans
-  POSTGRES_HOST: postgres
-  POSTGRES_PORT: 5432
-  DJANGO_DEBUG: "1"
-  TWOFA_RATE_LIMIT_MAX: 0
-  TWOFA_RATE_LIMIT_WINDOW: 0
-  RATELIMIT_ENABLE: 0
-  SMS_PROVIDER: console
-  EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-  EMAIL_HOST: mailpit
-  EMAIL_PORT: 1025
-  EMAIL_USE_TLS: "0"
-  EMAIL_USE_SSL: "0"
-  ACCOUNT_FRONTEND_BASE_URL: http://192.168.1.76:3053
+  DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-local}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],web}
+  POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
+  POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
+  POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+  POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+  CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+  CELERY_TASK_ALWAYS_EAGER: ${CELERY_TASK_ALWAYS_EAGER:-0}
+  EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.smtp.EmailBackend}
+  EMAIL_HOST: ${EMAIL_HOST:-mailpit}
+  EMAIL_PORT: ${EMAIL_PORT:-1025}
+  EMAIL_USE_TLS: ${EMAIL_USE_TLS:-0}
+  EMAIL_USE_SSL: ${EMAIL_USE_SSL:-0}
+  ACCOUNT_FRONTEND_BASE_URL: ${ACCOUNT_FRONTEND_BASE_URL:-http://192.168.1.76:3053}
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+  MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-tinybeans-media}
+  MINIO_USE_SSL: ${MINIO_USE_SSL:-0}
+  MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-104857600}
+  TWOFA_RATE_LIMIT_MAX: ${TWOFA_RATE_LIMIT_MAX:-0}
+  TWOFA_RATE_LIMIT_WINDOW: ${TWOFA_RATE_LIMIT_WINDOW:-0}
+  TWOFA_LOCKOUT_ENABLED: ${TWOFA_LOCKOUT_ENABLED:-0}
+  RATELIMIT_ENABLE: ${RATELIMIT_ENABLE:-0}
+  SMS_PROVIDER: ${SMS_PROVIDER:-console}
+  TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+  TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+  TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+  OAUTH_STATE_EXPIRATION: ${OAUTH_STATE_EXPIRATION:-600}
+  OAUTH_RATE_LIMIT_MAX_ATTEMPTS: ${OAUTH_RATE_LIMIT_MAX_ATTEMPTS:-5}
+  OAUTH_RATE_LIMIT_WINDOW: ${OAUTH_RATE_LIMIT_WINDOW:-900}
+
 
 services:
   web:
@@ -27,6 +46,9 @@ services:
       - ./:/app
     environment:
       <<: *django-common-env
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-your-client-secret}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://192.168.1.76:3053/auth/google/callback}
     depends_on:
       - redis
       - postgres
@@ -45,7 +67,8 @@ services:
     ports:
       - "3053:3000"
     environment:
-      - NODE_ENV=development
+      NODE_ENV: development
+      VITE_API_BASE: ${VITE_API_BASE:-http://192.168.1.76:8100/api}
     stdin_open: true
     tty: true
 
@@ -131,9 +154,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: tinybeans
-      POSTGRES_USER: tinybeans
-      POSTGRES_PASSWORD: tinybeans
+      POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
+      POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     expose:
@@ -164,8 +187,8 @@ services:
     volumes:
       - minio_data:/data
     expose:
-      - "9020"
-      - "9021"
+      - "9000"
+      - "9001"
     ports:
       - "9220:9000"  # API
       - "9221:9001"  # Console
