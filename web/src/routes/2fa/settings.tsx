@@ -3,31 +3,38 @@
  * Manage 2FA configuration, recovery codes, and trusted devices
  */
 
-import { Layout, StatusMessage } from "@/components";
+import { ButtonGroup, Layout, StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { verificationCodeSchema } from "@/lib/validations";
 import { RecoveryCodeList } from "@/modules/twofa/components/RecoveryCodeList";
 import { VerificationInput } from "@/modules/twofa/components/VerificationInput";
+import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
+import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
+import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
 import {
 	use2FAStatus,
 	useDisable2FA,
 	useGenerateRecoveryCodes,
-	useSetPreferredMethod,
+	useRemoveTwoFactorMethod,
 } from "@/modules/twofa/hooks";
-import type {
-	TwoFactorMethod,
-	TwoFactorStatusResponse,
-} from "@/modules/twofa/types";
+import type { TwoFactorMethod, TwoFactorStatusResponse } from "@/modules/twofa/types";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-interface MethodOption {
-	key: TwoFactorMethod;
-	title: string;
-	description: string;
-	available: boolean;
-	helper?: string;
-}
+type RemovableMethod = Exclude<TwoFactorMethod, "email">;
+
+const METHOD_LABELS: Record<TwoFactorMethod, string> = {
+	totp: "Authenticator App",
+	email: "Email",
+	sms: "SMS",
+};
+
+const REMOVAL_CONFIRMATION: Record<RemovableMethod, string> = {
+	totp:
+		"Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
+	sms:
+		"Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
+};
 
 function TwoFactorStatusHeader({ status }: { status: TwoFactorStatusResponse }) {
 	return (
@@ -36,15 +43,23 @@ function TwoFactorStatusHeader({ status }: { status: TwoFactorStatusResponse }) 
 				<div>
 					<h1 className="text-2xl font-semibold mb-2">Two-Factor Authentication</h1>
 					<div className="flex items-center gap-2">
-						<span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-							✓ Enabled
-						</span>
-						<span className="text-sm text-gray-600">
-							Method:{" "}
-							<span className="font-semibold">
-								{status.preferred_method?.toUpperCase()}
+						{status.is_enabled ? (
+							<>
+								<span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+									✓ Enabled
+								</span>
+								<span className="text-sm text-gray-600">
+									Method:{" "}
+									<span className="font-semibold">
+										{status.preferred_method?.toUpperCase()}
+									</span>
+								</span>
+							</>
+						) : (
+							<span className="inline-flex items-center bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+								⚠️ Not enabled
 							</span>
-						</span>
+						)}
 					</div>
 				</div>
 			</div>
@@ -63,92 +78,7 @@ interface PreferredMethodSectionProps {
 	onConfigure: () => void;
 }
 
-function PreferredMethodSection({
-	methodOptions,
-	preferredMethod,
-	pendingMethod,
-	isUpdating,
-	errorMessage,
-	phoneNumber,
-	onSetPreferred,
-	onConfigure,
-}: PreferredMethodSectionProps) {
-	return (
-		<div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-			<div className="flex items-start justify-between">
-				<div>
-					<h2 className="text-xl font-semibold mb-1">Default Verification Method</h2>
-					<p className="text-sm text-gray-600">
-						Choose which factor we request during login. Configure additional factors from the setup page whenever you need to switch.
-					</p>
-				</div>
-				{isUpdating && <span className="text-sm text-gray-500">Updating…</span>}
-			</div>
-
-			<div className="grid gap-4 md:grid-cols-3">
-				{methodOptions.map((option) => {
-					const isDefault = preferredMethod === option.key;
-					const isPendingOption = isUpdating && pendingMethod === option.key;
-
-					return (
-						<div
-							key={option.key}
-							className="border border-gray-200 rounded-lg p-4 flex flex-col gap-3"
-						>
-							<div className="flex items-center justify-between">
-								<h3 className="font-semibold text-lg">{option.title}</h3>
-								{isDefault && (
-									<span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
-										Default
-									</span>
-								)}
-							</div>
-							<p className="text-sm text-gray-600">{option.description}</p>
-
-							{option.key === "sms" && phoneNumber && (
-								<p className="text-sm text-gray-500">Sending to {phoneNumber}</p>
-							)}
-
-							{option.helper && (
-								<p className="text-xs text-gray-500">{option.helper}</p>
-							)}
-
-							<div className="mt-auto">
-								{option.available ? (
-									isDefault ? (
-										<p className="text-sm text-green-700 font-medium">Currently in use</p>
-									) : (
-										<Button
-											onClick={() => onSetPreferred(option.key)}
-											disabled={isUpdating}
-											className="w-full"
-										>
-											{isPendingOption ? "Saving…" : "Set as default"}
-										</Button>
-									)
-								) : (
-									<Button
-										variant="outline"
-										onClick={onConfigure}
-										className="w-full"
-									>
-										{option.key === "sms" && phoneNumber
-											? "Verify phone number"
-											: "Configure in setup"}
-									</Button>
-								)}
-							</div>
-						</div>
-					);
-				})}
-			</div>
-
-			{errorMessage && (
-				<StatusMessage variant="error">{errorMessage}</StatusMessage>
-			)}
-		</div>
-	);
-}
+// Removed old PreferredMethodSection in favor of consolidated method cards
 
 interface RecoveryCodesSectionProps {
 	showNewCodes: boolean;
@@ -310,12 +240,14 @@ function TwoFactorSettingsPage() {
 	const { data: status, isLoading } = use2FAStatus();
 	const disable2FA = useDisable2FA();
 	const generateCodes = useGenerateRecoveryCodes();
-	const setPreferredMethod = useSetPreferredMethod();
+	const removeMethod = useRemoveTwoFactorMethod();
 
 	const [showDisableConfirm, setShowDisableConfirm] = useState(false);
 	const [disableCode, setDisableCode] = useState("");
 	const [showNewCodes, setShowNewCodes] = useState(false);
-	const [pendingMethod, setPendingMethod] = useState<TwoFactorMethod | null>(null);
+	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(null);
+	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
+	const [removalError, setRemovalError] = useState<string | null>(null);
 
 	const handleDisable = async () => {
 		const validation = verificationCodeSchema.safeParse(disableCode);
@@ -338,49 +270,36 @@ function TwoFactorSettingsPage() {
 		}
 	};
 
-	const handleSetPreferred = (method: TwoFactorMethod) => {
-		setPendingMethod(method);
-		setPreferredMethod.mutate(method, {
-			onSettled: () => setPendingMethod(null),
-		});
+	const removalInProgress = removeMethod.isPending;
+	const handleRemovalRequest = (method: Exclude<TwoFactorMethod, "email">) => {
+		setRemovalError(null);
+		setRemovalMessage(null);
+		setMethodToRemove(method);
+	};
+	const handleRemovalCancel = () => {
+		if (!removalInProgress) {
+			setMethodToRemove(null);
+		}
+		setRemovalError(null);
+	};
+	const handleRemovalConfirm = async () => {
+		if (!methodToRemove) return;
+		setRemovalError(null);
+		try {
+			const result = await removeMethod.mutateAsync(methodToRemove);
+			setRemovalMessage(result?.message ?? "Method removed successfully.");
+			setMethodToRemove(null);
+		} catch (err) {
+			const apiMessage = (err as { data?: { error?: string } })?.data?.error;
+			const fallback = err instanceof Error ? err.message : "Failed to remove 2FA method.";
+			setRemovalError(apiMessage ?? fallback);
+		}
 	};
 
 	const preferredMethod = status?.preferred_method ?? null;
-	const smsVerified = Boolean(status?.sms_verified);
-	const methodOptions: Array<{
-		key: TwoFactorMethod;
-		title: string;
-		description: string;
-		available: boolean;
-		helper?: string;
-	}> = [
-		{
-			key: "totp",
-			title: "Authenticator App",
-			description:
-				"Use 6-digit codes generated by apps like Google Authenticator, 1Password, or Authy.",
-			available: Boolean(status?.has_totp),
-			helper: "Scan the QR code via the setup page if you need to reconfigure your authenticator app.",
-		},
-		{
-			key: "email",
-			title: "Email",
-			description: "Receive verification codes at your account email address.",
-			available: true,
-			helper: "Email is always available as a fallback option.",
-		},
-		{
-			key: "sms",
-			title: "SMS",
-			description: "Get verification codes sent to your mobile phone via text message.",
-			available: smsVerified,
-			helper: status?.phone_number
-				? smsVerified
-					? `Verified number: ${status.phone_number}`
-					: `Number pending verification: ${status.phone_number}`
-				: "Add a phone number from the setup page to enable SMS.",
-		},
-	];
+	const totpConfigured = Boolean(status?.has_totp);
+	const smsConfigured = Boolean(status?.has_sms);
+	const phoneNumber = status?.phone_number;
 
 	if (isLoading) {
 		return (
@@ -391,16 +310,9 @@ function TwoFactorSettingsPage() {
 		);
 	}
 
-	if (!status?.is_enabled) {
-		return (
-			<Layout.Error
-				title="Two-Factor Authentication"
-				description="2FA is not enabled for your account. Enable it to add another layer of security."
-				actionLabel="Enable 2FA"
-				onAction={() => navigate({ to: "/2fa/setup" })}
-			/>
-		);
-	}
+	// Always show consolidated setup on settings page. If 2FA is not enabled, show an inline callout instead of routing to a separate /2fa/setup page.
+	// This ensures there is no dependency on a non-existent setup route.
+
 
 	if (!status) {
 		return (
@@ -414,23 +326,67 @@ function TwoFactorSettingsPage() {
 	}
 
 	const canDisable = verificationCodeSchema.safeParse(disableCode).success;
-	const phoneNumber = status.phone_number;
 
 	return (
 		<Layout>
 			<div className="max-w-3xl mx-auto space-y-6">
 				<TwoFactorStatusHeader status={status} />
 
-				<PreferredMethodSection
-					methodOptions={methodOptions}
-					preferredMethod={preferredMethod}
-					pendingMethod={pendingMethod}
-					isUpdating={setPreferredMethod.isPending}
-					errorMessage={setPreferredMethod.error?.message}
-					phoneNumber={phoneNumber}
-					onSetPreferred={handleSetPreferred}
-					onConfigure={() => navigate({ to: "/2fa/setup" })}
-				/>
+				<div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+					<div className="flex items-start justify-between">
+						<div>
+							<h2 className="text-xl font-semibold mb-1">Setup and Manage Methods</h2>
+							<p className="text-sm text-gray-600">
+								Choose your default method by setting up and configuring available options below.
+							</p>
+						</div>
+					</div>
+
+					{!status.is_enabled && (
+						<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-4">
+							<p className="font-semibold">2FA is not enabled.</p>
+							<p>Start by setting up a method below. This will also generate fresh recovery codes.</p>
+						</div>
+					)}
+
+					{removalMessage && (
+						<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
+							{removalMessage}
+						</p>
+					)}
+
+					{removalError && (
+						<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+							{removalError}
+						</p>
+					)}
+
+					<div className="space-y-4">
+						<TotpMethodCard
+							isCurrent={preferredMethod === "totp"}
+							configured={totpConfigured}
+							removalInProgress={removalInProgress}
+							methodToRemove={methodToRemove}
+							onSetup={() => navigate({ to: "/2fa/setup/totp" })}
+							onRequestRemoval={() => handleRemovalRequest("totp")}
+						/>
+
+						<EmailMethodCard
+							isCurrent={preferredMethod === "email"}
+							onSetup={() => navigate({ to: "/2fa/setup/email" })}
+						/>
+
+						<SmsMethodCard
+							isCurrent={preferredMethod === "sms"}
+							configured={smsConfigured}
+							phoneNumber={phoneNumber}
+							removalInProgress={removalInProgress}
+							methodToRemove={methodToRemove}
+							onSetup={() => navigate({ to: "/2fa/setup/sms" })}
+							onRequestRemoval={() => handleRemovalRequest("sms")}
+						/>
+					</div>
+				</div>
 
 				<RecoveryCodesSection
 					showNewCodes={showNewCodes}

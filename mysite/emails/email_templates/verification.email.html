@@ -19,20 +19,18 @@ Enter this code in the app to activate your account. If you did not create an ac
 {% endblock %}
 
 {% block html_body %}
-<!DOCTYPE html>
-<html>
-  <body>
-    <p>Hi {{ username|default:"there" }},</p>
-    <p>Thanks for signing up! Confirm your email using the link below:</p>
-    {% if verification_link %}
-    <p><a href="{{ verification_link }}">Verify your email</a></p>
-    <p>This link expires in {{ verification_expires_in_minutes|default:"15" }} minutes.</p>
-    {% else %}
-    <p>Use the verification code below to activate your account.</p>
-    {% endif %}
-    <p>If you prefer to enter the code manually, use this verification token:</p>
-    <p style="font-size: 20px; font-weight: bold;">{{ token }}</p>
-    <p>Enter this code in the app to activate your account. If you did not create an account, you can ignore this email.</p>
-  </body>
-</html>
+{% include 'emails/partials/header.html' with title="Verify your Tinybeans-inspired account" intro_text="Thanks for signing up! Confirm your email using the link below:" email_tag="Verification" %}
+
+<p>Hi {{ username|default:"there" }},</p>
+{% if verification_link %}
+<p><a href="{{ verification_link }}">Verify your email</a></p>
+<p>This link expires in {{ verification_expires_in_minutes|default:"15" }} minutes.</p>
+{% else %}
+<p>Use the verification code below to activate your account.</p>
+{% endif %}
+<p>If you prefer to enter the code manually, use this verification token:</p>
+<p style="font-size: 20px; font-weight: bold;">{{ token }}</p>
+<p>Enter this code in the app to activate your account. If you did not create an account, you can ignore this email.</p>
+
+{% include 'emails/partials/footer.html' %}
 {% endblock %}

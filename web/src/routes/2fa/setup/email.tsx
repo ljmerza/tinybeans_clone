@@ -10,7 +10,7 @@ function EmailSetupRoute() {
             <div className="max-w-2xl mx-auto">
                 <EmailSetup
                     onComplete={() => navigate({ to: "/2fa/settings" })}
-                    onCancel={() => navigate({ to: "/2fa/setup" })}
+                    onCancel={() => navigate({ to: "/2fa/settings" })}
                 />
             </div>
         </Layout>

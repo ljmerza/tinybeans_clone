@@ -122,6 +122,40 @@ class TestTwoFactorServiceOTP:
         assert result is False
 
 
+    def test_send_otp_invalidates_previous_unused_codes(self):
+        """Requesting a new OTP should invalidate previous unused codes for same purpose/method"""
+        user = User.objects.create_user(username='user1', password='x')
+        TwoFactorSettings.objects.create(user=user, preferred_method='email', is_enabled=True)
+
+        # Create an existing, unused code
+        old_code = TwoFactorCode.objects.create(
+            user=user,
+            code='111111',
+            method='email',
+            purpose='setup',
+            is_used=False,
+            attempts=0,
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+
+        # Send a new OTP for same method/purpose
+        TwoFactorService.send_otp(user, method='email', purpose='setup')
+
+        # Old code should be invalidated (marked used and expired)
+        old_code.refresh_from_db()
+        assert old_code.is_used is True
+        assert old_code.expires_at <= timezone.now()
+
+        # New code should be the only valid one remaining
+        valid_count = TwoFactorCode.objects.filter(
+            user=user,
+            method='email',
+            purpose='setup',
+            is_used=False,
+            expires_at__gt=timezone.now(),
+        ).count()
+        assert valid_count == 1
+
 @pytest.mark.django_db
 class TestTwoFactorServiceTOTP:
     """Test TOTP generation and validation"""

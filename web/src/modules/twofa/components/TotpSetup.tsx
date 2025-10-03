@@ -55,9 +55,9 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
                     isVerifying={verifySetup.isPending}
                     errorMessage={verifySetup.error?.message}
                     onCodeChange={setCode}
-                    onVerify={async () => {
+                    onVerify={async (val) => {
                         try {
-                            await verifySetup.mutateAsync(code);
+                            await verifySetup.mutateAsync(val ?? code);
                             setStep("recovery");
                         } catch (error) {
                             console.error("Verification failed:", error);

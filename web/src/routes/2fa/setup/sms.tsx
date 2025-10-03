@@ -13,7 +13,7 @@ function SmsSetupRoute() {
                 <SmsSetup
                     defaultPhone={status?.phone_number ?? ""}
                     onComplete={() => navigate({ to: "/2fa/settings" })}
-                    onCancel={() => navigate({ to: "/2fa/setup" })}
+                    onCancel={() => navigate({ to: "/2fa/settings" })}
                 />
             </div>
         </Layout>

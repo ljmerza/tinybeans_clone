@@ -78,7 +78,15 @@ class TwoFactorService:
         code = TwoFactorService.generate_otp()
         expiry_minutes = getattr(settings, 'TWOFA_CODE_EXPIRY_MINUTES', 10)
         
-        # Create code record
+        # Invalidate any previous unused codes for the same method/purpose
+        TwoFactorCode.objects.filter(
+            user=user,
+            method=method,
+            purpose=purpose,
+            is_used=False,
+        ).update(is_used=True, expires_at=timezone.now())
+
+        # Create new code record
         code_obj = TwoFactorCode.objects.create(
             user=user,
             code=code,

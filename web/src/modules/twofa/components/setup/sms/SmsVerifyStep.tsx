@@ -29,7 +29,7 @@ export function SmsVerifyStep({
     return (
         <>
             <WizardSection title="Enter SMS Code" description={message}>
-                <VerificationInput value={code} onChange={onCodeChange} onComplete={onVerify} disabled={isVerifying} />
+                <VerificationInput value={code} onChange={onCodeChange} onComplete={(val) => onVerify(val)} disabled={isVerifying} />
                 <ButtonGroup className="flex-col sm:flex-row sm:justify-between">
                     <Button onClick={onResend} variant="ghost" disabled={isResending} className="sm:w-auto">
                         Resend Code

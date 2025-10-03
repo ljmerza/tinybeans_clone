@@ -14,17 +14,15 @@ If you were not expecting this invitation, no action is required.
 {% endblock %}
 
 {% block html_body %}
-<!DOCTYPE html>
-<html>
-  <body>
-    <p>Hi there,</p>
-    <p>{{ invited_by|default:"A circle admin" }} invited you to join the circle '{{ circle_name|default:"a circle" }}'.</p>
-    <p>Use the token below to accept the invitation and create your account:</p>
-    {% if invitation_link %}
-    <p><a href="{{ invitation_link }}">Accept invitation</a></p>
-    {% endif %}
-    <p style="font-size: 20px; font-weight: bold;">{{ token }}</p>
-    <p>If you were not expecting this invitation, no action is required.</p>
-  </body>
-</html>
+{% include 'emails/partials/header.html' with title="You're invited to join "|add:circle_name intro_text="Use the token below to accept the invitation and create your account:" email_tag="Invitation" %}
+
+<p>Hi there,</p>
+<p>{{ invited_by|default:"A circle admin" }} invited you to join the circle '{{ circle_name|default:"a circle" }}'.</p>
+{% if invitation_link %}
+<p><a href="{{ invitation_link }}">Accept invitation</a></p>
+{% endif %}
+<p style="font-size: 20px; font-weight: bold;">{{ token }}</p>
+<p>If you were not expecting this invitation, no action is required.</p>
+
+{% include 'emails/partials/footer.html' %}
 {% endblock %}

@@ -60,6 +60,9 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
                     onResend={async () => {
                         try {
                             await initSetup.mutateAsync({ method: "email" });
+                            // Invalidate old code locally
+                            setCode("");
+                            verifySetup.reset();
                         } catch (error) {
                             console.error("Email setup resend failed:", error);
                         }

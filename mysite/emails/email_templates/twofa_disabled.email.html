@@ -1,0 +1,16 @@
+{% block subject %}Two-Factor Authentication disabled{% endblock %}
+
+{% block text_body %}
+Hello {{ username|default:email }},
+
+Two-factor authentication has been disabled on your account.
+If you didn't disable 2FA, please contact support immediately and secure your account.
+{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title="Two-Factor Authentication disabled" intro_text="Security update" email_tag="Security" %}
+<p>Hello {{ username|default:email }},</p>
+<p>Two-factor authentication has been disabled on your account.</p>
+<p>If you didn't disable 2FA, please contact support immediately and secure your account.</p>
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

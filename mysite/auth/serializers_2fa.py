@@ -65,10 +65,12 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def get_has_totp(self, obj):
-        return bool(getattr(obj, '_totp_secret_encrypted', None))
+        # Consider TOTP configured only after full verification (i.e., 2FA is enabled)
+        return bool(getattr(obj, '_totp_secret_encrypted', None)) and bool(obj.is_enabled)
 
     def get_has_sms(self, obj):
-        return bool(obj.phone_number)
+        # Consider SMS configured only after phone number verification
+        return bool(obj.phone_number) and bool(obj.sms_verified)
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):

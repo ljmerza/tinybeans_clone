@@ -52,9 +52,9 @@ export function SmsSetup({ defaultPhone = "", onComplete, onCancel }: SmsSetupPr
                     isResending={initSetup.isPending}
                     errorMessage={verifySetup.error?.message}
                     onCodeChange={setCode}
-                    onVerify={async () => {
+                    onVerify={async (val) => {
                         try {
-                            await verifySetup.mutateAsync(code);
+                            await verifySetup.mutateAsync(val ?? code);
                             setStep("recovery");
                         } catch (error) {
                             console.error("SMS setup verification failed:", error);
@@ -64,6 +64,9 @@ export function SmsSetup({ defaultPhone = "", onComplete, onCancel }: SmsSetupPr
                     onResend={async () => {
                         try {
                             await initSetup.mutateAsync({ method: "sms", phone_number: phone.trim() });
+                            // Invalidate old code locally
+                            setCode("");
+                            verifySetup.reset();
                         } catch (error) {
                             console.error("SMS setup resend failed:", error);
                         }
