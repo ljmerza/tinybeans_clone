@@ -15,6 +15,14 @@ from .views import (
     MagicLoginVerifyView,
 )
 
+# Google OAuth Views
+from .views_google_oauth import (
+    GoogleOAuthInitiateView,
+    GoogleOAuthCallbackView,
+    GoogleOAuthLinkView,
+    GoogleOAuthUnlinkView,
+)
+
 urlpatterns = [
     path('csrf/', get_csrf_token, name='auth-csrf'),
     path('signup/', SignupView.as_view(), name='auth-signup'),
@@ -31,6 +39,12 @@ urlpatterns = [
     
     path('magic-login/request/', MagicLoginRequestView.as_view(), name='auth-magic-login-request'),
     path('magic-login/verify/', MagicLoginVerifyView.as_view(), name='auth-magic-login-verify'),
+    
+    # Google OAuth endpoints
+    path('google/initiate/', GoogleOAuthInitiateView.as_view(), name='auth-google-initiate'),
+    path('google/callback/', GoogleOAuthCallbackView.as_view(), name='auth-google-callback'),
+    path('google/link/', GoogleOAuthLinkView.as_view(), name='auth-google-link'),
+    path('google/unlink/', GoogleOAuthUnlinkView.as_view(), name='auth-google-unlink'),
 ]
 
 # Two-Factor Authentication URLs

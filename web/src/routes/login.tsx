@@ -1,4 +1,5 @@
 import { PublicOnlyRoute, StatusMessage } from "@/components";
+import { AuthCard } from "@/components/AuthCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,17 +33,39 @@ function LoginPage() {
 	});
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-			<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6">
-				<h1 className="mb-6 text-2xl font-semibold text-center">Login</h1>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						form.handleSubmit();
-					}}
-					className="space-y-4"
-				>
+		<AuthCard
+			title="Login"
+			footerClassName="space-y-4 text-center"
+			footer={
+				<>
+					<div className="pt-4 border-t border-gray-200">
+						<Link
+							to="/magic-link-request"
+							className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+						>
+							Login with Magic Link →
+						</Link>
+					</div>
+					<div className="text-sm text-muted-foreground">
+						Don't have an account?{" "}
+						<Link
+							to="/signup"
+							className="font-semibold text-blue-600 hover:text-blue-800"
+						>
+							Sign up
+						</Link>
+					</div>
+				</>
+			}
+		>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+				className="space-y-4"
+			>
 					<form.Field
 						name="username"
 						validators={{
@@ -124,38 +147,15 @@ function LoginPage() {
 						)}
 					</Button>
 
-					{login.error && (
-						<div className="bg-red-50 border border-red-200 rounded p-3">
-							<StatusMessage variant="error" align="center">
-								{login.error.message || "Login failed. Please try again."}
-							</StatusMessage>
-						</div>
-					)}
-				</form>
-
-				{/* Alternative login methods */}
-				<div className="mt-6 pt-4 border-t border-gray-200 space-y-3">
-					<div className="text-center">
-						<Link
-							to="/magic-link-request"
-							className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-						>
-							Login with Magic Link →
-						</Link>
+				{login.error && (
+					<div className="bg-red-50 border border-red-200 rounded p-3">
+						<StatusMessage variant="error" align="center">
+							{login.error.message || "Login failed. Please try again."}
+						</StatusMessage>
 					</div>
-				</div>
-
-				<div className="mt-4 text-center text-sm">
-					Don't have an account?{" "}
-					<Link
-						to="/signup"
-						className="font-semibold text-blue-600 hover:text-blue-800"
-					>
-						Sign up
-					</Link>
-				</div>
-			</div>
-		</div>
+				)}
+			</form>
+		</AuthCard>
 	);
 }
 

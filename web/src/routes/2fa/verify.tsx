@@ -4,6 +4,7 @@
  */
 
 import { StatusMessage } from "@/components";
+import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,125 +119,108 @@ function TwoFactorVerifyPage() {
 		}
 	};
 
+	const headerDescription = useRecoveryCode
+		? "Enter one of your recovery codes"
+		: message ?? `Enter the 6-digit code from your ${getMethodDisplay()}`;
+
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-			<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 space-y-6">
-				<div className="text-center">
-					<h1 className="text-2xl font-semibold mb-2">
-						Two-Factor Authentication
-					</h1>
-
-					{!useRecoveryCode && message && (
-						<p className="text-gray-600">{message}</p>
-					)}
-
-					{!useRecoveryCode && !message && (
-						<p className="text-gray-600">
-							Enter the 6-digit code from your {getMethodDisplay()}
-						</p>
-					)}
-
-					{useRecoveryCode && (
-						<p className="text-gray-600">Enter one of your recovery codes</p>
-					)}
-				</div>
-
-				<div className="space-y-4">
-					{!useRecoveryCode ? (
-						<VerificationInput
-							value={code}
-							onChange={setCode}
-							onComplete={handleVerify}
-							disabled={verify.isPending}
-						/>
-					) : (
-						<div className="space-y-2">
-							<Label htmlFor="recovery-code">Recovery Code</Label>
-							<Input
-								id="recovery-code"
-								type="text"
-								placeholder="XXXX-XXXX-XXXX"
-								value={code}
-								onChange={(e) => setCode(e.target.value)}
-								disabled={verify.isPending}
-								className="text-center font-mono text-lg"
-								maxLength={14}
-							/>
-							<p className="text-xs text-gray-500 text-center">
-								Format: XXXX-XXXX-XXXX (with dashes)
-							</p>
-						</div>
-					)}
-
-					<div className="flex items-center space-x-2">
-						<input
-							type="checkbox"
-							id="remember-me"
-							checked={rememberMe}
-							onChange={(e) => setRememberMe(e.target.checked)}
-							disabled={verify.isPending}
-							className="h-4 w-4 rounded border-gray-300"
-						/>
-						<Label
-							htmlFor="remember-me"
-							className="text-sm font-normal cursor-pointer"
-						>
-							Remember this device for 30 days
-						</Label>
-					</div>
-
-					<Button
-						onClick={handleVerify}
-						disabled={
-							(useRecoveryCode
-								? !recoveryCodeSchema.safeParse(code).success
-								: !verificationCodeSchema.safeParse(code).success) ||
-							verify.isPending
-						}
-						className="w-full"
-					>
-						{verify.isPending ? "Verifying..." : "Verify"}
-					</Button>
-
-					{verify.error && (
-						<div className="bg-red-50 border border-red-200 rounded p-3">
-							<StatusMessage variant="error" align="center">
-								{verify.error instanceof Error
-									? verify.error.message
-									: "Invalid code. Please try again."}
-							</StatusMessage>
-						</div>
-					)}
-
-					<div className="text-center">
-						<button
-							type="button"
-							onClick={() => {
-								setUseRecoveryCode(!useRecoveryCode);
-								setCode("");
-							}}
-							disabled={verify.isPending}
-							className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
-						>
-							{useRecoveryCode
-								? "← Use verification code instead"
-								: "Use recovery code instead →"}
-						</button>
-					</div>
-				</div>
-
-				<div className="pt-4 border-t text-center">
-					<button
-						type="button"
-						onClick={() => navigate({ to: "/login" })}
+		<AuthCard
+			title="Two-Factor Authentication"
+			description={headerDescription}
+			className="max-w-md"
+			footerClassName="border-t pt-4 text-center space-y-0"
+			footer={
+				<button
+					type="button"
+					onClick={() => navigate({ to: "/login" })}
+					disabled={verify.isPending}
+					className="text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+				>
+					← Back to login
+				</button>
+			}
+		>
+			{!useRecoveryCode ? (
+				<VerificationInput
+					value={code}
+					onChange={setCode}
+					onComplete={handleVerify}
+					disabled={verify.isPending}
+				/>
+			) : (
+				<div className="space-y-2">
+					<Label htmlFor="recovery-code">Recovery Code</Label>
+					<Input
+						id="recovery-code"
+						type="text"
+						placeholder="XXXX-XXXX-XXXX"
+						value={code}
+						onChange={(e) => setCode(e.target.value)}
 						disabled={verify.isPending}
-						className="text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
-					>
-						← Back to login
-					</button>
+						className="text-center font-mono text-lg"
+						maxLength={14}
+					/>
+					<p className="text-xs text-gray-500 text-center">
+						Format: XXXX-XXXX-XXXX (with dashes)
+					</p>
 				</div>
+			)}
+
+			<div className="flex items-center space-x-2">
+				<input
+					type="checkbox"
+					id="remember-me"
+					checked={rememberMe}
+					onChange={(e) => setRememberMe(e.target.checked)}
+					disabled={verify.isPending}
+					className="h-4 w-4 rounded border-gray-300"
+				/>
+				<Label
+					htmlFor="remember-me"
+					className="text-sm font-normal cursor-pointer"
+				>
+					Remember this device for 30 days
+				</Label>
 			</div>
-		</div>
+
+			<Button
+				onClick={handleVerify}
+				disabled={
+					(useRecoveryCode
+						? !recoveryCodeSchema.safeParse(code).success
+						: !verificationCodeSchema.safeParse(code).success) || verify.isPending
+				}
+				className="w-full"
+			>
+				{verify.isPending ? "Verifying..." : "Verify"}
+			</Button>
+
+			{verify.error && (
+				<div className="bg-red-50 border border-red-200 rounded p-3">
+					<StatusMessage variant="error" align="center">
+						{verify.error instanceof Error
+							? verify.error.message
+							: "Invalid code. Please try again."}
+					</StatusMessage>
+				</div>
+			)}
+
+			<div className="text-center">
+				<button
+					type="button"
+					onClick={() => {
+						setUseRecoveryCode(!useRecoveryCode);
+						setCode("");
+					}}
+					disabled={verify.isPending}
+					className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+				>
+					{useRecoveryCode
+						? "← Use verification code instead"
+						: "Use recovery code instead →"}
+				</button>
+			</div>
+		</AuthCard>
 	);
 }
 

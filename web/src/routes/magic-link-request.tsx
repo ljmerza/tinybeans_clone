@@ -1,6 +1,7 @@
+import { StatusMessage } from "@/components";
+import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusMessage } from "@/components";
 import { useMagicLoginRequest } from "@/modules/login/hooks";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -40,24 +41,40 @@ function MagicLinkRequestPage() {
 			: null;
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-			<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
-				<div className="space-y-2 text-center">
-					<h1 className="text-2xl font-semibold">Magic Link Login</h1>
-					<p className="text-sm text-muted-foreground">
-						Enter your email address and we'll send you a magic link to log in
-						instantly—no password required.
-					</p>
-				</div>
-
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						form.handleSubmit();
-					}}
-					className="space-y-4"
-				>
+		<AuthCard
+			title="Magic Link Login"
+			description="Enter your email address and we'll send you a magic link to log in instantly—no password required."
+			footerClassName="space-y-3 text-center text-sm text-muted-foreground"
+			footer={
+				<>
+					<div>
+						<Link
+							to="/login"
+							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+						>
+							Back to traditional login
+						</Link>
+					</div>
+					<div>
+						Don't have an account?{" "}
+						<Link
+							to="/signup"
+							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+						>
+							Sign up
+						</Link>
+					</div>
+				</>
+			}
+		>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+				className="space-y-4"
+			>
 					<form.Field
 						name="email"
 						validators={{
@@ -102,46 +119,23 @@ function MagicLinkRequestPage() {
 					{successMessage && (
 						<StatusMessage variant="success">{successMessage}</StatusMessage>
 					)}
-					{errorMessage && (
-						<StatusMessage variant="error">{errorMessage}</StatusMessage>
-					)}
-				</form>
+				{errorMessage && (
+					<StatusMessage variant="error">{errorMessage}</StatusMessage>
+				)}
+			</form>
 
-				<div className="space-y-2 pt-4 border-t">
-					<div className="text-center text-sm text-muted-foreground">
-						<Link
-							to="/login"
-							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-						>
-							Back to traditional login
-						</Link>
-					</div>
-					<div className="text-center text-sm text-muted-foreground">
-						Don't have an account?{" "}
-						<Link
-							to="/signup"
-							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-						>
-							Sign up
-						</Link>
-					</div>
-				</div>
-
-				<div className="pt-4 border-t">
-					<div className="text-xs text-muted-foreground space-y-2">
-						<p className="font-semibold">How it works:</p>
-						<ol className="list-decimal list-inside space-y-1 text-gray-600">
-							<li>Enter your email address</li>
-							<li>Click the link we send you</li>
-							<li>You're logged in automatically</li>
-						</ol>
-						<p className="text-gray-500 italic">
-							The magic link expires in 15 minutes and can only be used once.
-						</p>
-					</div>
-				</div>
+			<div className="pt-4 border-t text-xs text-muted-foreground space-y-2">
+				<p className="font-semibold">How it works:</p>
+				<ol className="list-decimal list-inside space-y-1 text-gray-600">
+					<li>Enter your email address</li>
+					<li>Click the link we send you</li>
+					<li>You're logged in automatically</li>
+				</ol>
+				<p className="text-gray-500 italic">
+					The magic link expires in 15 minutes and can only be used once.
+				</p>
 			</div>
-		</div>
+		</AuthCard>
 	);
 }
 

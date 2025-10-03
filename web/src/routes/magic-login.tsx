@@ -29,7 +29,7 @@ function MagicLoginPage() {
 			.catch(() => {
 				setStatus("error");
 			});
-	}, [token]);
+	}, [token, magicLoginVerify]);
 
 	return (
 		<div className="mx-auto max-w-sm p-6">

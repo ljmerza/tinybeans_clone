@@ -1,4 +1,5 @@
-import { PublicOnlyRoute } from "@/components";
+import { PublicOnlyRoute, StatusMessage } from "@/components";
+import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { confirmPasswordSchema, passwordSchema } from "@/lib/validations";
@@ -36,8 +37,21 @@ function SignupPage() {
 	});
 
 	return (
-		<div className="container-sm section-spacing">
-			<h1 className="heading-3 mb-4">Create your account</h1>
+		<AuthCard
+			title="Create your account"
+			description="Join the community by filling out the details below. All fields are required."
+			footer={
+				<div className="text-sm text-muted-foreground">
+					Already have an account?{" "}
+					<Link
+						to="/login"
+						className="font-semibold text-blue-600 hover:text-blue-800"
+					>
+						Log in
+					</Link>
+				</div>
+			}
+		>
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
@@ -46,11 +60,11 @@ function SignupPage() {
 				}}
 				className="space-y-4"
 			>
-				<form.Field
-					name="username"
-					validators={{
-						onBlur: ({ value }) => {
-							const result = baseSchema.shape.username.safeParse(value);
+					<form.Field
+						name="username"
+						validators={{
+							onBlur: ({ value }) => {
+								const result = baseSchema.shape.username.safeParse(value);
 							return result.success
 								? undefined
 								: result.error.errors[0].message;
@@ -67,6 +81,8 @@ function SignupPage() {
 								value={field.state.value}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
+								autoComplete="username"
+								disabled={signup.isPending}
 								required
 							/>
 							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
@@ -74,10 +90,10 @@ function SignupPage() {
 							)}
 						</div>
 					)}
-				</form.Field>
+					</form.Field>
 
-				<form.Field
-					name="email"
+					<form.Field
+						name="email"
 					validators={{
 						onBlur: ({ value }) => {
 							const result = baseSchema.shape.email.safeParse(value);
@@ -98,6 +114,8 @@ function SignupPage() {
 								value={field.state.value}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
+								autoComplete="email"
+								disabled={signup.isPending}
 								required
 							/>
 							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
@@ -105,7 +123,7 @@ function SignupPage() {
 							)}
 						</div>
 					)}
-				</form.Field>
+					</form.Field>
 
 				<form.Field
 					name="password"
@@ -129,6 +147,8 @@ function SignupPage() {
 								value={field.state.value}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
+								autoComplete="new-password"
+								disabled={signup.isPending}
 								required
 							/>
 							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
@@ -136,7 +156,7 @@ function SignupPage() {
 							)}
 						</div>
 					)}
-				</form.Field>
+					</form.Field>
 
 				<form.Field
 					name="password_confirm"
@@ -160,6 +180,8 @@ function SignupPage() {
 								value={field.state.value}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
+								autoComplete="new-password"
+								disabled={signup.isPending}
 								required
 							/>
 							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
@@ -169,27 +191,17 @@ function SignupPage() {
 					)}
 				</form.Field>
 
-				<Button type="submit" className="w-full" disabled={signup.isPending}>
-					{signup.isPending ? "Creating…" : "Create account"}
-				</Button>
+			<Button type="submit" className="w-full" disabled={signup.isPending}>
+				{signup.isPending ? "Creating…" : "Create account"}
+			</Button>
 
-				{signup.error && (
-					<p className="form-error">
-						{signup.error.message ?? "Signup failed"}
-					</p>
-				)}
-
-				<div className="text-center text-sm">
-					Already have an account?{" "}
-					<Link
-						to="/login"
-						className="font-semibold text-blue-600 hover:text-blue-800"
-					>
-						Log in
-					</Link>
-				</div>
-			</form>
-		</div>
+			{signup.error && (
+				<StatusMessage variant="error">
+					{signup.error.message ?? "Signup failed"}
+				</StatusMessage>
+			)}
+		</form>
+		</AuthCard>
 	);
 }
 
