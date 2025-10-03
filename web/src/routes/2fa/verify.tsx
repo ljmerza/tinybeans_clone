@@ -9,12 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { verificationCodeSchema } from "@/lib/validations";
-import { VerificationInput } from "@/modules/twofa/components/VerificationInput";
-import { useVerify2FALogin } from "@/modules/twofa/hooks";
-import type {
-	TwoFactorMethod,
-	TwoFactorVerifyState,
-} from "@/modules/twofa/types";
+import {
+	VerificationInput,
+	useVerify2FALogin,
+} from "@/features/twofa";
+import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
 import {
 	Navigate,
 	createFileRoute,

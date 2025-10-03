@@ -81,6 +81,14 @@ class GoogleOAuthState(models.Model):
             self.expires_at > timezone.now()
         )
     
+    def is_used(self):
+        """Check if state has been used."""
+        return self.used_at is not None
+    
+    def is_expired(self):
+        """Check if state has expired."""
+        return self.expires_at <= timezone.now()
+    
     def mark_as_used(self):
         """Mark state as used to prevent replay attacks."""
         self.used_at = timezone.now()

@@ -81,8 +81,8 @@ The routes will be:
 All route files use absolute imports:
 
 ```typescript
-import { useVerify2FALogin } from '@/modules/twofa/hooks'
-import { VerificationInput } from '@/modules/twofa/components/VerificationInput'
+import { useVerify2FALogin } from '@/features/twofa/hooks'
+import { VerificationInput } from '@/features/twofa/components/VerificationInput'
 import { Button } from '@/components/ui/button'
 ```
 
@@ -91,7 +91,7 @@ import { Button } from '@/components/ui/button'
 ### From Login Hook (Automatic)
 
 ```typescript
-// web/src/modules/login/hooks.ts
+// web/src/features/auth/hooks.ts
 if (data.requires_2fa) {
   navigate({ 
     to: '/2fa/verify',
@@ -207,7 +207,7 @@ web/src/routes/2fa/
 ├── settings.tsx         ✅ Created (8.0 KB)
 └── trusted-devices.tsx  ✅ Created (4.6 KB)
 
-web/src/modules/twofa/
+web/src/features/twofa/
 ├── types.ts             ✅ Created
 ├── client.ts            ✅ Created
 ├── hooks.ts             ✅ Created
@@ -218,7 +218,7 @@ web/src/modules/twofa/
     ├── RecoveryCodeList.tsx     ✅ Created
     └── TotpSetup.tsx            ✅ Created
 
-web/src/modules/login/
+web/src/features/auth/
 └── hooks.ts             ✅ Modified (added 2FA support)
 ```
 
@@ -263,7 +263,7 @@ navigate({ to: '/2fa/verify', state: { ... } as any })
 
 ### Issue: Cannot find module errors
 
-**Solution:** Check import paths use `@/modules/twofa/...`
+**Solution:** Check import paths use `@/features/twofa/...`
 
 ### Issue: Components not rendering
 

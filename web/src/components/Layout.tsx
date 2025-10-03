@@ -1,7 +1,7 @@
-import { authStore } from "@/modules/login/store";
+import { authStore } from "@/features/auth";
 import { Link } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { StandardError } from "./StandardError";
 import { StandardLoading } from "./StandardLoading";
 
@@ -136,9 +136,9 @@ function LayoutError({
 	);
 }
 
-type LayoutComponent = ((props: LayoutProps) => JSX.Element) & {
-	Loading: (props: LayoutLoadingProps) => JSX.Element;
-	Error: (props: LayoutErrorProps) => JSX.Element;
+type LayoutComponent = ((props: LayoutProps) => ReactElement) & {
+	Loading: (props: LayoutLoadingProps) => ReactElement;
+	Error: (props: LayoutErrorProps) => ReactElement;
 };
 
 const LayoutFn = ((props: LayoutProps) => {

@@ -12,7 +12,7 @@
 
 ## Epic Goal
 
-Migrate the two-factor authentication feature from `src/modules/twofa/` to `src/features/twofa/`, organizing the complex component hierarchy, consolidating route files, and ensuring all 2FA flows (setup, verification, management) work correctly with the new structure.
+Migrate the two-factor authentication feature from `src/features/twofa/` to `src/features/twofa/`, organizing the complex component hierarchy, consolidating route files, and ensuring all 2FA flows (setup, verification, management) work correctly with the new structure.
 
 ---
 
@@ -36,7 +36,7 @@ Migrate the two-factor authentication feature from `src/modules/twofa/` to `src/
 ### Files to Migrate
 
 ```
-src/modules/twofa/
+src/features/twofa/
 ├── client.ts                           → features/twofa/api/twofaClient.ts
 ├── hooks.ts                            → features/twofa/hooks/ (split)
 ├── index.ts                            → features/twofa/index.ts
@@ -554,7 +554,7 @@ export function useRecoveryCodes() {
 **Example Update:**
 ```typescript
 // routes/2fa/settings.tsx (BEFORE)
-import { TwoFactorSettings } from '@/modules/twofa/components/TwoFactorSettings'
+import { TwoFactorSettings } from '@/features/twofa/components/TwoFactorSettings'
 
 // routes/2fa/settings.tsx (AFTER)
 import { createFileRoute } from '@tanstack/react-router'
@@ -582,7 +582,7 @@ function TwoFactorSettingsPage() {
 # Update all 2FA imports
 
 find src -type f \( -name "*.tsx" -o -name "*.ts" \) -exec sed -i \
-  's|from "@/modules/twofa|from "@/features/twofa|g' {} +
+  's|from "@/features/twofa|from "@/features/twofa|g' {} +
 
 echo "✅ 2FA imports updated"
 ```
@@ -603,7 +603,7 @@ echo "✅ 2FA imports updated"
 **So that** the migration is complete and verified
 
 **Acceptance Criteria:**
-1. Old `modules/twofa/` directory removed
+1. Old `features/twofa/` directory removed
 2. No references to old paths
 3. All 2FA flows tested end-to-end
 4. Documentation updated
@@ -710,7 +710,7 @@ export type {
 
 - [ ] All 7 stories completed
 - [ ] All 2FA code in `features/twofa/`
-- [ ] No code in `modules/twofa/`
+- [ ] No code in `features/twofa/`
 - [ ] All routes updated
 - [ ] All flows tested
 - [ ] Documentation updated

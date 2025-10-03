@@ -4,13 +4,17 @@
  */
 
 import { ConfirmDialog, Layout } from "@/components";
-import { TwoFactorEnabledSettings } from "@/modules/twofa/components/TwoFactorEnabledSettings";
-import { TwoFactorStatusHeader } from "@/modules/twofa/components/TwoFactorStatusHeader";
-import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
-import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
-import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
-import { use2FAStatus, useRemoveTwoFactorMethod, useSetPreferredMethod } from "@/modules/twofa/hooks";
-import type { TwoFactorMethod } from "@/modules/twofa/types";
+import {
+	EmailMethodCard,
+	SmsMethodCard,
+	TotpMethodCard,
+	TwoFactorEnabledSettings,
+	TwoFactorStatusHeader,
+	use2FAStatus,
+	useRemoveTwoFactorMethod,
+	useSetPreferredMethod,
+} from "@/features/twofa";
+import type { TwoFactorMethod } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 

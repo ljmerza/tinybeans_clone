@@ -4,10 +4,7 @@
 
 import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
-import {
-	useRemoveTrustedDevice,
-	useTrustedDevices,
-} from "@/modules/twofa/hooks";
+import { useRemoveTrustedDevice, useTrustedDevices } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function TrustedDevicesPage() {

@@ -48,7 +48,7 @@ We have implemented a **Dedicated CSRF Endpoint with Pre-initialization** approa
 │  └─────────────────┬──────────────────────────────────────┘ │
 │                    │                                         │
 │  ┌─────────────────▼──────────────────────────────────────┐ │
-│  │  modules/login/client.ts                               │ │
+│  │  features/auth/client.ts                               │ │
 │  │  - getCsrfToken(): Read from document.cookie          │ │
 │  │  - Add X-CSRFToken header to all POST/PUT/PATCH/DELETE│ │
 │  │  - Include credentials in all requests                │ │
@@ -118,7 +118,7 @@ urlpatterns = [
 **File:** `web/src/lib/csrf.ts`
 
 ```typescript
-import { API_BASE } from '@/modules/login/client'
+import { API_BASE } from '@/features/auth/client'
 
 let csrfInitialized = false
 
@@ -159,7 +159,7 @@ export function resetCsrfState(): void {
 
 #### 3. Frontend: API Client with CSRF Support
 
-**File:** `web/src/modules/login/client.ts`
+**File:** `web/src/features/auth/client.ts`
 
 ```typescript
 // Get CSRF token from cookie
@@ -225,7 +225,7 @@ export async function refreshAccessToken(): Promise<boolean> {
 
 ```typescript
 import { ensureCsrfToken } from './lib/csrf.ts'
-import { refreshAccessToken } from './modules/login/client.ts'
+import { refreshAccessToken } from './features/auth/client.ts'
 
 // Initialize app: fetch CSRF token first, then try to restore session
 ensureCsrfToken().then(() => {
@@ -707,7 +707,7 @@ def get_csrf_token(request):
 ```typescript
 // web/src/lib/csrf.ts
 
-import { API_BASE } from '@/modules/login/client'
+import { API_BASE } from '@/features/auth/client'
 
 /**
  * Tracks whether CSRF token has been initialized.
@@ -789,7 +789,7 @@ export function isCsrfInitialized(): boolean {
 ### Frontend: Complete API Client
 
 ```typescript
-// web/src/modules/login/client.ts
+// web/src/features/auth/client.ts
 
 import { authStore, setAccessToken } from './store'
 

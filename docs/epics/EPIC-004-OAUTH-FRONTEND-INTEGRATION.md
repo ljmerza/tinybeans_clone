@@ -42,7 +42,7 @@ Build React frontend components and flows for Google OAuth, including "Sign in w
 
 **Technical Notes:**
 ```typescript
-// modules/oauth/GoogleOAuthButton.tsx
+// features/auth/oauth/GoogleOAuthButton.tsx
 import { useState } from 'react';
 import { useGoogleOAuth } from './useGoogleOAuth';
 import { Button } from '@/components/ui/button';
@@ -124,7 +124,7 @@ export function GoogleOAuthButton({
 
 **Technical Notes:**
 ```typescript
-// modules/oauth/useGoogleOAuth.ts
+// features/auth/oauth/useGoogleOAuth.ts
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { oauthApi } from '@/lib/api/oauth';
@@ -215,7 +215,7 @@ export function useGoogleOAuth() {
 // routes/auth/google-callback.tsx
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { useGoogleOAuth } from '@/modules/oauth/useGoogleOAuth';
+import { useGoogleOAuth } from '@/features/auth/useGoogleOAuth';
 import { Spinner } from '@/components/ui/spinner';
 
 export const Route = createFileRoute('/auth/google/callback')({
@@ -296,7 +296,7 @@ function GoogleCallbackPage() {
 
 **Error Message Mapping:**
 ```typescript
-// modules/oauth/oauth-utils.ts
+// features/auth/oauth/oauth-utils.ts
 export const OAUTH_ERROR_MESSAGES = {
   'UNVERIFIED_ACCOUNT_EXISTS': {
     title: 'Email Verification Required',
@@ -400,7 +400,7 @@ export function getOAuthErrorMessage(error: ApiError) {
 **Technical Notes:**
 ```tsx
 // routes/login.tsx
-import { GoogleOAuthButton } from '@/modules/oauth/GoogleOAuthButton';
+import { GoogleOAuthButton } from '@/features/auth/GoogleOAuthButton';
 
 function LoginPage() {
   return (

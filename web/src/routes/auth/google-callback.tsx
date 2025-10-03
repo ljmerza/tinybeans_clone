@@ -1,7 +1,11 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { useGoogleOAuth } from "@/modules/oauth/hooks";
-import { getOAuthErrorMessage, getOAuthState, validateOAuthState } from "@/modules/oauth/utils";
+import {
+	getOAuthErrorMessage,
+	getOAuthState,
+	useGoogleOAuth,
+	validateOAuthState,
+} from "@/features/auth";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

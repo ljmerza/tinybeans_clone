@@ -40,7 +40,7 @@ This inconsistency makes it difficult for developers to:
 
 ### Current State
 - **Route files**: Split between `src/routes/` and `src/modules/*/routes.*.tsx`
-  - Example: `src/routes/login.tsx` AND `src/modules/login/routes.login.tsx` both exist
+  - Example: `src/routes/login.tsx` AND `src/features/auth/routes.login.tsx` both exist
 - **Feature logic**: Organized in `src/modules/{feature}/` with good co-location of hooks, types, stores
 - **Components**: Mix of feature-specific components in modules and shared components in `src/components/`
 - **No clear pattern**: New developers must make subjective decisions about file placement
@@ -268,7 +268,7 @@ web/src/
 - [ ] Extract and migrate login/signup/magic link components
 - [ ] Update all route files and imports
 - [ ] Comprehensive testing of auth flows
-- [ ] Remove old `modules/login/` directory
+- [ ] Remove old `features/auth/` directory
 
 **Epic 3: 2FA Feature Migration (Week 3)** - [See Epic 3 Details](../../epics/FE-ARCH-003-TWOFA-MIGRATION.md)
 - [ ] Create `src/features/twofa/` structure
@@ -276,7 +276,7 @@ web/src/
 - [ ] Migrate setup wizards (TOTP, Email, SMS)
 - [ ] Migrate verification and settings components
 - [ ] Update all 2FA routes and imports
-- [ ] Remove old `modules/twofa/` directory
+- [ ] Remove old `features/twofa/` directory
 
 **Epic 4: Tooling & Documentation (Week 4)** - [See Epic 4 Details](../../epics/FE-ARCH-004-TOOLING-DOCS.md)
 - [ ] Create feature generator CLI tool

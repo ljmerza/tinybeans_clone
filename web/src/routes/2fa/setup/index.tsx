@@ -5,11 +5,14 @@
 
 import { ButtonGroup, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
-import { EmailMethodCard } from "@/modules/twofa/components/methods/EmailMethodCard";
-import { SmsMethodCard } from "@/modules/twofa/components/methods/SmsMethodCard";
-import { TotpMethodCard } from "@/modules/twofa/components/methods/TotpMethodCard";
-import { use2FAStatus, useRemoveTwoFactorMethod } from "@/modules/twofa/hooks";
-import type { TwoFactorMethod } from "@/modules/twofa/types";
+import {
+	EmailMethodCard,
+	SmsMethodCard,
+	TotpMethodCard,
+	use2FAStatus,
+	useRemoveTwoFactorMethod,
+} from "@/features/twofa";
+import type { TwoFactorMethod } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 

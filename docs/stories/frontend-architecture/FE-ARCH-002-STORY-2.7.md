@@ -12,19 +12,19 @@
 
 ## Acceptance Criteria
 1. ✅ All imports updated across entire codebase
-2. ✅ No references to `modules/login/*` remain
+2. ✅ No references to `features/auth/*` remain
 3. ✅ All TypeScript errors resolved
 4. ✅ All linting errors resolved
-5. ✅ Old `modules/login/` directory removed
+5. ✅ Old `features/auth/` directory removed
 
 ## Tasks
 - [ ] Run import migration script
-- [ ] Find all @/modules/login references
+- [ ] Find all @/features/auth references
 - [ ] Update to @/features/auth
 - [ ] Test all auth flows
 - [ ] Run linter
 - [ ] Run type check
-- [ ] Remove modules/login directory
+- [ ] Remove features/auth directory
 - [ ] Commit changes
 
 **Related ADR**: [ADR-011](../../architecture/adr/ADR-011-FRONTEND-FILE-ARCHITECTURE.md)

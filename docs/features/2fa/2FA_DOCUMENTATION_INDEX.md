@@ -174,7 +174,7 @@ This document provides a roadmap to all Two-Factor Authentication (2FA) document
 1. **Start here:** [2FA Frontend Summary](./2FA_FRONTEND_IMPLEMENTATION_SUMMARY.md) - Quick overview
 2. **Then read:** [ADR-004](./ADR-004-2FA-FRONTEND-IMPLEMENTATION.md) - Detailed architecture
 3. **Reference:** [ADR-003 Appendix A](./ADR-003-TWO-FACTOR-AUTHENTICATION.md#appendix-a-api-requestresponse-examples) - API contracts
-4. **Build:** Create `web/src/modules/twofa/` following ADR-004
+4. **Build:** Create `web/src/features/twofa/` following ADR-004
 
 ### For Product/Project Managers
 
@@ -347,7 +347,7 @@ POST   /auth/2fa/trusted-devices/remove/      - Remove device
 ### Frontend Questions  
 - Review [ADR-004](./ADR-004-2FA-FRONTEND-IMPLEMENTATION.md)
 - Check [Frontend Summary](./2FA_FRONTEND_IMPLEMENTATION_SUMMARY.md)
-- Reference existing auth in `web/src/modules/login/`
+- Reference existing auth in `web/src/features/auth/`
 
 ### Testing Questions
 - Backend: [ADR-003 Testing Strategy](./ADR-003-TWO-FACTOR-AUTHENTICATION.md#testing-strategy)

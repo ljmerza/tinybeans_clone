@@ -972,14 +972,15 @@ Based on the domain-driven design approach, the application is organized into lo
 
 ### Frontend Components (React Modules)
 
-#### Authentication Module (`modules/login/`)
+#### Authentication Feature (`features/auth/`)
 **Responsibility:** Login, signup, and session management
 
 **Key Components:**
-- `LoginForm` - Username/password authentication
-- `SignupForm` - New user registration
-- `MagicLoginRequest` - Passwordless authentication
-- `authStore` - TanStack Store for auth state
+- `LoginCard` / `SignupCard` – Username/password authentication flows
+- `MagicLinkRequestCard` / `MagicLoginHandler` – Passwordless authentication
+- `PasswordReset*Card` – Password reset flows
+- `authStore` – TanStack Store for auth state
+- `authApi` – Fetch wrapper with CSRF handling and token refresh
 
 **Integration:** 
 - Auth API endpoints
@@ -988,21 +989,22 @@ Based on the domain-driven design approach, the application is organized into lo
 
 **Technology Stack:** React 19, TanStack Router, TanStack Store, Zod validation
 
-#### Two-Factor Authentication Module (`modules/twofa/`)
+#### Two-Factor Authentication Feature (`features/twofa/`)
 **Responsibility:** 2FA setup, verification, and device management
 
 **Key Components:**
-- `TwoFactorSetup` - QR code display and TOTP setup
-- `TwoFactorVerify` - OTP code verification
-- `RecoveryCodesDisplay` - Backup code management
-- `TrustedDevicesList` - Device trust management
+- `TotpSetup` / `SmsSetup` / `EmailSetup` – 2FA enrollment flows
+- `VerificationInput` – OTP entry component for login verification
+- `TwoFactorEnabledSettings` – Recovery codes and disable flows
+- `TrustedDevicesSection` – Device trust management
+- `twoFactorApi` – Authenticated 2FA client using auth feature transport
 
 **Integration:**
 - 2FA API endpoints
 - QR code rendering
 - Recovery code generation
 
-**Technology Stack:** React 19, QRCode.js, TanStack Query
+**Technology Stack:** React 19, TanStack Query
 
 #### UI Component Library (`components/ui/`)
 **Responsibility:** Reusable, accessible UI primitives
@@ -1574,7 +1576,7 @@ export function useUserProfile() {
 #### TanStack Store for Client State
 
 ```typescript
-// Auth store (modules/login/store.ts)
+// Auth store (features/auth/store.ts)
 import { Store } from '@tanstack/store';
 
 export const authStore = new Store({
@@ -1618,7 +1620,7 @@ export const Route = createRootRoute({
 
 // routes/login.tsx
 import { createFileRoute } from '@tanstack/react-router';
-import { LoginForm } from '@/modules/login/LoginForm';
+import { LoginForm } from '@/features/auth/LoginForm';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -2508,4 +2510,3 @@ Would you like me to:
 4. **Generate a summary/quick reference** section
 
 What would you like to do next?
-

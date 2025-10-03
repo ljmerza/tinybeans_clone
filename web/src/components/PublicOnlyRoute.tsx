@@ -1,4 +1,4 @@
-import { authStore } from "@/modules/login/store";
+import { authStore } from "@/features/auth";
 import { Navigate } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
 import type { ReactNode } from "react";
