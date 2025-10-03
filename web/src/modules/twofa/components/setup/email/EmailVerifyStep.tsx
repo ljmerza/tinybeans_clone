@@ -10,7 +10,7 @@ interface EmailVerifyStepProps {
     isResending: boolean;
     errorMessage?: string;
     onCodeChange: (value: string) => void;
-    onVerify: () => void;
+    onVerify: (value?: string) => void;
     onResend: () => void;
     onCancel?: () => void;
 }
@@ -48,7 +48,7 @@ export function EmailVerifyStep({
             </WizardSection>
             <WizardFooter>
                 <Button
-                    onClick={onVerify}
+                    onClick={() => onVerify()}
                     disabled={!verificationCodeSchema.safeParse(code).success || isVerifying}
                     className="w-full"
                 >

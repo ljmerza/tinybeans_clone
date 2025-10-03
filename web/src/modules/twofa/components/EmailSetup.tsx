@@ -48,9 +48,9 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
                     isResending={initSetup.isPending}
                     errorMessage={verifySetup.error?.message}
                     onCodeChange={setCode}
-                    onVerify={async () => {
+                    onVerify={async (val) => {
                         try {
-                            await verifySetup.mutateAsync(code);
+                            await verifySetup.mutateAsync(val ?? code);
                             setStep("recovery");
                         } catch (error) {
                             console.error("Email setup verification failed:", error);

@@ -6,8 +6,8 @@ from django.test import SimpleTestCase, override_settings
 
 from emails.mailers import MailerConfigurationError, MailerSendError
 from emails.services import clear_registered_templates, email_dispatch_service, register_email_template
-from emails.template_loader import load_email_templates
-from emails.templates import EMAIL_VERIFICATION_TEMPLATE
+from emails.template_loader import _EMAIL_TEMPLATE_DIR, load_email_templates
+from emails.templates import EMAIL_TEMPLATE_FILES, EMAIL_VERIFICATION_TEMPLATE
 
 
 class EmailServiceTests(SimpleTestCase):
@@ -257,3 +257,74 @@ class EmailTemplateLoaderTests(SimpleTestCase):
         html_content, mimetype = message.alternatives[0]
         self.assertEqual(mimetype, 'text/html')
         self.assertIn('654321', html_content)
+
+
+class EmailTemplateEdgeCases(SimpleTestCase):
+    def tearDown(self) -> None:
+        clear_registered_templates()
+        load_email_templates()
+
+    def test_html_only_template_generates_text_body(self):
+        from tempfile import TemporaryDirectory
+
+        template_id = 'tests.email.html_only'
+        filename = 'html_only_test.email.html'
+        template_source = """{% block subject %}HTML Only Subject{% endblock %}
+{% block html_body %}<p>Hello {{ name }}</p>{% endblock %}"""
+
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            (tmp_path / filename).write_text(template_source, encoding='utf-8')
+            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
+                clear_registered_templates()
+                load_email_templates()
+
+                template = email_dispatch_service.get_template(template_id)
+                self.assertIsNotNone(template)
+                assert template is not None
+
+                rendered = template.render({'name': 'World'})
+                self.assertEqual(rendered.subject, 'HTML Only Subject')
+                self.assertEqual(rendered.text_body, 'Hello World')
+                self.assertEqual(rendered.html_body, '<p>Hello World</p>')
+
+    def test_text_only_template_renders_without_html(self):
+        from tempfile import TemporaryDirectory
+
+        template_id = 'tests.email.text_only'
+        filename = 'text_only_test.email.html'
+        template_source = """{% block subject %}Plain Subject{% endblock %}
+{% block text_body %}Plain body for {{ target }}{% endblock %}"""
+
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            (tmp_path / filename).write_text(template_source, encoding='utf-8')
+            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
+                clear_registered_templates()
+                load_email_templates()
+
+                template = email_dispatch_service.get_template(template_id)
+                self.assertIsNotNone(template)
+                assert template is not None
+
+                rendered = template.render({'target': 'testing'})
+                self.assertEqual(rendered.subject, 'Plain Subject')
+                self.assertEqual(rendered.text_body, 'Plain body for testing')
+                self.assertIsNone(rendered.html_body)
+
+    def test_missing_subject_block_prevents_registration(self):
+        from tempfile import TemporaryDirectory
+
+        template_id = 'tests.email.missing_subject'
+        filename = 'missing_subject.email.html'
+        template_source = """{% block text_body %}Body without subject{% endblock %}"""
+
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            (tmp_path / filename).write_text(template_source, encoding='utf-8')
+            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
+                clear_registered_templates()
+                load_email_templates()
+
+                template = email_dispatch_service.get_template(template_id)
+                self.assertIsNone(template)
