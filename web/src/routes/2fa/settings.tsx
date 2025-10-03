@@ -291,6 +291,9 @@ function TwoFactorSettingsPage() {
 	const preferredMethod = status?.preferred_method ?? null;
 	const totpConfigured = Boolean(status?.has_totp);
 	const smsConfigured = Boolean(status?.has_sms);
+	// Email is configured if has_email is true, or if 2FA is enabled with email as preferred method
+	const emailConfigured = Boolean(status?.has_email) || 
+		(Boolean(status?.is_enabled) && status?.preferred_method === "email");
 	const phoneNumber = status?.phone_number;
 
 	if (isLoading) {
@@ -391,6 +394,7 @@ function TwoFactorSettingsPage() {
 
 						<EmailMethodCard
 							isCurrent={preferredMethod === "email"}
+							configured={emailConfigured}
 							onSetup={() => navigate({ to: "/2fa/setup/email" })}
 						/>
 

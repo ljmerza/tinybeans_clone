@@ -47,6 +47,7 @@ export interface TwoFactorStatusResponse {
 	message?: string;
 	has_totp?: boolean;
 	has_sms?: boolean;
+	has_email?: boolean;
 	sms_verified?: boolean;
 }
 

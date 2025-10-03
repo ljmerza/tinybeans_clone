@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 
 interface EmailMethodCardProps {
     isCurrent: boolean;
+    configured: boolean;
     onSetup: () => void;
 }
 
-export function EmailMethodCard({ isCurrent, onSetup }: EmailMethodCardProps) {
+export function EmailMethodCard({ isCurrent, configured, onSetup }: EmailMethodCardProps) {
     return (
         <Card className="border-2 border-gray-200">
             <CardHeader className="flex items-start gap-4 pb-0">
@@ -37,9 +38,15 @@ export function EmailMethodCard({ isCurrent, onSetup }: EmailMethodCardProps) {
             </CardHeader>
             <CardContent className="pt-4">
                 <ButtonGroup>
-                    <Button onClick={onSetup} className="bg-blue-600 hover:bg-blue-700 text-white">
-                        Setup
-                    </Button>
+                    {configured ? (
+                        <StatusMessage variant="success" className="text-sm">
+                            ✓ Configured
+                        </StatusMessage>
+                    ) : (
+                        <Button onClick={onSetup} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            Setup
+                        </Button>
+                    )}
                 </ButtonGroup>
             </CardContent>
         </Card>
