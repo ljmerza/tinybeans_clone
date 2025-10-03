@@ -259,6 +259,8 @@ CELERY_TASK_ROUTES = {
     'keeps.tasks.cleanup_failed_uploads': {'queue': 'media'},
     'keeps.tasks.validate_media_file': {'queue': 'media'},
     'auth.tasks.cleanup_expired_trusted_devices': {'queue': 'maintenance'},
+    'auth.tasks.cleanup_expired_oauth_states': {'queue': 'maintenance'},
+    'auth.tasks.cleanup_expired_magic_login_tokens': {'queue': 'maintenance'},
     'mysite.celery.debug_task': {'queue': 'maintenance'},
 }
 CELERY_WORKER_SEND_TASK_EVENTS = True
@@ -267,6 +269,23 @@ CELERY_TASK_ALWAYS_EAGER = _env_flag('CELERY_TASK_ALWAYS_EAGER')
 CELERY_TASK_EAGER_PROPAGATES = _env_flag('CELERY_TASK_EAGER_PROPAGATES', default=True)
 CELERY_TASK_SOFT_TIME_LIMIT = int(os.environ.get('CELERY_TASK_SOFT_TIME_LIMIT', 30))
 CELERY_TASK_TIME_LIMIT = int(os.environ.get('CELERY_TASK_TIME_LIMIT', 40))
+
+# Celery Beat Schedule (Periodic Tasks)
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-expired-oauth-states': {
+        'task': 'auth.tasks.cleanup_expired_oauth_states',
+        'schedule': crontab(minute='*/15'),  # Every 15 minutes
+    },
+    'cleanup-expired-trusted-devices': {
+        'task': 'auth.tasks.cleanup_expired_trusted_devices',
+        'schedule': crontab(hour=2, minute=0),  # Daily at 2 AM
+    },
+    'cleanup-expired-magic-login-tokens': {
+        'task': 'auth.tasks.cleanup_expired_magic_login_tokens',
+        'schedule': crontab(hour=3, minute=0),  # Daily at 3 AM
+    },
+}
 
 # Media Storage Configuration - MinIO Only
 MEDIA_STORAGE_BACKEND = 'minio'
@@ -344,6 +363,39 @@ SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'twilio')
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
+
+# Google OAuth Configuration
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '')
+GOOGLE_OAUTH_REDIRECT_URI = os.environ.get(
+    'GOOGLE_OAUTH_REDIRECT_URI', 
+    'http://localhost:3000/auth/google/callback'
+)
+
+# Security: Allowed redirect URIs (whitelist)
+# Prevents open redirect vulnerabilities
+OAUTH_ALLOWED_REDIRECT_URIS = [
+    'https://tinybeans.app/auth/google/callback',
+    'https://staging.tinybeans.app/auth/google/callback',
+    'http://localhost:3000/auth/google/callback',  # Development only
+]
+
+# OAuth state expiration (seconds)
+# State tokens expire after 10 minutes to prevent stale requests
+OAUTH_STATE_EXPIRATION = int(os.environ.get('OAUTH_STATE_EXPIRATION', 600))
+
+# OAuth rate limiting
+# Prevent abuse of OAuth endpoints
+OAUTH_RATE_LIMIT_MAX_ATTEMPTS = int(os.environ.get('OAUTH_RATE_LIMIT_MAX_ATTEMPTS', 5))
+OAUTH_RATE_LIMIT_WINDOW = int(os.environ.get('OAUTH_RATE_LIMIT_WINDOW', 900))  # 15 minutes
+
+# Google OAuth scopes
+# Minimum required scopes for authentication
+GOOGLE_OAUTH_SCOPES = [
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
 
 # Rate limiting (django-ratelimit)
 RATELIMIT_ENABLE = _env_flag('RATELIMIT_ENABLE', default=not DEBUG)

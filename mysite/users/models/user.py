@@ -96,16 +96,35 @@ class UserManager(BaseUserManager):
         return self._create_user(username, email, password, **extra_fields)
 
 
+class AuthProvider(models.TextChoices):
+    """Authentication provider choices for users.
+    
+    Defines how a user authenticated with the system:
+    - MANUAL: Traditional email/password registration
+    - GOOGLE: Google OAuth only
+    - HYBRID: Both manual and Google OAuth linked
+    """
+    MANUAL = 'manual', 'Manual Registration'
+    GOOGLE = 'google', 'Google OAuth Only'
+    HYBRID = 'hybrid', 'Both Manual and Google'
+
+
 class User(AbstractUser):
     """Custom user model for the Tinybeans application.
     
-    Extends Django's AbstractUser with additional fields for email verification
-    and user roles within circles. Email is required and must be unique.
+    Extends Django's AbstractUser with additional fields for email verification,
+    user roles within circles, and Google OAuth integration.
     
     Attributes:
         email: User's email address (required, unique)
         role: User's default role (admin or member)
         email_verified: Whether the user's email has been verified
+        google_id: Google user ID from OAuth (unique, nullable)
+        google_email: Email from Google for debugging/tracking (nullable)
+        has_usable_password: Whether user has set a password
+        auth_provider: How the user authenticates (manual, google, hybrid)
+        google_linked_at: When Google account was linked (nullable)
+        last_google_sync: Last time user info was synced from Google (nullable)
     """
     email = models.EmailField(unique=True)
     role = models.CharField(
@@ -114,6 +133,41 @@ class User(AbstractUser):
         default=UserRole.CIRCLE_MEMBER,
     )
     email_verified = models.BooleanField(default=False)
+    
+    # Google OAuth fields
+    google_id = models.CharField(
+        max_length=100,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Google user ID from OAuth"
+    )
+    google_email = models.EmailField(
+        null=True,
+        blank=True,
+        help_text="Email from Google (for debugging/tracking)"
+    )
+    has_usable_password = models.BooleanField(
+        default=True,
+        help_text="Whether user has set a password"
+    )
+    auth_provider = models.CharField(
+        max_length=20,
+        choices=AuthProvider.choices,
+        default=AuthProvider.MANUAL,
+        help_text="Authentication method used by user"
+    )
+    google_linked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When Google account was linked"
+    )
+    last_google_sync = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last time user info was synced from Google"
+    )
 
     objects = UserManager()
 
@@ -121,3 +175,6 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ['username']
+        indexes = [
+            models.Index(fields=['google_id'], name='users_google_id_idx'),
+        ]

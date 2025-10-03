@@ -35,3 +35,41 @@ def cleanup_expired_magic_login_tokens():
     return f"Cleaned up {deleted_count} expired/used magic login tokens"
 
 
+@shared_task
+def cleanup_expired_oauth_states():
+    """
+    Scheduled task to clean up expired OAuth state tokens.
+    
+    Runs every 15 minutes via Celery Beat to prevent database growth.
+    Deletes OAuth state tokens older than 1 hour (including expired and used ones).
+    
+    Returns:
+        str: Success message with count of deleted states
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+    from .models import GoogleOAuthState
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Delete states older than 1 hour
+    cutoff_time = timezone.now() - timedelta(hours=1)
+    deleted_count, _ = GoogleOAuthState.objects.filter(
+        created_at__lt=cutoff_time
+    ).delete()
+    
+    logger.info(f"OAuth state cleanup: deleted {deleted_count} expired states")
+    
+    # Alert if there are too many expired states (indicates cleanup lag)
+    remaining_expired = GoogleOAuthState.objects.filter(
+        expires_at__lt=timezone.now()
+    ).count()
+    
+    if remaining_expired > 10000:
+        logger.warning(
+            f"OAuth state cleanup lag detected: {remaining_expired} expired states remaining"
+        )
+    
+    return f"Cleaned up {deleted_count} expired OAuth states"
+
