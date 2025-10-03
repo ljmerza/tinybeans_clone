@@ -11,6 +11,8 @@ from .views import (
     SignupView,
     TokenRefreshCookieView,
     get_csrf_token,
+    MagicLoginRequestView,
+    MagicLoginVerifyView,
 )
 
 urlpatterns = [
@@ -26,6 +28,9 @@ urlpatterns = [
     path('password/change/', PasswordChangeView.as_view(), name='auth-password-change'),
     path('password/reset/confirm/', PasswordResetConfirmView.as_view(), name='auth-password-reset-confirm'),
     path('password/reset/request/', PasswordResetRequestView.as_view(), name='auth-password-reset-request'),
+    
+    path('magic-login/request/', MagicLoginRequestView.as_view(), name='auth-magic-login-request'),
+    path('magic-login/verify/', MagicLoginVerifyView.as_view(), name='auth-magic-login-verify'),
 ]
 
 # Two-Factor Authentication URLs

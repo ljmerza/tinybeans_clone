@@ -131,17 +131,29 @@ function LoginPage() {
 							</StatusMessage>
 						</div>
 					)}
+				</form>
 
-					<div className="text-center text-sm">
-						Don't have an account?{" "}
+				{/* Alternative login methods */}
+				<div className="mt-6 pt-4 border-t border-gray-200 space-y-3">
+					<div className="text-center">
 						<Link
-							to="/signup"
-							className="font-semibold text-blue-600 hover:text-blue-800"
+							to="/magic-link-request"
+							className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
 						>
-							Sign up
+							Login with Magic Link →
 						</Link>
 					</div>
-				</form>
+				</div>
+
+				<div className="mt-4 text-center text-sm">
+					Don't have an account?{" "}
+					<Link
+						to="/signup"
+						className="font-semibold text-blue-600 hover:text-blue-800"
+					>
+						Sign up
+					</Link>
+				</div>
 			</div>
 		</div>
 	);

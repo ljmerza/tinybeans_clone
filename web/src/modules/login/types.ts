@@ -58,3 +58,17 @@ export type TwoFactorNavigateState = TwoFactorVerifyState;
 export interface RefreshAccessTokenResponse {
 	access?: string;
 }
+
+export interface MagicLoginRequest {
+	email: string;
+}
+
+export interface MagicLoginRequestResponse {
+	message: string;
+}
+
+export interface MagicLoginVerifyRequest {
+	token: string;
+}
+
+export type MagicLoginVerifyResponse = LoginRequiresTwoFactor | LoginSuccess;

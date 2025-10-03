@@ -5,6 +5,7 @@ from .models import (
     RecoveryCode,
     TrustedDevice,
     TwoFactorAuditLog,
+    MagicLoginToken,
 )
 
 
@@ -52,4 +53,19 @@ class TwoFactorAuditLogAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'action', 'ip_address']
     readonly_fields = ['created_at']
     date_hierarchy = 'created_at'
+
+
+@admin.register(MagicLoginToken)
+class MagicLoginTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'token_preview', 'is_used', 'expires_at', 'used_at', 'created_at']
+    list_filter = ['is_used', 'created_at', 'expires_at']
+    search_fields = ['user__username', 'user__email', 'token']
+    readonly_fields = ['token', 'created_at', 'used_at']
+    date_hierarchy = 'created_at'
+    
+    def token_preview(self, obj):
+        """Show first 8 characters of token for identification"""
+        return f"{obj.token[:8]}..." if obj.token else "-"
+    token_preview.short_description = 'Token'
+
 

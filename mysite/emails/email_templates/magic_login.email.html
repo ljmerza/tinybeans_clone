@@ -1,0 +1,46 @@
+{% block subject %}Your Magic Login Link{% endblock %}
+
+{% block text_body %}
+Hi {{ username|default:"there" }},
+
+You requested a magic login link for your Tinybeans-inspired account.
+
+Click the link below to log in instantly (no password required):
+{% if magic_link %}
+{{ magic_link }}
+
+This link expires in {{ expires_in_minutes|default:"15" }} minutes.
+{% endif %}
+
+For security reasons, this link can only be used once. If you didn't request this login link, you can safely ignore this email.
+
+Stay safe,
+The Tinybeans-inspired Team
+{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title="Your Magic Login Link" intro_text="You requested a magic login link for your account." email_tag="Magic Login" %}
+
+<p>Hi {{ username|default:"there" }},</p>
+
+<p>You requested a magic login link for your Tinybeans-inspired account.</p>
+
+{% if magic_link %}
+<p style="margin: 30px 0;">
+    <a href="{{ magic_link }}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+        Login to Your Account
+    </a>
+</p>
+
+<p style="color: #666; font-size: 14px;">This link expires in {{ expires_in_minutes|default:"15" }} minutes and can only be used once.</p>
+
+<p style="color: #666; font-size: 14px; margin-top: 20px;">Or copy and paste this URL into your browser:</p>
+<p style="word-break: break-all; color: #4F46E5; font-size: 12px;">{{ magic_link }}</p>
+{% endif %}
+
+<p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
+    <strong>Security Note:</strong> This link can only be used once. If you didn't request this login link, you can safely ignore this email. Your account remains secure.
+</p>
+
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

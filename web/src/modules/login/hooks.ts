@@ -9,6 +9,10 @@ import type {
 	SignupRequest,
 	SignupResponse,
 	TwoFactorNavigateState,
+	MagicLoginRequest,
+	MagicLoginRequestResponse,
+	MagicLoginVerifyRequest,
+	MagicLoginVerifyResponse,
 } from "./types";
 
 export function useMe() {
@@ -140,5 +144,58 @@ export function usePasswordResetConfirm() {
 					suppressSuccessToast: true,
 				},
 			),
+	});
+}
+
+export function useMagicLoginRequest() {
+	return useMutation<
+		MagicLoginRequestResponse,
+		Error,
+		MagicLoginRequest
+	>({
+		mutationFn: (body) =>
+			api.post<MagicLoginRequestResponse>(
+				"/auth/magic-login/request/",
+				body,
+				{
+					suppressErrorToast: true,
+					suppressSuccessToast: true,
+				},
+			),
+	});
+}
+
+export function useMagicLoginVerify() {
+	const qc = useQueryClient();
+	const navigate = useNavigate();
+
+	return useMutation<MagicLoginVerifyResponse, Error, MagicLoginVerifyRequest>({
+		mutationFn: (body) =>
+			api.post<MagicLoginVerifyResponse, MagicLoginVerifyRequest>(
+				"/auth/magic-login/verify/",
+				body,
+				{
+					suppressErrorToast: true,
+					suppressSuccessToast: true,
+				},
+			),
+		onSuccess: (data) => {
+			console.log("Magic login response:", data);
+
+			// Check if 2FA is required
+			if (data.requires_2fa) {
+				const state: TwoFactorNavigateState = {
+					partialToken: data.partial_token,
+					method: data.method,
+					message: data.message,
+				};
+				navigate({ to: "/2fa/verify", state });
+				return;
+			}
+
+			setAccessToken(data.tokens.access);
+			qc.invalidateQueries({ queryKey: ["auth"] });
+			navigate({ to: "/" });
+		},
 	});
 }

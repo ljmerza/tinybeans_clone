@@ -5,6 +5,7 @@ EMAIL_VERIFICATION_TEMPLATE = 'users.email.verification'
 PASSWORD_RESET_TEMPLATE = 'users.password.reset'
 CIRCLE_INVITATION_TEMPLATE = 'users.circle.invitation'
 CHILD_UPGRADE_TEMPLATE = 'users.child.upgrade'
+MAGIC_LOGIN_TEMPLATE = 'users.magic.login'
 
 # 2FA-related templates
 TWOFA_CODE_TEMPLATE = 'twofa.code'
@@ -19,6 +20,7 @@ EMAIL_TEMPLATE_FILES = {
     PASSWORD_RESET_TEMPLATE: 'password_reset.email.html',
     CIRCLE_INVITATION_TEMPLATE: 'circle_invitation.email.html',
     CHILD_UPGRADE_TEMPLATE: 'child_upgrade.email.html',
+    MAGIC_LOGIN_TEMPLATE: 'magic_login.email.html',
     TWOFA_CODE_TEMPLATE: 'twofa_code.email.html',
     TWOFA_ENABLED_TEMPLATE: 'twofa_enabled.email.html',
     TWOFA_DISABLED_TEMPLATE: 'twofa_disabled.email.html',
@@ -31,6 +33,7 @@ __all__ = [
     'PASSWORD_RESET_TEMPLATE',
     'CIRCLE_INVITATION_TEMPLATE',
     'CHILD_UPGRADE_TEMPLATE',
+    'MAGIC_LOGIN_TEMPLATE',
     'TWOFA_CODE_TEMPLATE',
     'TWOFA_ENABLED_TEMPLATE',
     'TWOFA_DISABLED_TEMPLATE',

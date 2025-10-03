@@ -228,3 +228,38 @@ class TwoFactorAuditLog(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.action} - {'Success' if self.success else 'Failed'}"
+
+
+class MagicLoginToken(models.Model):
+    """Magic login link tokens for passwordless authentication"""
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='magic_login_tokens')
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    is_used = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    expires_at = models.DateTimeField(db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Magic Login Token'
+        verbose_name_plural = 'Magic Login Tokens'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['token', 'is_used']),
+            models.Index(fields=['user', 'expires_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {'Used' if self.is_used else 'Unused'} - {self.created_at}"
+    
+    def is_valid(self):
+        """Check if token is still valid"""
+        return not self.is_used and self.expires_at > timezone.now()
+    
+    def mark_as_used(self):
+        """Mark token as used"""
+        self.is_used = True
+        self.used_at = timezone.now()
+        self.save(update_fields=['is_used', 'used_at'])

@@ -33,6 +33,8 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     SignupSerializer,
+    MagicLoginRequestSerializer,
+    MagicLoginVerifySerializer,
 )
 from .token_utils import (
     REFRESH_COOKIE_NAME,
@@ -379,3 +381,174 @@ def get_csrf_token(request):
     Call this endpoint before making any POST requests to get the CSRF token.
     """
     return JsonResponse({'detail': 'CSRF cookie set'})
+
+
+class MagicLoginRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = MagicLoginRequestSerializer
+
+    @extend_schema(
+        description='Request a magic login link to be sent via email.',
+        request=MagicLoginRequestSerializer,
+        responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Magic login link email scheduled')},
+    )
+    @method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True))
+    def post(self, request):
+        serializer = MagicLoginRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data.get('user')
+        
+        if user:
+            import uuid
+            from datetime import timedelta
+            from .models import MagicLoginToken
+            from .token_utils import get_client_ip
+            
+            # Generate unique token
+            token = uuid.uuid4().hex
+            
+            # Create magic login token with 15-minute expiry
+            magic_token = MagicLoginToken.objects.create(
+                user=user,
+                token=token,
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+                expires_at=timezone.now() + timedelta(minutes=15)
+            )
+            
+            # Send email with magic link
+            base_url = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
+            magic_link = f"{base_url}/magic-login?{urlencode({'token': token})}"
+            
+            send_email_task.delay(
+                to_email=user.email,
+                template_id='users.magic.login',
+                context={
+                    'token': token,
+                    'email': user.email,
+                    'username': user.username,
+                    'magic_link': magic_link,
+                    'expires_in_minutes': 15,
+                },
+            )
+        
+        # Always return success to prevent email enumeration
+        return Response(
+            {'message': _('If an account with that email exists, a magic login link has been sent.')}, 
+            status=status.HTTP_202_ACCEPTED
+        )
+
+
+class MagicLoginVerifyView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = MagicLoginVerifySerializer
+
+    @extend_schema(
+        description='Verify a magic login token and authenticate the user.',
+        request=MagicLoginVerifySerializer,
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Login successful with JWT tokens')},
+    )
+    @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
+    def post(self, request):
+        serializer = MagicLoginVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        from .models import MagicLoginToken
+        
+        token_value = serializer.validated_data['token']
+        
+        try:
+            magic_token = MagicLoginToken.objects.select_related('user').get(token=token_value)
+            
+            if not magic_token.is_valid():
+                return Response(
+                    {'detail': _('Invalid or expired magic login link')}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Mark token as used
+            magic_token.mark_as_used()
+            
+            user = magic_token.user
+            
+            # Check if user account is active
+            if not user.is_active:
+                return Response(
+                    {'detail': _('User account is inactive')}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Check if 2FA is enabled for this user
+            try:
+                from .models import TwoFactorSettings
+                from .services.twofa_service import TwoFactorService
+                from .services.trusted_device_service import TrustedDeviceService
+                
+                twofa_settings = user.twofa_settings
+                
+                if twofa_settings.is_enabled:
+                    # Check if account is locked
+                    if twofa_settings.is_locked():
+                        return rate_limit_response(
+                            'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'
+                        )
+                    
+                    # Check if device is trusted
+                    device_id = TrustedDeviceService.get_device_id_from_request(request)
+                    
+                    if device_id and TrustedDeviceService.is_trusted_device(user, device_id):
+                        # Trusted device - proceed with login
+                        tokens = get_tokens_for_user(user)
+                        data = {
+                            'user': UserSerializer(user).data,
+                            'tokens': {'access': tokens['access']},
+                            'trusted_device': True,
+                        }
+                        data['message'] = _('Logged in successfully')
+                        response = Response(data)
+                        set_refresh_cookie(response, tokens['refresh'])
+                        return response
+                    
+                    # 2FA required - check rate limiting
+                    if TwoFactorService.is_rate_limited(user):
+                        return rate_limit_response('Too many 2FA requests. Please try again later.')
+                    
+                    # Send 2FA code based on preferred method
+                    if twofa_settings.preferred_method in ['email', 'sms']:
+                        TwoFactorService.send_otp(
+                            user,
+                            method=twofa_settings.preferred_method,
+                            purpose='login'
+                        )
+                    
+                    # Generate partial token for 2FA verification
+                    from .token_utils import generate_partial_token
+                    partial_token = generate_partial_token(user, request)
+                    
+                    return Response({
+                        'requires_2fa': True,
+                        'method': twofa_settings.preferred_method,
+                        'partial_token': partial_token,
+                        'message': f'2FA code sent to your {twofa_settings.preferred_method}' if twofa_settings.preferred_method != 'totp' else 'Enter code from authenticator app',
+                    })
+                    
+            except TwoFactorSettings.DoesNotExist:
+                # No 2FA configured - proceed with normal login
+                pass
+            
+            # Generate JWT tokens and login
+            tokens = get_tokens_for_user(user)
+            data = {
+                'user': UserSerializer(user).data,
+                'tokens': {'access': tokens['access']},
+            }
+            data['message'] = _('Logged in successfully')
+            response = Response(data)
+            set_refresh_cookie(response, tokens['refresh'])
+            return response
+            
+        except MagicLoginToken.DoesNotExist:
+            return Response(
+                {'detail': _('Invalid magic login link')}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
