@@ -20,6 +20,7 @@ from auth.token_utils import (
     pop_token,
     store_token,
 )
+from mysite.notification_utils import create_message, success_response, error_response
 from ..models import (
     ChildGuardianConsent,
     ChildProfile,
@@ -133,7 +134,11 @@ class ChildProfileUpgradeRequestView(APIView):
                 'circle_name': child.circle.name,
             },
         )
-        return Response({'message': _('Upgrade invitation created'), 'token': token}, status=status.HTTP_202_ACCEPTED)
+        return success_response(
+            {'token': token},
+            messages=[create_message('notifications.child.upgrade_invitation_sent')],
+            status_code=status.HTTP_202_ACCEPTED
+        )
 
 
 class ChildProfileUpgradeConfirmView(APIView):
@@ -156,20 +161,38 @@ class ChildProfileUpgradeConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         payload = pop_token('child-upgrade', serializer.validated_data['token'])
         if not payload:
-            return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.token_invalid_expired')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         child = ChildProfile.objects.filter(id=payload['child_id']).select_related('circle').first()
         if not child:
-            return Response({'detail': _('Child profile not found')}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                messages=[create_message('errors.child_profile_not_found')],
+                status_code=status.HTTP_404_NOT_FOUND
+            )
         if child.linked_user:
-            return Response({'detail': _('Child profile already linked')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.child_already_linked')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         if not child.upgrade_token:
-            return Response({'detail': _('Upgrade invitation has been revoked. Please request a new invitation.')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.upgrade_invitation_revoked')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         provided_token = serializer.validated_data['token']
         if child.upgrade_token != provided_token:
-            return Response({'detail': _('Upgrade invitation mismatch. Please request a new invitation.')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.upgrade_invitation_mismatch')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         if child.upgrade_token_expires_at and timezone.now() > child.upgrade_token_expires_at:
-            return Response({'detail': _('Upgrade invitation expired. Please request a new invitation.')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.upgrade_invitation_expired')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         email = payload['email']
         password = serializer.validated_data['password']
@@ -210,11 +233,11 @@ class ChildProfileUpgradeConfirmView(APIView):
                 metadata={'email': email, 'user_id': user.id},
             )
 
-        return Response(
+        return success_response(
             {
-                'detail': _('Account created'),
                 'user': UserSerializer(user).data,
                 'tokens': get_tokens_for_user(user),
             },
-            status=status.HTTP_201_CREATED,
+            messages=[create_message('notifications.child.account_created')],
+            status_code=status.HTTP_201_CREATED
         )

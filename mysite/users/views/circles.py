@@ -172,7 +172,11 @@ class CircleInvitationCreateView(APIView):
 
         data = CircleInvitationSerializer(invitation).data
         data['token'] = token
-        return Response({'invitation': data}, status=status.HTTP_202_ACCEPTED)
+        return success_response(
+            {'invitation': data},
+            messages=[create_message('notifications.circle.invitation_sent')],
+            status_code=status.HTTP_202_ACCEPTED
+        )
 
 
 class CircleInvitationListView(APIView):
@@ -243,7 +247,11 @@ class CircleMemberListView(APIView):
         serializer.is_valid(raise_exception=True)
         membership = serializer.save()
 
-        return Response({'membership': CircleMemberSerializer(membership).data}, status=status.HTTP_201_CREATED)
+        return success_response(
+            {'membership': CircleMemberSerializer(membership).data},
+            messages=[create_message('notifications.circle.member_added')],
+            status_code=status.HTTP_201_CREATED
+        )
 
 
 class CircleMemberRemoveView(APIView):
@@ -258,7 +266,10 @@ class CircleMemberRemoveView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership_to_remove = CircleMembership.objects.filter(circle=circle, user_id=user_id).select_related('user').first()
         if not membership_to_remove:
-            return Response({'detail': _('Membership not found')}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                messages=[create_message('errors.membership_not_found')],
+                status_code=status.HTTP_404_NOT_FOUND
+            )
 
         requester_membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         removing_self = request.user.id == user_id
@@ -347,7 +358,10 @@ class CircleInvitationRespondView(APIView):
         action = serializer.validated_data['action']
 
         if invitation.status != CircleInvitationStatus.PENDING:
-            return Response({'detail': _('Invitation is no longer pending')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.invitation_not_pending')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         with transaction.atomic():
             if action == 'accept':
@@ -360,15 +374,18 @@ class CircleInvitationRespondView(APIView):
                     membership.role = invitation.role
                     membership.save(update_fields=['role'])
                 invitation.status = CircleInvitationStatus.ACCEPTED
-                message = _('Invitation accepted')
+                message_key = 'notifications.circle.invitation_accepted'
             else:
                 invitation.status = CircleInvitationStatus.DECLINED
-                message = _('Invitation declined')
+                message_key = 'notifications.circle.invitation_declined'
             invitation.responded_at = timezone.now()
             invitation.save(update_fields=['status', 'responded_at'])
 
-        response = {'detail': message, 'circle': CircleSerializer(invitation.circle).data}
-        return Response(response)
+        return success_response(
+            {'circle': CircleSerializer(invitation.circle).data},
+            messages=[create_message(message_key)],
+            status_code=status.HTTP_200_OK
+        )
 
 
 class CircleInvitationAcceptView(APIView):
@@ -390,20 +407,32 @@ class CircleInvitationAcceptView(APIView):
         serializer.is_valid(raise_exception=True)
         payload = pop_token('circle-invite', serializer.validated_data['token'])
         if not payload:
-            return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.token_invalid_expired')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         invitation = CircleInvitation.objects.filter(
             id=payload['invitation_id'],
             status=CircleInvitationStatus.PENDING,
         ).select_related('circle', 'invited_by').first()
         if not invitation:
-            return Response({'detail': _('Invitation not found')}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                messages=[create_message('errors.invitation_not_found')],
+                status_code=status.HTTP_404_NOT_FOUND
+            )
         if invitation.email.lower() != payload.get('email', '').lower():
-            return Response({'detail': _('Invitation mismatch')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                messages=[create_message('errors.invitation_mismatch')],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         existing_user = User.objects.filter(email__iexact=invitation.email).first()
         if existing_user:
-            return Response({'detail': _('Email already registered. Please log in and ask an admin to reissue membership.')}, status=status.HTTP_409_CONFLICT)
+            return error_response(
+                messages=[create_message('errors.email_already_registered')],
+                status_code=status.HTTP_409_CONFLICT
+            )
 
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
@@ -428,10 +457,12 @@ class CircleInvitationAcceptView(APIView):
             invitation.responded_at = timezone.now()
             invitation.save(update_fields=['status', 'responded_at'])
 
-        response = {
-            'detail': _('Invitation accepted'),
-            'user': UserSerializer(user).data,
-            'circle': CircleSerializer(invitation.circle).data,
-            'tokens': get_tokens_for_user(user),
-        }
-        return Response(response, status=status.HTTP_201_CREATED)
+        return success_response(
+            {
+                'user': UserSerializer(user).data,
+                'circle': CircleSerializer(invitation.circle).data,
+                'tokens': get_tokens_for_user(user),
+            },
+            messages=[create_message('notifications.circle.invitation_accepted')],
+            status_code=status.HTTP_201_CREATED
+        )

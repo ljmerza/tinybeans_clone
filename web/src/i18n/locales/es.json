@@ -11,7 +11,21 @@
       "created": "Círculo creado exitosamente",
       "updated": "Círculo actualizado exitosamente",
       "member_added": "Miembro agregado al círculo",
-      "member_removed": "Miembro eliminado del círculo"
+      "member_removed": "Miembro eliminado del círculo",
+      "invitation_sent": "Invitación enviada exitosamente",
+      "invitation_accepted": "Invitación aceptada exitosamente",
+      "invitation_declined": "Invitación rechazada"
+    },
+    "pet": {
+      "created": "Perfil de mascota creado exitosamente",
+      "updated": "Perfil de mascota actualizado exitosamente"
+    },
+    "child": {
+      "upgrade_invitation_sent": "Invitación de actualización enviada exitosamente",
+      "account_created": "Cuenta creada exitosamente"
+    },
+    "media": {
+      "upload_initiated": "Carga de medios iniciada exitosamente"
     },
     "auth": {
       "login_success": "¡Bienvenido de nuevo!",
@@ -23,6 +37,19 @@
       "password_updated": "Contraseña actualizada exitosamente",
       "magic_link_sent": "Si existe una cuenta con ese correo, se ha enviado un enlace mágico",
       "magic_login_success": "Inicio de sesión exitoso con enlace mágico"
+    },
+    "twofa": {
+      "setup_initiated": "Escanee el código QR con su aplicación de autenticación",
+      "verification_code_sent": "Código de verificación enviado a su {{method}}",
+      "setup_complete": "2FA habilitado exitosamente. ¡Guarde sus códigos de recuperación!",
+      "disabled": "2FA deshabilitado exitosamente",
+      "preferred_method_updated": "Método 2FA predeterminado actualizado a {{method}}",
+      "method_removed": "Método 2FA {{method}} eliminado",
+      "method_removed_disabled": "La autenticación de dos factores ha sido deshabilitada porque no hay otros métodos verificados disponibles",
+      "method_removed_preferred_changed": "Método preferido actualizado a {{preferred_method}}",
+      "enter_authenticator_code": "Ingrese su código de autenticación para deshabilitar 2FA",
+      "recovery_codes_generated": "Nuevos códigos de recuperación generados. Los códigos antiguos han sido invalidados",
+      "device_removed": "Dispositivo eliminado exitosamente"
     }
   },
   "errors": {
@@ -49,6 +76,47 @@
     "magic_link_expired": "Este enlace mágico ha expirado",
     "magic_link_invalid": "Enlace mágico inválido",
     "magic_link_rate_limit": "Demasiadas solicitudes de enlace mágico. Por favor intente de nuevo más tarde.",
-    "account_inactive": "Su cuenta no está activa"
+    "account_inactive": "Su cuenta no está activa",
+    "membership_not_found": "Membresía no encontrada",
+    "invitation_not_pending": "La invitación ya no está pendiente",
+    "invitation_not_found": "Invitación no encontrada",
+    "invitation_mismatch": "La invitación no coincide",
+    "email_already_registered": "Correo electrónico ya registrado. Por favor inicie sesión.",
+    "child_profile_not_found": "Perfil de niño no encontrado",
+    "child_already_linked": "El perfil del niño ya está vinculado a una cuenta",
+    "upgrade_invitation_revoked": "La invitación de actualización ha sido revocada",
+    "upgrade_invitation_mismatch": "La invitación de actualización no coincide",
+    "upgrade_invitation_expired": "La invitación de actualización ha expirado",
+    "circle_not_found": "Círculo no encontrado o no eres miembro",
+    "invalid_keep_type": "Tipo de momento requerido. Opciones: nota, media, hito",
+    "keep_not_found": "Momento no encontrado",
+    "access_denied": "Acceso denegado",
+    "required_fields_missing": "Faltan campos requeridos",
+    "invalid_media_type": "El tipo de medio debe ser foto o video",
+    "upload_failed": "Error en la carga. Por favor intente de nuevo.",
+    "upload_not_found": "Carga no encontrada",
+    "twofa": {
+      "invalid_method": "Método 2FA inválido",
+      "phone_number_required": "Número de teléfono requerido para método SMS",
+      "not_initialized": "2FA no inicializado. Inicie la configuración primero",
+      "invalid_verification_code": "Código de verificación inválido",
+      "not_enabled": "2FA no habilitado",
+      "already_disabled": "2FA ya está deshabilitado",
+      "not_configured": "2FA no configurado",
+      "enable_before_changing_method": "Habilite 2FA antes de cambiar el método predeterminado",
+      "totp_not_configured": "Aplicación de autenticación aún no configurada. Configure la aplicación de autenticación desde la página de configuración 2FA primero",
+      "totp_not_verified": "Verifique su aplicación de autenticación a través de la configuración TOTP antes de elegirla como predeterminada",
+      "sms_no_phone": "Agregue un número de teléfono a través de la configuración SMS antes de usar SMS como predeterminado",
+      "sms_not_verified": "Verifique su número de teléfono a través de la configuración SMS antes de elegirlo como predeterminado",
+      "email_not_verified": "Verifique el correo electrónico a través de la configuración de correo antes de elegirlo como predeterminado",
+      "method_not_configured": "2FA {{method}} no está configurado",
+      "recovery_codes_required": "Se deben proporcionar códigos de recuperación. Los códigos solo se pueden descargar inmediatamente después de la generación",
+      "no_recovery_codes": "No se proporcionaron códigos de recuperación",
+      "device_id_required": "device_id es requerido",
+      "device_not_found": "Dispositivo no encontrado",
+      "partial_token_invalid": "Token parcial inválido o expirado. Por favor inicie sesión de nuevo",
+      "not_configured_for_account": "2FA no configurado para esta cuenta",
+      "must_be_enabled_for_recovery": "2FA debe estar habilitado para generar códigos de recuperación"
+    }
   }
 }

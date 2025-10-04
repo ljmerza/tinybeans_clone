@@ -11,7 +11,21 @@
       "created": "Circle created successfully",
       "updated": "Circle updated successfully",
       "member_added": "Member added to circle",
-      "member_removed": "Member removed from circle"
+      "member_removed": "Member removed from circle",
+      "invitation_sent": "Invitation sent successfully",
+      "invitation_accepted": "Invitation accepted successfully",
+      "invitation_declined": "Invitation declined"
+    },
+    "pet": {
+      "created": "Pet profile created successfully",
+      "updated": "Pet profile updated successfully"
+    },
+    "child": {
+      "upgrade_invitation_sent": "Upgrade invitation sent successfully",
+      "account_created": "Account created successfully"
+    },
+    "media": {
+      "upload_initiated": "Media upload initiated successfully"
     },
     "auth": {
       "login_success": "Welcome back!",
@@ -23,6 +37,19 @@
       "password_updated": "Password updated successfully",
       "magic_link_sent": "If an account with that email exists, a magic link has been sent",
       "magic_login_success": "Successfully logged in via magic link"
+    },
+    "twofa": {
+      "setup_initiated": "Scan QR code with your authenticator app",
+      "verification_code_sent": "Verification code sent to your {{method}}",
+      "setup_complete": "2FA enabled successfully. Save your recovery codes!",
+      "disabled": "2FA disabled successfully",
+      "preferred_method_updated": "Default 2FA method updated to {{method}}",
+      "method_removed": "{{method}} 2FA method removed",
+      "method_removed_disabled": "Two-factor authentication has been disabled because no other verified methods are available",
+      "method_removed_preferred_changed": "Preferred method updated to {{preferred_method}}",
+      "enter_authenticator_code": "Enter your authenticator code to disable 2FA",
+      "recovery_codes_generated": "New recovery codes generated. Old codes have been invalidated",
+      "device_removed": "Device removed successfully"
     }
   },
   "errors": {
@@ -49,6 +76,47 @@
     "magic_link_expired": "This magic link has expired",
     "magic_link_invalid": "Invalid magic link",
     "magic_link_rate_limit": "Too many magic link requests. Please try again later.",
-    "account_inactive": "Your account is not active"
+    "account_inactive": "Your account is not active",
+    "membership_not_found": "Membership not found",
+    "invitation_not_pending": "Invitation is no longer pending",
+    "invitation_not_found": "Invitation not found",
+    "invitation_mismatch": "Invitation mismatch",
+    "email_already_registered": "Email already registered. Please log in.",
+    "child_profile_not_found": "Child profile not found",
+    "child_already_linked": "Child profile already linked to an account",
+    "upgrade_invitation_revoked": "Upgrade invitation has been revoked",
+    "upgrade_invitation_mismatch": "Upgrade invitation mismatch",
+    "upgrade_invitation_expired": "Upgrade invitation has expired",
+    "circle_not_found": "Circle not found or you are not a member",
+    "invalid_keep_type": "Valid keep type required. Options: note, media, milestone",
+    "keep_not_found": "Keep not found",
+    "access_denied": "Access denied",
+    "required_fields_missing": "Required fields are missing",
+    "invalid_media_type": "Media type must be photo or video",
+    "upload_failed": "Upload failed. Please try again.",
+    "upload_not_found": "Upload not found",
+    "twofa": {
+      "invalid_method": "Invalid 2FA method",
+      "phone_number_required": "Phone number required for SMS method",
+      "not_initialized": "2FA not initialized. Start setup first",
+      "invalid_verification_code": "Invalid verification code",
+      "not_enabled": "2FA not enabled",
+      "already_disabled": "2FA is already disabled",
+      "not_configured": "2FA not configured",
+      "enable_before_changing_method": "Enable 2FA before changing the default method",
+      "totp_not_configured": "Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first",
+      "totp_not_verified": "Verify your authenticator app via TOTP setup before choosing it as default",
+      "sms_no_phone": "Add a phone number via SMS setup before using SMS as default",
+      "sms_not_verified": "Verify your phone number via SMS setup before choosing it as default",
+      "email_not_verified": "Verify email via Email setup before choosing it as default",
+      "method_not_configured": "{{method}} 2FA is not configured",
+      "recovery_codes_required": "Recovery codes must be provided. Codes can only be downloaded immediately after generation",
+      "no_recovery_codes": "No recovery codes provided",
+      "device_id_required": "device_id is required",
+      "device_not_found": "Device not found",
+      "partial_token_invalid": "Invalid or expired partial token. Please login again",
+      "not_configured_for_account": "2FA not configured for this account",
+      "must_be_enabled_for_recovery": "2FA must be enabled to generate recovery codes"
+    }
   }
 }

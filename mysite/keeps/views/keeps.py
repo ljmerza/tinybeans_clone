@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiTypes, OpenApiParameter
 
+from mysite.notification_utils import create_message, error_response
 from users.models import Circle
 from ..models import Keep, KeepType
 from ..serializers import (
@@ -334,9 +335,9 @@ class KeepByCircleView(APIView):
                 memberships__user=request.user
             )
         except Circle.DoesNotExist:
-            return Response(
-                {'error': 'Circle not found or you are not a member.'},
-                status=status.HTTP_404_NOT_FOUND
+            return error_response(
+                messages=[create_message('errors.circle_not_found')],
+                status_code=status.HTTP_404_NOT_FOUND
             )
         
         keeps = Keep.objects.filter(circle=circle).select_related(
@@ -381,9 +382,9 @@ class KeepByTypeView(APIView):
         """Filter keeps by type."""
         keep_type = request.query_params.get('type')
         if not keep_type or keep_type not in [choice[0] for choice in KeepType.choices]:
-            return Response(
-                {'error': 'Valid keep type required. Options: note, media, milestone'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                messages=[create_message('errors.invalid_keep_type')],
+                status_code=status.HTTP_400_BAD_REQUEST
             )
         
         user_circles = Circle.objects.filter(

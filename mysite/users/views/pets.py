@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
+from mysite.notification_utils import create_message, success_response
 from ..models import Circle, CircleMembership, PetProfile, UserRole
 from ..serializers import PetProfileSerializer, PetProfileCreateSerializer
 
@@ -71,7 +72,11 @@ class CirclePetListView(APIView):
         
         # Return the full pet data
         response_serializer = PetProfileSerializer(pet)
-        return Response({'pet': response_serializer.data}, status=status.HTTP_201_CREATED)
+        return success_response(
+            {'pet': response_serializer.data},
+            messages=[create_message('notifications.pet.created')],
+            status_code=status.HTTP_201_CREATED
+        )
 
 
 class PetProfileDetailView(APIView):
@@ -125,7 +130,11 @@ class PetProfileDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         
-        return Response({'pet': serializer.data})
+        return success_response(
+            {'pet': serializer.data},
+            messages=[create_message('notifications.pet.updated')],
+            status_code=status.HTTP_200_OK
+        )
 
     @extend_schema(
         description='Delete a pet profile. Only circle admins can delete pets.',

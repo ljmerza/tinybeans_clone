@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_ratelimit.decorators import ratelimit
 
+from mysite.notification_utils import create_message, success_response, error_response
 from .models import TwoFactorSettings, TwoFactorAuditLog
 from .serializers_2fa import (
     TwoFactorSetupSerializer,
@@ -61,22 +62,22 @@ class TwoFactorSetupView(APIView):
             
             qr_data = TwoFactorService.generate_totp_qr_code(user, secret)
             
-            return Response({
+            return success_response({
                 'method': 'totp',
                 'secret': secret,
                 'qr_code': qr_data['uri'],
                 'qr_code_image': qr_data['qr_code_image'],
-                'message': 'Scan QR code with your authenticator app',
-            })
+            }, messages=[create_message('notifications.twofa.setup_initiated')])
         
         elif method in ['email', 'sms']:
             update_fields = ['preferred_method']
 
             if method == 'sms':
                 if not phone_number:
-                    return Response(
-                        {'error': 'Phone number required for SMS method'},
-                        status=status.HTTP_400_BAD_REQUEST
+                    return error_response(
+                        'phone_number_required',
+                        [create_message('errors.twofa.phone_number_required')],
+                        status.HTTP_400_BAD_REQUEST
                     )
                 settings_obj.phone_number = phone_number
                 settings_obj.sms_verified = False
@@ -91,15 +92,15 @@ class TwoFactorSetupView(APIView):
             # Send OTP
             code_obj = TwoFactorService.send_otp(user, method=method, purpose='setup')
             
-            return Response({
+            return success_response({
                 'method': method,
-                'message': f'Verification code sent to your {method}',
                 'expires_in': 600,
-            })
+            }, messages=[create_message('notifications.twofa.verification_code_sent', {'method': method})])
         
-        return Response(
-            {'error': 'Invalid method'},
-            status=status.HTTP_400_BAD_REQUEST
+        return error_response(
+            'invalid_method',
+            [create_message('errors.twofa.invalid_method')],
+            status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -122,9 +123,10 @@ class TwoFactorVerifySetupView(APIView):
         try:
             settings_obj = user.twofa_settings
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not initialized. Start setup first.'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'not_initialized',
+                [create_message('errors.twofa.not_initialized')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Verify code based on method
@@ -135,9 +137,10 @@ class TwoFactorVerifySetupView(APIView):
             verified = TwoFactorService.verify_otp(user, code, purpose='setup')
         
         if not verified:
-            return Response(
-                {'error': 'Invalid verification code'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'invalid_verification_code',
+                [create_message('errors.twofa.invalid_verification_code')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Enable 2FA and mark verification state
@@ -171,12 +174,11 @@ class TwoFactorVerifySetupView(APIView):
         from emails.mailers import TwoFactorMailer
         TwoFactorMailer.send_2fa_enabled_notification(user)
         
-        return Response({
+        return success_response({
             'enabled': True,
             'method': settings_obj.preferred_method,
-            'recovery_codes': recovery_codes,  # Already plain text codes
-            'message': '2FA enabled successfully. Save your recovery codes!'
-        })
+            'recovery_codes': recovery_codes,
+        }, messages=[create_message('notifications.twofa.setup_complete')])
 
 
 class TwoFactorStatusView(APIView):
@@ -189,9 +191,9 @@ class TwoFactorStatusView(APIView):
         try:
             settings_obj = request.user.twofa_settings
             serializer = TwoFactorStatusSerializer(settings_obj)
-            return Response(serializer.data)
+            return success_response(serializer.data)
         except TwoFactorSettings.DoesNotExist:
-            return Response({
+            return success_response({
                 'is_enabled': False,
                 'preferred_method': None,
                 'phone_number': None,
@@ -221,49 +223,54 @@ class TwoFactorPreferredMethodView(APIView):
         try:
             settings_obj = user.twofa_settings
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not configured'},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                'not_configured',
+                [create_message('errors.twofa.not_configured')],
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if not settings_obj.is_enabled:
-            return Response(
-                {'error': 'Enable 2FA before changing the default method'},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                'enable_before_changing_method',
+                [create_message('errors.twofa.enable_before_changing_method')],
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if method == 'totp':
             if not getattr(settings_obj, '_totp_secret_encrypted', None):
-                return Response(
-                    {
-                        'error': 'Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first.'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'totp_not_configured',
+                    [create_message('errors.twofa.totp_not_configured')],
+                    status.HTTP_400_BAD_REQUEST,
                 )
             if not settings_obj.totp_verified:
-                return Response(
-                    {'error': 'Verify your authenticator app via TOTP setup before choosing it as default'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'totp_not_verified',
+                    [create_message('errors.twofa.totp_not_verified')],
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
         if method == 'sms':
             if not settings_obj.phone_number:
-                return Response(
-                    {'error': 'Add a phone number via SMS setup before using SMS as default'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'sms_no_phone',
+                    [create_message('errors.twofa.sms_no_phone')],
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
             if not settings_obj.sms_verified:
-                return Response(
-                    {'error': 'Verify your phone number via SMS setup before choosing it as default'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'sms_not_verified',
+                    [create_message('errors.twofa.sms_not_verified')],
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
         if method == 'email':
             if not settings_obj.email_verified:
-                return Response(
-                    {'error': 'Verify email via Email setup before choosing it as default'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'email_not_verified',
+                    [create_message('errors.twofa.email_not_verified')],
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
         settings_obj.preferred_method = method
@@ -278,10 +285,9 @@ class TwoFactorPreferredMethodView(APIView):
             success=True,
         )
 
-        return Response({
+        return success_response({
             'preferred_method': method,
-            'message': f'Default 2FA method updated to {method.upper()}',
-        })
+        }, messages=[create_message('notifications.twofa.preferred_method_updated', {'method': method.upper()})])
 
 
 class TwoFactorMethodRemoveView(APIView):
@@ -309,9 +315,10 @@ class TwoFactorMethodRemoveView(APIView):
         try:
             settings_obj = request.user.twofa_settings
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not configured'},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                'not_configured',
+                [create_message('errors.twofa.not_configured')],
+                status.HTTP_400_BAD_REQUEST,
             )
 
         update_fields = set()
@@ -320,9 +327,10 @@ class TwoFactorMethodRemoveView(APIView):
 
         if method == 'totp':
             if not getattr(settings_obj, '_totp_secret_encrypted', None):
-                return Response(
-                    {'error': 'Authenticator app 2FA is not configured'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'method_not_configured',
+                    [create_message('errors.twofa.method_not_configured', {'method': 'Authenticator app'})],
+                    status.HTTP_400_BAD_REQUEST,
                 )
             settings_obj.totp_secret = None
             settings_obj.totp_verified = False
@@ -330,9 +338,10 @@ class TwoFactorMethodRemoveView(APIView):
 
         elif method == 'sms':
             if not settings_obj.phone_number:
-                return Response(
-                    {'error': 'SMS 2FA is not configured'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'method_not_configured',
+                    [create_message('errors.twofa.method_not_configured', {'method': 'SMS'})],
+                    status.HTTP_400_BAD_REQUEST,
                 )
             settings_obj.phone_number = None
             settings_obj.sms_verified = False
@@ -340,9 +349,10 @@ class TwoFactorMethodRemoveView(APIView):
 
         elif method == 'email':
             if not settings_obj.email_verified:
-                return Response(
-                    {'error': 'Email 2FA is not configured'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    'method_not_configured',
+                    [create_message('errors.twofa.method_not_configured', {'method': 'Email'})],
+                    status.HTTP_400_BAD_REQUEST,
                 )
             settings_obj.email_verified = False
             update_fields.add('email_verified')
@@ -391,20 +401,20 @@ class TwoFactorMethodRemoveView(APIView):
 
         status_payload = TwoFactorStatusSerializer(settings_obj).data
 
-        message = f"{method.upper()} 2FA method removed."
+        messages = [create_message('notifications.twofa.method_removed', {'method': method.upper()})]
         if became_disabled:
-            message += ' Two-factor authentication has been disabled because no other verified methods are available.'
+            messages.append(create_message('notifications.twofa.method_removed_disabled'))
         elif preferred_changed:
-            message += f" Preferred method updated to {settings_obj.preferred_method.upper()}."
+            messages.append(create_message('notifications.twofa.method_removed_preferred_changed', {'preferred_method': settings_obj.preferred_method.upper()}))
 
-        return Response(
+        return success_response(
             {
-                'message': message,
                 'method_removed': method,
                 'preferred_method_changed': preferred_changed,
                 'twofa_disabled': became_disabled,
                 'status': status_payload,
-            }
+            },
+            messages=messages
         )
 
 
@@ -420,23 +430,24 @@ class TwoFactorDisableRequestView(APIView):
         try:
             settings_obj = user.twofa_settings
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not enabled'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'not_enabled',
+                [create_message('errors.twofa.not_enabled')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         if not settings_obj.is_enabled:
-            return Response(
-                {'error': '2FA is already disabled'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'already_disabled',
+                [create_message('errors.twofa.already_disabled')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # For TOTP, no code needs to be sent
         if settings_obj.preferred_method == 'totp':
-            return Response({
+            return success_response({
                 'method': 'totp',
-                'message': 'Enter your authenticator code to disable 2FA',
-            })
+            }, messages=[create_message('notifications.twofa.enter_authenticator_code')])
         
         # For email/SMS, check rate limiting
         if TwoFactorService.is_rate_limited(user):
@@ -445,11 +456,10 @@ class TwoFactorDisableRequestView(APIView):
         # Send OTP for disable purpose
         code_obj = TwoFactorService.send_otp(user, method=settings_obj.preferred_method, purpose='disable')
         
-        return Response({
+        return success_response({
             'method': settings_obj.preferred_method,
-            'message': f'Verification code sent to your {settings_obj.preferred_method}',
             'expires_in': 600,
-        })
+        }, messages=[create_message('notifications.twofa.verification_code_sent', {'method': settings_obj.preferred_method})])
 
 
 class TwoFactorDisableView(APIView):
@@ -471,15 +481,17 @@ class TwoFactorDisableView(APIView):
         try:
             settings_obj = user.twofa_settings
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not enabled'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'not_enabled',
+                [create_message('errors.twofa.not_enabled')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         if not settings_obj.is_enabled:
-            return Response(
-                {'error': '2FA is already disabled'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'already_disabled',
+                [create_message('errors.twofa.already_disabled')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Verify code
@@ -494,9 +506,10 @@ class TwoFactorDisableView(APIView):
             verified = TwoFactorService.verify_recovery_code(user, code)
         
         if not verified:
-            return Response(
-                {'error': 'Invalid verification code'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'invalid_verification_code',
+                [create_message('errors.twofa.invalid_verification_code')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Disable 2FA and clear all verified methods
@@ -522,10 +535,9 @@ class TwoFactorDisableView(APIView):
         from emails.mailers import TwoFactorMailer
         TwoFactorMailer.send_2fa_disabled_notification(user)
         
-        return Response({
+        return success_response({
             'enabled': False,
-            'message': '2FA disabled successfully'
-        })
+        }, messages=[create_message('notifications.twofa.disabled')])
 
 
 class RecoveryCodeGenerateView(APIView):
@@ -544,23 +556,24 @@ class RecoveryCodeGenerateView(APIView):
         try:
             settings_obj = user.twofa_settings
             if not settings_obj.is_enabled:
-                return Response(
-                    {'error': '2FA must be enabled to generate recovery codes'},
-                    status=status.HTTP_400_BAD_REQUEST
+                return error_response(
+                    'must_be_enabled_for_recovery',
+                    [create_message('errors.twofa.must_be_enabled_for_recovery')],
+                    status.HTTP_400_BAD_REQUEST
                 )
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not configured'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'not_configured',
+                [create_message('errors.twofa.not_configured')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Generate new codes (returns plain text codes now)
         recovery_codes = TwoFactorService.generate_recovery_codes(user)
         
-        return Response({
-            'recovery_codes': recovery_codes,  # Already plain text codes
-            'message': 'New recovery codes generated. Old codes have been invalidated.'
-        })
+        return success_response({
+            'recovery_codes': recovery_codes,
+        }, messages=[create_message('notifications.twofa.recovery_codes_generated')])
 
 
 class RecoveryCodeDownloadView(APIView):
@@ -581,18 +594,20 @@ class RecoveryCodeDownloadView(APIView):
         # Get codes from query params (passed from frontend after generation)
         codes_param = request.query_params.get('codes')
         if not codes_param:
-            return Response(
-                {'error': 'Recovery codes must be provided. Codes can only be downloaded immediately after generation.'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'recovery_codes_required',
+                [create_message('errors.twofa.recovery_codes_required')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Parse codes (comma-separated)
         recovery_codes = codes_param.split(',')
         
         if not recovery_codes or len(recovery_codes) == 0:
-            return Response(
-                {'error': 'No recovery codes provided'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'no_recovery_codes',
+                [create_message('errors.twofa.no_recovery_codes')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         if format_type == 'pdf':
@@ -626,7 +641,7 @@ class TrustedDevicesListView(APIView):
         """Get all trusted devices"""
         devices = TrustedDeviceService.get_trusted_devices(request.user)
         serializer = TrustedDeviceSerializer(devices, many=True)
-        return Response({'devices': serializer.data})
+        return success_response({'devices': serializer.data})
     
     @extend_schema(
         request={'device_id': 'string'},
@@ -637,19 +652,21 @@ class TrustedDevicesListView(APIView):
         device_id = request.data.get('device_id')
         
         if not device_id:
-            return Response(
-                {'error': 'device_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'device_id_required',
+                [create_message('errors.twofa.device_id_required')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         removed = TrustedDeviceService.remove_trusted_device(request.user, device_id)
         
         if removed:
-            return Response({'message': 'Device removed successfully'})
+            return success_response({}, messages=[create_message('notifications.twofa.device_removed')])
         else:
-            return Response(
-                {'error': 'Device not found'},
-                status=status.HTTP_404_NOT_FOUND
+            return error_response(
+                'device_not_found',
+                [create_message('errors.twofa.device_not_found')],
+                status.HTTP_404_NOT_FOUND
             )
 
 
@@ -663,11 +680,12 @@ class TrustedDeviceRemoveView(APIView):
         removed = TrustedDeviceService.remove_trusted_device(request.user, device_id)
         
         if removed:
-            return Response({'message': 'Device removed successfully'})
+            return success_response({}, messages=[create_message('notifications.twofa.device_removed')])
         else:
-            return Response(
-                {'error': 'Device not found'},
-                status=status.HTTP_404_NOT_FOUND
+            return error_response(
+                'device_not_found',
+                [create_message('errors.twofa.device_not_found')],
+                status.HTTP_404_NOT_FOUND
             )
 
 
@@ -695,17 +713,19 @@ class TwoFactorVerifyLoginView(APIView):
         # Verify partial token with IP validation
         user = verify_partial_token(partial_token, request)
         if not user:
-            return Response(
-                {'error': 'Invalid or expired partial token. Please login again.'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'partial_token_invalid',
+                [create_message('errors.twofa.partial_token_invalid')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         try:
             settings_obj = user.twofa_settings
         except TwoFactorSettings.DoesNotExist:
-            return Response(
-                {'error': '2FA not configured for this account'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'not_configured_for_account',
+                [create_message('errors.twofa.not_configured_for_account')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Check if account is locked
@@ -744,9 +764,10 @@ class TwoFactorVerifyLoginView(APIView):
                 success=False
             )
             
-            return Response(
-                {'error': 'Invalid verification code'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'invalid_verification_code',
+                [create_message('errors.twofa.invalid_verification_code')],
+                status.HTTP_400_BAD_REQUEST
             )
         
         # Reset failed attempts on successful login
@@ -770,13 +791,12 @@ class TwoFactorVerifyLoginView(APIView):
         
         # Generate full tokens
         tokens = get_tokens_for_user(user)
-        data = {
+        
+        response = success_response({
             'user': UserSerializer(user).data,
             'tokens': {'access': tokens['access']},
             'trusted_device': remember_me,
-        }
-        
-        response = Response(data)
+        })
         set_refresh_cookie(response, tokens['refresh'])
         
         # Set device_id cookie if remember_me
