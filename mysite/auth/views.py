@@ -46,7 +46,8 @@ from .token_utils import (
     store_token,
     generate_partial_token,
 )
-from .response_utils import rate_limit_response
+from .response_utils import rate_limit_response as legacy_rate_limit_response
+from mysite.notification_utils import create_message, success_response, error_response
 
 
 class SignupView(APIView):
@@ -91,12 +92,17 @@ class SignupView(APIView):
         )
 
         tokens = get_tokens_for_user(user)
-        data = UserSerializer(user).data
-        data['tokens'] = {'access': tokens['access']}
-        data['message'] = _('Account created successfully')
-        response = Response(data, status=status.HTTP_201_CREATED)
-        set_refresh_cookie(response, tokens['refresh'])
-        return response
+        user_data = UserSerializer(user).data
+        user_data['tokens'] = {'access': tokens['access']}
+        
+        # Use new notification format per ADR-012
+        response_data = success_response(
+            user_data,
+            messages=[create_message('notifications.auth.signup_success')],
+            status_code=status.HTTP_201_CREATED
+        )
+        set_refresh_cookie(response_data, tokens['refresh'])
+        return response_data
 
 
 class LoginView(APIView):
@@ -126,8 +132,12 @@ class LoginView(APIView):
             if twofa_settings.is_enabled:
                 # Check if account is locked
                 if twofa_settings.is_locked():
-                    return rate_limit_response(
-                        'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'
+                    return error_response(
+                        'account_locked',
+                        [create_message('errors.account_locked_2fa', {
+                            'retry_after': 'later'
+                        })],
+                        status.HTTP_429_TOO_MANY_REQUESTS
                     )
                 
                 # Check if device is trusted (Remember Me feature)
@@ -136,19 +146,24 @@ class LoginView(APIView):
                 if device_id and TrustedDeviceService.is_trusted_device(user, device_id):
                     # Trusted device - skip 2FA and proceed with normal login
                     tokens = get_tokens_for_user(user)
-                    data = {
-                        'user': UserSerializer(user).data,
-                        'tokens': {'access': tokens['access']},
-                        'trusted_device': True,
-                    }
-                    data['message'] = _('Logged in successfully')
-                    response = Response(data)
-                    set_refresh_cookie(response, tokens['refresh'])
-                    return response
+                    user_data = UserSerializer(user).data
+                    user_data['tokens'] = {'access': tokens['access']}
+                    user_data['trusted_device'] = True
+                    
+                    response_data = success_response(
+                        user_data,
+                        messages=[create_message('notifications.auth.login_success')]
+                    )
+                    set_refresh_cookie(response_data, tokens['refresh'])
+                    return response_data
                 
                 # 2FA required - check rate limiting
                 if TwoFactorService.is_rate_limited(user):
-                    return rate_limit_response('Too many 2FA requests. Please try again later.')
+                    return error_response(
+                        'rate_limit_exceeded',
+                        [create_message('errors.rate_limit_2fa')],
+                        status.HTTP_429_TOO_MANY_REQUESTS
+                    )
                 
                 # Send 2FA code based on preferred method
                 if twofa_settings.preferred_method in ['email', 'sms']:
@@ -174,14 +189,15 @@ class LoginView(APIView):
         
         # Normal login flow (no 2FA or 2FA not enabled)
         tokens = get_tokens_for_user(user)
-        data = {
-            'user': UserSerializer(user).data,
-            'tokens': {'access': tokens['access']},
-        }
-        data['message'] = _('Logged in successfully')
-        response = Response(data)
-        set_refresh_cookie(response, tokens['refresh'])
-        return response
+        user_data = UserSerializer(user).data
+        user_data['tokens'] = {'access': tokens['access']}
+        
+        response_data = success_response(
+            user_data,
+            messages=[create_message('notifications.auth.login_success')]
+        )
+        set_refresh_cookie(response_data, tokens['refresh'])
+        return response_data
 
 
 class EmailVerificationResendView(APIView):

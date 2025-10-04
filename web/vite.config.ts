@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
@@ -33,6 +33,7 @@ export default defineConfig({
       '@/components': resolve(__dirname, './src/components'),
       '@/lib': resolve(__dirname, './src/lib'),
       '@/integrations': resolve(__dirname, './src/integrations'),
+      '@/i18n': resolve(__dirname, './src/i18n'),
     },
   },
 })

@@ -10,7 +10,7 @@ from ..models import User, UserNotificationPreferences
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'email_verified', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'email_verified', 'date_joined', 'language']
         read_only_fields = ['id', 'role', 'email_verified', 'date_joined']
 
 

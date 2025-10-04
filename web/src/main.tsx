@@ -6,6 +6,7 @@ import { AppProviders } from "./components/AppProviders";
 
 import "./styles.css";
 import "sonner/dist/styles.css";
+import "./i18n/config"; // Initialize i18n
 import reportWebVitals from "./reportWebVitals.ts";
 
 // Create QueryClient instance

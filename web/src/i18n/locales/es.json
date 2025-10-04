@@ -1,0 +1,35 @@
+{
+  "notifications": {
+    "profile": {
+      "photo_uploaded": "Foto de perfil actualizada exitosamente",
+      "updated": "Perfil actualizado exitosamente"
+    },
+    "auth": {
+      "login_success": "¡Bienvenido de nuevo!",
+      "signup_success": "Cuenta creada exitosamente",
+      "logout_success": "Sesión cerrada exitosamente",
+      "email_verified": "Correo electrónico verificado exitosamente",
+      "password_reset": "Correo de restablecimiento de contraseña enviado"
+    }
+  },
+  "errors": {
+    "file_too_large": "El archivo {{filename}} es demasiado grande. El tamaño máximo es {{maxSize}}.",
+    "invalid_file_type": "Tipo de archivo inválido. Tipos permitidos: {{allowedTypes}}",
+    "email_invalid": "Por favor ingrese una dirección de correo electrónico válida",
+    "password_too_short": "La contraseña debe tener al menos {{minLength}} caracteres",
+    "password_mismatch": "Las contraseñas no coinciden",
+    "required_field": "Este campo es obligatorio",
+    "username_taken": "Este nombre de usuario ya está en uso",
+    "email_taken": "Este correo electrónico ya está registrado",
+    "invalid_credentials": "Correo electrónico o contraseña inválidos",
+    "rate_limit": "Demasiadas solicitudes. Por favor intente de nuevo en {{retry_after}} segundos.",
+    "rate_limit_2fa": "Demasiadas solicitudes 2FA. Por favor intente de nuevo más tarde.",
+    "account_locked_2fa": "Cuenta bloqueada temporalmente debido a demasiados intentos fallidos de 2FA. Por favor intente de nuevo {{retry_after}}.",
+    "network_error": "Error de red. Por favor verifique su conexión.",
+    "server_error": "Algo salió mal. Por favor intente de nuevo más tarde.",
+    "unauthorized": "Debe iniciar sesión para realizar esta acción",
+    "forbidden": "No tiene permiso para realizar esta acción",
+    "not_found": "El recurso solicitado no fue encontrado",
+    "validation_failed": "Por favor revise el formulario en busca de errores"
+  }
+}

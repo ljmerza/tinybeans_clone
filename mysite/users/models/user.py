@@ -109,6 +109,15 @@ class AuthProvider(models.TextChoices):
     HYBRID = 'hybrid', 'Both Manual and Google'
 
 
+class Language(models.TextChoices):
+    """Language choices for user interface.
+    
+    Defines the available languages for the application interface.
+    """
+    ENGLISH = 'en', 'English'
+    SPANISH = 'es', 'Spanish'
+
+
 class User(AbstractUser):
     """Custom user model for the Tinybeans application.
     
@@ -167,6 +176,12 @@ class User(AbstractUser):
         null=True,
         blank=True,
         help_text="Last time user info was synced from Google"
+    )
+    language = models.CharField(
+        max_length=10,
+        choices=Language.choices,
+        default=Language.ENGLISH,
+        help_text="User's preferred language for the interface"
     )
 
     objects = UserManager()

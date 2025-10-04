@@ -1,0 +1,35 @@
+{
+  "notifications": {
+    "profile": {
+      "photo_uploaded": "Profile photo updated successfully",
+      "updated": "Profile updated successfully"
+    },
+    "auth": {
+      "login_success": "Welcome back!",
+      "signup_success": "Account created successfully",
+      "logout_success": "Logged out successfully",
+      "email_verified": "Email verified successfully",
+      "password_reset": "Password reset email sent"
+    }
+  },
+  "errors": {
+    "file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
+    "invalid_file_type": "Invalid file type. Allowed types: {{allowedTypes}}",
+    "email_invalid": "Please enter a valid email address",
+    "password_too_short": "Password must be at least {{minLength}} characters",
+    "password_mismatch": "Passwords do not match",
+    "required_field": "This field is required",
+    "username_taken": "This username is already taken",
+    "email_taken": "This email is already registered",
+    "invalid_credentials": "Invalid email or password",
+    "rate_limit": "Too many requests. Please try again in {{retry_after}} seconds.",
+    "rate_limit_2fa": "Too many 2FA requests. Please try again later.",
+    "account_locked_2fa": "Account temporarily locked due to too many failed 2FA attempts. Please try again {{retry_after}}.",
+    "network_error": "Network error. Please check your connection.",
+    "server_error": "Something went wrong. Please try again later.",
+    "unauthorized": "You must be logged in to perform this action",
+    "forbidden": "You don't have permission to perform this action",
+    "not_found": "The requested resource was not found",
+    "validation_failed": "Please check the form for errors"
+  }
+}

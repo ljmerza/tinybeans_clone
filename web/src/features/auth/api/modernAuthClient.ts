@@ -1,6 +1,15 @@
+/**
+ * Modern HTTP Client (ADR-012 Compliant)
+ * 
+ * This client follows ADR-012: Notification Strategy
+ * - No automatic toasts
+ * - Components explicitly handle messages
+ * - Supports i18n message format
+ * 
+ * Use this for new code. The old authClient.ts is kept for backward compatibility.
+ */
 import { API_BASE, createHttpClient, getCsrfToken } from "@/lib/httpClient";
 import type { RequestOptions } from "@/lib/httpClient";
-import { showApiToast } from "@/lib/toast";
 import { authStore, setAccessToken } from "../store/authStore";
 import type { RefreshAccessTokenResponse } from "../types";
 
@@ -15,7 +24,6 @@ export async function refreshAccessToken(): Promise<boolean> {
 		headers,
 	});
 	if (!res.ok) {
-		// Clear the access token when refresh fails to log out the user
 		setAccessToken(null);
 		return false;
 	}
@@ -26,22 +34,18 @@ export async function refreshAccessToken(): Promise<boolean> {
 		setAccessToken(data.access);
 		return true;
 	}
-	// Clear token if response doesn't contain access token
 	setAccessToken(null);
 	return false;
 }
 
-// Create auth-specific HTTP client with integrated auth logic
-// NOTE: onSuccess and onError callbacks are deprecated per ADR-012.
-// Components should explicitly handle messages using i18n translation.
-// These are kept temporarily for backward compatibility during migration.
-export const api = createHttpClient({
+/**
+ * Modern HTTP client following ADR-012
+ * No automatic toasts - components handle messages explicitly
+ */
+export const apiClient = createHttpClient({
 	getAuthToken: () => authStore.state.accessToken,
 	onUnauthorized: refreshAccessToken,
-	// TODO: Remove these callbacks after migrating all components to handle messages explicitly
-	onSuccess: showApiToast,
-	onError: (data, status, fallbackMessage) =>
-		showApiToast(data, status, { fallbackMessage }),
+	// No onSuccess/onError - components handle messages
 	skipRetryPaths: ["/auth/login/", "/auth/signup/", "/auth/token/refresh/"],
 });
 

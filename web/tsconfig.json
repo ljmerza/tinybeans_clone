@@ -12,6 +12,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
+    "resolveJsonModule": true,
 
     /* Linting */
     "skipLibCheck": true,
@@ -26,7 +27,9 @@
       "@/features/*": ["./src/features/*"],
       "@/components/*": ["./src/components/*"],
       "@/lib/*": ["./src/lib/*"],
-      "@/integrations/*": ["./src/integrations/*"]
+      "@/integrations/*": ["./src/integrations/*"],
+      "@/i18n": ["./src/i18n/index.ts"],
+      "@/i18n/*": ["./src/i18n/*"]
     }
   }
 }
