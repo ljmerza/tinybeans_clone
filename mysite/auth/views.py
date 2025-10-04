@@ -233,7 +233,11 @@ class EmailVerificationResendView(APIView):
                 'verification_expires_in_minutes': expires_in_minutes,
             },
         )
-        return Response({'message': _('Verification email reissued')}, status=status.HTTP_202_ACCEPTED)
+        return success_response(
+            {},
+            messages=[create_message('notifications.auth.email_verification_sent')],
+            status_code=status.HTTP_202_ACCEPTED
+        )
 
 
 class TokenRefreshCookieView(APIView):
@@ -284,14 +288,25 @@ class EmailVerificationConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         payload = pop_token('verify-email', serializer.validated_data['token'])
         if not payload:
-            return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                'invalid_token',
+                [create_message('errors.token_invalid_expired')],
+                status.HTTP_400_BAD_REQUEST
+            )
         user = User.objects.filter(id=payload['user_id']).first()
         if not user:
-            return Response({'detail': _('User not found')}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                'user_not_found',
+                [create_message('errors.user_not_found')],
+                status.HTTP_404_NOT_FOUND
+            )
         if not user.email_verified:
             user.email_verified = True
             user.save(update_fields=['email_verified'])
-        return Response({'detail': _('Email verified successfully')})
+        return success_response(
+            {},
+            messages=[create_message('notifications.auth.email_verified')]
+        )
 
 
 class PasswordResetRequestView(APIView):
@@ -327,8 +342,12 @@ class PasswordResetRequestView(APIView):
                     'expires_in_minutes': expires_in_minutes,
                 },
             )
-            return Response({'message': _('Password reset sent')}, status=status.HTTP_202_ACCEPTED)
-        return Response({'message': _('Password reset sent')}, status=status.HTTP_202_ACCEPTED)
+        # Always return success to prevent email enumeration
+        return success_response(
+            {},
+            messages=[create_message('notifications.auth.password_reset')],
+            status_code=status.HTTP_202_ACCEPTED
+        )
 
 
 class PasswordResetConfirmView(APIView):
@@ -345,13 +364,24 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         payload = pop_token('password-reset', serializer.validated_data['token'])
         if not payload:
-            return Response({'detail': _('Invalid or expired token')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                'invalid_token',
+                [create_message('errors.token_invalid_expired')],
+                status.HTTP_400_BAD_REQUEST
+            )
         user = User.objects.filter(id=payload['user_id']).first()
         if not user:
-            return Response({'detail': _('User not found')}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                'user_not_found',
+                [create_message('errors.user_not_found')],
+                status.HTTP_404_NOT_FOUND
+            )
         user.set_password(serializer.validated_data['password'])
         user.save(update_fields=['password'])
-        return Response({'detail': _('Password updated')})
+        return success_response(
+            {},
+            messages=[create_message('notifications.auth.password_updated')]
+        )
 
 
 class PasswordChangeView(APIView):

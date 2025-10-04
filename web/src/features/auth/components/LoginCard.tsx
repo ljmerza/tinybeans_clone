@@ -4,12 +4,14 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { passwordSchema } from "@/lib/validations";
+import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { z } from "zod";
 
-import { useLogin } from "../hooks";
+import { useLoginModern } from "../hooks/modernHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 const schema = z.object({
@@ -20,7 +22,9 @@ const schema = z.object({
 type LoginFormValues = z.infer<typeof schema>;
 
 export function LoginCard() {
-	const login = useLogin();
+	const login = useLoginModern();
+	const { getGeneral } = useApiMessages();
+	const [generalError, setGeneralError] = useState("");
 
 	const form = useForm({
 		defaultValues: {
@@ -28,10 +32,20 @@ export function LoginCard() {
 			password: "",
 		} satisfies LoginFormValues,
 		onSubmit: async ({ value }) => {
+			setGeneralError("");
+			
 			try {
 				await login.mutateAsync(value);
-			} catch (error) {
+			} catch (error: any) {
 				console.error("Login submission error:", error);
+				
+				// Extract and display general errors
+				const generalErrors = getGeneral(error.messages);
+				if (generalErrors.length > 0) {
+					setGeneralError(generalErrors.join(". "));
+				} else {
+					setGeneralError(error.message ?? "Login failed");
+				}
 			}
 		},
 	});
@@ -164,9 +178,9 @@ export function LoginCard() {
 					)}
 				</Button>
 
-				{login.error && (
+				{generalError && (
 					<StatusMessage variant="error">
-						{login.error.message ?? "Login failed"}
+						{generalError}
 					</StatusMessage>
 				)}
 			</form>

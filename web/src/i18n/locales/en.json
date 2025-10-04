@@ -9,7 +9,9 @@
       "signup_success": "Account created successfully",
       "logout_success": "Logged out successfully",
       "email_verified": "Email verified successfully",
-      "password_reset": "Password reset email sent"
+      "email_verification_sent": "Verification email sent",
+      "password_reset": "Password reset email sent",
+      "password_updated": "Password updated successfully"
     }
   },
   "errors": {
@@ -25,6 +27,8 @@
     "rate_limit": "Too many requests. Please try again in {{retry_after}} seconds.",
     "rate_limit_2fa": "Too many 2FA requests. Please try again later.",
     "account_locked_2fa": "Account temporarily locked due to too many failed 2FA attempts. Please try again {{retry_after}}.",
+    "token_invalid_expired": "Invalid or expired token",
+    "user_not_found": "User not found",
     "network_error": "Network error. Please check your connection.",
     "server_error": "Something went wrong. Please try again later.",
     "unauthorized": "You must be logged in to perform this action",

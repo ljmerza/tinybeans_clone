@@ -9,7 +9,9 @@
       "signup_success": "Cuenta creada exitosamente",
       "logout_success": "Sesión cerrada exitosamente",
       "email_verified": "Correo electrónico verificado exitosamente",
-      "password_reset": "Correo de restablecimiento de contraseña enviado"
+      "email_verification_sent": "Correo de verificación enviado",
+      "password_reset": "Correo de restablecimiento de contraseña enviado",
+      "password_updated": "Contraseña actualizada exitosamente"
     }
   },
   "errors": {
@@ -25,6 +27,8 @@
     "rate_limit": "Demasiadas solicitudes. Por favor intente de nuevo en {{retry_after}} segundos.",
     "rate_limit_2fa": "Demasiadas solicitudes 2FA. Por favor intente de nuevo más tarde.",
     "account_locked_2fa": "Cuenta bloqueada temporalmente debido a demasiados intentos fallidos de 2FA. Por favor intente de nuevo {{retry_after}}.",
+    "token_invalid_expired": "Token inválido o expirado",
+    "user_not_found": "Usuario no encontrado",
     "network_error": "Error de red. Por favor verifique su conexión.",
     "server_error": "Algo salió mal. Por favor intente de nuevo más tarde.",
     "unauthorized": "Debe iniciar sesión para realizar esta acción",

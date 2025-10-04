@@ -3,12 +3,14 @@ import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { confirmPasswordSchema, passwordSchema } from "@/lib/validations";
+import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { z } from "zod";
 
-import { useSignup } from "../hooks";
+import { useSignupModern } from "../hooks/modernHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 const baseSchema = z.object({
@@ -21,8 +23,11 @@ const baseSchema = z.object({
 type SignupFormValues = z.infer<typeof baseSchema>;
 
 export function SignupCard() {
-	const signup = useSignup();
+	const signup = useSignupModern();
 	const navigate = useNavigate();
+	const { getGeneral, getFieldErrors } = useApiMessages();
+	const [generalError, setGeneralError] = useState("");
+	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
 	const form = useForm({
 		defaultValues: {
@@ -32,9 +37,30 @@ export function SignupCard() {
 			password_confirm: "",
 		} satisfies SignupFormValues,
 		onSubmit: async ({ value }) => {
+			setGeneralError("");
+			setFieldErrors({});
+			
 			const { password_confirm: _ignored, ...payload } = value;
-			await signup.mutateAsync(payload);
-			navigate({ to: "/" });
+			
+			try {
+				await signup.mutateAsync(payload);
+				navigate({ to: "/" });
+			} catch (error: any) {
+				console.error("Signup error:", error);
+				
+				// Extract field errors
+				const errors = getFieldErrors(error.messages);
+				setFieldErrors(errors);
+				
+				// Extract general errors
+				const generalErrors = getGeneral(error.messages);
+				if (generalErrors.length > 0) {
+					setGeneralError(generalErrors.join(". "));
+				} else if (!Object.keys(errors).length) {
+					// Fallback if no structured errors
+					setGeneralError(error.message ?? "Signup failed");
+				}
+			}
 		},
 	});
 
@@ -103,6 +129,9 @@ export function SignupCard() {
 							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
 								<p className="form-error">{field.state.meta.errors[0]}</p>
 							)}
+							{fieldErrors.username && (
+								<p className="form-error">{fieldErrors.username}</p>
+							)}
 						</div>
 					)}
 				</form.Field>
@@ -135,6 +164,9 @@ export function SignupCard() {
 							/>
 							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
 								<p className="form-error">{field.state.meta.errors[0]}</p>
+							)}
+							{fieldErrors.email && (
+								<p className="form-error">{fieldErrors.email}</p>
 							)}
 						</div>
 					)}
@@ -210,9 +242,9 @@ export function SignupCard() {
 					{signup.isPending ? "Creating account…" : "Create account"}
 				</Button>
 
-				{signup.error && (
+				{generalError && (
 					<StatusMessage variant="error">
-						{signup.error.message ?? "Signup failed"}
+						{generalError}
 					</StatusMessage>
 				)}
 			</form>

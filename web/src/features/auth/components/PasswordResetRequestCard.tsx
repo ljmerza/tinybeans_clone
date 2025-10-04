@@ -2,12 +2,13 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { usePasswordResetRequest } from "../hooks";
+import { usePasswordResetRequestModern } from "../hooks/modernHooks";
 
 const schema = z.object({
 	identifier: z.string().min(1, "Email or username is required"),
@@ -16,27 +17,45 @@ const schema = z.object({
 type PasswordResetRequestValues = z.infer<typeof schema>;
 
 export function PasswordResetRequestCard() {
-	const resetRequest = usePasswordResetRequest();
+	const resetRequest = usePasswordResetRequestModern();
+	const { translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const form = useForm({
 		defaultValues: { identifier: "" } satisfies PasswordResetRequestValues,
 		onSubmit: async ({ value }) => {
 			setSuccessMessage(null);
+			setErrorMessage(null);
+			
 			try {
 				const response = await resetRequest.mutateAsync(value);
-				setSuccessMessage(
-					response.message ??
-						"If an account exists for that identifier, we'll send password reset instructions.",
-				);
-			} catch (error) {
+				
+				// Translate and show success message
+				if (response?.messages) {
+					const messages = translate(response.messages);
+					setSuccessMessage(
+						messages.join(". ") ||
+						"If an account exists for that identifier, we'll send password reset instructions."
+					);
+				} else {
+					setSuccessMessage(
+						"If an account exists for that identifier, we'll send password reset instructions."
+					);
+				}
+			} catch (error: any) {
 				console.error("Password reset request error:", error);
+				
+				// Translate and show error message
+				if (error.messages) {
+					const messages = translate(error.messages);
+					setErrorMessage(messages.join(". "));
+				} else {
+					setErrorMessage(error.message ?? "Failed to send reset email");
+				}
 			}
 		},
 	});
-
-	const errorMessage =
-		resetRequest.error instanceof Error ? resetRequest.error.message : null;
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
