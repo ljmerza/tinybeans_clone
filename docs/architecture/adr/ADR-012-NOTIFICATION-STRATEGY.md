@@ -1,85 +1,236 @@
-# ADR-012: Unified Notification Strategy
+# ADR-012: API Message Handling Strategy
 
 ## Status
-**Proposed** - *Date: 2024-06-06*  
+**Accepted** - *Date: 2024-06-06*  
 **Owner:** Web Platform Team
 
 ## Context
 
-Users currently receive duplicate notifications because domain events emitted by the API are echoed by optimistic UI feedback coded in the frontend. Both sources ship partially translated text, so the same message can arrive twice in different formats, and it is unclear which side should own the message catalogue. This increases the cost of adding new notifications, introduces translation drift, and makes it difficult to reason about the user experience across platforms.
-
-We need a consistent strategy that:
-- Defines a single source of truth for domain notifications versus purely local UI feedback.
-- Clarifies when to render toast messages versus inline messaging.
-- Establishes how localization keys flow through the stack so we translate each string exactly once.
-
-### Current Implementation Findings (June 2024)
-
-- The shared auth HTTP client (`authApi`) invokes `showApiToast` for every HTTP success or failure that carries a `message`/`detail` payload, so the backend text is toasted even when the frontend routes the outcome to inline components.
-- Google OAuth link/unlink flows return strings from the API *and* explicitly call `toast.success` in `useGoogleOAuth`, which results in two identical success toasts for the same action.
-- Two-factor setup, disable, and method-management endpoints return human-readable messages while the React wizard already renders contextual success panels, creating a toast + inline combination for every step.
-- The 2FA settings page uses banners fed by server responses (remove method, switch default, remove trusted device) while the auto toast fires with the same copy, so users receive duplicated confirmations.
-- Frontend-only experiences (e.g. OAuth callback routing or client-side validation failures) rely solely on UI messages today; these should remain frontend-owned under the new contract.
+Users currently receive duplicate notifications because the API returns raw message strings that are automatically shown as toasts, while the frontend also shows its own inline feedback. This creates a poor UX with duplicated messages and makes it unclear who controls message presentation.
 
 ## Decision
 
-1. **Domain events originate from the backend.** All API responses that need to notify users will include a `notifications` array. Each item carries metadata rather than already-formatted strings:
-   - `id`: stable identifier for de-duplication (UUID or semantic key supplied by the backend).
-   - `level`: `info`, `success`, `warning`, or `error`.
-   - `channel`: `toast`, `inline`, or `modal` (future friendly for other surfaces).
-   - `i18n_key`: canonical translation key (e.g. `notifications.profile.photo_uploaded`).
-   - `default_message`: English fallback for logs and development.
-   - `context`: optional payload (field references, CTA actions, etc.).
+All API endpoints will return messages in a standardized format, and the frontend will have full control over when and how to present them.
 
-   Frontend clients render backend notifications by looking up `i18n_key` in the shared translation catalogue. The `default_message` is used only if the key is missing.
+### Backend Implementation
 
-2. **Frontend-originated notifications are limited to local UX concerns.** The UI may raise notifications only for client-side validations, offline-mode feedback, or speculative UX hints while waiting on the server. These must reuse the same translation keys (sourced from the shared catalogue) and must not duplicate a domain event that will arrive from the API.
-
-3. **Presentation rules determine toast versus inline usage.**
-   - Use `inline` for contextual feedback scoped to a specific form, field, or component. These messages anchor near the triggering UI and are cleared when the user resolves the issue.
-   - Use `toast` for global, ephemeral updates that acknowledge a completed action or cross-surface event (e.g. background sync, push events). Toasts should auto-dismiss but remain accessible in an activity center when appropriate.
-   - Reserve `modal` (or other channels) for disruptive, decision-required flows (e.g. destructive confirmations). Modal usage requires explicit product approval.
-
-4. **Internationalization lives in a shared catalogue.** Translation keys for notifications reside in the existing i18n pipeline (e.g. `locales/{lang}.json`). Backend code references the same keys by name, enabling continuous localization without duplicating translation work. Adding a new notification requires updating the catalogue once; both backend and frontend tests should fail fast if the key is missing.
-
-5. **Deduplication is enforced on the client.** The frontend maintains a notification store keyed by `id`. When a backend response includes an `id` already displayed (within a configurable TTL), the UI will ignore the duplicate. Frontend-generated notifications must use a distinct namespace (e.g. `ui.local.` prefix) to avoid collisions.
-
-6. **Transport-agnostic contract.** Whether notifications arrive via REST, GraphQL, or WebSocket push, the payload structure remains identical. Backend services that broadcast events (emails, push notifications) can reuse the same metadata, keeping message semantics consistent across channels.
-
-### API Example
+All API responses include a `messages` array:
 
 ```json
 {
-  "data": { "photoUrl": "https://..." },
-  "notifications": [
+  "data": { /* response data */ },
+  "messages": [
     {
-      "id": "profile-photo-uploaded",
-      "level": "success",
-      "channel": "toast",
       "i18n_key": "notifications.profile.photo_uploaded",
-      "default_message": "Profile photo updated successfully"
+      "default_message": "Profile photo updated successfully",
+      "context": {}
     }
   ]
 }
 ```
 
-## Consequences
+**Message structure:**
+- `i18n_key`: Translation key from frontend i18n files (e.g., `notifications.profile.photo_uploaded`)
+- `default_message`: English fallback for development/logging
+- `context`: Optional object with dynamic values for parameterized messages (e.g., `{ filename: "photo.jpg", maxSize: "10MB" }`)
 
-- Backend work: add the `notifications` contract to relevant endpoints and migrate existing hard-coded message strings to i18n keys.
-- Frontend work: update notification store to consume the new payload, enforce de-duplication, and route toasts versus inline messaging consistently.
-- Localization work: ensure the translation pipeline exports/imports any new keys, and add tests that fail when a referenced key is missing.
-- Transitional period: while migrating old flows, toggle a feature flag to prefer backend notifications; once coverage is complete, remove redundant frontend messages.
+**Backend does NOT specify:**
+- Severity level (conveyed by HTTP status: `2xx` = success, `4xx` = client error, `5xx` = server error)
+- Presentation channel (toast/inline/modal - this is a frontend decision)
 
-## Alternatives Considered
+### Frontend Implementation
 
-- **Status quo with manual coordination.** Rejected because it relies on developers to remember which side owns each message, which has already led to drift and duplication.
-- **Backend sends fully translated strings.** Rejected because it complicates localization, requires language negotiation on every request, and couples backend deployments to translation updates.
+**1. HTTP Status determines severity:**
+- `2xx` → success
+- `4xx` → warning/error
+- `5xx` → error
 
-## Follow-up Actions
+**2. Internationalization with react-i18next:**
 
-1. Define the notification payload schema in shared API documentation and update OpenAPI specs.
-2. Inventory current frontend-only notifications; remove or migrate any that overlap with new backend events.
-3. Add automated tests (unit/integration) ensuring translation keys referenced by backend exist in the catalogue.
-4. Schedule a UX review to align toast styling and inline message components with the new channels.
-5. Change the shared HTTP client so success/error toasts are opt-in, then suppress auto-toast for flows that already provide inline messaging (2FA status, trusted devices, etc.).
-6. Refactor Google OAuth and 2FA UI hooks to consume the upcoming `notifications` payload instead of hard-coded strings, ensuring only one surface (inline or toast) renders each message.
+Install the i18n library:
+```bash
+npm install react-i18next i18next
+```
+
+**Setup configuration:**
+```typescript
+// src/i18n/config.ts
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import en from './locales/en.json';
+import es from './locales/es.json';
+
+i18next
+  .use(initReactI18next)
+  .init({
+    resources: {
+      en: { translation: en },
+      es: { translation: es }
+    },
+    lng: 'en', // default language
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false // React already escapes
+    }
+  });
+
+export default i18next;
+```
+
+**Translation files structure:**
+```json
+// src/i18n/locales/en.json
+{
+  "notifications": {
+    "profile": {
+      "photo_uploaded": "Profile photo updated successfully"
+    }
+  },
+  "errors": {
+    "file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}."
+  }
+}
+
+// src/i18n/locales/es.json
+{
+  "notifications": {
+    "profile": {
+      "photo_uploaded": "Foto de perfil actualizada exitosamente"
+    }
+  },
+  "errors": {
+    "file_too_large": "El archivo {{filename}} es demasiado grande. El tamaño máximo es {{maxSize}}."
+  }
+}
+```
+
+**Usage in components:**
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  
+  // Simple translation
+  const message = t('notifications.profile.photo_uploaded');
+  
+  // With interpolation (context)
+  const errorMsg = t('errors.file_too_large', {
+    filename: 'photo.jpg',
+    maxSize: '10MB'
+  });
+  
+  return <div>{message}</div>;
+}
+```
+
+**3. Components explicitly control message display:**
+```typescript
+import { useTranslation } from 'react-i18next';
+
+// Component with inline feedback - suppress API messages
+const { mutate } = useUploadPhoto({
+  onSuccess: (response) => {
+    // Already showing inline UI feedback
+    // Don't display response.messages
+  }
+});
+
+// Background operation - show as toast
+const { mutate } = useSyncData({
+  onSuccess: (response) => {
+    const { t } = useTranslation();
+    response.messages.forEach(msg => {
+      showToast({
+        message: t(msg.i18n_key, msg.context),
+        type: 'success' // inferred from 200 status
+      });
+    });
+  }
+});
+```
+
+**4. Remove automatic global toast behavior:**
+- Shared HTTP client should NOT auto-toast messages
+- Each component/hook decides if/how to show messages
+- This prevents duplicate messages and gives context-aware control
+
+### Examples
+
+**Simple success message:**
+```json
+HTTP/1.1 200 OK
+
+{
+  "data": { "photoUrl": "https://..." },
+  "messages": [
+    {
+      "i18n_key": "notifications.profile.photo_uploaded",
+      "default_message": "Profile photo updated successfully",
+      "context": {}
+    }
+  ]
+}
+```
+
+**Parameterized error message:**
+```json
+HTTP/1.1 400 Bad Request
+
+{
+  "error": "file_too_large",
+  "messages": [
+    {
+      "i18n_key": "errors.file_too_large",
+      "default_message": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
+      "context": {
+        "filename": "vacation-photo.jpg",
+        "maxSize": "10MB"
+      }
+    }
+  ]
+}
+```
+
+**Frontend handles translation:**
+```typescript
+const { t } = useTranslation();
+
+// Backend sends: i18n_key="errors.file_too_large", context={filename: "vacation-photo.jpg", maxSize: "10MB"}
+const message = t('errors.file_too_large', { filename: 'vacation-photo.jpg', maxSize: '10MB' });
+
+// English user sees: "File vacation-photo.jpg is too large. Maximum size is 10MB."
+// Spanish user sees: "El archivo vacation-photo.jpg es demasiado grande. El tamaño máximo es 10MB."
+```
+
+## Implementation Tasks
+
+### Backend
+1. Update all API endpoints to return `messages` array with `i18n_key`, `default_message`, and `context`
+2. Remove `level` and `channel` fields - rely on HTTP status for severity
+3. Document message schema in OpenAPI specs
+
+### Frontend
+1. Install react-i18next: `npm install react-i18next i18next`
+2. Create i18n configuration file with language resources
+3. Create translation files structure under `src/i18n/locales/`
+4. Add all message i18n keys to translation files for each supported language
+5. Create utility functions for message handling:
+   - Infer severity from HTTP status
+   - Provide presenters for different channels (toast, inline, modal)
+6. Update shared HTTP client to remove automatic toast behavior
+7. Update all components/hooks to explicitly handle messages using `useTranslation()`:
+   - Decide whether to show messages based on UI context
+   - Translate messages with `t(msg.i18n_key, msg.context)`
+   - Choose appropriate presentation channel
+   - Suppress messages when optimistic UI provides feedback
+8. Add tests ensuring all i18n keys exist in translation files
+
+## Benefits
+
+- **No duplicate messages:** Frontend controls when to display
+- **Context-aware:** Same message shown differently based on UI state
+- **Internationalization:** Client-side translation with instant language switching
+- **Clean separation:** Backend = domain events, Frontend = presentation
+- **HTTP semantics:** Uses status codes instead of duplicating severity
+- **Standard library:** react-i18next is the most popular i18n solution for React apps
