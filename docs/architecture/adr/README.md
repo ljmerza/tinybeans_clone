@@ -95,6 +95,7 @@ Create an ADR when making decisions about:
 | [ADR-004](./ADR-004-2FA-FRONTEND-IMPLEMENTATION.md) | 2FA Frontend Implementation | Accepted | 2024-12-29 | React components and flows for 2FA setup/verification |
 | [ADR-009](./ADR-009-PHOTO-CALENDAR-REACT-LIBRARY.md) | Photo Calendar React Library | Accepted | 2024-12-30 | React-based photo calendar component selection |
 | [ADR-011](./ADR-011-FRONTEND-FILE-ARCHITECTURE.md) | Frontend File Architecture | Proposed | 2025-01-15 | Feature-based organization with clear separation of routes and features |
+| [ADR-012](./ADR-012-NOTIFICATION-STRATEGY.md) | Notification Strategy | Accepted | 2024-06-06 | Standardized backend messages & frontend-controlled presentation |
 
 ### Backend Architecture
 
