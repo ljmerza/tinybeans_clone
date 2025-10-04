@@ -4,6 +4,15 @@
       "photo_uploaded": "Foto de perfil actualizada exitosamente",
       "updated": "Perfil actualizado exitosamente"
     },
+    "preferences": {
+      "updated": "Preferencias actualizadas exitosamente"
+    },
+    "circle": {
+      "created": "Círculo creado exitosamente",
+      "updated": "Círculo actualizado exitosamente",
+      "member_added": "Miembro agregado al círculo",
+      "member_removed": "Miembro eliminado del círculo"
+    },
     "auth": {
       "login_success": "¡Bienvenido de nuevo!",
       "signup_success": "Cuenta creada exitosamente",
@@ -11,7 +20,9 @@
       "email_verified": "Correo electrónico verificado exitosamente",
       "email_verification_sent": "Correo de verificación enviado",
       "password_reset": "Correo de restablecimiento de contraseña enviado",
-      "password_updated": "Contraseña actualizada exitosamente"
+      "password_updated": "Contraseña actualizada exitosamente",
+      "magic_link_sent": "Si existe una cuenta con ese correo, se ha enviado un enlace mágico",
+      "magic_login_success": "Inicio de sesión exitoso con enlace mágico"
     }
   },
   "errors": {
@@ -34,6 +45,10 @@
     "unauthorized": "Debe iniciar sesión para realizar esta acción",
     "forbidden": "No tiene permiso para realizar esta acción",
     "not_found": "El recurso solicitado no fue encontrado",
-    "validation_failed": "Por favor revise el formulario en busca de errores"
+    "validation_failed": "Por favor revise el formulario en busca de errores",
+    "magic_link_expired": "Este enlace mágico ha expirado",
+    "magic_link_invalid": "Enlace mágico inválido",
+    "magic_link_rate_limit": "Demasiadas solicitudes de enlace mágico. Por favor intente de nuevo más tarde.",
+    "account_inactive": "Su cuenta no está activa"
   }
 }

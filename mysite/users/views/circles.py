@@ -17,6 +17,7 @@ from auth.token_utils import (
     pop_token,
     store_token,
 )
+from mysite.notification_utils import create_message, success_response
 from ..models import (
     Circle,
     CircleInvitation,
@@ -79,7 +80,11 @@ class UserCircleListView(APIView):
         serializer = CircleCreateSerializer(data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         circle = serializer.save()
-        return Response({'circle': CircleSerializer(circle).data}, status=status.HTTP_201_CREATED)
+        return success_response(
+            {'circle': CircleSerializer(circle).data},
+            messages=[create_message('notifications.circle.created')],
+            status_code=status.HTTP_201_CREATED
+        )
 
 
 class CircleDetailView(APIView):
@@ -105,7 +110,11 @@ class CircleDetailView(APIView):
         serializer = CircleCreateSerializer(circle, data=request.data, partial=True, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'circle': CircleSerializer(circle).data})
+        return success_response(
+            {'circle': CircleSerializer(circle).data},
+            messages=[create_message('notifications.circle.updated')],
+            status_code=status.HTTP_200_OK
+        )
 
 
 class CircleInvitationCreateView(APIView):

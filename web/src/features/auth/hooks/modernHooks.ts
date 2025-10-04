@@ -31,7 +31,7 @@ export function useLoginModern() {
 			setAccessToken(null);
 			return apiClient.post<LoginResponse>("/auth/login/", body);
 		},
-		onSuccess: (data) => {
+		onSuccess: ({ data }:any) => {
 			console.log("Login response:", data);
 
 			// Check if 2FA is required
@@ -155,6 +155,62 @@ export function usePasswordResetConfirmModern() {
 		},
 		onError: (error: any) => {
 			console.error("Password reset confirm error:", error);
+			// Error messages handled by component
+		},
+	});
+}
+
+/**
+ * Modern magic link request hook
+ */
+export function useMagicLinkRequestModern() {
+	const { showAsToast } = useApiMessages();
+
+	return useMutation<any, Error, { email: string }>({
+		mutationFn: (body) =>
+			apiClient.post("/auth/magic-login/request/", body),
+		onSuccess: (data) => {
+			// Show success message (always shown for security)
+			if (data?.messages) {
+				showAsToast(data.messages, 202);
+			}
+		},
+		onError: (error: any) => {
+			console.error("Magic link request error:", error);
+			// Error messages handled by component
+		},
+	});
+}
+
+/**
+ * Modern magic login verify hook
+ */
+export function useMagicLoginVerifyModern() {
+	const qc = useQueryClient();
+	const navigate = useNavigate();
+	const { showAsToast } = useApiMessages();
+
+	return useMutation<any, Error, { token: string }>({
+		mutationFn: (body) =>
+			apiClient.post("/auth/magic-login/verify/", body),
+		onSuccess: (data) => {
+			// Set auth token
+			if (data?.tokens?.access) {
+				setAccessToken(data.tokens.access);
+			}
+			
+			qc.invalidateQueries({ queryKey: ["auth"] });
+			
+			// Show success message
+			if (data?.messages) {
+				showAsToast(data.messages, 200);
+			}
+			
+			// Navigate to home
+			navigate({ to: "/" });
+		},
+		onError: (error: any) => {
+			console.error("Magic login verify error:", error);
 			// Error messages handled by component
 		},
 	});

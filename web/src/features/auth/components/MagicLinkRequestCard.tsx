@@ -2,13 +2,14 @@ import { StatusMessage } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { useMagicLoginRequest } from "../hooks";
+import { useMagicLinkRequestModern } from "../hooks/modernHooks";
 
 const schema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -17,29 +18,45 @@ const schema = z.object({
 type MagicLinkFormValues = z.infer<typeof schema>;
 
 export function MagicLinkRequestCard() {
-	const magicLoginRequest = useMagicLoginRequest();
+	const magicLoginRequest = useMagicLinkRequestModern();
+	const { getGeneral, translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const form = useForm({
 		defaultValues: { email: "" } satisfies MagicLinkFormValues,
 		onSubmit: async ({ value }) => {
+			// Clear previous messages
 			setSuccessMessage(null);
+			setErrorMessage(null);
+			
 			try {
 				const response = await magicLoginRequest.mutateAsync(value);
-				setSuccessMessage(
-					response.message ??
-						"If an account with that email exists, a magic login link has been sent. Check your email!",
-				);
-			} catch (error) {
+				
+				// Show success message from server or default
+				if (response?.messages) {
+					const messages = translate(response.messages);
+					if (messages.length > 0) {
+						setSuccessMessage(messages[0]);
+					}
+				} else {
+					setSuccessMessage(
+						"If an account with that email exists, a magic login link has been sent. Check your email!"
+					);
+				}
+			} catch (error: any) {
 				console.error("Magic link request error:", error);
+				
+				// Extract general error messages
+				const generals = getGeneral(error.messages);
+				if (generals.length > 0) {
+					setErrorMessage(generals[0]);
+				} else {
+					setErrorMessage("Failed to send magic link. Please try again.");
+				}
 			}
 		},
 	});
-
-	const errorMessage =
-		magicLoginRequest.error instanceof Error
-			? magicLoginRequest.error.message
-			: null;
 
 	return (
 		<AuthCard

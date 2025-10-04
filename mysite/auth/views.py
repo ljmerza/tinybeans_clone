@@ -400,7 +400,13 @@ class PasswordChangeView(APIView):
         user.set_password(serializer.validated_data['password'])
         user.save(update_fields=['password'])
         tokens = get_tokens_for_user(user)
-        response = Response({'detail': _('Password changed'), 'tokens': {'access': tokens['access']}})
+        
+        data = {'tokens': {'access': tokens['access']}}
+        response = success_response(
+            data,
+            messages=[create_message('notifications.auth.password_updated')],
+            status_code=status.HTTP_200_OK
+        )
         set_refresh_cookie(response, tokens['refresh'])
         return response
 
@@ -414,8 +420,11 @@ class LogoutView(APIView):
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Logged out successfully')},
     )
     def post(self, request):
-        message = _('Logged out successfully')
-        response = Response({'detail': message, 'message': message})
+        response = success_response(
+            {},
+            messages=[create_message('notifications.auth.logout_success')],
+            status_code=status.HTTP_200_OK
+        )
         clear_refresh_cookie(response)
         return response
 
@@ -479,9 +488,10 @@ class MagicLoginRequestView(APIView):
             )
         
         # Always return success to prevent email enumeration
-        return Response(
-            {'message': _('If an account with that email exists, a magic login link has been sent.')}, 
-            status=status.HTTP_202_ACCEPTED
+        return success_response(
+            {},
+            messages=[create_message('notifications.auth.magic_link_sent')],
+            status_code=status.HTTP_202_ACCEPTED
         )
 
 
@@ -507,9 +517,9 @@ class MagicLoginVerifyView(APIView):
             magic_token = MagicLoginToken.objects.select_related('user').get(token=token_value)
             
             if not magic_token.is_valid():
-                return Response(
-                    {'detail': _('Invalid or expired magic login link')}, 
-                    status=status.HTTP_400_BAD_REQUEST
+                return error_response(
+                    messages=[create_message('errors.magic_link_expired')],
+                    status_code=status.HTTP_400_BAD_REQUEST
                 )
             
             # Mark token as used
@@ -519,9 +529,9 @@ class MagicLoginVerifyView(APIView):
             
             # Check if user account is active
             if not user.is_active:
-                return Response(
-                    {'detail': _('User account is inactive')}, 
-                    status=status.HTTP_403_FORBIDDEN
+                return error_response(
+                    messages=[create_message('errors.account_inactive')],
+                    status_code=status.HTTP_403_FORBIDDEN
                 )
             
             # Check if 2FA is enabled for this user
@@ -550,8 +560,11 @@ class MagicLoginVerifyView(APIView):
                             'tokens': {'access': tokens['access']},
                             'trusted_device': True,
                         }
-                        data['message'] = _('Logged in successfully')
-                        response = Response(data)
+                        response = success_response(
+                            data,
+                            messages=[create_message('notifications.auth.magic_login_success')],
+                            status_code=status.HTTP_200_OK
+                        )
                         set_refresh_cookie(response, tokens['refresh'])
                         return response
                     
@@ -588,13 +601,16 @@ class MagicLoginVerifyView(APIView):
                 'user': UserSerializer(user).data,
                 'tokens': {'access': tokens['access']},
             }
-            data['message'] = _('Logged in successfully')
-            response = Response(data)
+            response = success_response(
+                data,
+                messages=[create_message('notifications.auth.magic_login_success')],
+                status_code=status.HTTP_200_OK
+            )
             set_refresh_cookie(response, tokens['refresh'])
             return response
             
         except MagicLoginToken.DoesNotExist:
-            return Response(
-                {'detail': _('Invalid magic login link')}, 
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                messages=[create_message('errors.magic_link_invalid')],
+                status_code=status.HTTP_400_BAD_REQUEST
             )

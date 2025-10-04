@@ -4,6 +4,15 @@
       "photo_uploaded": "Profile photo updated successfully",
       "updated": "Profile updated successfully"
     },
+    "preferences": {
+      "updated": "Preferences updated successfully"
+    },
+    "circle": {
+      "created": "Circle created successfully",
+      "updated": "Circle updated successfully",
+      "member_added": "Member added to circle",
+      "member_removed": "Member removed from circle"
+    },
     "auth": {
       "login_success": "Welcome back!",
       "signup_success": "Account created successfully",
@@ -11,7 +20,9 @@
       "email_verified": "Email verified successfully",
       "email_verification_sent": "Verification email sent",
       "password_reset": "Password reset email sent",
-      "password_updated": "Password updated successfully"
+      "password_updated": "Password updated successfully",
+      "magic_link_sent": "If an account with that email exists, a magic link has been sent",
+      "magic_login_success": "Successfully logged in via magic link"
     }
   },
   "errors": {
@@ -34,6 +45,10 @@
     "unauthorized": "You must be logged in to perform this action",
     "forbidden": "You don't have permission to perform this action",
     "not_found": "The requested resource was not found",
-    "validation_failed": "Please check the form for errors"
+    "validation_failed": "Please check the form for errors",
+    "magic_link_expired": "This magic link has expired",
+    "magic_link_invalid": "Invalid magic link",
+    "magic_link_rate_limit": "Too many magic link requests. Please try again later.",
+    "account_inactive": "Your account is not active"
   }
 }

@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { StatusMessage } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { useApiMessages } from "@/i18n";
 import { useNavigate } from "@tanstack/react-router";
 
-import { useMagicLoginVerify } from "../hooks";
+import { useMagicLoginVerifyModern } from "../hooks/modernHooks";
 
 type MagicLoginHandlerProps = {
 	token?: string;
@@ -13,26 +14,38 @@ type MagicLoginHandlerProps = {
 
 export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 	const navigate = useNavigate();
-	const magicLoginVerify = useMagicLoginVerify();
+	const magicLoginVerify = useMagicLoginVerifyModern();
+	const { getGeneral, translate } = useApiMessages();
 	const [status, setStatus] = useState<"verifying" | "success" | "error">(
 		"verifying",
 	);
+	const [errorMessage, setErrorMessage] = useState<string>("");
 
 	useEffect(() => {
 		if (!token) {
 			setStatus("error");
+			setErrorMessage("Invalid or expired magic login link. Please request a new one.");
 			return;
 		}
 
 		magicLoginVerify
 			.mutateAsync({ token })
-			.then(() => {
+			.then((response) => {
 				setStatus("success");
+				// Navigation handled by hook
 			})
-			.catch(() => {
+			.catch((error: any) => {
 				setStatus("error");
+				
+				// Extract error message
+				const generals = getGeneral(error.messages);
+				if (generals.length > 0) {
+					setErrorMessage(generals[0]);
+				} else {
+					setErrorMessage("Invalid or expired magic login link. Please request a new one.");
+				}
 			});
-	}, [token, magicLoginVerify]);
+	}, [token, magicLoginVerify, getGeneral]);
 
 	if (status === "verifying") {
 		return (
@@ -60,8 +73,7 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 	return (
 		<div className="mx-auto max-w-sm p-6 space-y-4">
 			<StatusMessage variant="error">
-				{magicLoginVerify.error?.message ??
-					"Invalid or expired magic login link. Please request a new one."}
+				{errorMessage}
 			</StatusMessage>
 			<Button onClick={() => navigate({ to: "/login" })} className="w-full">
 				Return to Login
