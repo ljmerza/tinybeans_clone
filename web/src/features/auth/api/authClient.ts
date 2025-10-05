@@ -1,12 +1,10 @@
 /**
- * Modern HTTP Client (ADR-012 Compliant)
+ * Authentication HTTP Client
  * 
- * This client follows ADR-012: Notification Strategy
- * - No automatic toasts
- * - Components explicitly handle messages
- * - Supports i18n message format
- * 
- * Use this for new code. The old authClient.ts is kept for backward compatibility.
+ * Provides HTTP client for authentication operations with:
+ * - Automatic token management
+ * - Token refresh on 401 errors
+ * - CSRF protection
  */
 import { API_BASE, createHttpClient } from "@/lib/httpClient";
 import type { RequestOptions } from "@/lib/httpClient";
@@ -16,8 +14,8 @@ import { refreshAccessToken } from "../utils/refreshToken";
 export { refreshAccessToken };
 
 /**
- * Modern HTTP client following ADR-012
- * No automatic toasts - components handle messages explicitly
+ * HTTP client for authentication operations
+ * Components handle messages explicitly for context-aware presentation
  */
 export const apiClient = createHttpClient({
 	getAuthToken: () => authStore.state.accessToken,

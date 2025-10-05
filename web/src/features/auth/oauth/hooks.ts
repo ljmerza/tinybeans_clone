@@ -13,7 +13,6 @@ import {
 /**
  * useGoogleOAuth Hook
  * Manages Google OAuth flow state and API calls
- * Uses ADR-012 notification system
  */
 export function useGoogleOAuth() {
 	const navigate = useNavigate();
@@ -32,7 +31,7 @@ export function useGoogleOAuth() {
 			window.location.href = data.google_oauth_url;
 		},
 		onError: (error: any) => {
-			// Use ADR-012 error handling
+			// Handle errors with i18n translation
 			handleError(error);
 		},
 	});
@@ -56,7 +55,7 @@ export function useGoogleOAuth() {
 			navigate({ to: "/" });
 		},
 		onError: (error: any) => {
-			// Use ADR-012 error handling
+			// Handle errors with i18n translation
 			handleError(error);
 			// Clear state on error
 			clearOAuthState();
@@ -74,7 +73,7 @@ export function useGoogleOAuth() {
 			}
 		},
 		onError: (error: any) => {
-			// Use ADR-012 error handling
+			// Handle errors with i18n translation
 			handleError(error);
 			clearOAuthState();
 		},
@@ -90,7 +89,7 @@ export function useGoogleOAuth() {
 			}
 		},
 		onError: (error: any) => {
-			// Use ADR-012 error handling
+			// Handle errors with i18n translation
 			handleError(error);
 		},
 	});

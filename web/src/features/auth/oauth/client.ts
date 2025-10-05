@@ -1,4 +1,4 @@
-import { apiClient } from "../api/modernAuthClient";
+import { apiClient } from "../api/authClient";
 import type {
 	OAuthCallbackRequest,
 	OAuthCallbackResponse,

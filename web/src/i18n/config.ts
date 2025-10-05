@@ -1,6 +1,5 @@
 /**
  * i18n Configuration
- * Implements ADR-012: Notification Strategy
  * 
  * Provides internationalization support using react-i18next.
  * Backend sends i18n_key and context, frontend handles translation.

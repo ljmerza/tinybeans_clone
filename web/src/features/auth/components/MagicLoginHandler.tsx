@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useApiMessages } from "@/i18n";
 import { useNavigate } from "@tanstack/react-router";
 
-import { useMagicLoginVerifyModern } from "../hooks/modernHooks";
+import { useMagicLoginVerifyWithMessages } from "../hooks/explicitHooks";
 
 type MagicLoginHandlerProps = {
 	token?: string;
@@ -14,7 +14,7 @@ type MagicLoginHandlerProps = {
 
 export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 	const navigate = useNavigate();
-	const magicLoginVerify = useMagicLoginVerifyModern();
+	const magicLoginVerify = useMagicLoginVerifyWithMessages();
 	const { getGeneral, translate } = useApiMessages();
 	const [status, setStatus] = useState<"verifying" | "success" | "error">(
 		"verifying",

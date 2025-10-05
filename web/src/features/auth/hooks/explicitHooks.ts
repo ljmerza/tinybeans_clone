@@ -1,13 +1,13 @@
 /**
- * Modern Auth Hooks (ADR-012 Compliant)
+ * Auth Hooks with Explicit Message Handling
  * 
- * These hooks use the new notification strategy with explicit message handling.
- * Use these for new components. Legacy hooks are in index.ts for backward compatibility.
+ * These hooks provide explicit control over message display for context-aware notifications.
+ * Components decide when and how to show success/error messages.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useApiMessages } from "@/i18n";
-import { apiClient } from "../api/modernAuthClient";
+import { apiClient } from "../api/authClient";
 import { setAccessToken } from "../store/authStore";
 import type {
 	LoginRequest,
@@ -18,9 +18,9 @@ import type {
 } from "../types";
 
 /**
- * Modern login hook with explicit message handling
+ * Login hook with explicit message handling
  */
-export function useLoginModern() {
+export function useLoginWithMessages() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
@@ -63,9 +63,9 @@ export function useLoginModern() {
 }
 
 /**
- * Modern signup hook with explicit message handling
+ * Signup hook with explicit message handling
  */
-export function useSignupModern() {
+export function useSignupWithMessages() {
 	const qc = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
@@ -89,9 +89,9 @@ export function useSignupModern() {
 }
 
 /**
- * Modern logout hook with explicit message handling
+ * * logout hook with explicit message handling
  */
-export function useLogoutModern() {
+export function useLogoutWithMessages() {
 	const qc = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
@@ -113,9 +113,9 @@ export function useLogoutModern() {
 }
 
 /**
- * Modern password reset request hook
+ * * password reset request hook
  */
-export function usePasswordResetRequestModern() {
+export function usePasswordResetRequestWithMessages() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { identifier: string }>({
@@ -135,9 +135,9 @@ export function usePasswordResetRequestModern() {
 }
 
 /**
- * Modern password reset confirm hook
+ * * password reset confirm hook
  */
-export function usePasswordResetConfirmModern() {
+export function usePasswordResetConfirmWithMessages() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, {
@@ -161,9 +161,9 @@ export function usePasswordResetConfirmModern() {
 }
 
 /**
- * Modern magic link request hook
+ * * magic link request hook
  */
-export function useMagicLinkRequestModern() {
+export function useMagicLinkRequestWithMessages() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { email: string }>({
@@ -183,9 +183,9 @@ export function useMagicLinkRequestModern() {
 }
 
 /**
- * Modern magic login verify hook
+ * * magic login verify hook
  */
-export function useMagicLoginVerifyModern() {
+export function useMagicLoginVerifyWithMessages() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();

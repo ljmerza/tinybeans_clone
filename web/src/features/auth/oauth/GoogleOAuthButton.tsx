@@ -13,7 +13,6 @@ interface GoogleOAuthButtonProps {
  * Google OAuth Button Component
  * Displays "Sign in with Google" button with proper branding
  * Follows Google Identity Guidelines
- * Uses ADR-012 notification system via hooks
  */
 export function GoogleOAuthButton({
 	mode,

@@ -1,5 +1,5 @@
 /**
- * Example: Using ADR-012 Notification Strategy
+ * Example: Using Notification Strategy with i18n
  * 
  * This file demonstrates the proper usage of the notification strategy
  * with i18n support. Use these patterns in your components.
@@ -13,7 +13,7 @@
 import { useTranslation } from 'react-i18next';
 import { useApiMessages, type ApiResponse } from '@/i18n';
 import { showToast } from '@/lib/toast';
-import { apiClient } from '@/features/auth/api/modernAuthClient';
+import { apiClient } from '@/features/auth/api/authClient';
 
 /**
  * Example 1: Simple success with inline feedback

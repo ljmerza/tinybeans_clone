@@ -9,7 +9,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { usePasswordResetConfirmModern } from "../hooks/modernHooks";
+import { usePasswordResetConfirmWithMessages } from "../hooks/explicitHooks";
 
 type PasswordResetConfirmCardProps = {
 	token?: string;
@@ -35,7 +35,7 @@ type PasswordResetConfirmValues = z.infer<typeof schema>;
 export function PasswordResetConfirmCard({
 	token,
 }: PasswordResetConfirmCardProps) {
-	const confirmReset = usePasswordResetConfirmModern();
+	const confirmReset = usePasswordResetConfirmWithMessages();
 	const navigate = useNavigate();
 	const { getGeneral, getFieldErrors, translate } = useApiMessages();
 	const [generalError, setGeneralError] = useState("");

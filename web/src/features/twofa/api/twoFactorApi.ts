@@ -4,7 +4,7 @@
  */
 
 import { API_BASE, getCsrfToken } from "@/lib/httpClient";
-import { apiClient } from "@/features/auth/api/modernAuthClient";
+import { apiClient } from "@/features/auth/api/authClient";
 import { authStore } from "@/features/auth/store/authStore";
 import type {
 	RecoveryCodesResponse,

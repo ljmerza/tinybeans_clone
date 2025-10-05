@@ -1,6 +1,5 @@
 /**
  * Notification Utilities
- * Implements ADR-012: Notification Strategy
  * 
  * Utilities for handling standardized API messages with i18n support.
  */

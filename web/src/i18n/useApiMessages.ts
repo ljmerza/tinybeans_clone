@@ -1,6 +1,5 @@
 /**
  * useApiMessages Hook
- * Implements ADR-012: Notification Strategy
  * 
  * Provides utilities for handling API messages with i18n translation
  */

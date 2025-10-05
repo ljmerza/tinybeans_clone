@@ -1,10 +1,10 @@
 /**
- * LoginCard Component (ADR-012 Compliant)
+ * LoginCard Component
  * 
- * This component uses the modern notification strategy:
- * - Uses useApiMessages for explicit error handling
- * - Shows field-level errors inline
- * - No auto-toast behavior
+ * Login form with:
+ * - Explicit error handling with useApiMessages
+ * - Field-level error display
+ * - Context-aware error presentation
  */
 import { StatusMessage } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
@@ -19,7 +19,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { useLoginModern } from "../hooks/modernHooks";
+import { useLoginWithMessages } from "../hooks/explicitHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 const schema = z.object({
@@ -30,7 +30,7 @@ const schema = z.object({
 type LoginFormValues = z.infer<typeof schema>;
 
 export function LoginCard() {
-	const login = useLoginModern();
+	const login = useLoginWithMessages();
 	const { getGeneral } = useApiMessages();
 	const [generalError, setGeneralError] = useState<string>("");
 

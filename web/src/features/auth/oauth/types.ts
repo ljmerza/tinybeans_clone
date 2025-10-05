@@ -1,6 +1,6 @@
 /**
  * Google OAuth Types
- * Based on ADR-010 API specifications and ADR-012 notification system
+ * Based on API specifications with standardized message format
  */
 
 import type { ApiMessage } from "@/types";

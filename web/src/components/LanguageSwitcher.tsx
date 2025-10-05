@@ -7,7 +7,7 @@
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { apiClient } from '@/features/auth/api/modernAuthClient';
+import { apiClient } from '@/features/auth/api/authClient';
 
 type Language = 'en' | 'es';
 

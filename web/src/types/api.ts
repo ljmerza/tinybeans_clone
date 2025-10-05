@@ -1,6 +1,6 @@
 /**
  * @fileoverview Shared API types used across the application.
- * Implements ADR-012: Notification Strategy with standardized message format.
+ * Standardized message format for backend-frontend communication.
  * 
  * @module types/api
  */

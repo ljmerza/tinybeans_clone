@@ -3,10 +3,10 @@ import { useEffect, useRef } from "react";
 import { LoadingPage } from "@/components/LoadingPage";
 import { useNavigate } from "@tanstack/react-router";
 
-import { useLogoutModern } from "../hooks/modernHooks";
+import { useLogoutWithMessages } from "../hooks/explicitHooks";
 
 export function LogoutHandler() {
-	const logout = useLogoutModern();
+	const logout = useLogoutWithMessages();
 	const navigate = useNavigate();
 	const hasLoggedOut = useRef(false);
 
