@@ -163,15 +163,8 @@ export function useMagicLinkRequest() {
 	return useMutation<any, Error, { email: string }>({
 		mutationFn: (body) =>
 			apiClient.post("/auth/magic-login/request/", body),
-		onSuccess: (data) => {
-			// Show success message (always shown for security)
-			if (data?.messages) {
-				showAsToast(data.messages, 202);
-			}
-		},
 		onError: (error: any) => {
 			console.error("Magic link request error:", error);
-			// Error messages handled by component
 		},
 	});
 }

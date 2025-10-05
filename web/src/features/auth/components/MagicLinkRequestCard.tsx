@@ -48,9 +48,6 @@ export function MagicLinkRequestCard() {
 					setSuccessMessage(t('auth.magic_link.success_message'));
 				}
 			} catch (error: any) {
-				console.error("Magic link request error:", error);
-				
-				// Extract general error messages
 				const generals = getGeneral(error.messages);
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
