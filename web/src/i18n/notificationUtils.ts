@@ -74,7 +74,7 @@ export function translateMessage(message: ApiMessage, t: TFunction): string {
  */
 export function combineMessages(
 	messages: string[],
-	separator: string = "\n",
+	separator = "\n",
 ): string {
 	return messages.filter((msg) => msg.trim().length > 0).join(separator);
 }

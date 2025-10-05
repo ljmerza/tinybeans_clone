@@ -16,6 +16,7 @@ import type {
 	SignupRequest,
 	SignupResponse,
 } from "../types";
+import type { MutationResponse, ApiError } from "@/types";
 
 /**
  * Login hook with explicit message handling
@@ -31,7 +32,7 @@ export function useLogin() {
 			setAccessToken(null);
 			return apiClient.post<LoginResponse>("/auth/login/", body);
 		},
-		onSuccess: ({ data }: any) => {
+		onSuccess: ({ data }: MutationResponse<LoginResponse>) => {
 			console.log("Login response:", data);
 
 			// Check if 2FA is required
@@ -49,7 +50,7 @@ export function useLogin() {
 
 			navigate({ to: "/" });
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			console.error("Login error:", error);
 			// Error messages handled by component for inline display
 		},
@@ -74,7 +75,7 @@ export function useSignup() {
 				showAsToast(data.messages, 201);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			console.error("Signup error:", error);
 			// Error messages handled by component
 		},
@@ -94,12 +95,12 @@ export function useLogout() {
 			setAccessToken(null);
 			return true;
 		},
-		onSuccess: (data: any) => {
+		onSuccess: (data: boolean) => {
 			qc.invalidateQueries({ queryKey: ["auth"] });
 
 			// Show logout confirmation
-			if (data?.messages) {
-				showAsToast(data.messages, 200);
+			if (data) {
+				// Logout successful
 			}
 		},
 	});
@@ -111,7 +112,7 @@ export function useLogout() {
 export function usePasswordResetRequest() {
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<any, Error, { identifier: string }>({
+	return useMutation<ApiResponseWithMessages, Error, { identifier: string }>({
 		mutationFn: (body) => apiClient.post("/auth/password/reset/request/", body),
 		onSuccess: (data) => {
 			// Show success message
@@ -119,7 +120,7 @@ export function usePasswordResetRequest() {
 				showAsToast(data.messages, 200);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			console.error("Password reset error:", error);
 			// Error messages handled by component
 		},
@@ -133,7 +134,7 @@ export function usePasswordResetConfirm() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<
-		any,
+		ApiResponseWithMessages,
 		Error,
 		{
 			token: string;
@@ -148,7 +149,7 @@ export function usePasswordResetConfirm() {
 				showAsToast(data.messages, 200);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			console.error("Password reset confirm error:", error);
 			// Error messages handled by component
 		},
@@ -161,9 +162,9 @@ export function usePasswordResetConfirm() {
 export function useMagicLinkRequest() {
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<any, Error, { email: string }>({
+	return useMutation<ApiResponseWithMessages, Error, { email: string }>({
 		mutationFn: (body) => apiClient.post("/auth/magic-login/request/", body),
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			console.error("Magic link request error:", error);
 		},
 	});
@@ -177,7 +178,7 @@ export function useMagicLoginVerify() {
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<any, Error, { token: string }>({
+	return useMutation<ApiResponseWithMessages, Error, { token: string }>({
 		mutationFn: (body) => apiClient.post("/auth/magic-login/verify/", body),
 		onSuccess: (data) => {
 			// Set auth token
@@ -195,7 +196,7 @@ export function useMagicLoginVerify() {
 			// Navigate to home
 			navigate({ to: "/" });
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			console.error("Magic login verify error:", error);
 			// Error messages handled by component
 		},

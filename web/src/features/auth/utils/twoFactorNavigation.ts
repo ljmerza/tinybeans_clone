@@ -5,6 +5,7 @@
  */
 
 import type { TwoFactorNavigateState } from "../types";
+import type { TwoFactorMethod } from "@/features/twofa";
 
 /**
  * Handles 2FA redirect after login/signup when 2FA is required
@@ -29,18 +30,18 @@ export function handleTwoFactorRedirect(
 	data: {
 		requires_2fa?: boolean;
 		partial_token?: string;
-		method?: string;
+		method?: TwoFactorMethod;
 		message?: string;
 	},
-	navigate: (options: any) => any,
+	navigate: (options: { to: string; state?: TwoFactorNavigateState }) => void,
 ): boolean {
 	if (data.requires_2fa && data.partial_token && data.method) {
 		const state: TwoFactorNavigateState = {
 			partialToken: data.partial_token,
-			method: data.method as any,
+			method: data.method,
 			message: data.message,
 		};
-		navigate({ to: "/2fa/verify", state: state as never });
+		navigate({ to: "/2fa/verify", state });
 		return true;
 	}
 	return false;

@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { ApiError, ApiResponseWithMessages } from "@/types";
 
 import { FieldError } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { zodValidator } from "@/lib/form/index.js";
+import { zodValidator } from "@/lib/form/index";
 import {
 	passwordResetRequestSchema,
 	type PasswordResetRequestFormData,
-} from "@/lib/validations/schemas/password-reset.js";
+} from "@/lib/validations/schemas/password-reset";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -41,15 +42,16 @@ export function PasswordResetRequestCard() {
 				} else {
 					setSuccessMessage(t("auth.password_reset.success_message"));
 				}
-			} catch (error: any) {
-				console.error("Password reset request error:", error);
+			} catch (error) {
+				const apiError = error as ApiError;
+				console.error("Password reset request error:", apiError);
 
 				// Translate and show error message
-				if (error.messages) {
-					const messages = translate(error.messages);
+				if (apiError.messages) {
+					const messages = translate(apiError.messages);
 					setErrorMessage(messages.join(". "));
 				} else {
-					setErrorMessage(error.message ?? t("auth.password_reset.failed"));
+					setErrorMessage(apiError.message ?? t("auth.password_reset.failed"));
 				}
 			}
 		},

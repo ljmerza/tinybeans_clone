@@ -5,9 +5,10 @@
  * Shows error message only when field is touched and has errors
  */
 
+import type { FormField } from "@/types";
+
 interface FieldErrorProps {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	field: any;
+	field: FormField;
 }
 
 export function FieldError({ field }: FieldErrorProps) {

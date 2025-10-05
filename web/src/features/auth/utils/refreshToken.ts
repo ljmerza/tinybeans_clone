@@ -44,7 +44,7 @@ export async function refreshAccessToken(): Promise<boolean> {
 				.catch(() => null);
 
 			// Backend wraps response in { data: { access: "..." } }
-			const tokenData = (data as any)?.data || data;
+			const tokenData = data?.data || data;
 
 			if (tokenData?.access) {
 				setAccessToken(tokenData.access);

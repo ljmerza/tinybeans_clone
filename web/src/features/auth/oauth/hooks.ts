@@ -5,6 +5,7 @@ import { setAccessToken } from "../store/authStore";
 import { oauthApi } from "./client";
 import type { OAuthCallbackRequest } from "./types";
 import { clearOAuthState, getRedirectUri, storeOAuthState } from "./utils";
+import type { ApiError } from "@/types";
 
 /**
  * useGoogleOAuth Hook
@@ -26,7 +27,7 @@ export function useGoogleOAuth() {
 			// Redirect to Google OAuth URL
 			window.location.href = data.google_oauth_url;
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			// Handle errors with i18n translation
 			handleError(error);
 		},
@@ -50,7 +51,7 @@ export function useGoogleOAuth() {
 			// Navigate to home/dashboard (adjust route as needed)
 			navigate({ to: "/" });
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			// Handle errors with i18n translation
 			handleError(error);
 			// Clear state on error
@@ -68,7 +69,7 @@ export function useGoogleOAuth() {
 				showAsToast(response.messages, 200);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			// Handle errors with i18n translation
 			handleError(error);
 			clearOAuthState();
@@ -84,7 +85,7 @@ export function useGoogleOAuth() {
 				showAsToast(response.messages, 200);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: ApiError) => {
 			// Handle errors with i18n translation
 			handleError(error);
 		},

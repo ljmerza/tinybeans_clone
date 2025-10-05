@@ -135,7 +135,7 @@ export const twoFactorApi = {
 			}
 
 			if (token) {
-				headers["Authorization"] = `Bearer ${token}`;
+				headers.Authorization = `Bearer ${token}`;
 			}
 
 			// Make POST request with blob response

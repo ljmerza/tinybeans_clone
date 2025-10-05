@@ -1,3 +1,24 @@
+import { StatusMessage, FieldError } from "@/components";
+import { AuthCard } from "@/components/AuthCard";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { zodValidator } from "@/lib/form/index";
+import {
+	loginSchema,
+	type LoginFormData,
+} from "@/lib/validations/schemas/login";
+import { useApiMessages } from "@/i18n";
+import { Label } from "@radix-ui/react-label";
+import { useForm } from "@tanstack/react-form";
+import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { ApiError } from "@/types";
+
+import { useLogin } from "../hooks/authHooks";
+import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
+
 /**
  * LoginCard Component
  *
@@ -7,25 +28,6 @@
  * - Field-level error display
  * - Context-aware error presentation
  */
-import { StatusMessage, FieldError } from "@/components";
-import { AuthCard } from "@/components/AuthCard";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { zodValidator } from "@/lib/form/index.js";
-import {
-	loginSchema,
-	type LoginFormData,
-} from "@/lib/validations/schemas/login.js";
-import { useApiMessages } from "@/i18n";
-import { Label } from "@radix-ui/react-label";
-import { useForm } from "@tanstack/react-form";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
-import { useLogin } from "../hooks/authHooks";
-import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 export function LoginCard() {
 	const { t } = useTranslation();
@@ -43,16 +45,17 @@ export function LoginCard() {
 
 			try {
 				await login.mutateAsync(value);
-			} catch (error: any) {
-				console.error("Login submission error:", error);
+			} catch (error) {
+				const apiError = error as ApiError;
+				console.error("Login submission error:", apiError);
 
 				// Extract general errors for display
-				const generalErrors = getGeneral(error.messages);
+				const generalErrors = getGeneral(apiError.messages);
 				if (generalErrors.length > 0) {
 					setGeneralError(generalErrors.join(". "));
 				} else {
 					// Fallback to error message
-					setGeneralError(error.message ?? t("auth.login.login_failed"));
+					setGeneralError(apiError.message ?? t("auth.login.login_failed"));
 				}
 			}
 		},

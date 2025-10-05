@@ -2,17 +2,18 @@ import { StatusMessage, FieldError } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { zodValidator } from "@/lib/form/index.js";
+import { zodValidator } from "@/lib/form/index";
 import {
 	magicLinkRequestSchema,
 	type MagicLinkRequestFormData,
-} from "@/lib/validations/schemas/magic-link.js";
+} from "@/lib/validations/schemas/magic-link";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { ApiError } from "@/types";
 
 import { useMagicLinkRequest } from "../hooks/authHooks";
 
@@ -42,8 +43,9 @@ export function MagicLinkRequestCard() {
 				} else {
 					setSuccessMessage(t("auth.magic_link.success_message"));
 				}
-			} catch (error: any) {
-				const generals = getGeneral(error.messages);
+			} catch (error) {
+				const apiError = error as ApiError;
+				const generals = getGeneral(apiError.messages);
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
 				} else {

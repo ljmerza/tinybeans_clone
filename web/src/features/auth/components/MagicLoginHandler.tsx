@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { ApiError } from "@/types";
 
 import { StatusMessage } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -36,11 +37,12 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 				setStatus("success");
 				// Navigation handled by hook
 			})
-			.catch((error: any) => {
+			.catch((error) => {
+				const apiError = error as ApiError;
 				setStatus("error");
 
 				// Extract error message
-				const generals = getGeneral(error.messages);
+				const generals = getGeneral(apiError.messages);
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
 				} else {

@@ -1,16 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusMessage, FieldError } from "@/components";
-import { zodValidator } from "@/lib/form/index.js";
+import { zodValidator } from "@/lib/form/index";
 import {
 	passwordResetConfirmSchema,
 	type PasswordResetConfirmFormData,
-} from "@/lib/validations/schemas/password-reset.js";
+} from "@/lib/validations/schemas/password-reset";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { ApiError } from "@/types";
 
 import { usePasswordResetConfirm } from "../hooks/authHooks";
 
@@ -62,12 +63,13 @@ export function PasswordResetConfirmCard({
 				setTimeout(() => {
 					navigate({ to: "/login" });
 				}, 1500);
-			} catch (error: any) {
-				console.error("Password reset confirm error:", error);
+			} catch (error) {
+				const apiError = error as ApiError;
+				console.error("Password reset confirm error:", apiError);
 
 				// Extract field and general errors
-				const fields = getFieldErrors(error.messages);
-				const generals = getGeneral(error.messages);
+				const fields = getFieldErrors(apiError.messages);
+				const generals = getGeneral(apiError.messages);
 
 				setFieldErrors(fields);
 				if (generals.length > 0) {

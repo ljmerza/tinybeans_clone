@@ -4,7 +4,7 @@
  * Only visible when 2FA is enabled
  */
 
-import { verificationCodeSchema } from "@/lib/validations/schemas/twofa.js";
+import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {

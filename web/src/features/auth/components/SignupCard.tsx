@@ -2,17 +2,19 @@ import { StatusMessage, FieldError } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { zodValidator } from "@/lib/form/index.js";
+import { zodValidator } from "@/lib/form/index";
 import {
 	signupSchema,
+	signupSchemaBase,
 	type SignupFormData,
-} from "@/lib/validations/schemas/signup.js";
+} from "@/lib/validations/schemas/signup";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { ApiError } from "@/types";
 
 import { useSignup } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
@@ -41,20 +43,21 @@ export function SignupCard() {
 			try {
 				await signup.mutateAsync(payload);
 				navigate({ to: "/" });
-			} catch (error: any) {
-				console.error("Signup error:", error);
+			} catch (error) {
+				const apiError = error as ApiError;
+				console.error("Signup error:", apiError);
 
 				// Extract field errors
-				const errors = getFieldErrors(error.messages);
+				const errors = getFieldErrors(apiError.messages);
 				setFieldErrors(errors);
 
 				// Extract general errors
-				const generalErrors = getGeneral(error.messages);
+				const generalErrors = getGeneral(apiError.messages);
 				if (generalErrors.length > 0) {
 					setGeneralError(generalErrors.join(". "));
 				} else if (!Object.keys(errors).length) {
 					// Fallback if no structured errors
-					setGeneralError(error.message ?? t("auth.signup.signup_failed"));
+					setGeneralError(apiError.message ?? t("auth.signup.signup_failed"));
 				}
 			}
 		},
@@ -102,7 +105,7 @@ export function SignupCard() {
 				<form.Field
 					name="username"
 					validators={{
-						onBlur: zodValidator(signupSchema.shape.username),
+						onBlur: zodValidator(signupSchemaBase.shape.username),
 					}}
 				>
 					{(field) => (
@@ -130,7 +133,7 @@ export function SignupCard() {
 				<form.Field
 					name="email"
 					validators={{
-						onBlur: zodValidator(signupSchema.shape.email),
+						onBlur: zodValidator(signupSchemaBase.shape.email),
 					}}
 				>
 					{(field) => (
@@ -159,7 +162,7 @@ export function SignupCard() {
 				<form.Field
 					name="password"
 					validators={{
-						onBlur: zodValidator(signupSchema.shape.password),
+						onBlur: zodValidator(signupSchemaBase.shape.password),
 					}}
 				>
 					{(field) => (
@@ -185,7 +188,7 @@ export function SignupCard() {
 				<form.Field
 					name="password_confirm"
 					validators={{
-						onBlur: zodValidator(signupSchema.shape.password_confirm),
+						onBlur: zodValidator(signupSchemaBase.shape.password_confirm),
 					}}
 				>
 					{(field) => (

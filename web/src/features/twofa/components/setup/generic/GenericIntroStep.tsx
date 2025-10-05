@@ -84,8 +84,8 @@ export function GenericIntroStep({
 				{config.customContent}
 				<InfoPanel title={config.infoPanelTitle}>
 					<ul className="space-y-1 list-disc list-inside">
-						{config.infoPanelItems.map((item, index) => (
-							<li key={index}>{item}</li>
+						{config.infoPanelItems.map((item) => (
+							<li key={item}>{item}</li>
 						))}
 					</ul>
 				</InfoPanel>

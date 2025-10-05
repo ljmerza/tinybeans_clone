@@ -12,7 +12,7 @@ import {
 	WizardSection,
 } from "@/components";
 import { Button } from "@/components/ui/button";
-import { verificationCodeSchema } from "@/lib/validations/schemas/twofa.js";
+import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import { VerificationInput } from "../../VerificationInput";
 import type { VerifyStepConfig } from "./types";
 

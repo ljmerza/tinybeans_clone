@@ -157,9 +157,9 @@ export function GenericMethodCard({
 					<CardTitle>{config.title}</CardTitle>
 					<CardDescription>{config.description}</CardDescription>
 					<ChipGroup className="mb-1">
-						{config.chips.map((chip, index) => (
+						{config.chips.map((chip) => (
 							<Chip
-								key={index}
+								key={`${chip.label}-${chip.variant}`}
 								variant={chip.variant}
 								className={chip.className}
 							>
