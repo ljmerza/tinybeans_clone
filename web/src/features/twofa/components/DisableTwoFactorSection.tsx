@@ -5,7 +5,7 @@
 
 import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialogWithContent } from "@/components/ui/confirm-dialog-with-content";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { VerificationInput } from "./VerificationInput";
 
 interface DisableTwoFactorSectionProps {
@@ -51,7 +51,7 @@ export function DisableTwoFactorSection({
 				</Button>
 			</div>
 
-			<ConfirmDialogWithContent
+			<ConfirmDialog
 				open={showDisableConfirm}
 				onOpenChange={(open) => !open && onCancelDisable()}
 				title="Disable Two-Factor Authentication"
@@ -78,7 +78,7 @@ export function DisableTwoFactorSection({
 						</StatusMessage>
 					)}
 				</div>
-			</ConfirmDialogWithContent>
+			</ConfirmDialog>
 		</div>
 	);
 }

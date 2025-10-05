@@ -1,6 +1,6 @@
 /**
- * @fileoverview Simple confirmation dialog component.
- * Provides a pre-built dialog for simple yes/no confirmations.
+ * @fileoverview Confirmation dialog component.
+ * Provides a pre-built dialog for confirmations with optional custom content.
  *
  * @module components/ui/confirm-dialog
  */
@@ -15,6 +15,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import type * as React from "react";
 
 /**
  * Props for the ConfirmDialog component.
@@ -28,6 +29,8 @@ export interface ConfirmDialogProps {
 	title: string;
 	/** Optional description text */
 	description?: string;
+	/** Optional custom content to display between description and buttons */
+	children?: React.ReactNode;
 	/** Label for confirm button (default: "Confirm") */
 	confirmLabel?: string;
 	/** Label for cancel button (default: "Cancel") */
@@ -45,12 +48,12 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * Simple confirmation dialog component.
+ * Confirmation dialog component.
  *
- * Provides a modal dialog with title, description, and confirm/cancel buttons.
- * Handles loading states and prevents closing while loading.
+ * Provides a modal dialog with title, description, optional custom content,
+ * and confirm/cancel buttons. Handles loading states and prevents closing while loading.
  *
- * @example
+ * @example Simple confirmation
  * ```tsx
  * const [isOpen, setIsOpen] = useState(false);
  *
@@ -66,6 +69,25 @@ export interface ConfirmDialogProps {
  *     setIsOpen(false);
  *   }}
  * />
+ * ```
+ *
+ * @example With custom content (e.g., verification input)
+ * ```tsx
+ * <ConfirmDialog
+ *   open={showDialog}
+ *   onOpenChange={setShowDialog}
+ *   title="Disable 2FA"
+ *   description="Enter your verification code to confirm."
+ *   confirmLabel="Disable"
+ *   variant="destructive"
+ *   disabled={!code}
+ *   onConfirm={handleDisable}
+ * >
+ *   <VerificationInput
+ *     value={code}
+ *     onChange={setCode}
+ *   />
+ * </ConfirmDialog>
  * ```
  *
  * @example Destructive action with loading state
@@ -93,6 +115,7 @@ export function ConfirmDialog({
 	onOpenChange,
 	title,
 	description,
+	children,
 	confirmLabel = "Confirm",
 	cancelLabel = "Cancel",
 	onConfirm,
@@ -133,6 +156,7 @@ export function ConfirmDialog({
 					</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
 				</DialogHeader>
+				{children && <div className="py-4">{children}</div>}
 				<DialogFooter>
 					<Button variant="outline" onClick={handleCancel} disabled={isLoading}>
 						{cancelLabel}

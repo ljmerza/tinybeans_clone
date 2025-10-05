@@ -1,34 +1,8 @@
 import { useAuthSession } from "@/features/auth/context/AuthSessionProvider";
-import { Link } from "@tanstack/react-router";
 import type { ReactElement, ReactNode } from "react";
+import { Header } from "./Header";
 import { StandardError } from "./StandardError";
 import { StandardLoading } from "./StandardLoading";
-
-function AuthenticatedHeaderActions() {
-	return (
-		<>
-			<Link to="/2fa/settings" className="btn-ghost">
-				2FA Settings
-			</Link>
-			<Link to="/logout" className="btn-ghost">
-				Logout
-			</Link>
-		</>
-	);
-}
-
-function GuestHeaderActions() {
-	return (
-		<>
-			<Link to="/login" className="btn-ghost">
-				Login
-			</Link>
-			<Link to="/signup" className="btn-primary">
-				Sign up
-			</Link>
-		</>
-	);
-}
 
 interface LayoutProps {
 	children?: ReactNode;
@@ -43,29 +17,7 @@ function LayoutBase({ children, showHeader = true }: LayoutProps) {
 
 	return (
 		<div className="min-h-screen bg-gray-50">
-			{showHeader && (
-				<header className="bg-white shadow-sm">
-					<div className="container-page">
-						<div className="flex justify-between items-center h-16">
-							<div className="flex items-center">
-								<Link
-									to="/"
-									className="text-xl font-bold text-gray-900 hover:text-gray-700"
-								>
-									Home
-								</Link>
-							</div>
-							<nav className="flex items-center gap-4">
-								{session.isAuthenticated ? (
-									<AuthenticatedHeaderActions />
-								) : (
-									<GuestHeaderActions />
-								)}
-							</nav>
-						</div>
-					</div>
-				</header>
-			)}
+			{showHeader && <Header isAuthenticated={session.isAuthenticated} />}
 
 			<main className={showHeader ? "container-page section-spacing" : ""}>
 				{children}
