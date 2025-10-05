@@ -31,16 +31,16 @@ export function GoogleOAuthButton({
 
 	// Button text based on mode
 	const buttonText = {
-		signup: t('auth.oauth.google_signup'),
-		login: t('auth.oauth.google_signin'),
-		link: t('auth.oauth.google_link'),
+		signup: t("auth.oauth.google_signup"),
+		login: t("auth.oauth.google_signin"),
+		link: t("auth.oauth.google_link"),
 	}[mode];
 
 	// ARIA label for accessibility
 	const ariaLabel = {
-		signup: t('auth.oauth.google_signup'),
-		login: t('auth.oauth.google_signin'),
-		link: t('auth.oauth.google_link'),
+		signup: t("auth.oauth.google_signup"),
+		login: t("auth.oauth.google_signin"),
+		link: t("auth.oauth.google_link"),
 	}[mode];
 
 	return (

@@ -1,6 +1,6 @@
 /**
  * Authentication HTTP Client
- * 
+ *
  * Provides HTTP client for authentication operations with:
  * - Automatic token management
  * - Token refresh on 401 errors

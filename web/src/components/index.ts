@@ -4,6 +4,7 @@ export { LoadingPage } from "./LoadingPage";
 export { StandardLoading } from "./StandardLoading";
 export { StandardError } from "./StandardError";
 export { StatusMessage } from "./StatusMessage";
+export { FieldError } from "./FieldError";
 export { Chip, ChipGroup } from "./Chip";
 export {
 	Card,
@@ -21,4 +22,3 @@ export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { Layout } from "./Layout";
 export { Header } from "./Header";
 export { ConfirmDialog } from "./ui/confirm-dialog";
-

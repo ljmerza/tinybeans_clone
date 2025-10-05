@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
 import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
-import { verificationCodeSchema } from "@/lib/validations";
+import { verificationCodeSchema } from "@/lib/validations/schemas/twofa.js";
 import {
 	Navigate,
 	createFileRoute,

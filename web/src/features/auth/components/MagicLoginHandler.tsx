@@ -26,7 +26,7 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 	useEffect(() => {
 		if (!token) {
 			setStatus("error");
-			setErrorMessage(t('errors.magic_link_invalid'));
+			setErrorMessage(t("errors.magic_link_invalid"));
 			return;
 		}
 
@@ -38,13 +38,13 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 			})
 			.catch((error: any) => {
 				setStatus("error");
-				
+
 				// Extract error message
 				const generals = getGeneral(error.messages);
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
 				} else {
-					setErrorMessage(t('errors.magic_link_invalid'));
+					setErrorMessage(t("errors.magic_link_invalid"));
 				}
 			});
 	}, [token, magicLoginVerify, getGeneral, t]);
@@ -53,7 +53,7 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 		return (
 			<div className="mx-auto max-w-sm p-6 space-y-4">
 				<StatusMessage variant="info">
-					{t('auth.magic_link.verifying')}
+					{t("auth.magic_link.verifying")}
 				</StatusMessage>
 				<div className="flex justify-center">
 					<LoadingSpinner />
@@ -66,7 +66,7 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 		return (
 			<div className="mx-auto max-w-sm p-6 space-y-4">
 				<StatusMessage variant="success">
-					{t('auth.magic_link.success')}
+					{t("auth.magic_link.success")}
 				</StatusMessage>
 			</div>
 		);
@@ -74,11 +74,9 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 
 	return (
 		<div className="mx-auto max-w-sm p-6 space-y-4">
-			<StatusMessage variant="error">
-				{errorMessage}
-			</StatusMessage>
+			<StatusMessage variant="error">{errorMessage}</StatusMessage>
 			<Button onClick={() => navigate({ to: "/login" })} className="w-full">
-				{t('auth.password_reset.back_to_login')}
+				{t("auth.password_reset.back_to_login")}
 			</Button>
 		</div>
 	);

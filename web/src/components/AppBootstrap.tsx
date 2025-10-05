@@ -33,7 +33,7 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 				await ensureCsrfToken();
 
 				// Step 2: Try to restore session from refresh token
-				const refreshSuccess = await refreshAccessToken();
+				await refreshAccessToken();
 
 				if (mounted) {
 					setStatus("ready");

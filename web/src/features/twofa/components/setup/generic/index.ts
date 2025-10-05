@@ -1,7 +1,7 @@
 /**
  * @fileoverview Generic 2FA setup step components.
  * Consolidates duplicate step components across Email/SMS/TOTP methods.
- * 
+ *
  * @module features/twofa/components/setup/generic
  */
 

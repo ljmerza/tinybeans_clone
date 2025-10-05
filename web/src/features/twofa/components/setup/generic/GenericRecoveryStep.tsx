@@ -1,7 +1,7 @@
 /**
  * @fileoverview Generic Recovery Step component for 2FA setup.
  * Replaces EmailRecoveryStep, SmsRecoveryStep, and TotpRecoveryStep.
- * 
+ *
  * @module features/twofa/components/setup/generic
  */
 

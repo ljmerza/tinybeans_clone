@@ -20,11 +20,17 @@ export const twoFactorApi = {
 	 * Initialize 2FA setup
 	 * Returns QR code for TOTP or sends OTP for email/SMS
 	 */
-	initializeSetup: async (method: "totp" | "email" | "sms", phone_number?: string) => {
-		const response = await apiClient.post<TwoFactorSetupResponse>("/auth/2fa/setup/", {
-			method,
-			phone_number,
-		});
+	initializeSetup: async (
+		method: "totp" | "email" | "sms",
+		phone_number?: string,
+	) => {
+		const response = await apiClient.post<TwoFactorSetupResponse>(
+			"/auth/2fa/setup/",
+			{
+				method,
+				phone_number,
+			},
+		);
 		return response.data;
 	},
 
@@ -33,7 +39,10 @@ export const twoFactorApi = {
 	 * Returns recovery codes
 	 */
 	verifySetup: async (code: string) => {
-		const response = await apiClient.post<RecoveryCodesResponse>("/auth/2fa/verify-setup/", { code });
+		const response = await apiClient.post<RecoveryCodesResponse>(
+			"/auth/2fa/verify-setup/",
+			{ code },
+		);
 		return response.data;
 	},
 
@@ -41,7 +50,8 @@ export const twoFactorApi = {
 	 * Get current 2FA status
 	 */
 	getStatus: async () => {
-		const response = await apiClient.get<TwoFactorStatusResponse>("/auth/2fa/status/");
+		const response =
+			await apiClient.get<TwoFactorStatusResponse>("/auth/2fa/status/");
 		return response.data;
 	},
 
@@ -50,12 +60,19 @@ export const twoFactorApi = {
 	 * Accepts both 6-digit codes and recovery codes
 	 * partial_token in body (not Authorization header)
 	 */
-	verifyLogin: async (partial_token: string, code: string, remember_me = false) => {
-		const response = await apiClient.post<TwoFactorVerifyLoginResponse>("/auth/2fa/verify-login/", {
-			partial_token,
-			code,
-			remember_me,
-		});
+	verifyLogin: async (
+		partial_token: string,
+		code: string,
+		remember_me = false,
+	) => {
+		const response = await apiClient.post<TwoFactorVerifyLoginResponse>(
+			"/auth/2fa/verify-login/",
+			{
+				partial_token,
+				code,
+				remember_me,
+			},
+		);
 		return response.data;
 	},
 
@@ -63,10 +80,11 @@ export const twoFactorApi = {
 	 * Request a code to disable 2FA (for email/SMS methods)
 	 */
 	requestDisableCode: async () => {
-		const response = await apiClient.post<{ method: string; message: string; expires_in?: number }>(
-			"/auth/2fa/disable/request/",
-			{},
-		);
+		const response = await apiClient.post<{
+			method: string;
+			message: string;
+			expires_in?: number;
+		}>("/auth/2fa/disable/request/", {});
 		return response.data;
 	},
 
@@ -74,7 +92,10 @@ export const twoFactorApi = {
 	 * Disable 2FA
 	 */
 	disable: async (code: string) => {
-		const response = await apiClient.post<{ enabled: boolean; message: string }>("/auth/2fa/disable/", {
+		const response = await apiClient.post<{
+			enabled: boolean;
+			message: string;
+		}>("/auth/2fa/disable/", {
 			code,
 		});
 		return response.data;
@@ -95,45 +116,53 @@ export const twoFactorApi = {
 	 * Download recovery codes as TXT or PDF
 	 * Uses POST to securely send codes in request body instead of URL
 	 */
-	downloadRecoveryCodes: async (codes: string[], format: "txt" | "pdf" = "txt") => {
+	downloadRecoveryCodes: async (
+		codes: string[],
+		format: "txt" | "pdf" = "txt",
+	) => {
 		try {
 			// Use the same auth mechanism as apiClient
 			const token = authStore.state.accessToken;
 			const csrfToken = getCsrfToken();
-			
+
 			// Build headers
 			const headers: Record<string, string> = {
-				'Content-Type': 'application/json',
+				"Content-Type": "application/json",
 			};
-			
+
 			if (csrfToken) {
-				headers['X-CSRFToken'] = csrfToken;
+				headers["X-CSRFToken"] = csrfToken;
 			}
-			
+
 			if (token) {
-				headers['Authorization'] = `Bearer ${token}`;
+				headers["Authorization"] = `Bearer ${token}`;
 			}
-			
+
 			// Make POST request with blob response
-			const response = await fetch(`${API_BASE}/auth/2fa/recovery-codes/download/`, {
-				method: 'POST',
-				headers,
-				credentials: 'include',
-				body: JSON.stringify({ codes, format }),
-			});
-			
+			const response = await fetch(
+				`${API_BASE}/auth/2fa/recovery-codes/download/`,
+				{
+					method: "POST",
+					headers,
+					credentials: "include",
+					body: JSON.stringify({ codes, format }),
+				},
+			);
+
 			if (!response.ok) {
 				const errorText = await response.text();
-				console.error('Download failed:', response.status, errorText);
-				throw new Error(`Failed to download recovery codes: ${response.statusText}`);
+				console.error("Download failed:", response.status, errorText);
+				throw new Error(
+					`Failed to download recovery codes: ${response.statusText}`,
+				);
 			}
-			
+
 			// Get the blob
 			const blob = await response.blob();
-			
+
 			// Create download link
 			const downloadUrl = window.URL.createObjectURL(blob);
-			const link = document.createElement('a');
+			const link = document.createElement("a");
 			link.href = downloadUrl;
 			link.download = `tinybeans-recovery-codes.${format}`;
 			document.body.appendChild(link);
@@ -141,7 +170,7 @@ export const twoFactorApi = {
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(downloadUrl);
 		} catch (error) {
-			console.error('Failed to download recovery codes:', error);
+			console.error("Failed to download recovery codes:", error);
 			throw error;
 		}
 	},
@@ -150,7 +179,9 @@ export const twoFactorApi = {
 	 * Get list of trusted devices
 	 */
 	getTrustedDevices: async () => {
-		const response = await apiClient.get<TrustedDevicesResponse>("/auth/2fa/trusted-devices/");
+		const response = await apiClient.get<TrustedDevicesResponse>(
+			"/auth/2fa/trusted-devices/",
+		);
 		return response.data;
 	},
 
@@ -168,10 +199,10 @@ export const twoFactorApi = {
 	 * Update preferred 2FA method
 	 */
 	setPreferredMethod: async (method: "totp" | "email" | "sms") => {
-		const response = await apiClient.post<{ preferred_method: string; message: string }>(
-			"/auth/2fa/preferred-method/",
-			{ method },
-		);
+		const response = await apiClient.post<{
+			preferred_method: string;
+			message: string;
+		}>("/auth/2fa/preferred-method/", { method });
 		return response.data;
 	},
 

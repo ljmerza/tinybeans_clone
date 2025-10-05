@@ -1,7 +1,7 @@
 /**
  * @fileoverview Generic Verify Step component for 2FA setup.
  * Replaces EmailVerifyStep, SmsVerifyStep, and TotpVerifyStep.
- * 
+ *
  * @module features/twofa/components/setup/generic
  */
 
@@ -12,7 +12,7 @@ import {
 	WizardSection,
 } from "@/components";
 import { Button } from "@/components/ui/button";
-import { verificationCodeSchema } from "@/lib/validations";
+import { verificationCodeSchema } from "@/lib/validations/schemas/twofa.js";
 import { VerificationInput } from "../../VerificationInput";
 import type { VerifyStepConfig } from "./types";
 

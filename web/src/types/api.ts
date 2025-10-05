@@ -1,16 +1,16 @@
 /**
  * @fileoverview Shared API types used across the application.
  * Standardized message format for backend-frontend communication.
- * 
+ *
  * @module types/api
  */
 
 /**
  * Message structure from backend API with i18n support.
- * 
+ *
  * Messages contain translation keys and optional context for interpolation.
  * Components should use `useApiMessages()` hook to translate these messages.
- * 
+ *
  * @example
  * ```typescript
  * {
@@ -28,12 +28,12 @@ export interface ApiMessage {
 
 /**
  * Standard API response structure.
- * 
+ *
  * All API responses follow this structure to provide consistent
  * handling of data, messages, and errors.
- * 
+ *
  * @template T - Type of the data payload
- * 
+ *
  * @example Success response with messages
  * ```typescript
  * {
@@ -43,7 +43,7 @@ export interface ApiMessage {
  *   ]
  * }
  * ```
- * 
+ *
  * @example Error response
  * ```typescript
  * {

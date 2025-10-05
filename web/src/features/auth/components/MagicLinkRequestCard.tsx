@@ -1,24 +1,20 @@
-import { StatusMessage } from "@/components";
+import { StatusMessage, FieldError } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { zodValidator } from "@/lib/form/index.js";
+import {
+	magicLinkRequestSchema,
+	type MagicLinkRequestFormData,
+} from "@/lib/validations/schemas/magic-link.js";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 
 import { useMagicLinkRequest } from "../hooks/authHooks";
-
-const createSchema = (t: (key: string) => string) => z.object({
-	email: z.string().email(t('validation.email_valid')),
-});
-
-type MagicLinkFormValues = {
-	email: string;
-};
 
 export function MagicLinkRequestCard() {
 	const { t } = useTranslation();
@@ -26,18 +22,17 @@ export function MagicLinkRequestCard() {
 	const { getGeneral, translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const schema = createSchema(t);
 
-	const form = useForm({
-		defaultValues: { email: "" } satisfies MagicLinkFormValues,
+	const form = useForm<MagicLinkRequestFormData>({
+		defaultValues: { email: "" },
 		onSubmit: async ({ value }) => {
 			// Clear previous messages
 			setSuccessMessage(null);
 			setErrorMessage(null);
-			
+
 			try {
 				const response = await magicLoginRequest.mutateAsync(value);
-				
+
 				// Show success message from server or default
 				if (response?.messages) {
 					const messages = translate(response.messages);
@@ -45,14 +40,14 @@ export function MagicLinkRequestCard() {
 						setSuccessMessage(messages[0]);
 					}
 				} else {
-					setSuccessMessage(t('auth.magic_link.success_message'));
+					setSuccessMessage(t("auth.magic_link.success_message"));
 				}
 			} catch (error: any) {
 				const generals = getGeneral(error.messages);
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
 				} else {
-					setErrorMessage(t('auth.magic_link.failed'));
+					setErrorMessage(t("auth.magic_link.failed"));
 				}
 			}
 		},
@@ -60,8 +55,8 @@ export function MagicLinkRequestCard() {
 
 	return (
 		<AuthCard
-			title={t('auth.magic_link.request_title')}
-			description={t('auth.magic_link.request_description')}
+			title={t("auth.magic_link.request_title")}
+			description={t("auth.magic_link.request_description")}
 			footerClassName="space-y-3 text-center text-sm text-muted-foreground"
 			footer={
 				<>
@@ -70,16 +65,16 @@ export function MagicLinkRequestCard() {
 							to="/login"
 							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
 						>
-							{t('auth.magic_link.back_to_login')}
+							{t("auth.magic_link.back_to_login")}
 						</Link>
 					</div>
 					<div>
-						{t('auth.login.no_account')}{" "}
+						{t("auth.login.no_account")}{" "}
 						<Link
 							to="/signup"
 							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
 						>
-							{t('nav.signup')}
+							{t("nav.signup")}
 						</Link>
 					</div>
 				</>
@@ -96,17 +91,12 @@ export function MagicLinkRequestCard() {
 				<form.Field
 					name="email"
 					validators={{
-						onBlur: ({ value }) => {
-							const result = schema.shape.email.safeParse(value);
-							return result.success
-								? undefined
-								: result.error.errors[0].message;
-						},
+						onBlur: zodValidator(magicLinkRequestSchema.shape.email),
 					}}
 				>
 					{(field) => (
 						<div className="form-group">
-							<Label htmlFor={field.name}>{t('auth.magic_link.email')}</Label>
+							<Label htmlFor={field.name}>{t("auth.magic_link.email")}</Label>
 							<Input
 								id={field.name}
 								type="email"
@@ -117,9 +107,7 @@ export function MagicLinkRequestCard() {
 								autoComplete="email"
 								required
 							/>
-							{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
-								<p className="form-error">{field.state.meta.errors[0]}</p>
-							)}
+							<FieldError field={field} />
 						</div>
 					)}
 				</form.Field>
@@ -130,8 +118,8 @@ export function MagicLinkRequestCard() {
 					disabled={magicLoginRequest.isPending}
 				>
 					{magicLoginRequest.isPending
-						? t('auth.magic_link.sending')
-						: t('auth.magic_link.send_magic_link')}
+						? t("auth.magic_link.sending")
+						: t("auth.magic_link.send_magic_link")}
 				</Button>
 
 				{successMessage && (

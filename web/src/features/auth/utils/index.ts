@@ -1,6 +1,6 @@
 /**
  * Auth Utilities Index
- * 
+ *
  * Barrel export for authentication utility functions
  */
 

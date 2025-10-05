@@ -1,7 +1,7 @@
 /**
  * @fileoverview Generic 2FA Method Card component.
  * Consolidates EmailMethodCard, SmsMethodCard, and TotpMethodCard.
- * 
+ *
  * @module features/twofa/components/methods
  */
 
@@ -27,7 +27,14 @@ export interface ChipConfig {
 	/** Label text */
 	label: string;
 	/** Chip variant */
-	variant?: "neutral" | "primary" | "success" | "info" | "warning" | "danger" | "custom";
+	variant?:
+		| "neutral"
+		| "primary"
+		| "success"
+		| "info"
+		| "warning"
+		| "danger"
+		| "custom";
 	/** Custom className */
 	className?: string;
 }

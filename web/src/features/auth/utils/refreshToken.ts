@@ -32,25 +32,25 @@ export async function refreshAccessToken(): Promise<boolean> {
 				credentials: "include",
 				headers,
 			});
-			
+
 			if (!res.ok) {
 				// Clear the access token when refresh fails to log out the user
 				setAccessToken(null);
 				return false;
 			}
-			
+
 			const data: RefreshAccessTokenResponse | null = await res
 				.json()
 				.catch(() => null);
 
 			// Backend wraps response in { data: { access: "..." } }
 			const tokenData = (data as any)?.data || data;
-			
+
 			if (tokenData?.access) {
 				setAccessToken(tokenData.access);
 				return true;
 			}
-			
+
 			// Clear token if response doesn't contain access token
 			setAccessToken(null);
 			return false;

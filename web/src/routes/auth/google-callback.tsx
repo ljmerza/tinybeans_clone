@@ -39,15 +39,19 @@ function GoogleCallbackPage() {
 		if (searchParams.error) {
 			const errorMsg = searchParams.error_description || searchParams.error;
 			showAsToast(
-				[{
-					i18n_key: "errors.oauth.google_cancelled",
-					context: {}
-				}],
-				400
+				[
+					{
+						i18n_key: "errors.oauth.google_cancelled",
+						context: {},
+					},
+				],
+				400,
 			);
-			setClientError(errorMsg === "access_denied" 
-				? "You cancelled the Google sign-in process." 
-				: errorMsg);
+			setClientError(
+				errorMsg === "access_denied"
+					? "You cancelled the Google sign-in process."
+					: errorMsg,
+			);
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -56,11 +60,13 @@ function GoogleCallbackPage() {
 		// Validate required parameters
 		if (!searchParams.code || !searchParams.state) {
 			showAsToast(
-				[{
-					i18n_key: "errors.oauth.invalid_callback",
-					context: {}
-				}],
-				400
+				[
+					{
+						i18n_key: "errors.oauth.invalid_callback",
+						context: {},
+					},
+				],
+				400,
 			);
 			setClientError("Missing required OAuth parameters. Please try again.");
 			setHasProcessed(true);
@@ -72,13 +78,17 @@ function GoogleCallbackPage() {
 		const storedState = getOAuthState();
 		if (!validateOAuthState(searchParams.state, storedState)) {
 			showAsToast(
-				[{
-					i18n_key: "errors.oauth.state_mismatch",
-					context: {}
-				}],
-				400
+				[
+					{
+						i18n_key: "errors.oauth.state_mismatch",
+						context: {},
+					},
+				],
+				400,
 			);
-			setClientError("Security validation failed. Please try signing in again.");
+			setClientError(
+				"Security validation failed. Please try signing in again.",
+			);
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -120,7 +130,8 @@ function GoogleCallbackPage() {
 
 						{/* Error Message */}
 						<p className="text-gray-600 mb-6">
-							{clientError || "An error occurred during sign-in. Please try again."}
+							{clientError ||
+								"An error occurred during sign-in. Please try again."}
 						</p>
 
 						{/* Action Buttons */}

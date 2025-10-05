@@ -21,10 +21,10 @@ function AuthenticatedHeaderActions() {
 	return (
 		<>
 			<Link to="/2fa/settings" className="btn-ghost">
-				{t('nav.twofa_settings')}
+				{t("nav.twofa_settings")}
 			</Link>
 			<Link to="/logout" className="btn-ghost">
-				{t('nav.logout')}
+				{t("nav.logout")}
 			</Link>
 		</>
 	);
@@ -38,10 +38,10 @@ function GuestHeaderActions() {
 	return (
 		<>
 			<Link to="/login" className="btn-ghost">
-				{t('nav.login')}
+				{t("nav.login")}
 			</Link>
 			<Link to="/signup" className="btn-primary">
-				{t('nav.signup')}
+				{t("nav.signup")}
 			</Link>
 		</>
 	);
@@ -70,7 +70,7 @@ export function Header({ isAuthenticated }: HeaderProps) {
 							to="/"
 							className="text-xl font-bold text-gray-900 hover:text-gray-700"
 						>
-							{t('nav.home')}
+							{t("nav.home")}
 						</Link>
 					</div>
 					<nav className="flex items-center gap-4">

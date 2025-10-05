@@ -18,13 +18,8 @@ interface AppProvidersProps {
 	isInitializing?: boolean;
 }
 
-// Create router singleton
 const router = createRouter({
 	routeTree,
-	context: {
-		// biome-ignore lint/style/noNonNullAssertion: TanStack Router pattern - context is provided via RouterProvider
-		queryClient: undefined!,
-	},
 	defaultPreload: "intent",
 	scrollRestoration: true,
 	defaultStructuralSharing: true,

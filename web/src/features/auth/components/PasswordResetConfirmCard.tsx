@@ -1,36 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusMessage } from "@/components";
-import { confirmPasswordSchema, passwordSchema } from "@/lib/validations";
+import { StatusMessage, FieldError } from "@/components";
+import { zodValidator } from "@/lib/form/index.js";
+import {
+	passwordResetConfirmSchema,
+	type PasswordResetConfirmFormData,
+} from "@/lib/validations/schemas/password-reset.js";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { z } from "zod";
 
 import { usePasswordResetConfirm } from "../hooks/authHooks";
 
 type PasswordResetConfirmCardProps = {
 	token?: string;
 };
-
-const schema = z
-	.object({
-		password: passwordSchema,
-		password_confirm: confirmPasswordSchema,
-	})
-	.superRefine((values, ctx) => {
-		if (values.password !== values.password_confirm) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: "Passwords do not match",
-				path: ["password_confirm"],
-			});
-		}
-	});
-
-type PasswordResetConfirmValues = z.infer<typeof schema>;
 
 export function PasswordResetConfirmCard({
 	token,
@@ -42,26 +28,26 @@ export function PasswordResetConfirmCard({
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 	const [successMessage, setSuccessMessage] = useState("");
 
-	const form = useForm({
+	const form = useForm<PasswordResetConfirmFormData>({
 		defaultValues: {
 			password: "",
 			password_confirm: "",
-		} satisfies PasswordResetConfirmValues,
+		},
 		onSubmit: async ({ value }) => {
 			if (!token) return;
-			
+
 			// Clear previous errors
 			setGeneralError("");
 			setFieldErrors({});
 			setSuccessMessage("");
-			
+
 			try {
 				const response = await confirmReset.mutateAsync({
 					token,
 					password: value.password,
 					password_confirm: value.password_confirm,
 				});
-				
+
 				// Show success message if provided
 				if (response?.messages) {
 					const messages = translate(response.messages);
@@ -69,20 +55,20 @@ export function PasswordResetConfirmCard({
 						setSuccessMessage(messages[0]);
 					}
 				}
-				
+
 				form.reset();
-				
+
 				// Navigate after a short delay so user sees success message
 				setTimeout(() => {
 					navigate({ to: "/login" });
 				}, 1500);
 			} catch (error: any) {
 				console.error("Password reset confirm error:", error);
-				
+
 				// Extract field and general errors
 				const fields = getFieldErrors(error.messages);
 				const generals = getGeneral(error.messages);
-				
+
 				setFieldErrors(fields);
 				if (generals.length > 0) {
 					setGeneralError(generals[0]);
@@ -126,10 +112,8 @@ export function PasswordResetConfirmCard({
 				</div>
 
 				{/* Display general error */}
-				{generalError && (
-					<StatusMessage type="error" message={generalError} />
-				)}
-				
+				{generalError && <StatusMessage type="error" message={generalError} />}
+
 				{/* Display success message */}
 				{successMessage && (
 					<StatusMessage type="success" message={successMessage} />
@@ -146,12 +130,7 @@ export function PasswordResetConfirmCard({
 					<form.Field
 						name="password"
 						validators={{
-							onBlur: ({ value }) => {
-								const result = passwordSchema.safeParse(value);
-								return result.success
-									? undefined
-									: result.error.errors[0].message;
-							},
+							onBlur: zodValidator(passwordResetConfirmSchema.shape.password),
 						}}
 					>
 						{(field) => (
@@ -168,9 +147,7 @@ export function PasswordResetConfirmCard({
 									required
 								/>
 								{/* Show field-level validation error or server error */}
-								{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
-									<p className="form-error">{field.state.meta.errors[0]}</p>
-								)}
+								<FieldError field={field} />
 								{fieldErrors.password && (
 									<p className="form-error">{fieldErrors.password}</p>
 								)}
@@ -181,14 +158,9 @@ export function PasswordResetConfirmCard({
 					<form.Field
 						name="password_confirm"
 						validators={{
-							onBlur: ({ value, fieldApi }) => {
-								if (value.length < 8) return "Confirm password";
-								const password = fieldApi.form.getFieldValue("password");
-								if (value !== password) {
-									return "Passwords do not match";
-								}
-								return undefined;
-							},
+							onBlur: zodValidator(
+								passwordResetConfirmSchema.shape.password_confirm,
+							),
 						}}
 					>
 						{(field) => (
@@ -205,9 +177,7 @@ export function PasswordResetConfirmCard({
 									required
 								/>
 								{/* Show field-level validation error or server error */}
-								{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
-									<p className="form-error">{field.state.meta.errors[0]}</p>
-								)}
+								<FieldError field={field} />
 								{fieldErrors.password_confirm && (
 									<p className="form-error">{fieldErrors.password_confirm}</p>
 								)}

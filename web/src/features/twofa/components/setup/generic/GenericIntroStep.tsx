@@ -1,7 +1,7 @@
 /**
  * @fileoverview Generic Intro Step component for 2FA setup.
  * Replaces EmailIntroStep, SmsIntroStep, and TotpIntroStep.
- * 
+ *
  * @module features/twofa/components/setup/generic
  */
 

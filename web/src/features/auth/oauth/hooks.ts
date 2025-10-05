@@ -4,11 +4,7 @@ import { useApiMessages } from "@/i18n";
 import { setAccessToken } from "../store/authStore";
 import { oauthApi } from "./client";
 import type { OAuthCallbackRequest } from "./types";
-import {
-	clearOAuthState,
-	getRedirectUri,
-	storeOAuthState,
-} from "./utils";
+import { clearOAuthState, getRedirectUri, storeOAuthState } from "./utils";
 
 /**
  * useGoogleOAuth Hook

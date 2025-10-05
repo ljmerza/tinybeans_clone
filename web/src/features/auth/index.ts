@@ -4,5 +4,9 @@ export * from "./oauth";
 export * from "./context/AuthSessionProvider";
 export * from "./guards/routeGuards";
 export { authStore, setAccessToken } from "./store/authStore";
-export { API_BASE, apiClient as authApi, refreshAccessToken } from "./api/authClient";
+export {
+	API_BASE,
+	apiClient as authApi,
+	refreshAccessToken,
+} from "./api/authClient";
 export type { RequestOptions as AuthRequestOptions } from "./api/authClient";

@@ -26,5 +26,5 @@ export function LogoutHandler() {
 			});
 	}, [logout, navigate]);
 
-	return <LoadingPage message={t('auth.logout.logging_out')} />;
+	return <LoadingPage message={t("auth.logout.logging_out")} />;
 }

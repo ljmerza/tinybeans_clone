@@ -1,23 +1,20 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { FieldError } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { zodValidator } from "@/lib/form/index.js";
+import {
+	passwordResetRequestSchema,
+	type PasswordResetRequestFormData,
+} from "@/lib/validations/schemas/password-reset.js";
 import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { usePasswordResetRequest } from "../hooks/authHooks";
-
-const createSchema = (t: (key: string) => string) => z.object({
-	identifier: z.string().min(1, t('validation.field_required')),
-});
-
-type PasswordResetRequestValues = {
-	identifier: string;
-};
 
 export function PasswordResetRequestCard() {
 	const { t } = useTranslation();
@@ -25,36 +22,34 @@ export function PasswordResetRequestCard() {
 	const { translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const schema = createSchema(t);
 
-	const form = useForm({
-		defaultValues: { identifier: "" } satisfies PasswordResetRequestValues,
+	const form = useForm<PasswordResetRequestFormData>({
+		defaultValues: { identifier: "" },
 		onSubmit: async ({ value }) => {
 			setSuccessMessage(null);
 			setErrorMessage(null);
-			
+
 			try {
 				const response = await resetRequest.mutateAsync(value);
-				
+
 				// Translate and show success message
 				if (response?.messages) {
 					const messages = translate(response.messages);
 					setSuccessMessage(
-						messages.join(". ") ||
-						t('auth.password_reset.success_message')
+						messages.join(". ") || t("auth.password_reset.success_message"),
 					);
 				} else {
-					setSuccessMessage(t('auth.password_reset.success_message'));
+					setSuccessMessage(t("auth.password_reset.success_message"));
 				}
 			} catch (error: any) {
 				console.error("Password reset request error:", error);
-				
+
 				// Translate and show error message
 				if (error.messages) {
 					const messages = translate(error.messages);
 					setErrorMessage(messages.join(". "));
 				} else {
-					setErrorMessage(error.message ?? t('auth.password_reset.failed'));
+					setErrorMessage(error.message ?? t("auth.password_reset.failed"));
 				}
 			}
 		},
@@ -64,9 +59,11 @@ export function PasswordResetRequestCard() {
 		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 			<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
 				<div className="space-y-2 text-center">
-					<h1 className="text-2xl font-semibold">{t('auth.password_reset.request_title')}</h1>
+					<h1 className="text-2xl font-semibold">
+						{t("auth.password_reset.request_title")}
+					</h1>
 					<p className="text-sm text-muted-foreground">
-						{t('auth.password_reset.request_description')}
+						{t("auth.password_reset.request_description")}
 					</p>
 				</div>
 
@@ -93,17 +90,14 @@ export function PasswordResetRequestCard() {
 					<form.Field
 						name="identifier"
 						validators={{
-							onBlur: ({ value }) => {
-								const result = schema.shape.identifier.safeParse(value);
-								return result.success
-									? undefined
-									: result.error.errors[0].message;
-							},
+							onBlur: zodValidator(passwordResetRequestSchema.shape.identifier),
 						}}
 					>
 						{(field) => (
 							<div className="form-group">
-								<Label htmlFor={field.name}>{t('auth.password_reset.email_or_username')}</Label>
+								<Label htmlFor={field.name}>
+									{t("auth.password_reset.email_or_username")}
+								</Label>
 								<Input
 									id={field.name}
 									autoComplete="email"
@@ -113,9 +107,7 @@ export function PasswordResetRequestCard() {
 									disabled={resetRequest.isPending}
 									required
 								/>
-								{field.state.meta.isTouched && field.state.meta.errors?.[0] && (
-									<p className="form-error">{field.state.meta.errors[0]}</p>
-								)}
+								<FieldError field={field} />
 							</div>
 						)}
 					</form.Field>
@@ -125,7 +117,9 @@ export function PasswordResetRequestCard() {
 						className="w-full"
 						disabled={resetRequest.isPending}
 					>
-						{resetRequest.isPending ? t('auth.password_reset.sending') : t('auth.password_reset.send_reset_link')}
+						{resetRequest.isPending
+							? t("auth.password_reset.sending")
+							: t("auth.password_reset.send_reset_link")}
 					</Button>
 				</form>
 
@@ -134,7 +128,7 @@ export function PasswordResetRequestCard() {
 						to="/login"
 						className="font-semibold text-blue-600 hover:text-blue-800"
 					>
-						{t('auth.password_reset.back_to_login')}
+						{t("auth.password_reset.back_to_login")}
 					</Link>
 				</div>
 			</div>

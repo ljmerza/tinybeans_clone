@@ -12,7 +12,8 @@ export function EmailIntroStep(props: EmailIntroStepProps) {
 		<GenericIntroStep
 			config={{
 				title: "Verify by Email",
-				description: "We will send a 6-digit verification code to your account email.",
+				description:
+					"We will send a 6-digit verification code to your account email.",
 				infoPanelTitle: "How it works",
 				infoPanelItems: [
 					"We send a verification code to your primary email.",

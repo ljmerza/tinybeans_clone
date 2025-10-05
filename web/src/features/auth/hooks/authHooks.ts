@@ -1,6 +1,6 @@
 /**
  * Auth Hooks with Explicit Message Handling
- * 
+ *
  * These hooks provide explicit control over message display for context-aware notifications.
  * Components decide when and how to show success/error messages.
  */
@@ -31,7 +31,7 @@ export function useLogin() {
 			setAccessToken(null);
 			return apiClient.post<LoginResponse>("/auth/login/", body);
 		},
-		onSuccess: ({ data }:any) => {
+		onSuccess: ({ data }: any) => {
 			console.log("Login response:", data);
 
 			// Check if 2FA is required
@@ -41,12 +41,12 @@ export function useLogin() {
 
 			setAccessToken(data.tokens.access);
 			qc.invalidateQueries({ queryKey: ["auth"] });
-			
+
 			// Show success message if provided
 			if (data.messages) {
 				showAsToast(data.messages, 200);
 			}
-			
+
 			navigate({ to: "/" });
 		},
 		onError: (error: any) => {
@@ -64,12 +64,11 @@ export function useSignup() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<SignupResponse, Error, SignupRequest>({
-		mutationFn: (body) =>
-			apiClient.post<SignupResponse>("/auth/signup/", body),
+		mutationFn: (body) => apiClient.post<SignupResponse>("/auth/signup/", body),
 		onSuccess: (data) => {
 			setAccessToken(data.tokens.access);
 			qc.invalidateQueries({ queryKey: ["auth"] });
-			
+
 			// Show success message
 			if (data.messages) {
 				showAsToast(data.messages, 201);
@@ -97,7 +96,7 @@ export function useLogout() {
 		},
 		onSuccess: (data: any) => {
 			qc.invalidateQueries({ queryKey: ["auth"] });
-			
+
 			// Show logout confirmation
 			if (data?.messages) {
 				showAsToast(data.messages, 200);
@@ -113,8 +112,7 @@ export function usePasswordResetRequest() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { identifier: string }>({
-		mutationFn: (body) =>
-			apiClient.post("/auth/password/reset/request/", body),
+		mutationFn: (body) => apiClient.post("/auth/password/reset/request/", body),
 		onSuccess: (data) => {
 			// Show success message
 			if (data?.messages) {
@@ -134,13 +132,16 @@ export function usePasswordResetRequest() {
 export function usePasswordResetConfirm() {
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<any, Error, {
-		token: string;
-		password: string;
-		password_confirm: string;
-	}>({
-		mutationFn: (body) =>
-			apiClient.post("/auth/password/reset/confirm/", body),
+	return useMutation<
+		any,
+		Error,
+		{
+			token: string;
+			password: string;
+			password_confirm: string;
+		}
+	>({
+		mutationFn: (body) => apiClient.post("/auth/password/reset/confirm/", body),
 		onSuccess: (data) => {
 			// Show success message
 			if (data?.messages) {
@@ -161,8 +162,7 @@ export function useMagicLinkRequest() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { email: string }>({
-		mutationFn: (body) =>
-			apiClient.post("/auth/magic-login/request/", body),
+		mutationFn: (body) => apiClient.post("/auth/magic-login/request/", body),
 		onError: (error: any) => {
 			console.error("Magic link request error:", error);
 		},
@@ -178,21 +178,20 @@ export function useMagicLoginVerify() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { token: string }>({
-		mutationFn: (body) =>
-			apiClient.post("/auth/magic-login/verify/", body),
+		mutationFn: (body) => apiClient.post("/auth/magic-login/verify/", body),
 		onSuccess: (data) => {
 			// Set auth token
 			if (data?.tokens?.access) {
 				setAccessToken(data.tokens.access);
 			}
-			
+
 			qc.invalidateQueries({ queryKey: ["auth"] });
-			
+
 			// Show success message
 			if (data?.messages) {
 				showAsToast(data.messages, 200);
 			}
-			
+
 			// Navigate to home
 			navigate({ to: "/" });
 		},
