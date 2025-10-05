@@ -12,3 +12,5 @@ export { VerificationInput } from "./VerificationInput";
 export { EmailMethodCard } from "./methods/EmailMethodCard";
 export { SmsMethodCard } from "./methods/SmsMethodCard";
 export { TotpMethodCard } from "./methods/TotpMethodCard";
+export { GenericMethodCard } from "./methods/GenericMethodCard";
+export type { MethodCardConfig, ChipConfig } from "./methods/GenericMethodCard";

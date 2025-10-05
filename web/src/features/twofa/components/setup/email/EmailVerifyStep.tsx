@@ -1,12 +1,4 @@
-import {
-	ButtonGroup,
-	StatusMessage,
-	WizardFooter,
-	WizardSection,
-} from "@/components";
-import { Button } from "@/components/ui/button";
-import { verificationCodeSchema } from "@/lib/validations";
-import { VerificationInput } from "../../VerificationInput";
+import { GenericVerifyStep } from "../generic";
 
 interface EmailVerifyStepProps {
 	code: string;
@@ -20,58 +12,25 @@ interface EmailVerifyStepProps {
 	onCancel?: () => void;
 }
 
-export function EmailVerifyStep({
-	code,
-	message,
-	isVerifying,
-	isResending,
-	errorMessage,
-	onCodeChange,
-	onVerify,
-	onResend,
-	onCancel,
-}: EmailVerifyStepProps) {
+export function EmailVerifyStep(props: EmailVerifyStepProps) {
 	return (
-		<>
-			<WizardSection title="Enter Email Code" description={message}>
-				<VerificationInput
-					value={code}
-					onChange={onCodeChange}
-					onComplete={(val) => onVerify(val)}
-					disabled={isVerifying}
-				/>
-				<ButtonGroup className="flex-col sm:flex-row sm:justify-between">
-					<Button
-						onClick={onResend}
-						variant="ghost"
-						disabled={isResending}
-						className="sm:w-auto"
-					>
-						Resend Code
-					</Button>
-					{onCancel && (
-						<Button variant="outline" onClick={onCancel} className="sm:w-auto">
-							Cancel
-						</Button>
-					)}
-				</ButtonGroup>
-				{errorMessage && (
-					<StatusMessage variant="error" align="center">
-						{errorMessage}
-					</StatusMessage>
-				)}
-			</WizardSection>
-			<WizardFooter>
-				<Button
-					onClick={() => onVerify()}
-					disabled={
-						!verificationCodeSchema.safeParse(code).success || isVerifying
-					}
-					className="w-full"
-				>
-					{isVerifying ? "Verifying..." : "Verify & Enable Email"}
-				</Button>
-			</WizardFooter>
-		</>
+		<GenericVerifyStep
+			config={{
+				title: "Enter Email Code",
+				verifyButtonText: "Verify & Enable Email",
+				loadingText: "Verifying...",
+				showResend: true,
+				resendButtonText: "Resend Code",
+			}}
+			code={props.code}
+			message={props.message}
+			isVerifying={props.isVerifying}
+			isResending={props.isResending}
+			errorMessage={props.errorMessage}
+			onCodeChange={props.onCodeChange}
+			onVerify={props.onVerify}
+			onResend={props.onResend}
+			onSecondaryAction={props.onCancel}
+		/>
 	);
 }

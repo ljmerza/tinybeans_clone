@@ -1,31 +1,19 @@
-import { WizardFooter, WizardSection } from "@/components";
-import { Button } from "@/components/ui/button";
-import { RecoveryCodeList } from "../../RecoveryCodeList";
+import { GenericRecoveryStep } from "../generic";
 
 interface SmsRecoveryStepProps {
-	recoveryCodes?: string[];
-	onComplete: () => void;
+recoveryCodes?: string[];
+onComplete: () => void;
 }
 
-export function SmsRecoveryStep({
-	recoveryCodes,
-	onComplete,
-}: SmsRecoveryStepProps) {
-	return (
-		<>
-			<WizardSection
-				title="✅ SMS 2FA Enabled"
-				description="Save your recovery codes in a safe place in case you can’t receive texts."
-			>
-				{recoveryCodes && (
-					<RecoveryCodeList codes={recoveryCodes} showDownloadButton />
-				)}
-			</WizardSection>
-			<WizardFooter>
-				<Button onClick={onComplete} className="w-full">
-					Done
-				</Button>
-			</WizardFooter>
-		</>
-	);
+export function SmsRecoveryStep(props: SmsRecoveryStepProps) {
+return (
+<GenericRecoveryStep
+config={{
+title: "✅ SMS 2FA Enabled",
+description: "Save your recovery codes in a safe place in case you can't receive texts.",
+}}
+recoveryCodes={props.recoveryCodes}
+onComplete={props.onComplete}
+/>
+);
 }
