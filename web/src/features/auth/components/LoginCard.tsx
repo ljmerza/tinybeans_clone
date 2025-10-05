@@ -1,3 +1,12 @@
+/**
+ * LoginCard Component (ADR-012 Compliant)
+ * 
+ * This component uses the modern notification strategy:
+ * - Uses modernAuthClient instead of legacy api
+ * - Uses useApiMessages for explicit error handling
+ * - Shows field-level errors inline
+ * - No auto-toast behavior
+ */
 import { StatusMessage } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -24,7 +33,7 @@ type LoginFormValues = z.infer<typeof schema>;
 export function LoginCard() {
 	const login = useLoginModern();
 	const { getGeneral } = useApiMessages();
-	const [generalError, setGeneralError] = useState("");
+	const [generalError, setGeneralError] = useState<string>("");
 
 	const form = useForm({
 		defaultValues: {
@@ -39,11 +48,12 @@ export function LoginCard() {
 			} catch (error: any) {
 				console.error("Login submission error:", error);
 				
-				// Extract and display general errors
+				// Extract general errors for display
 				const generalErrors = getGeneral(error.messages);
 				if (generalErrors.length > 0) {
 					setGeneralError(generalErrors.join(". "));
 				} else {
+					// Fallback to error message
 					setGeneralError(error.message ?? "Login failed");
 				}
 			}
@@ -178,6 +188,7 @@ export function LoginCard() {
 					)}
 				</Button>
 
+				{/* Show general error message */}
 				{generalError && (
 					<StatusMessage variant="error">
 						{generalError}
