@@ -1,7 +1,13 @@
 /**
  * Google OAuth Types
- * Based on ADR-010 API specifications
+ * Based on ADR-010 API specifications and ADR-012 notification system
  */
+
+// ADR-012 Message type
+export interface ApiMessage {
+	i18n_key: string;
+	context: Record<string, any>;
+}
 
 export interface OAuthInitiateRequest {
 	redirect_uri: string;
@@ -11,6 +17,7 @@ export interface OAuthInitiateResponse {
 	google_oauth_url: string;
 	state: string;
 	expires_in: number;
+	messages?: ApiMessage[];
 }
 
 export interface OAuthCallbackRequest {
@@ -38,6 +45,7 @@ export interface OAuthCallbackResponse {
 	user: OAuthUser;
 	tokens: OAuthTokens;
 	account_action: "created" | "linked" | "login";
+	messages?: ApiMessage[];
 }
 
 export interface OAuthLinkRequest {
@@ -48,6 +56,7 @@ export interface OAuthLinkRequest {
 export interface OAuthLinkResponse {
 	message: string;
 	user: OAuthUser;
+	messages?: ApiMessage[];
 }
 
 export interface OAuthUnlinkRequest {
@@ -57,6 +66,7 @@ export interface OAuthUnlinkRequest {
 export interface OAuthUnlinkResponse {
 	message: string;
 	user: OAuthUser;
+	messages?: ApiMessage[];
 }
 
 export interface OAuthError {

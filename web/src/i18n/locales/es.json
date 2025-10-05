@@ -38,6 +38,10 @@
       "magic_link_sent": "Si existe una cuenta con ese correo, se ha enviado un enlace mágico",
       "magic_login_success": "Inicio de sesión exitoso con enlace mágico"
     },
+    "oauth": {
+      "account_linked": "Cuenta de Google vinculada exitosamente",
+      "account_unlinked": "Cuenta de Google desvinculada exitosamente"
+    },
     "twofa": {
       "setup_initiated": "Escanee el código QR con su aplicación de autenticación",
       "verification_code_sent": "Código de verificación enviado a su {{method}}",
@@ -95,6 +99,25 @@
     "invalid_media_type": "El tipo de medio debe ser foto o video",
     "upload_failed": "Error en la carga. Por favor intente de nuevo.",
     "upload_not_found": "Carga no encontrada",
+    "validation_error": "{{field}}: {{message}}",
+    "oauth": {
+      "invalid_redirect_uri": "URI de redirección inválido: {{uri}}",
+      "initiate_failed": "Error al iniciar el flujo de OAuth. Por favor intente de nuevo.",
+      "invalid_state": "Token de estado de OAuth inválido o expirado",
+      "unverified_account_exists": "Existe una cuenta no verificada con el correo {{email}}. Por favor verifique su correo primero. {{help_url}}",
+      "authentication_failed": "Autenticación OAuth falló. Por favor intente de nuevo.",
+      "callback_failed": "Error en callback de OAuth. Por favor intente de nuevo.",
+      "account_already_linked": "Esta cuenta de Google ya está vinculada a otra cuenta",
+      "link_failed": "Error al vincular cuenta de Google. Por favor intente de nuevo.",
+      "cannot_unlink_without_password": "No se puede desvincular cuenta de Google. Primero debe establecer una contraseña. {{help_url}}",
+      "invalid_password": "Contraseña inválida",
+      "google_cancelled": "Cancelaste el proceso de inicio de sesión con Google",
+      "invalid_callback": "Faltan parámetros OAuth requeridos. Por favor intente de nuevo.",
+      "state_mismatch": "La validación de seguridad falló. Por favor intente iniciar sesión de nuevo."
+    },
+    "auth": {
+      "invalid_password": "Contraseña inválida"
+    },
     "twofa": {
       "invalid_method": "Método 2FA inválido",
       "phone_number_required": "Número de teléfono requerido para método SMS",

@@ -1,13 +1,10 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useGoogleOAuth } from "./hooks";
-import type { OAuthErrorInfo } from "./types";
-import { getOAuthErrorMessage } from "./utils";
 
 interface GoogleOAuthButtonProps {
 	mode: "signup" | "login" | "link";
 	onSuccess?: () => void;
-	onError?: (error: OAuthErrorInfo) => void;
 	className?: string;
 	disabled?: boolean;
 }
@@ -16,24 +13,19 @@ interface GoogleOAuthButtonProps {
  * Google OAuth Button Component
  * Displays "Sign in with Google" button with proper branding
  * Follows Google Identity Guidelines
+ * Uses ADR-012 notification system via hooks
  */
 export function GoogleOAuthButton({
 	mode,
 	onSuccess,
-	onError,
 	className = "",
 	disabled = false,
 }: GoogleOAuthButtonProps) {
 	const { initiateOAuth, isLoading } = useGoogleOAuth();
 
-	const handleClick = async () => {
-		try {
-			await initiateOAuth();
-			onSuccess?.();
-		} catch (err) {
-			const errorInfo = getOAuthErrorMessage(err);
-			onError?.(errorInfo);
-		}
+	const handleClick = () => {
+		initiateOAuth();
+		onSuccess?.();
 	};
 
 	// Button text based on mode

@@ -162,7 +162,7 @@ class PetProfileViewTests(TestCase):
         response = self.client.post(reverse('circle-pet-list', args=[self.circle.id]), pet_data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['pet']['name'], 'Rex')
+        self.assertEqual(response.data['data']['pet']['name'], 'Rex')
         
         # Verify pet was created in database
         pet = PetProfile.objects.get(name='Rex')
@@ -211,7 +211,7 @@ class PetProfileViewTests(TestCase):
         response = self.client.patch(reverse('pet-detail', args=[pet.id]), update_data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['pet']['bio'], 'Updated bio for Whiskers')
+        self.assertEqual(response.data['data']['pet']['bio'], 'Updated bio for Whiskers')
 
     def test_update_pet_as_member_forbidden(self):
         """Test that members cannot update pet profiles."""

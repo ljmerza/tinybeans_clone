@@ -42,10 +42,10 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['to_email'], payload['email'])
         self.assertIn('token', kwargs['context'])
         body = response.json()
-        self.assertEqual(set(body['tokens'].keys()), {'access'})
+        self.assertEqual(set(body['data']['tokens'].keys()), {'access'})
         # No circle is created during signup in the current implementation
-        self.assertNotIn('circle', body)
-        self.assertNotIn('pending_circle_setup', body)
+        self.assertNotIn('circle', body['data'])
+        self.assertNotIn('pending_circle_setup', body['data'])
         # Verify no circle was created
         self.assertIsNone(Circle.objects.filter(created_by__username='newuser').first())
 
@@ -66,10 +66,10 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['template_id'], EMAIL_VERIFICATION_TEMPLATE)
         self.assertEqual(kwargs['to_email'], payload['email'])
         body = response.json()
-        self.assertEqual(set(body['tokens'].keys()), {'access'})
+        self.assertEqual(set(body['data']['tokens'].keys()), {'access'})
         # No circle functionality implemented during signup
-        self.assertNotIn('circle', body)
-        self.assertNotIn('pending_circle_setup', body)
+        self.assertNotIn('circle', body['data'])
+        self.assertNotIn('pending_circle_setup', body['data'])
 
         user = User.objects.get(username='latercircle')
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)

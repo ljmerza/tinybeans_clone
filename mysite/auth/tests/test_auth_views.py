@@ -31,7 +31,8 @@ class AuthViewSecurityTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         body = response.json()
         self.assertNotIn('verification_token', body)
-        self.assertIn('tokens', body)
+        self.assertNotIn('verification_token', body.get('data', {}))
+        self.assertIn('tokens', body['data'])
         mock_delay.assert_called_once()
 
     @patch('auth.views.send_email_task.delay')
@@ -89,7 +90,7 @@ class AuthViewSecurityTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         body = response.json()
-        self.assertEqual(body, {'message': 'Password reset sent'})
+        self.assertEqual(body, {'data': {}, 'messages': [{'i18n_key': 'notifications.auth.password_reset'}]})
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
         context = kwargs['context']

@@ -38,6 +38,10 @@
       "magic_link_sent": "If an account with that email exists, a magic link has been sent",
       "magic_login_success": "Successfully logged in via magic link"
     },
+    "oauth": {
+      "account_linked": "Google account linked successfully",
+      "account_unlinked": "Google account unlinked successfully"
+    },
     "twofa": {
       "setup_initiated": "Scan QR code with your authenticator app",
       "verification_code_sent": "Verification code sent to your {{method}}",
@@ -95,6 +99,25 @@
     "invalid_media_type": "Media type must be photo or video",
     "upload_failed": "Upload failed. Please try again.",
     "upload_not_found": "Upload not found",
+    "validation_error": "{{field}}: {{message}}",
+    "oauth": {
+      "invalid_redirect_uri": "Invalid redirect URI: {{uri}}",
+      "initiate_failed": "Failed to initiate OAuth flow. Please try again.",
+      "invalid_state": "Invalid or expired OAuth state token",
+      "unverified_account_exists": "An unverified account exists with email {{email}}. Please verify your email first. {{help_url}}",
+      "authentication_failed": "OAuth authentication failed. Please try again.",
+      "callback_failed": "OAuth callback failed. Please try again.",
+      "account_already_linked": "This Google account is already linked to another account",
+      "link_failed": "Failed to link Google account. Please try again.",
+      "cannot_unlink_without_password": "Cannot unlink Google account. You must set a password first. {{help_url}}",
+      "invalid_password": "Invalid password",
+      "google_cancelled": "You cancelled the Google sign-in process",
+      "invalid_callback": "Missing required OAuth parameters. Please try again.",
+      "state_mismatch": "Security validation failed. Please try signing in again."
+    },
+    "auth": {
+      "invalid_password": "Invalid password"
+    },
     "twofa": {
       "invalid_method": "Invalid 2FA method",
       "phone_number_required": "Phone number required for SMS method",

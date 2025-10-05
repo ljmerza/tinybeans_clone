@@ -1,4 +1,4 @@
-import { api } from "../api/authClient";
+import { apiClient } from "../api/modernAuthClient";
 import type {
 	OAuthCallbackRequest,
 	OAuthCallbackResponse,
@@ -13,6 +13,7 @@ import type {
 /**
  * OAuth API Client
  * Handles all Google OAuth API calls
+ * Uses modernAuthClient with ADR-012 notification system
  */
 export const oauthApi = {
 	/**
@@ -22,11 +23,11 @@ export const oauthApi = {
 	initiate: async (
 		params: OAuthInitiateRequest,
 	): Promise<OAuthInitiateResponse> => {
-		return api.post<OAuthInitiateResponse, OAuthInitiateRequest>(
+		const response = await apiClient.post<OAuthInitiateResponse>(
 			"/auth/google/initiate/",
 			params,
-			{ suppressSuccessToast: true },
 		);
+		return response.data;
 	},
 
 	/**
@@ -36,11 +37,11 @@ export const oauthApi = {
 	callback: async (
 		params: OAuthCallbackRequest,
 	): Promise<OAuthCallbackResponse> => {
-		return api.post<OAuthCallbackResponse, OAuthCallbackRequest>(
+		const response = await apiClient.post<OAuthCallbackResponse>(
 			"/auth/google/callback/",
 			params,
-			{ suppressSuccessToast: true },
 		);
+		return response.data;
 	},
 
 	/**
@@ -48,10 +49,11 @@ export const oauthApi = {
 	 * POST /api/auth/google/link/
 	 */
 	link: async (params: OAuthLinkRequest): Promise<OAuthLinkResponse> => {
-		return api.post<OAuthLinkResponse, OAuthLinkRequest>(
+		const response = await apiClient.post<OAuthLinkResponse>(
 			"/auth/google/link/",
 			params,
 		);
+		return response.data;
 	},
 
 	/**
@@ -59,9 +61,10 @@ export const oauthApi = {
 	 * DELETE /api/auth/google/unlink/
 	 */
 	unlink: async (params: OAuthUnlinkRequest): Promise<OAuthUnlinkResponse> => {
-		return api.delete<OAuthUnlinkResponse, OAuthUnlinkRequest>(
+		const response = await apiClient.delete<OAuthUnlinkResponse>(
 			"/auth/google/unlink/",
-			params,
+			{ data: params },
 		);
+		return response.data;
 	},
 };

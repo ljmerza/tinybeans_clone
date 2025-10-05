@@ -1,9 +1,11 @@
 /**
  * Two-Factor Authentication API Client
  * Uses corrected endpoints matching backend implementation
+ * Updated to use modernAuthClient with ADR-012 notification system
  */
 
-import { API_BASE, authApi } from "@/features/auth";
+import { API_BASE } from "@/features/auth";
+import { apiClient } from "@/features/auth/api/modernAuthClient";
 import type {
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,
@@ -18,61 +20,76 @@ export const twoFactorApi = {
 	 * Initialize 2FA setup
 	 * Returns QR code for TOTP or sends OTP for email/SMS
 	 */
-	initializeSetup: (method: "totp" | "email" | "sms", phone_number?: string) =>
-		authApi.post<TwoFactorSetupResponse>("/auth/2fa/setup/", {
+	initializeSetup: async (method: "totp" | "email" | "sms", phone_number?: string) => {
+		const response = await apiClient.post<TwoFactorSetupResponse>("/auth/2fa/setup/", {
 			method,
 			phone_number,
-		}),
+		});
+		return response.data;
+	},
 
 	/**
 	 * Verify setup code and enable 2FA
 	 * Returns recovery codes
 	 */
-	verifySetup: (code: string) =>
-		authApi.post<RecoveryCodesResponse>("/auth/2fa/verify-setup/", { code }),
+	verifySetup: async (code: string) => {
+		const response = await apiClient.post<RecoveryCodesResponse>("/auth/2fa/verify-setup/", { code });
+		return response.data;
+	},
 
 	/**
 	 * Get current 2FA status
 	 */
-	getStatus: () => authApi.get<TwoFactorStatusResponse>("/auth/2fa/status/"),
+	getStatus: async () => {
+		const response = await apiClient.get<TwoFactorStatusResponse>("/auth/2fa/status/");
+		return response.data;
+	},
 
 	/**
 	 * Verify 2FA code during login (CORRECTED endpoint name)
 	 * Accepts both 6-digit codes and recovery codes
 	 * partial_token in body (not Authorization header)
 	 */
-	verifyLogin: (partial_token: string, code: string, remember_me = false) =>
-		authApi.post<TwoFactorVerifyLoginResponse>("/auth/2fa/verify-login/", {
+	verifyLogin: async (partial_token: string, code: string, remember_me = false) => {
+		const response = await apiClient.post<TwoFactorVerifyLoginResponse>("/auth/2fa/verify-login/", {
 			partial_token,
 			code,
 			remember_me,
-		}),
+		});
+		return response.data;
+	},
 
 	/**
 	 * Request a code to disable 2FA (for email/SMS methods)
 	 */
-	requestDisableCode: () =>
-		authApi.post<{ method: string; message: string; expires_in?: number }>(
+	requestDisableCode: async () => {
+		const response = await apiClient.post<{ method: string; message: string; expires_in?: number }>(
 			"/auth/2fa/disable/request/",
 			{},
-		),
+		);
+		return response.data;
+	},
 
 	/**
 	 * Disable 2FA
 	 */
-	disable: (code: string) =>
-		authApi.post<{ enabled: boolean; message: string }>("/auth/2fa/disable/", {
+	disable: async (code: string) => {
+		const response = await apiClient.post<{ enabled: boolean; message: string }>("/auth/2fa/disable/", {
 			code,
-		}),
+		});
+		return response.data;
+	},
 
 	/**
 	 * Generate new recovery codes (invalidates old ones)
 	 */
-	generateRecoveryCodes: () =>
-		authApi.post<RecoveryCodesResponse>(
+	generateRecoveryCodes: async () => {
+		const response = await apiClient.post<RecoveryCodesResponse>(
 			"/auth/2fa/recovery-codes/generate/",
 			{},
-		),
+		);
+		return response.data;
+	},
 
 	/**
 	 * Download recovery codes as TXT or PDF
@@ -85,30 +102,39 @@ export const twoFactorApi = {
 	/**
 	 * Get list of trusted devices
 	 */
-	getTrustedDevices: () =>
-		authApi.get<TrustedDevicesResponse>("/auth/2fa/trusted-devices/"),
+	getTrustedDevices: async () => {
+		const response = await apiClient.get<TrustedDevicesResponse>("/auth/2fa/trusted-devices/");
+		return response.data;
+	},
 
 	/**
+	 * Remove a trusted device
 	 */
-	removeTrustedDevice: (device_id: string) =>
-		authApi.delete<{ message?: string }>(
+	removeTrustedDevice: async (device_id: string) => {
+		const response = await apiClient.delete<{ message?: string }>(
 			`/auth/2fa/trusted-devices/${device_id}/`,
-		),
+		);
+		return response.data;
+	},
 
 	/**
 	 * Update preferred 2FA method
 	 */
-	setPreferredMethod: (method: "totp" | "email" | "sms") =>
-		authApi.post<{ preferred_method: string; message: string }>(
+	setPreferredMethod: async (method: "totp" | "email" | "sms") => {
+		const response = await apiClient.post<{ preferred_method: string; message: string }>(
 			"/auth/2fa/preferred-method/",
 			{ method },
-		),
+		);
+		return response.data;
+	},
 
 	/**
 	 * Remove a configured 2FA method
 	 */
-	removeMethod: (method: "totp" | "sms" | "email") =>
-		authApi.delete<TwoFactorMethodRemovalResponse>(
+	removeMethod: async (method: "totp" | "sms" | "email") => {
+		const response = await apiClient.delete<TwoFactorMethodRemovalResponse>(
 			`/auth/2fa/methods/${method}/`,
-		),
+		);
+		return response.data;
+	},
 };

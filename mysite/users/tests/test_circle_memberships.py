@@ -41,7 +41,7 @@ class CircleMembershipViewTests(TestCase):
         response = self.client.post(reverse('user-circle-list'), payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        new_circle_id = response.data['circle']['id']
+        new_circle_id = response.data['data']['circle']['id']
         self.assertTrue(
             CircleMembership.objects.filter(circle_id=new_circle_id, user=self.admin, role=UserRole.CIRCLE_ADMIN).exists()
         )

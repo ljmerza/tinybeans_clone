@@ -1,12 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { useApiMessages } from "@/i18n";
 import { setAccessToken } from "../store/authStore";
 import { oauthApi } from "./client";
 import type { OAuthCallbackRequest } from "./types";
 import {
 	clearOAuthState,
-	getOAuthErrorMessage,
 	getRedirectUri,
 	storeOAuthState,
 } from "./utils";
@@ -14,9 +13,11 @@ import {
 /**
  * useGoogleOAuth Hook
  * Manages Google OAuth flow state and API calls
+ * Uses ADR-012 notification system
  */
 export function useGoogleOAuth() {
 	const navigate = useNavigate();
+	const { handleError, showAsToast } = useApiMessages();
 
 	// Mutation for initiating OAuth flow
 	const initiateMutation = useMutation({
@@ -30,40 +31,33 @@ export function useGoogleOAuth() {
 			// Redirect to Google OAuth URL
 			window.location.href = data.google_oauth_url;
 		},
-		onError: (error) => {
-			const errorInfo = getOAuthErrorMessage(error);
-			toast.error(errorInfo.title, {
-				description: errorInfo.message,
-			});
+		onError: (error: any) => {
+			// Use ADR-012 error handling
+			handleError(error);
 		},
 	});
 
 	// Mutation for handling OAuth callback
 	const callbackMutation = useMutation({
 		mutationFn: (params: OAuthCallbackRequest) => oauthApi.callback(params),
-		onSuccess: (data) => {
+		onSuccess: (response) => {
 			// Store access token
-			setAccessToken(data.tokens.access);
-
-			// Show success message based on action
-			const messages = {
-				created: "Account created successfully! Welcome to Tinybeans.",
-				linked: "Google account linked successfully!",
-				login: "Signed in successfully!",
-			};
-			toast.success(messages[data.account_action]);
+			setAccessToken(response.tokens.access);
 
 			// Clear stored state
 			clearOAuthState();
 
+			// Show success messages if present (optional - backend might not send them)
+			if (response.messages && response.messages.length > 0) {
+				showAsToast(response.messages, 200);
+			}
+
 			// Navigate to home/dashboard (adjust route as needed)
 			navigate({ to: "/" });
 		},
-		onError: (error) => {
-			const errorInfo = getOAuthErrorMessage(error);
-			toast.error(errorInfo.title, {
-				description: errorInfo.message,
-			});
+		onError: (error: any) => {
+			// Use ADR-012 error handling
+			handleError(error);
 			// Clear state on error
 			clearOAuthState();
 		},
@@ -72,15 +66,16 @@ export function useGoogleOAuth() {
 	// Mutation for linking Google account (authenticated users)
 	const linkMutation = useMutation({
 		mutationFn: (params: OAuthCallbackRequest) => oauthApi.link(params),
-		onSuccess: () => {
-			toast.success("Google account linked successfully!");
+		onSuccess: (response) => {
 			clearOAuthState();
+			// Show success message from backend
+			if (response.messages && response.messages.length > 0) {
+				showAsToast(response.messages, 200);
+			}
 		},
-		onError: (error) => {
-			const errorInfo = getOAuthErrorMessage(error);
-			toast.error(errorInfo.title, {
-				description: errorInfo.message,
-			});
+		onError: (error: any) => {
+			// Use ADR-012 error handling
+			handleError(error);
 			clearOAuthState();
 		},
 	});
@@ -88,14 +83,15 @@ export function useGoogleOAuth() {
 	// Mutation for unlinking Google account
 	const unlinkMutation = useMutation({
 		mutationFn: (password: string) => oauthApi.unlink({ password }),
-		onSuccess: () => {
-			toast.success("Google account unlinked successfully");
+		onSuccess: (response) => {
+			// Show success message from backend
+			if (response.messages && response.messages.length > 0) {
+				showAsToast(response.messages, 200);
+			}
 		},
-		onError: (error) => {
-			const errorInfo = getOAuthErrorMessage(error);
-			toast.error(errorInfo.title, {
-				description: errorInfo.message,
-			});
+		onError: (error: any) => {
+			// Use ADR-012 error handling
+			handleError(error);
 		},
 	});
 

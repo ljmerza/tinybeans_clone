@@ -1,14 +1,13 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { useApiMessages } from "@/i18n";
 import {
-	getOAuthErrorMessage,
 	getOAuthState,
 	useGoogleOAuth,
 	validateOAuthState,
 } from "@/features/auth";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 
 // Search params schema for OAuth callback
@@ -28,7 +27,9 @@ function GoogleCallbackPage() {
 	const navigate = useNavigate();
 	const searchParams = Route.useSearch();
 	const { handleCallback, error } = useGoogleOAuth();
+	const { showAsToast } = useApiMessages();
 	const [hasProcessed, setHasProcessed] = useState(false);
+	const [clientError, setClientError] = useState<string | null>(null);
 
 	useEffect(() => {
 		// Prevent double processing
@@ -37,12 +38,16 @@ function GoogleCallbackPage() {
 		// Check for Google OAuth error
 		if (searchParams.error) {
 			const errorMsg = searchParams.error_description || searchParams.error;
-			toast.error("Google Sign-in Cancelled", {
-				description:
-					errorMsg === "access_denied"
-						? "You cancelled the Google sign-in process."
-						: errorMsg,
-			});
+			showAsToast(
+				[{
+					i18n_key: "errors.oauth.google_cancelled",
+					context: {}
+				}],
+				400
+			);
+			setClientError(errorMsg === "access_denied" 
+				? "You cancelled the Google sign-in process." 
+				: errorMsg);
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -50,9 +55,14 @@ function GoogleCallbackPage() {
 
 		// Validate required parameters
 		if (!searchParams.code || !searchParams.state) {
-			toast.error("Invalid OAuth Callback", {
-				description: "Missing required OAuth parameters. Please try again.",
-			});
+			showAsToast(
+				[{
+					i18n_key: "errors.oauth.invalid_callback",
+					context: {}
+				}],
+				400
+			);
+			setClientError("Missing required OAuth parameters. Please try again.");
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -61,9 +71,14 @@ function GoogleCallbackPage() {
 		// Validate state token (CSRF protection)
 		const storedState = getOAuthState();
 		if (!validateOAuthState(searchParams.state, storedState)) {
-			toast.error("OAuth State Mismatch", {
-				description: "Security validation failed. Please try signing in again.",
-			});
+			showAsToast(
+				[{
+					i18n_key: "errors.oauth.state_mismatch",
+					context: {}
+				}],
+				400
+			);
+			setClientError("Security validation failed. Please try signing in again.");
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -72,11 +87,10 @@ function GoogleCallbackPage() {
 		// Process the callback
 		setHasProcessed(true);
 		handleCallback(searchParams.code, searchParams.state);
-	}, [searchParams, handleCallback, navigate, hasProcessed]);
+	}, [searchParams, handleCallback, navigate, hasProcessed, showAsToast]);
 
 	// Show error state
-	if (error) {
-		const errorInfo = getOAuthErrorMessage(error);
+	if (error || clientError) {
 		return (
 			<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 				<div className="max-w-md w-full space-y-6 text-center">
@@ -101,11 +115,13 @@ function GoogleCallbackPage() {
 
 						{/* Error Title */}
 						<h2 className="text-2xl font-bold text-gray-900 mb-2">
-							{errorInfo.title}
+							Sign-in Failed
 						</h2>
 
 						{/* Error Message */}
-						<p className="text-gray-600 mb-6">{errorInfo.message}</p>
+						<p className="text-gray-600 mb-6">
+							{clientError || "An error occurred during sign-in. Please try again."}
+						</p>
 
 						{/* Action Buttons */}
 						<div className="space-y-3">
@@ -115,15 +131,6 @@ function GoogleCallbackPage() {
 							>
 								Back to Login
 							</Button>
-							{errorInfo.action && errorInfo.action === "Retry" && (
-								<Button
-									variant="outline"
-									onClick={() => window.location.reload()}
-									className="w-full"
-								>
-									Try Again
-								</Button>
-							)}
 						</div>
 					</div>
 				</div>

@@ -27,7 +27,7 @@ class AuthTokenCookieTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         body = response.json()
-        self.assertEqual(set(body['tokens'].keys()), {'access'})
+        self.assertEqual(set(body['data']['tokens'].keys()), {'access'})
         cookie = response.cookies['refresh_token']
         self.assertTrue(bool(cookie['httponly']))
         self.assertTrue(bool(cookie['secure']))

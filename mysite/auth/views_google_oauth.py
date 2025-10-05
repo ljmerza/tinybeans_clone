@@ -38,6 +38,7 @@ from auth.serializers import (
 from auth.token_utils import get_tokens_for_user, set_refresh_cookie
 from auth.response_utils import rate_limit_response
 from users.serializers import UserSerializer
+from mysite.notification_utils import error_response, success_response, validation_error_response, create_message
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +86,14 @@ class GoogleOAuthInitiateView(APIView):
         # Validate request
         serializer = OAuthInitiateRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'error': {'code': 'INVALID_REQUEST', 'message': serializer.errors}},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            errors = []
+            for field, field_errors in serializer.errors.items():
+                for error_msg in field_errors:
+                    errors.append(create_message('errors.validation_error', {
+                        'field': field,
+                        'message': str(error_msg)
+                    }))
+            return validation_error_response(errors)
         
         redirect_uri = serializer.validated_data['redirect_uri']
         ip_address = get_client_ip(request)
@@ -109,29 +114,21 @@ class GoogleOAuthInitiateView(APIView):
             })
             response_serializer.is_valid(raise_exception=True)
             
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
+            return success_response(response_serializer.data)
             
         except InvalidRedirectURIError as e:
             logger.warning(f"Invalid redirect URI: {redirect_uri}", extra={'ip': ip_address})
-            return Response(
-                {
-                    'error': {
-                        'code': 'INVALID_REDIRECT_URI',
-                        'message': str(e)
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'invalid_redirect_uri',
+                [create_message('errors.oauth.invalid_redirect_uri', {'uri': redirect_uri})],
+                status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
             logger.error(f"OAuth initiate failed: {str(e)}", exc_info=True)
-            return Response(
-                {
-                    'error': {
-                        'code': 'OAUTH_INITIATE_FAILED',
-                        'message': 'Failed to initiate OAuth flow'
-                    }
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            return error_response(
+                'oauth_initiate_failed',
+                [create_message('errors.oauth.initiate_failed', {})],
+                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -176,10 +173,14 @@ class GoogleOAuthCallbackView(APIView):
         # Validate request
         serializer = OAuthCallbackRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'error': {'code': 'INVALID_REQUEST', 'message': serializer.errors}},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            errors = []
+            for field, field_errors in serializer.errors.items():
+                for error_msg in field_errors:
+                    errors.append(create_message('errors.validation_error', {
+                        'field': field,
+                        'message': str(error_msg)
+                    }))
+            return validation_error_response(errors)
         
         authorization_code = serializer.validated_data['code']
         state_token = serializer.validated_data['state']
@@ -222,7 +223,7 @@ class GoogleOAuthCallbackView(APIView):
             response_serializer.is_valid(raise_exception=True)
             
             # Create response with refresh token cookie
-            response = Response(response_serializer.data, status=status.HTTP_200_OK)
+            response = success_response(response_serializer.data)
             set_refresh_cookie(response, tokens['refresh'])
             
             logger.info(
@@ -238,14 +239,10 @@ class GoogleOAuthCallbackView(APIView):
             
         except InvalidStateError as e:
             logger.warning(f"Invalid OAuth state: {str(e)}", extra={'ip': ip_address})
-            return Response(
-                {
-                    'error': {
-                        'code': 'INVALID_STATE_TOKEN',
-                        'message': str(e)
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'invalid_state_token',
+                [create_message('errors.oauth.invalid_state', {})],
+                status.HTTP_400_BAD_REQUEST
             )
             
         except UnverifiedAccountError as e:
@@ -253,40 +250,29 @@ class GoogleOAuthCallbackView(APIView):
                 f"OAuth blocked - unverified account: {e.email}",
                 extra={'email': e.email, 'ip': ip_address}
             )
-            return Response(
-                {
-                    'error': {
-                        'code': 'UNVERIFIED_ACCOUNT_EXISTS',
-                        'message': 'An unverified account exists with this email. Please verify your email first.',
-                        'email': e.email,
-                        'help_url': '/help/verify-email'
-                    }
-                },
-                status=status.HTTP_403_FORBIDDEN
+            return error_response(
+                'unverified_account_exists',
+                [create_message('errors.oauth.unverified_account_exists', {
+                    'email': e.email,
+                    'help_url': '/help/verify-email'
+                })],
+                status.HTTP_403_FORBIDDEN
             )
             
         except OAuthError as e:
             logger.error(f"OAuth error: {str(e)}", exc_info=True)
-            return Response(
-                {
-                    'error': {
-                        'code': 'OAUTH_ERROR',
-                        'message': str(e)
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'oauth_error',
+                [create_message('errors.oauth.authentication_failed', {})],
+                status.HTTP_400_BAD_REQUEST
             )
             
         except Exception as e:
             logger.error(f"OAuth callback failed: {str(e)}", exc_info=True)
-            return Response(
-                {
-                    'error': {
-                        'code': 'OAUTH_CALLBACK_FAILED',
-                        'message': 'OAuth authentication failed'
-                    }
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            return error_response(
+                'oauth_callback_failed',
+                [create_message('errors.oauth.callback_failed', {})],
+                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -322,10 +308,14 @@ class GoogleOAuthLinkView(APIView):
         # Validate request
         serializer = OAuthLinkRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'error': {'code': 'INVALID_REQUEST', 'message': serializer.errors}},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            errors = []
+            for field, field_errors in serializer.errors.items():
+                for error_msg in field_errors:
+                    errors.append(create_message('errors.validation_error', {
+                        'field': field,
+                        'message': str(error_msg)
+                    }))
+            return validation_error_response(errors)
         
         authorization_code = serializer.validated_data['code']
         state_token = serializer.validated_data['state']
@@ -365,29 +355,24 @@ class GoogleOAuthLinkView(APIView):
                 extra={'user_id': request.user.id, 'ip': ip_address}
             )
             
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
+            return success_response(
+                response_serializer.data,
+                messages=[create_message('notifications.oauth.account_linked', {})]
+            )
             
         except GoogleAccountAlreadyLinkedError as e:
-            return Response(
-                {
-                    'error': {
-                        'code': 'GOOGLE_ACCOUNT_ALREADY_LINKED',
-                        'message': str(e)
-                    }
-                },
-                status=status.HTTP_409_CONFLICT
+            return error_response(
+                'google_account_already_linked',
+                [create_message('errors.oauth.account_already_linked', {})],
+                status.HTTP_409_CONFLICT
             )
             
         except OAuthError as e:
             logger.error(f"Link Google account failed: {str(e)}", exc_info=True)
-            return Response(
-                {
-                    'error': {
-                        'code': 'OAUTH_LINK_FAILED',
-                        'message': str(e)
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'oauth_link_failed',
+                [create_message('errors.oauth.link_failed', {})],
+                status.HTTP_400_BAD_REQUEST
             )
 
 
@@ -422,10 +407,14 @@ class GoogleOAuthUnlinkView(APIView):
         # Validate request
         serializer = OAuthUnlinkRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'error': {'code': 'INVALID_REQUEST', 'message': serializer.errors}},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            errors = []
+            for field, field_errors in serializer.errors.items():
+                for error_msg in field_errors:
+                    errors.append(create_message('errors.validation_error', {
+                        'field': field,
+                        'message': str(error_msg)
+                    }))
+            return validation_error_response(errors)
         
         password = serializer.validated_data['password']
         
@@ -435,14 +424,10 @@ class GoogleOAuthUnlinkView(APIView):
                 "Invalid password for OAuth unlink",
                 extra={'user_id': request.user.id}
             )
-            return Response(
-                {
-                    'error': {
-                        'code': 'INVALID_PASSWORD',
-                        'message': 'Invalid password'
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'invalid_password',
+                [create_message('errors.auth.invalid_password', {'field': 'password'})],
+                status.HTTP_400_BAD_REQUEST
             )
         
         try:
@@ -462,16 +447,16 @@ class GoogleOAuthUnlinkView(APIView):
                 extra={'user_id': request.user.id}
             )
             
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
+            return success_response(
+                response_serializer.data,
+                messages=[create_message('notifications.oauth.account_unlinked', {})]
+            )
             
         except OAuthError as e:
-            return Response(
-                {
-                    'error': {
-                        'code': 'CANNOT_UNLINK_WITHOUT_PASSWORD',
-                        'message': str(e),
-                        'help_url': '/help/set-password'
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                'cannot_unlink_without_password',
+                [create_message('errors.oauth.cannot_unlink_without_password', {
+                    'help_url': '/help/set-password'
+                })],
+                status.HTTP_400_BAD_REQUEST
             )

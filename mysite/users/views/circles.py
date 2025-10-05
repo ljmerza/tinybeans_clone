@@ -17,7 +17,7 @@ from auth.token_utils import (
     pop_token,
     store_token,
 )
-from mysite.notification_utils import create_message, success_response
+from mysite.notification_utils import create_message, success_response, error_response
 from ..models import (
     Circle,
     CircleInvitation,
@@ -267,6 +267,7 @@ class CircleMemberRemoveView(APIView):
         membership_to_remove = CircleMembership.objects.filter(circle=circle, user_id=user_id).select_related('user').first()
         if not membership_to_remove:
             return error_response(
+                'membership_not_found',
                 messages=[create_message('errors.membership_not_found')],
                 status_code=status.HTTP_404_NOT_FOUND
             )
