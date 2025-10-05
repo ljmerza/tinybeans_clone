@@ -9,7 +9,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { useMagicLinkRequestWithMessages } from "../hooks/explicitHooks";
+import { useMagicLinkRequest } from "../hooks/authHooks";
 
 const schema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -18,7 +18,7 @@ const schema = z.object({
 type MagicLinkFormValues = z.infer<typeof schema>;
 
 export function MagicLinkRequestCard() {
-	const magicLoginRequest = useMagicLinkRequestWithMessages();
+	const magicLoginRequest = useMagicLinkRequest();
 	const { getGeneral, translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);

@@ -15,6 +15,7 @@ import {
 	useSetPreferredMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
+import { extractApiError } from "@/features/auth/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -70,10 +71,7 @@ function TwoFactorSettingsPage() {
 			setRemovalMessage(result?.message ?? "Method removed successfully.");
 			setMethodToRemove(null);
 		} catch (err) {
-			const apiMessage = (err as { data?: { error?: string } })?.data?.error;
-			const fallback =
-				err instanceof Error ? err.message : "Failed to remove 2FA method.";
-			setRemovalError(apiMessage ?? fallback);
+			setRemovalError(extractApiError(err, "Failed to remove 2FA method."));
 		}
 	};
 
@@ -89,10 +87,7 @@ function TwoFactorSettingsPage() {
 				result?.message ?? "Default method updated successfully.",
 			);
 		} catch (err) {
-			const apiMessage = (err as { data?: { error?: string } })?.data?.error;
-			const fallback =
-				err instanceof Error ? err.message : "Failed to update default method.";
-			setSwitchError(apiMessage ?? fallback);
+			setSwitchError(extractApiError(err, "Failed to update default method."));
 		}
 	};
 

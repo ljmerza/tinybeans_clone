@@ -10,7 +10,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { useSignupWithMessages } from "../hooks/explicitHooks";
+import { useSignup } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 const baseSchema = z.object({
@@ -23,7 +23,7 @@ const baseSchema = z.object({
 type SignupFormValues = z.infer<typeof baseSchema>;
 
 export function SignupCard() {
-	const signup = useSignupWithMessages();
+	const signup = useSignup();
 	const navigate = useNavigate();
 	const { getGeneral, getFieldErrors } = useApiMessages();
 	const [generalError, setGeneralError] = useState("");

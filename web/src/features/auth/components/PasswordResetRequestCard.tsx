@@ -8,7 +8,7 @@ import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { usePasswordResetRequestWithMessages } from "../hooks/explicitHooks";
+import { usePasswordResetRequest } from "../hooks/authHooks";
 
 const schema = z.object({
 	identifier: z.string().min(1, "Email or username is required"),
@@ -17,7 +17,7 @@ const schema = z.object({
 type PasswordResetRequestValues = z.infer<typeof schema>;
 
 export function PasswordResetRequestCard() {
-	const resetRequest = usePasswordResetRequestWithMessages();
+	const resetRequest = usePasswordResetRequest();
 	const { translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);

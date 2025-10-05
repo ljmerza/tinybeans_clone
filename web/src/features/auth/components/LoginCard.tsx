@@ -19,7 +19,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { useLoginWithMessages } from "../hooks/explicitHooks";
+import { useLogin } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 const schema = z.object({
@@ -30,7 +30,7 @@ const schema = z.object({
 type LoginFormValues = z.infer<typeof schema>;
 
 export function LoginCard() {
-	const login = useLoginWithMessages();
+	const login = useLogin();
 	const { getGeneral } = useApiMessages();
 	const [generalError, setGeneralError] = useState<string>("");
 

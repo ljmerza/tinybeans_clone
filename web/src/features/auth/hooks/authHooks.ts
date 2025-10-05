@@ -9,18 +9,18 @@ import { useNavigate } from "@tanstack/react-router";
 import { useApiMessages } from "@/i18n";
 import { apiClient } from "../api/authClient";
 import { setAccessToken } from "../store/authStore";
+import { handleTwoFactorRedirect } from "../utils";
 import type {
 	LoginRequest,
 	LoginResponse,
 	SignupRequest,
 	SignupResponse,
-	TwoFactorNavigateState,
 } from "../types";
 
 /**
  * Login hook with explicit message handling
  */
-export function useLoginWithMessages() {
+export function useLogin() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
@@ -35,13 +35,7 @@ export function useLoginWithMessages() {
 			console.log("Login response:", data);
 
 			// Check if 2FA is required
-			if (data.requires_2fa) {
-				const state: TwoFactorNavigateState = {
-					partialToken: data.partial_token,
-					method: data.method,
-					message: data.message,
-				};
-				navigate({ to: "/2fa/verify", state: state as never });
+			if (handleTwoFactorRedirect(data, navigate)) {
 				return;
 			}
 
@@ -65,7 +59,7 @@ export function useLoginWithMessages() {
 /**
  * Signup hook with explicit message handling
  */
-export function useSignupWithMessages() {
+export function useSignup() {
 	const qc = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
@@ -91,7 +85,7 @@ export function useSignupWithMessages() {
 /**
  * * logout hook with explicit message handling
  */
-export function useLogoutWithMessages() {
+export function useLogout() {
 	const qc = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
@@ -115,7 +109,7 @@ export function useLogoutWithMessages() {
 /**
  * * password reset request hook
  */
-export function usePasswordResetRequestWithMessages() {
+export function usePasswordResetRequest() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { identifier: string }>({
@@ -137,7 +131,7 @@ export function usePasswordResetRequestWithMessages() {
 /**
  * * password reset confirm hook
  */
-export function usePasswordResetConfirmWithMessages() {
+export function usePasswordResetConfirm() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, {
@@ -163,7 +157,7 @@ export function usePasswordResetConfirmWithMessages() {
 /**
  * * magic link request hook
  */
-export function useMagicLinkRequestWithMessages() {
+export function useMagicLinkRequest() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<any, Error, { email: string }>({
@@ -185,7 +179,7 @@ export function useMagicLinkRequestWithMessages() {
 /**
  * * magic login verify hook
  */
-export function useMagicLoginVerifyWithMessages() {
+export function useMagicLoginVerify() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
