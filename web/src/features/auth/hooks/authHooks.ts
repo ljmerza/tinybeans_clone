@@ -33,8 +33,6 @@ export function useLogin() {
 			return apiClient.post<LoginResponse>("/auth/login/", body);
 		},
 		onSuccess: ({ data }: MutationResponse<LoginResponse>) => {
-			console.log("Login response:", data);
-
 			// Check if 2FA is required
 			if (handleTwoFactorRedirect(data, navigate)) {
 				return;
