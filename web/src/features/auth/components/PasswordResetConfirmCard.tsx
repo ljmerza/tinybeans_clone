@@ -1,17 +1,17 @@
+import { FieldError, StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusMessage, FieldError } from "@/components";
+import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import {
-	passwordResetConfirmSchema,
 	type PasswordResetConfirmFormData,
+	passwordResetConfirmSchema,
 } from "@/lib/validations/schemas/password-reset";
-import { useApiMessages } from "@/i18n";
+import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import type { ApiError } from "@/types";
 
 import { usePasswordResetConfirm } from "../hooks/authHooks";
 

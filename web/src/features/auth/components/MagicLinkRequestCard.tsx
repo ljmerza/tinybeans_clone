@@ -1,19 +1,19 @@
-import { StatusMessage, FieldError } from "@/components";
+import { FieldError, StatusMessage } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import {
-	magicLinkRequestSchema,
 	type MagicLinkRequestFormData,
+	magicLinkRequestSchema,
 } from "@/lib/validations/schemas/magic-link";
-import { useApiMessages } from "@/i18n";
+import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ApiError } from "@/types";
 
 import { useMagicLinkRequest } from "../hooks/authHooks";
 

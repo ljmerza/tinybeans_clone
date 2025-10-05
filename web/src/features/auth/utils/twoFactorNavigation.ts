@@ -4,8 +4,8 @@
  * Provides consistent 2FA redirect handling across authentication flows.
  */
 
-import type { TwoFactorNavigateState } from "../types";
 import type { TwoFactorMethod } from "@/features/twofa";
+import type { TwoFactorNavigateState } from "../types";
 
 /**
  * Handles 2FA redirect after login/signup when 2FA is required

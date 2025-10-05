@@ -1,10 +1,10 @@
+import type { ApiMessage, ApiResponse } from "@/types";
 /**
  * Notification Utilities
  *
  * Utilities for handling standardized API messages with i18n support.
  */
 import type { TFunction } from "i18next";
-import type { ApiMessage, ApiResponse } from "@/types";
 
 // Re-export types for backward compatibility
 export type { ApiMessage, ApiResponse };
@@ -72,10 +72,7 @@ export function translateMessage(message: ApiMessage, t: TFunction): string {
  * @param separator - Separator between messages (default: '\n')
  * @returns Combined message string
  */
-export function combineMessages(
-	messages: string[],
-	separator = "\n",
-): string {
+export function combineMessages(messages: string[], separator = "\n"): string {
 	return messages.filter((msg) => msg.trim().length > 0).join(separator);
 }
 

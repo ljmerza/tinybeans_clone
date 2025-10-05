@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { apiClient } from "@/features/auth/api/authClient";
+import { useState } from "react";
 /**
  * Language Switcher Component
  *
@@ -5,9 +8,6 @@
  * Updates both the UI immediately and saves preference to backend.
  */
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { apiClient } from "@/features/auth/api/authClient";
 
 type Language = "en" | "es";
 

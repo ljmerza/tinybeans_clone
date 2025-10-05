@@ -1,16 +1,16 @@
+import type { ApiError, ApiResponseWithMessages } from "@/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ApiError, ApiResponseWithMessages } from "@/types";
 
 import { FieldError } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import {
-	passwordResetRequestSchema,
 	type PasswordResetRequestFormData,
+	passwordResetRequestSchema,
 } from "@/lib/validations/schemas/password-reset";
-import { useApiMessages } from "@/i18n";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";

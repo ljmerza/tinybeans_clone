@@ -3,9 +3,9 @@
  * Uses corrected endpoints matching backend implementation
  */
 
-import { API_BASE, getCsrfToken } from "@/lib/httpClient";
 import { apiClient } from "@/features/auth/api/authClient";
 import { authStore } from "@/features/auth/store/authStore";
+import { API_BASE, getCsrfToken } from "@/lib/httpClient";
 import type {
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,

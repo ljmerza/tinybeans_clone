@@ -5,6 +5,7 @@
 
 import { ButtonGroup, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
+import { extractApiError } from "@/features/auth/utils";
 import {
 	EmailMethodCard,
 	SmsMethodCard,
@@ -13,7 +14,6 @@ import {
 	useRemoveTwoFactorMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
-import { extractApiError } from "@/features/auth/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 

@@ -2,8 +2,8 @@
  * Common type definitions used across the application
  */
 
-import type { ApiMessage } from "./api";
 import type { FieldApi } from "@tanstack/react-form";
+import type { ApiMessage } from "./api";
 
 /**
  * Generic API response structure with messages

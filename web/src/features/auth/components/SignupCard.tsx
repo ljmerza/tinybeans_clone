@@ -1,20 +1,20 @@
-import { StatusMessage, FieldError } from "@/components";
+import { FieldError, StatusMessage } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import {
+	type SignupFormData,
 	signupSchema,
 	signupSchemaBase,
-	type SignupFormData,
 } from "@/lib/validations/schemas/signup";
-import { useApiMessages } from "@/i18n";
+import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ApiError } from "@/types";
 
 import { useSignup } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";

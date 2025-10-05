@@ -17,8 +17,8 @@ import {
 	StatusMessage,
 } from "@/components";
 import { Button } from "@/components/ui/button";
-import type { ReactNode } from "react";
 import type { TwoFactorMethod } from "@/features/twofa/types";
+import type { ReactNode } from "react";
 
 /**
  * Configuration for a chip badge
