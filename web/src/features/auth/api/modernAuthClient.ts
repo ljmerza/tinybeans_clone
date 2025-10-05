@@ -8,35 +8,12 @@
  * 
  * Use this for new code. The old authClient.ts is kept for backward compatibility.
  */
-import { API_BASE, createHttpClient, getCsrfToken } from "@/lib/httpClient";
+import { API_BASE, createHttpClient } from "@/lib/httpClient";
 import type { RequestOptions } from "@/lib/httpClient";
-import { authStore, setAccessToken } from "../store/authStore";
-import type { RefreshAccessTokenResponse } from "../types";
+import { authStore } from "../store/authStore";
+import { refreshAccessToken } from "../utils/refreshToken";
 
-export async function refreshAccessToken(): Promise<boolean> {
-	const csrfToken = getCsrfToken();
-	const headers: HeadersInit = { "Content-Type": "application/json" };
-	if (csrfToken) headers["X-CSRFToken"] = csrfToken;
-
-	const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
-		method: "POST",
-		credentials: "include",
-		headers,
-	});
-	if (!res.ok) {
-		setAccessToken(null);
-		return false;
-	}
-	const data: RefreshAccessTokenResponse | null = await res
-		.json()
-		.catch(() => null);
-	if (data?.access) {
-		setAccessToken(data.access);
-		return true;
-	}
-	setAccessToken(null);
-	return false;
-}
+export { refreshAccessToken };
 
 /**
  * Modern HTTP client following ADR-012

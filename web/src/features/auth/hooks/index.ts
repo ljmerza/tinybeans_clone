@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { api, refreshAccessToken } from "../api/authClient";
+import { api } from "../api/authClient";
 import { authStore, setAccessToken } from "../store/authStore";
 import type {
 	LoginRequest,
@@ -19,7 +19,6 @@ export function useMe() {
 	return useQuery({
 		queryKey: ["auth", "me", authStore.state.accessToken],
 		queryFn: async () => {
-			await refreshAccessToken();
 			const data = await api.get<MeResponse>("/users/me/");
 			return data.user;
 		},

@@ -155,12 +155,15 @@ class TestRecoveryCodeFlow:
         assert gen_response.status_code == status.HTTP_200_OK
         assert len(gen_response.data['recovery_codes']) == 10
         
-        # Get first code
-        first_code = gen_response.data['recovery_codes'][0]
+        # Get recovery codes
+        recovery_codes = gen_response.data['recovery_codes']
+        first_code = recovery_codes[0]
         
-        # Step 2: Download recovery codes (TXT)
-        download_response = self.client.get(
-            '/api/auth/2fa/recovery-codes/download/?format=txt'
+        # Step 2: Download recovery codes (TXT) - using POST with codes in body
+        download_response = self.client.post(
+            '/api/auth/2fa/recovery-codes/download/',
+            {'format': 'txt', 'codes': recovery_codes},
+            content_type='application/json'
         )
         
         assert download_response.status_code == status.HTTP_200_OK

@@ -579,30 +579,37 @@ class RecoveryCodeDownloadView(APIView):
     """Download recovery codes"""
     permission_classes = [permissions.IsAuthenticated]
     
-    @extend_schema(responses={200: dict})
-    def get(self, request):
+    @extend_schema(
+        request={
+            'type': 'object',
+            'properties': {
+                'format': {'type': 'string', 'enum': ['txt', 'pdf']},
+                'codes': {'type': 'array', 'items': {'type': 'string'}}
+            }
+        },
+        responses={200: dict}
+    )
+    def post(self, request):
         """Download recovery codes in TXT or PDF format
         
         NOTE: Since codes are hashed for security, they can only be downloaded
         immediately after generation. This endpoint requires codes to be passed
-        as query parameters from the generation response.
+        in the request body from the generation response.
         """
-        format_type = request.query_params.get('format', 'txt')
+        format_type = request.data.get('format', 'txt')
         user = request.user
         
-        # Get codes from query params (passed from frontend after generation)
-        codes_param = request.query_params.get('codes')
-        if not codes_param:
+        # Get codes from request body (more secure than query params)
+        recovery_codes = request.data.get('codes', [])
+        
+        if not recovery_codes or not isinstance(recovery_codes, list):
             return error_response(
                 'recovery_codes_required',
                 [create_message('errors.twofa.recovery_codes_required')],
                 status.HTTP_400_BAD_REQUEST
             )
         
-        # Parse codes (comma-separated)
-        recovery_codes = codes_param.split(',')
-        
-        if not recovery_codes or len(recovery_codes) == 0:
+        if len(recovery_codes) == 0:
             return error_response(
                 'no_recovery_codes',
                 [create_message('errors.twofa.no_recovery_codes')],

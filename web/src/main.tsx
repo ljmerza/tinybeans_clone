@@ -2,7 +2,6 @@ import { QueryClient } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { AppBootstrap } from "./components/AppBootstrap";
-import { AppProviders } from "./components/AppProviders";
 
 import "./styles.css";
 import "sonner/dist/styles.css";
@@ -32,9 +31,7 @@ if (rootElement && !rootElement.innerHTML) {
 
 	root.render(
 		<StrictMode>
-			<AppBootstrap>
-				<AppProviders queryClient={queryClient} />
-			</AppBootstrap>
+			<AppBootstrap queryClient={queryClient} />
 		</StrictMode>,
 	);
 }

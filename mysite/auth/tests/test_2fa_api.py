@@ -543,14 +543,19 @@ class TestRecoveryCodeAPI:
             is_enabled=True
         )
         
-        # Create recovery codes
-        for i in range(5):
+        # Create recovery codes - these will be sent in the request body
+        codes = [f'CODE-{i:04d}-TEST' for i in range(5)]
+        for code in codes:
             RecoveryCode.objects.create(
                 user=self.user,
-                code=f'CODE-{i:04d}-TEST'
+                code=code
             )
         
-        response = self.client.get('/api/auth/2fa/recovery-codes/download/?format=txt')
+        response = self.client.post(
+            '/api/auth/2fa/recovery-codes/download/',
+            {'format': 'txt', 'codes': codes},
+            content_type='application/json'
+        )
         
         assert response.status_code == status.HTTP_200_OK
         assert response['Content-Type'] == 'text/plain'
@@ -564,16 +569,21 @@ class TestRecoveryCodeAPI:
             is_enabled=True
         )
         
-        # Create recovery codes
-        for i in range(5):
+        # Create recovery codes - these will be sent in the request body
+        codes = [f'CODE-{i:04d}-TEST' for i in range(5)]
+        for code in codes:
             RecoveryCode.objects.create(
                 user=self.user,
-                code=f'CODE-{i:04d}-TEST'
+                code=code
             )
         
         mock_pdf.return_value = b'fake-pdf-content'
         
-        response = self.client.get('/api/auth/2fa/recovery-codes/download/?format=pdf')
+        response = self.client.post(
+            '/api/auth/2fa/recovery-codes/download/',
+            {'format': 'pdf', 'codes': codes},
+            content_type='application/json'
+        )
         
         assert response.status_code == status.HTTP_200_OK
         assert response['Content-Type'] == 'application/pdf'
@@ -581,7 +591,11 @@ class TestRecoveryCodeAPI:
     
     def test_download_no_codes(self):
         """Test download when no codes available"""
-        response = self.client.get('/api/auth/2fa/recovery-codes/download/')
+        response = self.client.post(
+            '/api/auth/2fa/recovery-codes/download/',
+            {'format': 'txt', 'codes': []},
+            content_type='application/json'
+        )
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 

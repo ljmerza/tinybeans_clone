@@ -53,6 +53,11 @@ export interface MeResponse {
 export type TwoFactorNavigateState = TwoFactorVerifyState;
 
 export interface RefreshAccessTokenResponse {
+	// Backend wraps response in { data: { access: "..." } }
+	data?: {
+		access: string;
+	};
+	// Also support unwrapped format for backwards compatibility
 	access?: string;
 }
 

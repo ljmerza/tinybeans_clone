@@ -5,19 +5,20 @@
 
 import { refreshAccessToken } from "@/features/auth";
 import { ensureCsrfToken } from "@/lib/csrf";
-import { type ReactNode, useEffect, useState } from "react";
+import type { QueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { AppProviders } from "./AppProviders";
 import { LoadingPage } from "./LoadingPage";
 import { StandardError } from "./StandardError";
 
 interface AppBootstrapProps {
-	children: ReactNode;
-	onInitialized?: () => void;
+	queryClient: QueryClient;
 }
 
 /**
  * Bootstrap component that initializes CSRF and session before rendering app
  */
-export function AppBootstrap({ children, onInitialized }: AppBootstrapProps) {
+export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 	const [status, setStatus] = useState<"loading" | "ready" | "error">(
 		"loading",
 	);
@@ -32,13 +33,13 @@ export function AppBootstrap({ children, onInitialized }: AppBootstrapProps) {
 				await ensureCsrfToken();
 
 				// Step 2: Try to restore session from refresh token
-				await refreshAccessToken();
+				const refreshSuccess = await refreshAccessToken();
 
 				if (mounted) {
 					setStatus("ready");
-					onInitialized?.();
 				}
 			} catch (err) {
+				console.error("[AppBootstrap] Bootstrap error:", err);
 				if (mounted) {
 					setError(
 						err instanceof Error
@@ -55,7 +56,7 @@ export function AppBootstrap({ children, onInitialized }: AppBootstrapProps) {
 		return () => {
 			mounted = false;
 		};
-	}, [onInitialized]);
+	}, []);
 
 	if (status === "loading") {
 		return <LoadingPage message="Initializing..." />;
@@ -73,5 +74,5 @@ export function AppBootstrap({ children, onInitialized }: AppBootstrapProps) {
 		);
 	}
 
-	return <>{children}</>;
+	return <AppProviders queryClient={queryClient} isInitializing={false} />;
 }

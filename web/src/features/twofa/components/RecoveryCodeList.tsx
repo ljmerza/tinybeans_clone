@@ -117,7 +117,7 @@ export function RecoveryCodeList({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => twoFactorApi.downloadRecoveryCodes("txt")}
+							onClick={() => twoFactorApi.downloadRecoveryCodes(codes, "txt")}
 							className="flex-1"
 						>
 							Download as TXT
@@ -125,7 +125,7 @@ export function RecoveryCodeList({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => twoFactorApi.downloadRecoveryCodes("pdf")}
+							onClick={() => twoFactorApi.downloadRecoveryCodes(codes, "pdf")}
 							className="flex-1"
 						>
 							Download as PDF

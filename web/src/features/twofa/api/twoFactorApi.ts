@@ -4,8 +4,9 @@
  * Updated to use modernAuthClient with ADR-012 notification system
  */
 
-import { API_BASE } from "@/features/auth";
+import { API_BASE, getCsrfToken } from "@/lib/httpClient";
 import { apiClient } from "@/features/auth/api/modernAuthClient";
+import { authStore } from "@/features/auth/store/authStore";
 import type {
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,
@@ -93,10 +94,57 @@ export const twoFactorApi = {
 
 	/**
 	 * Download recovery codes as TXT or PDF
+	 * Uses POST to securely send codes in request body instead of URL
 	 */
-	downloadRecoveryCodes: (format: "txt" | "pdf" = "txt") => {
-		const url = `${API_BASE}/auth/2fa/recovery-codes/download/?format=${format}`;
-		window.open(url, "_blank");
+	downloadRecoveryCodes: async (codes: string[], format: "txt" | "pdf" = "txt") => {
+		try {
+			// Use the same auth mechanism as apiClient
+			const token = authStore.state.accessToken;
+			const csrfToken = getCsrfToken();
+			
+			// Build headers
+			const headers: Record<string, string> = {
+				'Content-Type': 'application/json',
+			};
+			
+			if (csrfToken) {
+				headers['X-CSRFToken'] = csrfToken;
+			}
+			
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`;
+			}
+			
+			// Make POST request with blob response
+			const response = await fetch(`${API_BASE}/auth/2fa/recovery-codes/download/`, {
+				method: 'POST',
+				headers,
+				credentials: 'include',
+				body: JSON.stringify({ codes, format }),
+			});
+			
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('Download failed:', response.status, errorText);
+				throw new Error(`Failed to download recovery codes: ${response.statusText}`);
+			}
+			
+			// Get the blob
+			const blob = await response.blob();
+			
+			// Create download link
+			const downloadUrl = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = downloadUrl;
+			link.download = `tinybeans-recovery-codes.${format}`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(downloadUrl);
+		} catch (error) {
+			console.error('Failed to download recovery codes:', error);
+			throw error;
+		}
 	},
 
 	/**

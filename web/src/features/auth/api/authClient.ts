@@ -1,35 +1,10 @@
-import { API_BASE, createHttpClient, getCsrfToken } from "@/lib/httpClient";
+import { API_BASE, createHttpClient } from "@/lib/httpClient";
 import type { RequestOptions } from "@/lib/httpClient";
 import { showApiToast } from "@/lib/toast";
-import { authStore, setAccessToken } from "../store/authStore";
-import type { RefreshAccessTokenResponse } from "../types";
+import { authStore } from "../store/authStore";
+import { refreshAccessToken } from "../utils/refreshToken";
 
-export async function refreshAccessToken(): Promise<boolean> {
-	const csrfToken = getCsrfToken();
-	const headers: HeadersInit = { "Content-Type": "application/json" };
-	if (csrfToken) headers["X-CSRFToken"] = csrfToken;
-
-	const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
-		method: "POST",
-		credentials: "include",
-		headers,
-	});
-	if (!res.ok) {
-		// Clear the access token when refresh fails to log out the user
-		setAccessToken(null);
-		return false;
-	}
-	const data: RefreshAccessTokenResponse | null = await res
-		.json()
-		.catch(() => null);
-	if (data?.access) {
-		setAccessToken(data.access);
-		return true;
-	}
-	// Clear token if response doesn't contain access token
-	setAccessToken(null);
-	return false;
-}
+export { refreshAccessToken };
 
 // Create auth-specific HTTP client with integrated auth logic
 // NOTE: onSuccess and onError callbacks are deprecated per ADR-012.
