@@ -13,58 +13,21 @@ import type {
 /**
  * OAuth API Client
  * Handles all Google OAuth API calls
- * Uses modernAuthClient with ADR-012 notification system
  */
 export const oauthApi = {
-	/**
-	 * Initiate OAuth flow
-	 * POST /api/auth/google/initiate/
-	 */
-	initiate: async (
-		params: OAuthInitiateRequest,
-	): Promise<OAuthInitiateResponse> => {
-		const response = await apiClient.post<OAuthInitiateResponse>(
-			"/auth/google/initiate/",
-			params,
-		);
-		return response.data;
-	},
+	/** Initiate OAuth flow - POST /api/auth/google/initiate/ */
+	initiate: (params: OAuthInitiateRequest): Promise<OAuthInitiateResponse> =>
+		apiClient.post("/auth/google/initiate/", params),
 
-	/**
-	 * Handle OAuth callback
-	 * POST /api/auth/google/callback/
-	 */
-	callback: async (
-		params: OAuthCallbackRequest,
-	): Promise<OAuthCallbackResponse> => {
-		const response = await apiClient.post<OAuthCallbackResponse>(
-			"/auth/google/callback/",
-			params,
-		);
-		return response.data;
-	},
+	/** Handle OAuth callback - POST /api/auth/google/callback/ */
+	callback: (params: OAuthCallbackRequest): Promise<OAuthCallbackResponse> =>
+		apiClient.post("/auth/google/callback/", params),
 
-	/**
-	 * Link Google account to authenticated user
-	 * POST /api/auth/google/link/
-	 */
-	link: async (params: OAuthLinkRequest): Promise<OAuthLinkResponse> => {
-		const response = await apiClient.post<OAuthLinkResponse>(
-			"/auth/google/link/",
-			params,
-		);
-		return response.data;
-	},
+	/** Link Google account to authenticated user - POST /api/auth/google/link/ */
+	link: (params: OAuthLinkRequest): Promise<OAuthLinkResponse> =>
+		apiClient.post("/auth/google/link/", params),
 
-	/**
-	 * Unlink Google account
-	 * DELETE /api/auth/google/unlink/
-	 */
-	unlink: async (params: OAuthUnlinkRequest): Promise<OAuthUnlinkResponse> => {
-		const response = await apiClient.delete<OAuthUnlinkResponse>(
-			"/auth/google/unlink/",
-			{ data: params },
-		);
-		return response.data;
-	},
+	/** Unlink Google account - DELETE /api/auth/google/unlink/ */
+	unlink: (params: OAuthUnlinkRequest): Promise<OAuthUnlinkResponse> =>
+		apiClient.delete("/auth/google/unlink/", { data: params }),
 };

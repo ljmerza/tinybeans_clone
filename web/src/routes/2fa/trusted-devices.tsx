@@ -4,21 +4,28 @@
 
 import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useRemoveTrustedDevice, useTrustedDevices } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 function TrustedDevicesPage() {
 	const navigate = useNavigate();
 	const { data, isLoading } = useTrustedDevices();
 	const removeDevice = useRemoveTrustedDevice();
+	const [deviceToRemove, setDeviceToRemove] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
 
 	const handleRemove = (deviceId: string, deviceName: string) => {
-		if (
-			confirm(
-				`Remove "${deviceName}"?\n\nYou'll need to verify with 2FA next time you login from this device.`,
-			)
-		) {
-			removeDevice.mutate(deviceId);
+		setDeviceToRemove({ id: deviceId, name: deviceName });
+	};
+
+	const confirmRemove = () => {
+		if (deviceToRemove) {
+			removeDevice.mutate(deviceToRemove.id);
+			setDeviceToRemove(null);
 		}
 	};
 
@@ -125,6 +132,17 @@ function TrustedDevicesPage() {
 					</div>
 				</div>
 			</div>
+
+			<ConfirmDialog
+				open={deviceToRemove !== null}
+				onOpenChange={(open) => !open && setDeviceToRemove(null)}
+				title={`Remove "${deviceToRemove?.name}"?`}
+				description="You'll need to verify with 2FA next time you login from this device."
+				confirmLabel="Remove"
+				variant="destructive"
+				isLoading={removeDevice.isPending}
+				onConfirm={confirmRemove}
+			/>
 		</Layout>
 	);
 }

@@ -1,7 +1,6 @@
 /**
  * Two-Factor Authentication API Client
  * Uses corrected endpoints matching backend implementation
- * Updated to use modernAuthClient with ADR-012 notification system
  */
 
 import { API_BASE, getCsrfToken } from "@/lib/httpClient";

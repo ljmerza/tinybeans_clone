@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { api } from "../api/authClient";
+import { apiClient } from "../api/modernAuthClient";
 import { authStore, setAccessToken } from "../store/authStore";
 import type {
 	LoginRequest,
@@ -19,7 +19,7 @@ export function useMe() {
 	return useQuery({
 		queryKey: ["auth", "me", authStore.state.accessToken],
 		queryFn: async () => {
-			const data = await api.get<MeResponse>("/users/me/");
+			const data = await apiClient.get<MeResponse>("/users/me/");
 			return data.user;
 		},
 		staleTime: 5 * 60 * 1000,
@@ -36,10 +36,7 @@ export function useLogin() {
 			// Clear any existing auth token before attempting login
 			// This prevents 403 errors when user already has a valid token but wants to re-login
 			setAccessToken(null);
-			return api.post<LoginResponse, LoginRequest>("/auth/login/", body, {
-				suppressErrorToast: true,
-				suppressSuccessToast: true,
-			});
+			return apiClient.post<LoginResponse>("/auth/login/", body);
 		},
 		onSuccess: (data) => {
 			console.log("Login response:", data); // Debug log
@@ -69,7 +66,7 @@ export function useSignup() {
 	const qc = useQueryClient();
 	return useMutation<SignupResponse, Error, SignupRequest>({
 		mutationFn: (body) =>
-			api.post<SignupResponse, SignupRequest>("/auth/signup/", body),
+			apiClient.post<SignupResponse>("/auth/signup/", body),
 		onSuccess: (data) => {
 			setAccessToken(data.tokens.access);
 			qc.invalidateQueries({ queryKey: ["auth"] });
@@ -81,7 +78,7 @@ export function useLogout() {
 	const qc = useQueryClient();
 	return useMutation({
 		mutationFn: async () => {
-			await api.post("/auth/logout/");
+			await apiClient.post("/auth/logout/");
 			setAccessToken(null);
 			return true;
 		},
@@ -107,13 +104,9 @@ export function usePasswordResetRequest() {
 		PasswordResetRequestBody
 	>({
 		mutationFn: (body) =>
-			api.post<PasswordResetRequestResponse>(
+			apiClient.post<PasswordResetRequestResponse>(
 				"/auth/password/reset/request/",
 				body,
-				{
-					suppressErrorToast: true,
-					suppressSuccessToast: true,
-				},
 			),
 	});
 }
@@ -135,13 +128,9 @@ export function usePasswordResetConfirm() {
 		PasswordResetConfirmBody
 	>({
 		mutationFn: (body) =>
-			api.post<PasswordResetConfirmResponse>(
+			apiClient.post<PasswordResetConfirmResponse>(
 				"/auth/password/reset/confirm/",
 				body,
-				{
-					suppressErrorToast: true,
-					suppressSuccessToast: true,
-				},
 			),
 	});
 }
@@ -149,10 +138,7 @@ export function usePasswordResetConfirm() {
 export function useMagicLoginRequest() {
 	return useMutation<MagicLoginRequestResponse, Error, MagicLoginRequest>({
 		mutationFn: (body) =>
-			api.post<MagicLoginRequestResponse>("/auth/magic-login/request/", body, {
-				suppressErrorToast: true,
-				suppressSuccessToast: true,
-			}),
+			apiClient.post<MagicLoginRequestResponse>("/auth/magic-login/request/", body),
 	});
 }
 
@@ -162,13 +148,9 @@ export function useMagicLoginVerify() {
 
 	return useMutation<MagicLoginVerifyResponse, Error, MagicLoginVerifyRequest>({
 		mutationFn: (body) =>
-			api.post<MagicLoginVerifyResponse, MagicLoginVerifyRequest>(
+			apiClient.post<MagicLoginVerifyResponse>(
 				"/auth/magic-login/verify/",
 				body,
-				{
-					suppressErrorToast: true,
-					suppressSuccessToast: true,
-				},
 			),
 		onSuccess: (data) => {
 			console.log("Magic login response:", data);

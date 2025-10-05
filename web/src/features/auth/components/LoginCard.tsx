@@ -2,7 +2,6 @@
  * LoginCard Component (ADR-012 Compliant)
  * 
  * This component uses the modern notification strategy:
- * - Uses modernAuthClient instead of legacy api
  * - Uses useApiMessages for explicit error handling
  * - Shows field-level errors inline
  * - No auto-toast behavior

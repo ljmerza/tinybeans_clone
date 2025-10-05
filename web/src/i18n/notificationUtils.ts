@@ -5,23 +5,10 @@
  * Utilities for handling standardized API messages with i18n support.
  */
 import type { TFunction } from 'i18next';
+import type { ApiMessage, ApiResponse } from '@/types';
 
-/**
- * Message structure from backend API
- */
-export interface ApiMessage {
-  i18n_key: string;
-  context?: Record<string, string | number>;
-}
-
-/**
- * API response structure with optional messages
- */
-export interface ApiResponse<T = unknown> {
-  data?: T;
-  messages?: ApiMessage[];
-  error?: string;
-}
+// Re-export types for backward compatibility
+export type { ApiMessage, ApiResponse };
 
 /**
  * Infer severity level from HTTP status code

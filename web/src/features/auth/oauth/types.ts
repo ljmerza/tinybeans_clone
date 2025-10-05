@@ -3,11 +3,10 @@
  * Based on ADR-010 API specifications and ADR-012 notification system
  */
 
-// ADR-012 Message type
-export interface ApiMessage {
-	i18n_key: string;
-	context: Record<string, any>;
-}
+import type { ApiMessage } from "@/types";
+
+// Re-export for convenience
+export type { ApiMessage };
 
 export interface OAuthInitiateRequest {
 	redirect_uri: string;
