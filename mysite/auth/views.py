@@ -529,8 +529,9 @@ class MagicLoginVerifyView(APIView):
             
             if not magic_token.is_valid():
                 return error_response(
-                    messages=[create_message('errors.magic_link_expired')],
-                    status_code=status.HTTP_400_BAD_REQUEST
+                    'magic_link_expired',
+                    [create_message('errors.magic_link_expired')],
+                    status.HTTP_400_BAD_REQUEST
                 )
             
             # Mark token as used
@@ -541,8 +542,9 @@ class MagicLoginVerifyView(APIView):
             # Check if user account is active
             if not user.is_active:
                 return error_response(
-                    messages=[create_message('errors.account_inactive')],
-                    status_code=status.HTTP_403_FORBIDDEN
+                    'account_inactive',
+                    [create_message('errors.account_inactive')],
+                    status.HTTP_403_FORBIDDEN
                 )
             
             # Check if 2FA is enabled for this user
@@ -624,6 +626,7 @@ class MagicLoginVerifyView(APIView):
             
         except MagicLoginToken.DoesNotExist:
             return error_response(
-                messages=[create_message('errors.magic_link_invalid')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'magic_link_invalid',
+                [create_message('errors.magic_link_invalid')],
+                status.HTTP_400_BAD_REQUEST
             )
