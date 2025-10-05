@@ -7,21 +7,26 @@ import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useMagicLinkRequest } from "../hooks/authHooks";
 
-const schema = z.object({
-	email: z.string().email("Please enter a valid email address"),
+const createSchema = (t: (key: string) => string) => z.object({
+	email: z.string().email(t('validation.email_valid')),
 });
 
-type MagicLinkFormValues = z.infer<typeof schema>;
+type MagicLinkFormValues = {
+	email: string;
+};
 
 export function MagicLinkRequestCard() {
+	const { t } = useTranslation();
 	const magicLoginRequest = useMagicLinkRequest();
 	const { getGeneral, translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const schema = createSchema(t);
 
 	const form = useForm({
 		defaultValues: { email: "" } satisfies MagicLinkFormValues,
@@ -40,9 +45,7 @@ export function MagicLinkRequestCard() {
 						setSuccessMessage(messages[0]);
 					}
 				} else {
-					setSuccessMessage(
-						"If an account with that email exists, a magic login link has been sent. Check your email!"
-					);
+					setSuccessMessage(t('auth.magic_link.success_message'));
 				}
 			} catch (error: any) {
 				console.error("Magic link request error:", error);
@@ -52,7 +55,7 @@ export function MagicLinkRequestCard() {
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
 				} else {
-					setErrorMessage("Failed to send magic link. Please try again.");
+					setErrorMessage(t('auth.magic_link.failed'));
 				}
 			}
 		},
@@ -60,8 +63,8 @@ export function MagicLinkRequestCard() {
 
 	return (
 		<AuthCard
-			title="Magic Link Login"
-			description="Enter your email address and we'll send you a magic link to log in instantly—no password required."
+			title={t('auth.magic_link.request_title')}
+			description={t('auth.magic_link.request_description')}
 			footerClassName="space-y-3 text-center text-sm text-muted-foreground"
 			footer={
 				<>
@@ -70,16 +73,16 @@ export function MagicLinkRequestCard() {
 							to="/login"
 							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
 						>
-							Back to traditional login
+							{t('auth.magic_link.back_to_login')}
 						</Link>
 					</div>
 					<div>
-						Don't have an account?{" "}
+						{t('auth.login.no_account')}{" "}
 						<Link
 							to="/signup"
 							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
 						>
-							Sign up
+							{t('nav.signup')}
 						</Link>
 					</div>
 				</>
@@ -106,7 +109,7 @@ export function MagicLinkRequestCard() {
 				>
 					{(field) => (
 						<div className="form-group">
-							<Label htmlFor={field.name}>Email Address</Label>
+							<Label htmlFor={field.name}>{t('auth.magic_link.email')}</Label>
 							<Input
 								id={field.name}
 								type="email"
@@ -130,8 +133,8 @@ export function MagicLinkRequestCard() {
 					disabled={magicLoginRequest.isPending}
 				>
 					{magicLoginRequest.isPending
-						? "Sending Magic Link…"
-						: "Send Magic Link"}
+						? t('auth.magic_link.sending')
+						: t('auth.magic_link.send_magic_link')}
 				</Button>
 
 				{successMessage && (
@@ -141,18 +144,6 @@ export function MagicLinkRequestCard() {
 					<StatusMessage variant="error">{errorMessage}</StatusMessage>
 				)}
 			</form>
-
-			<div className="pt-4 border-t text-xs text-muted-foreground space-y-2">
-				<p className="font-semibold">How it works:</p>
-				<ol className="list-decimal list-inside space-y-1 text-gray-600">
-					<li>Enter your email address</li>
-					<li>Click the link we send you</li>
-					<li>You're logged in automatically</li>
-				</ol>
-				<p className="text-gray-500 italic">
-					The magic link expires in 15 minutes and can only be used once.
-				</p>
-			</div>
 		</AuthCard>
 	);
 }

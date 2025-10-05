@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import { LoadingPage } from "@/components/LoadingPage";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,6 +7,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useLogout } from "../hooks/authHooks";
 
 export function LogoutHandler() {
+	const { t } = useTranslation();
 	const logout = useLogout();
 	const navigate = useNavigate();
 	const hasLoggedOut = useRef(false);
@@ -24,5 +26,5 @@ export function LogoutHandler() {
 			});
 	}, [logout, navigate]);
 
-	return <LoadingPage message="Logging out..." />;
+	return <LoadingPage message={t('auth.logout.logging_out')} />;
 }

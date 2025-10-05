@@ -1,4 +1,182 @@
 {
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "yes": "Yes",
+    "no": "No",
+    "or": "OR",
+    "required": "Required"
+  },
+  "nav": {
+    "home": "Home",
+    "login": "Login",
+    "signup": "Sign up",
+    "logout": "Logout",
+    "settings": "Settings",
+    "twofa_settings": "2FA Settings"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "username": "Username",
+      "password": "Password",
+      "forgot_password": "Forgot password?",
+      "sign_in": "Sign in",
+      "signing_in": "Signing in…",
+      "no_account": "Don't have an account?",
+      "with_magic_link": "Login with Magic Link →",
+      "login_failed": "Login failed"
+    },
+    "signup": {
+      "title": "Create your account",
+      "description": "Join the community by filling out the details below. All fields are required.",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm password",
+      "create_account": "Create account",
+      "creating_account": "Creating account…",
+      "already_have_account": "Already have an account?",
+      "signup_failed": "Signup failed"
+    },
+    "password_reset": {
+      "request_title": "Reset Password",
+      "request_description": "Enter your email or username and we'll send you a link to reset your password.",
+      "email_or_username": "Email or username",
+      "send_reset_link": "Send reset link",
+      "sending": "Sending…",
+      "success_message": "If an account exists for that identifier, we'll send password reset instructions.",
+      "failed": "Failed to send reset email",
+      "back_to_login": "← Back to login",
+      "confirm_title": "Set New Password",
+      "confirm_description": "Enter your new password below.",
+      "new_password": "New password",
+      "confirm_new_password": "Confirm new password",
+      "reset_password": "Reset password",
+      "resetting": "Resetting…",
+      "reset_failed": "Failed to reset password"
+    },
+    "magic_link": {
+      "request_title": "Login with Magic Link",
+      "request_description": "Enter your email and we'll send you a magic link to sign in.",
+      "email": "Email",
+      "send_magic_link": "Send magic link",
+      "sending": "Sending…",
+      "check_email": "Check your email",
+      "success_message": "If an account with that email exists, a magic link has been sent.",
+      "failed": "Failed to send magic link",
+      "back_to_login": "← Back to login",
+      "processing": "Processing magic link...",
+      "verifying": "Verifying magic link...",
+      "success": "Successfully logged in!"
+    },
+    "oauth": {
+      "google_signin": "Sign in with Google",
+      "google_signup": "Sign up with Google",
+      "google_link": "Link Google Account",
+      "processing": "Processing Google sign-in..."
+    },
+    "logout": {
+      "logging_out": "Logging out...",
+      "message": "You have been logged out"
+    }
+  },
+  "twofa": {
+    "title": "Two-Factor Authentication",
+    "enabled": "2FA Enabled",
+    "disabled": "2FA Disabled",
+    "enable": "Enable 2FA",
+    "disable": "Disable 2FA",
+    "setup_title": "Set up Two-Factor Authentication",
+    "verify_title": "Two-Factor Authentication Required",
+    "verify_description": "Enter the verification code from your authenticator app or device",
+    "code": "Verification Code",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "use_recovery_code": "Use recovery code instead",
+    "trust_device": "Trust this device for 30 days",
+    "methods": {
+      "totp": "Authenticator App",
+      "sms": "SMS",
+      "email": "Email",
+      "recovery": "Recovery Code"
+    },
+    "setup": {
+      "choose_method": "Choose 2FA Method",
+      "totp": {
+        "title": "Authenticator App Setup",
+        "intro": "Use an authenticator app like Google Authenticator or Authy",
+        "scan": "Scan QR Code",
+        "scan_instructions": "Scan this QR code with your authenticator app",
+        "manual_entry": "Or enter this code manually:",
+        "verify": "Verify Code",
+        "enter_code": "Enter the 6-digit code from your app"
+      },
+      "sms": {
+        "title": "SMS Setup",
+        "intro": "Receive codes via text message",
+        "phone_number": "Phone Number",
+        "send_code": "Send Code",
+        "verify": "Verify Code"
+      },
+      "email": {
+        "title": "Email Setup",
+        "intro": "Receive codes via email",
+        "send_code": "Send Code",
+        "verify": "Verify Code"
+      },
+      "recovery": {
+        "title": "Recovery Codes",
+        "description": "Save these recovery codes in a safe place. Each code can only be used once.",
+        "download": "Download Codes",
+        "print": "Print Codes",
+        "copied": "Copied to clipboard",
+        "warning": "These codes will only be shown once!"
+      }
+    },
+    "settings": {
+      "status": "Status",
+      "default_method": "Default Method",
+      "change_method": "Change Default Method",
+      "recovery_codes": "Recovery Codes",
+      "regenerate_codes": "Regenerate Recovery Codes",
+      "trusted_devices": "Trusted Devices",
+      "remove_device": "Remove Device",
+      "disable_confirm": "Are you sure you want to disable 2FA?"
+    }
+  },
+  "pages": {
+    "home": {
+      "welcome": "Welcome",
+      "authenticated_message": "You are signed in!",
+      "guest_message": "Get started by signing up or logging in to your account."
+    },
+    "error": {
+      "something_wrong": "Something went wrong",
+      "unexpected_error": "An unexpected error occurred",
+      "go_home": "Go to Home"
+    }
+  },
+  "validation": {
+    "username_required": "Username is required",
+    "email_required": "Email is required",
+    "email_valid": "Valid email required",
+    "password_required": "Password is required",
+    "password_min_length": "Password must be at least 8 characters",
+    "passwords_match": "Passwords do not match",
+    "confirm_password": "Confirm password",
+    "field_required": "This field is required"
+  },
   "notifications": {
     "profile": {
       "photo_uploaded": "Profile photo updated successfully",

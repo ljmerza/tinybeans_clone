@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +11,21 @@ import { z } from "zod";
 
 import { usePasswordResetRequest } from "../hooks/authHooks";
 
-const schema = z.object({
-	identifier: z.string().min(1, "Email or username is required"),
+const createSchema = (t: (key: string) => string) => z.object({
+	identifier: z.string().min(1, t('validation.field_required')),
 });
 
-type PasswordResetRequestValues = z.infer<typeof schema>;
+type PasswordResetRequestValues = {
+	identifier: string;
+};
 
 export function PasswordResetRequestCard() {
+	const { t } = useTranslation();
 	const resetRequest = usePasswordResetRequest();
 	const { translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const schema = createSchema(t);
 
 	const form = useForm({
 		defaultValues: { identifier: "" } satisfies PasswordResetRequestValues,
@@ -36,12 +41,10 @@ export function PasswordResetRequestCard() {
 					const messages = translate(response.messages);
 					setSuccessMessage(
 						messages.join(". ") ||
-						"If an account exists for that identifier, we'll send password reset instructions."
+						t('auth.password_reset.success_message')
 					);
 				} else {
-					setSuccessMessage(
-						"If an account exists for that identifier, we'll send password reset instructions."
-					);
+					setSuccessMessage(t('auth.password_reset.success_message'));
 				}
 			} catch (error: any) {
 				console.error("Password reset request error:", error);
@@ -51,7 +54,7 @@ export function PasswordResetRequestCard() {
 					const messages = translate(error.messages);
 					setErrorMessage(messages.join(". "));
 				} else {
-					setErrorMessage(error.message ?? "Failed to send reset email");
+					setErrorMessage(error.message ?? t('auth.password_reset.failed'));
 				}
 			}
 		},
@@ -61,10 +64,9 @@ export function PasswordResetRequestCard() {
 		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 			<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
 				<div className="space-y-2 text-center">
-					<h1 className="text-2xl font-semibold">Forgot password</h1>
+					<h1 className="text-2xl font-semibold">{t('auth.password_reset.request_title')}</h1>
 					<p className="text-sm text-muted-foreground">
-						Enter your email address or username and we'll send you a reset
-						link.
+						{t('auth.password_reset.request_description')}
 					</p>
 				</div>
 
@@ -101,7 +103,7 @@ export function PasswordResetRequestCard() {
 					>
 						{(field) => (
 							<div className="form-group">
-								<Label htmlFor={field.name}>Email or username</Label>
+								<Label htmlFor={field.name}>{t('auth.password_reset.email_or_username')}</Label>
 								<Input
 									id={field.name}
 									autoComplete="email"
@@ -123,17 +125,16 @@ export function PasswordResetRequestCard() {
 						className="w-full"
 						disabled={resetRequest.isPending}
 					>
-						{resetRequest.isPending ? "Sending…" : "Send reset link"}
+						{resetRequest.isPending ? t('auth.password_reset.sending') : t('auth.password_reset.send_reset_link')}
 					</Button>
 				</form>
 
 				<div className="text-center text-sm">
-					Remembered your password?{" "}
 					<Link
 						to="/login"
 						className="font-semibold text-blue-600 hover:text-blue-800"
 					>
-						Return to login
+						{t('auth.password_reset.back_to_login')}
 					</Link>
 				</div>
 			</div>

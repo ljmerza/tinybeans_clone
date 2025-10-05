@@ -1,4 +1,182 @@
 {
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "yes": "Sí",
+    "no": "No",
+    "or": "O",
+    "required": "Requerido"
+  },
+  "nav": {
+    "home": "Inicio",
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar sesión",
+    "settings": "Configuración",
+    "twofa_settings": "Configuración 2FA"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "username": "Nombre de usuario",
+      "password": "Contraseña",
+      "forgot_password": "¿Olvidaste tu contraseña?",
+      "sign_in": "Iniciar sesión",
+      "signing_in": "Iniciando sesión…",
+      "no_account": "¿No tienes una cuenta?",
+      "with_magic_link": "Iniciar sesión con enlace mágico →",
+      "login_failed": "Fallo al iniciar sesión"
+    },
+    "signup": {
+      "title": "Crea tu cuenta",
+      "description": "Únete a la comunidad completando los detalles a continuación. Todos los campos son obligatorios.",
+      "username": "Nombre de usuario",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirm_password": "Confirmar contraseña",
+      "create_account": "Crear cuenta",
+      "creating_account": "Creando cuenta…",
+      "already_have_account": "¿Ya tienes una cuenta?",
+      "signup_failed": "Fallo al registrarse"
+    },
+    "password_reset": {
+      "request_title": "Restablecer contraseña",
+      "request_description": "Ingresa tu correo electrónico o nombre de usuario y te enviaremos un enlace para restablecer tu contraseña.",
+      "email_or_username": "Correo electrónico o nombre de usuario",
+      "send_reset_link": "Enviar enlace de restablecimiento",
+      "sending": "Enviando…",
+      "success_message": "Si existe una cuenta con ese identificador, enviaremos instrucciones de restablecimiento de contraseña.",
+      "failed": "Error al enviar correo de restablecimiento",
+      "back_to_login": "← Volver al inicio de sesión",
+      "confirm_title": "Establecer nueva contraseña",
+      "confirm_description": "Ingresa tu nueva contraseña a continuación.",
+      "new_password": "Nueva contraseña",
+      "confirm_new_password": "Confirmar nueva contraseña",
+      "reset_password": "Restablecer contraseña",
+      "resetting": "Restableciendo…",
+      "reset_failed": "Error al restablecer contraseña"
+    },
+    "magic_link": {
+      "request_title": "Iniciar sesión con enlace mágico",
+      "request_description": "Ingresa tu correo electrónico y te enviaremos un enlace mágico para iniciar sesión.",
+      "email": "Correo electrónico",
+      "send_magic_link": "Enviar enlace mágico",
+      "sending": "Enviando…",
+      "check_email": "Revisa tu correo electrónico",
+      "success_message": "Si existe una cuenta con ese correo, se ha enviado un enlace mágico.",
+      "failed": "Error al enviar enlace mágico",
+      "back_to_login": "← Volver al inicio de sesión",
+      "processing": "Procesando enlace mágico...",
+      "verifying": "Verificando enlace mágico...",
+      "success": "¡Inicio de sesión exitoso!"
+    },
+    "oauth": {
+      "google_signin": "Iniciar sesión con Google",
+      "google_signup": "Registrarse con Google",
+      "google_link": "Vincular cuenta de Google",
+      "processing": "Procesando inicio de sesión con Google..."
+    },
+    "logout": {
+      "logging_out": "Cerrando sesión...",
+      "message": "Has cerrado sesión"
+    }
+  },
+  "twofa": {
+    "title": "Autenticación de dos factores",
+    "enabled": "2FA habilitado",
+    "disabled": "2FA deshabilitado",
+    "enable": "Habilitar 2FA",
+    "disable": "Deshabilitar 2FA",
+    "setup_title": "Configurar autenticación de dos factores",
+    "verify_title": "Se requiere autenticación de dos factores",
+    "verify_description": "Ingresa el código de verificación de tu aplicación o dispositivo de autenticación",
+    "code": "Código de verificación",
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "use_recovery_code": "Usar código de recuperación",
+    "trust_device": "Confiar en este dispositivo durante 30 días",
+    "methods": {
+      "totp": "Aplicación de autenticación",
+      "sms": "SMS",
+      "email": "Correo electrónico",
+      "recovery": "Código de recuperación"
+    },
+    "setup": {
+      "choose_method": "Elegir método 2FA",
+      "totp": {
+        "title": "Configuración de aplicación de autenticación",
+        "intro": "Usa una aplicación de autenticación como Google Authenticator o Authy",
+        "scan": "Escanear código QR",
+        "scan_instructions": "Escanea este código QR con tu aplicación de autenticación",
+        "manual_entry": "O ingresa este código manualmente:",
+        "verify": "Verificar código",
+        "enter_code": "Ingresa el código de 6 dígitos de tu aplicación"
+      },
+      "sms": {
+        "title": "Configuración SMS",
+        "intro": "Recibe códigos por mensaje de texto",
+        "phone_number": "Número de teléfono",
+        "send_code": "Enviar código",
+        "verify": "Verificar código"
+      },
+      "email": {
+        "title": "Configuración de correo electrónico",
+        "intro": "Recibe códigos por correo electrónico",
+        "send_code": "Enviar código",
+        "verify": "Verificar código"
+      },
+      "recovery": {
+        "title": "Códigos de recuperación",
+        "description": "Guarda estos códigos de recuperación en un lugar seguro. Cada código solo se puede usar una vez.",
+        "download": "Descargar códigos",
+        "print": "Imprimir códigos",
+        "copied": "Copiado al portapapeles",
+        "warning": "¡Estos códigos solo se mostrarán una vez!"
+      }
+    },
+    "settings": {
+      "status": "Estado",
+      "default_method": "Método predeterminado",
+      "change_method": "Cambiar método predeterminado",
+      "recovery_codes": "Códigos de recuperación",
+      "regenerate_codes": "Regenerar códigos de recuperación",
+      "trusted_devices": "Dispositivos de confianza",
+      "remove_device": "Eliminar dispositivo",
+      "disable_confirm": "¿Estás seguro de que quieres deshabilitar 2FA?"
+    }
+  },
+  "pages": {
+    "home": {
+      "welcome": "Bienvenido",
+      "authenticated_message": "¡Has iniciado sesión!",
+      "guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
+    },
+    "error": {
+      "something_wrong": "Algo salió mal",
+      "unexpected_error": "Ocurrió un error inesperado",
+      "go_home": "Ir al inicio"
+    }
+  },
+  "validation": {
+    "username_required": "Se requiere nombre de usuario",
+    "email_required": "Se requiere correo electrónico",
+    "email_valid": "Se requiere correo electrónico válido",
+    "password_required": "Se requiere contraseña",
+    "password_min_length": "La contraseña debe tener al menos 8 caracteres",
+    "passwords_match": "Las contraseñas no coinciden",
+    "confirm_password": "Confirmar contraseña",
+    "field_required": "Este campo es obligatorio"
+  },
   "notifications": {
     "profile": {
       "photo_uploaded": "Foto de perfil actualizada exitosamente",

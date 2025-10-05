@@ -17,22 +17,28 @@ import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useLogin } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
-const schema = z.object({
-	username: z.string().min(1, "Username is required"),
+const createSchema = (t: (key: string) => string) => z.object({
+	username: z.string().min(1, t('validation.username_required')),
 	password: passwordSchema,
 });
 
-type LoginFormValues = z.infer<typeof schema>;
+type LoginFormValues = {
+	username: string;
+	password: string;
+};
 
 export function LoginCard() {
+	const { t } = useTranslation();
 	const login = useLogin();
 	const { getGeneral } = useApiMessages();
 	const [generalError, setGeneralError] = useState<string>("");
+	const schema = createSchema(t);
 
 	const form = useForm({
 		defaultValues: {
@@ -53,7 +59,7 @@ export function LoginCard() {
 					setGeneralError(generalErrors.join(". "));
 				} else {
 					// Fallback to error message
-					setGeneralError(error.message ?? "Login failed");
+					setGeneralError(error.message ?? t('auth.login.login_failed'));
 				}
 			}
 		},
@@ -61,7 +67,7 @@ export function LoginCard() {
 
 	return (
 		<AuthCard
-			title="Login"
+			title={t('auth.login.title')}
 			footerClassName="space-y-4 text-center"
 			footer={
 				<>
@@ -70,16 +76,16 @@ export function LoginCard() {
 							to="/magic-link-request"
 							className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
 						>
-							Login with Magic Link →
+							{t('auth.login.with_magic_link')}
 						</Link>
 					</div>
 					<div className="text-sm text-muted-foreground">
-						Don't have an account?{" "}
+						{t('auth.login.no_account')}{" "}
 						<Link
 							to="/signup"
 							className="font-semibold text-blue-600 hover:text-blue-800"
 						>
-							Sign up
+							{t('nav.signup')}
 						</Link>
 					</div>
 				</>
@@ -93,7 +99,7 @@ export function LoginCard() {
 						<div className="w-full border-t border-gray-300" />
 					</div>
 					<div className="relative flex justify-center text-sm">
-						<span className="px-2 bg-white text-gray-500">OR</span>
+						<span className="px-2 bg-white text-gray-500">{t('common.or')}</span>
 					</div>
 				</div>
 			</div>
@@ -119,7 +125,7 @@ export function LoginCard() {
 				>
 					{(field) => (
 						<div className="form-group">
-							<Label htmlFor={field.name}>Username</Label>
+							<Label htmlFor={field.name}>{t('auth.login.username')}</Label>
 							<Input
 								id={field.name}
 								value={field.state.value}
@@ -149,7 +155,7 @@ export function LoginCard() {
 				>
 					{(field) => (
 						<div className="form-group">
-							<Label htmlFor={field.name}>Password</Label>
+							<Label htmlFor={field.name}>{t('auth.login.password')}</Label>
 							<Input
 								id={field.name}
 								type="password"
@@ -172,7 +178,7 @@ export function LoginCard() {
 						to="/password/reset/request"
 						className="text-sm font-semibold text-blue-600 hover:text-blue-800"
 					>
-						Forgot password?
+						{t('auth.login.forgot_password')}
 					</Link>
 				</div>
 
@@ -180,10 +186,10 @@ export function LoginCard() {
 					{login.isPending ? (
 						<span className="flex items-center justify-center gap-2">
 							<LoadingSpinner size="sm" />
-							Signing in…
+							{t('auth.login.signing_in')}
 						</span>
 					) : (
-						"Sign in"
+						t('auth.login.sign_in')
 					)}
 				</Button>
 

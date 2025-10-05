@@ -8,26 +8,34 @@ import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useSignup } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
-const baseSchema = z.object({
-	username: z.string().min(1, "Username is required"),
-	email: z.string().email("Valid email required"),
+const createSchema = (t: (key: string) => string) => z.object({
+	username: z.string().min(1, t('validation.username_required')),
+	email: z.string().email(t('validation.email_valid')),
 	password: passwordSchema,
 	password_confirm: confirmPasswordSchema,
 });
 
-type SignupFormValues = z.infer<typeof baseSchema>;
+type SignupFormValues = {
+	username: string;
+	email: string;
+	password: string;
+	password_confirm: string;
+};
 
 export function SignupCard() {
+	const { t } = useTranslation();
 	const signup = useSignup();
 	const navigate = useNavigate();
 	const { getGeneral, getFieldErrors } = useApiMessages();
 	const [generalError, setGeneralError] = useState("");
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+	const schema = createSchema(t);
 
 	const form = useForm({
 		defaultValues: {
@@ -58,7 +66,7 @@ export function SignupCard() {
 					setGeneralError(generalErrors.join(". "));
 				} else if (!Object.keys(errors).length) {
 					// Fallback if no structured errors
-					setGeneralError(error.message ?? "Signup failed");
+					setGeneralError(error.message ?? t('auth.signup.signup_failed'));
 				}
 			}
 		},
@@ -66,16 +74,16 @@ export function SignupCard() {
 
 	return (
 		<AuthCard
-			title="Create your account"
-			description="Join the community by filling out the details below. All fields are required."
+			title={t('auth.signup.title')}
+			description={t('auth.signup.description')}
 			footer={
 				<div className="text-sm text-muted-foreground">
-					Already have an account?{" "}
+					{t('auth.signup.already_have_account')}{" "}
 					<Link
 						to="/login"
 						className="font-semibold text-blue-600 hover:text-blue-800"
 					>
-						Log in
+						{t('nav.login')}
 					</Link>
 				</div>
 			}
@@ -88,7 +96,7 @@ export function SignupCard() {
 						<div className="w-full border-t border-gray-300" />
 					</div>
 					<div className="relative flex justify-center text-sm">
-						<span className="px-2 bg-white text-gray-500">OR</span>
+						<span className="px-2 bg-white text-gray-500">{t('common.or')}</span>
 					</div>
 				</div>
 			</div>
@@ -105,7 +113,7 @@ export function SignupCard() {
 					name="username"
 					validators={{
 						onBlur: ({ value }) => {
-							const result = baseSchema.shape.username.safeParse(value);
+							const result = schema.shape.username.safeParse(value);
 							return result.success
 								? undefined
 								: result.error.errors[0].message;
@@ -115,7 +123,7 @@ export function SignupCard() {
 					{(field) => (
 						<div className="form-group">
 							<Label htmlFor={field.name} className="form-label">
-								Username
+								{t('auth.signup.username')}
 							</Label>
 							<Input
 								id={field.name}
@@ -140,7 +148,7 @@ export function SignupCard() {
 					name="email"
 					validators={{
 						onBlur: ({ value }) => {
-							const result = baseSchema.shape.email.safeParse(value);
+							const result = schema.shape.email.safeParse(value);
 							return result.success
 								? undefined
 								: result.error.errors[0].message;
@@ -150,7 +158,7 @@ export function SignupCard() {
 					{(field) => (
 						<div className="form-group">
 							<Label htmlFor={field.name} className="form-label">
-								Email
+								{t('auth.signup.email')}
 							</Label>
 							<Input
 								id={field.name}
@@ -176,7 +184,7 @@ export function SignupCard() {
 					name="password"
 					validators={{
 						onBlur: ({ value }) => {
-							const result = baseSchema.shape.password.safeParse(value);
+							const result = schema.shape.password.safeParse(value);
 							return result.success
 								? undefined
 								: result.error.errors[0].message;
@@ -186,7 +194,7 @@ export function SignupCard() {
 					{(field) => (
 						<div className="form-group">
 							<Label htmlFor={field.name} className="form-label">
-								Password
+								{t('auth.signup.password')}
 							</Label>
 							<Input
 								id={field.name}
@@ -209,9 +217,9 @@ export function SignupCard() {
 					name="password_confirm"
 					validators={{
 						onBlur: ({ value, fieldApi }) => {
-							if (value.length < 8) return "Confirm password";
+							if (value.length < 8) return t('validation.confirm_password');
 							const password = fieldApi.form.getFieldValue("password");
-							if (value !== password) return "Passwords do not match";
+							if (value !== password) return t('validation.passwords_match');
 							return undefined;
 						},
 					}}
@@ -219,7 +227,7 @@ export function SignupCard() {
 					{(field) => (
 						<div className="form-group">
 							<Label htmlFor={field.name} className="form-label">
-								Confirm password
+								{t('auth.signup.confirm_password')}
 							</Label>
 							<Input
 								id={field.name}
@@ -239,7 +247,7 @@ export function SignupCard() {
 				</form.Field>
 
 				<Button type="submit" className="w-full" disabled={signup.isPending}>
-					{signup.isPending ? "Creating account…" : "Create account"}
+					{signup.isPending ? t('auth.signup.creating_account') : t('auth.signup.create_account')}
 				</Button>
 
 				{generalError && (

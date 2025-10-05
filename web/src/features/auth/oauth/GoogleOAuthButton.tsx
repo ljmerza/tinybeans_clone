@@ -1,5 +1,6 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { useGoogleOAuth } from "./hooks";
 
 interface GoogleOAuthButtonProps {
@@ -20,6 +21,7 @@ export function GoogleOAuthButton({
 	className = "",
 	disabled = false,
 }: GoogleOAuthButtonProps) {
+	const { t } = useTranslation();
 	const { initiateOAuth, isLoading } = useGoogleOAuth();
 
 	const handleClick = () => {
@@ -29,16 +31,16 @@ export function GoogleOAuthButton({
 
 	// Button text based on mode
 	const buttonText = {
-		signup: "Sign up with Google",
-		login: "Sign in with Google",
-		link: "Link Google Account",
+		signup: t('auth.oauth.google_signup'),
+		login: t('auth.oauth.google_signin'),
+		link: t('auth.oauth.google_link'),
 	}[mode];
 
 	// ARIA label for accessibility
 	const ariaLabel = {
-		signup: "Sign up with Google account",
-		login: "Sign in with Google account",
-		link: "Link your Google account",
+		signup: t('auth.oauth.google_signup'),
+		login: t('auth.oauth.google_signin'),
+		link: t('auth.oauth.google_link'),
 	}[mode];
 
 	return (

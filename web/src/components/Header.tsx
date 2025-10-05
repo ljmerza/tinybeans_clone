@@ -6,6 +6,7 @@
  */
 
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
 	/** Whether the user is authenticated */
@@ -16,13 +17,14 @@ interface HeaderProps {
  * Header actions for authenticated users
  */
 function AuthenticatedHeaderActions() {
+	const { t } = useTranslation();
 	return (
 		<>
-				<Link to="/2fa/settings" className="btn-ghost">
-					2FA Settings
-				</Link>
+			<Link to="/2fa/settings" className="btn-ghost">
+				{t('nav.twofa_settings')}
+			</Link>
 			<Link to="/logout" className="btn-ghost">
-				Logout
+				{t('nav.logout')}
 			</Link>
 		</>
 	);
@@ -32,13 +34,14 @@ function AuthenticatedHeaderActions() {
  * Header actions for guest users
  */
 function GuestHeaderActions() {
+	const { t } = useTranslation();
 	return (
 		<>
 			<Link to="/login" className="btn-ghost">
-				Login
+				{t('nav.login')}
 			</Link>
 			<Link to="/signup" className="btn-primary">
-				Sign up
+				{t('nav.signup')}
 			</Link>
 		</>
 	);
@@ -57,6 +60,7 @@ function GuestHeaderActions() {
  * ```
  */
 export function Header({ isAuthenticated }: HeaderProps) {
+	const { t } = useTranslation();
 	return (
 		<header className="bg-white shadow-sm">
 			<div className="container-page">
@@ -66,7 +70,7 @@ export function Header({ isAuthenticated }: HeaderProps) {
 							to="/"
 							className="text-xl font-bold text-gray-900 hover:text-gray-700"
 						>
-							Home
+							{t('nav.home')}
 						</Link>
 					</div>
 					<nav className="flex items-center gap-4">

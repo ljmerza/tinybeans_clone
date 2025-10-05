@@ -1,6 +1,8 @@
 import { Component, type ReactNode } from "react";
+import { withTranslation } from "react-i18next";
+import type { WithTranslation } from "react-i18next";
 
-interface Props {
+interface Props extends WithTranslation {
 	children: ReactNode;
 	fallback?: ReactNode;
 }
@@ -10,7 +12,7 @@ interface State {
 	error?: Error;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryComponent extends Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = { hasError: false };
@@ -34,21 +36,23 @@ export class ErrorBoundary extends Component<Props, State> {
 				return this.props.fallback;
 			}
 
+			const { t } = this.props;
+
 			return (
 				<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 					<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
 						<h2 className="text-2xl font-semibold text-red-600 mb-4">
-							Something went wrong
+							{t('pages.error.something_wrong')}
 						</h2>
 						<p className="text-gray-600 mb-4">
-							{this.state.error?.message || "An unexpected error occurred"}
+							{this.state.error?.message || t('pages.error.unexpected_error')}
 						</p>
 						<button
 							type="button"
 							onClick={this.handleGoHome}
 							className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
 						>
-							Go to Home
+							{t('pages.error.go_home')}
 						</button>
 					</div>
 				</div>
@@ -58,3 +62,5 @@ export class ErrorBoundary extends Component<Props, State> {
 		return this.props.children;
 	}
 }
+
+export const ErrorBoundary = withTranslation()(ErrorBoundaryComponent);

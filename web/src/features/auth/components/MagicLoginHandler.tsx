@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { StatusMessage } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -13,9 +14,10 @@ type MagicLoginHandlerProps = {
 };
 
 export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const magicLoginVerify = useMagicLoginVerify();
-	const { getGeneral, translate } = useApiMessages();
+	const { getGeneral } = useApiMessages();
 	const [status, setStatus] = useState<"verifying" | "success" | "error">(
 		"verifying",
 	);
@@ -24,13 +26,13 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 	useEffect(() => {
 		if (!token) {
 			setStatus("error");
-			setErrorMessage("Invalid or expired magic login link. Please request a new one.");
+			setErrorMessage(t('errors.magic_link_invalid'));
 			return;
 		}
 
 		magicLoginVerify
 			.mutateAsync({ token })
-			.then((response) => {
+			.then(() => {
 				setStatus("success");
 				// Navigation handled by hook
 			})
@@ -42,16 +44,16 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 				if (generals.length > 0) {
 					setErrorMessage(generals[0]);
 				} else {
-					setErrorMessage("Invalid or expired magic login link. Please request a new one.");
+					setErrorMessage(t('errors.magic_link_invalid'));
 				}
 			});
-	}, [token, magicLoginVerify, getGeneral]);
+	}, [token, magicLoginVerify, getGeneral, t]);
 
 	if (status === "verifying") {
 		return (
 			<div className="mx-auto max-w-sm p-6 space-y-4">
 				<StatusMessage variant="info">
-					Verifying your magic login link...
+					{t('auth.magic_link.verifying')}
 				</StatusMessage>
 				<div className="flex justify-center">
 					<LoadingSpinner />
@@ -64,7 +66,7 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 		return (
 			<div className="mx-auto max-w-sm p-6 space-y-4">
 				<StatusMessage variant="success">
-					Successfully logged in! Redirecting...
+					{t('auth.magic_link.success')}
 				</StatusMessage>
 			</div>
 		);
@@ -76,7 +78,7 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 				{errorMessage}
 			</StatusMessage>
 			<Button onClick={() => navigate({ to: "/login" })} className="w-full">
-				Return to Login
+				{t('auth.password_reset.back_to_login')}
 			</Button>
 		</div>
 	);
