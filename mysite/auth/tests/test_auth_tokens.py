@@ -52,7 +52,7 @@ class AuthTokenCookieTests(TestCase):
 
         self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
         body = refresh_response.json()
-        self.assertIn('access', body)
+        self.assertIn('access', body.get('data', body))
         # cookie should be reset (same or rotated value) and remain http-only
         cookie = refresh_response.cookies['refresh_token']
         self.assertTrue(bool(cookie['httponly']))
@@ -61,7 +61,8 @@ class AuthTokenCookieTests(TestCase):
         response = self.client.post(reverse('auth-token-refresh'))
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIn('detail', response.json())
+        body = response.json()
+        self.assertTrue('detail' in body or 'error' in body)
 
     def test_refresh_with_invalid_cookie_clears_cookie(self):
         self.client.cookies['refresh_token'] = 'invalid'

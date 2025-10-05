@@ -45,6 +45,7 @@
     "twofa": {
       "setup_initiated": "Escanee el código QR con su aplicación de autenticación",
       "verification_code_sent": "Código de verificación enviado a su {{method}}",
+      "code_sent": "Código 2FA enviado a su {{method}}",
       "setup_complete": "2FA habilitado exitosamente. ¡Guarde sus códigos de recuperación!",
       "disabled": "2FA deshabilitado exitosamente",
       "preferred_method_updated": "Método 2FA predeterminado actualizado a {{method}}",

@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_ratelimit.decorators import ratelimit
 
-from mysite.notification_utils import create_message, success_response, error_response
+from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
 from .models import TwoFactorSettings, TwoFactorAuditLog
 from .serializers_2fa import (
     TwoFactorSetupSerializer,
@@ -24,7 +24,6 @@ from .serializers_2fa import (
 from .services.twofa_service import TwoFactorService
 from .services.trusted_device_service import TrustedDeviceService
 from .services.recovery_code_service import RecoveryCodeService
-from .response_utils import rate_limit_response
 
 
 class TwoFactorSetupView(APIView):
@@ -87,7 +86,7 @@ class TwoFactorSetupView(APIView):
             
             # Check rate limiting
             if TwoFactorService.is_rate_limited(user):
-                return rate_limit_response()
+                return rate_limit_response('errors.rate_limit_2fa')
             
             # Send OTP
             code_obj = TwoFactorService.send_otp(user, method=method, purpose='setup')
@@ -451,7 +450,7 @@ class TwoFactorDisableRequestView(APIView):
         
         # For email/SMS, check rate limiting
         if TwoFactorService.is_rate_limited(user):
-            return rate_limit_response()
+            return rate_limit_response('errors.rate_limit_2fa')
         
         # Send OTP for disable purpose
         code_obj = TwoFactorService.send_otp(user, method=settings_obj.preferred_method, purpose='disable')
@@ -730,9 +729,7 @@ class TwoFactorVerifyLoginView(APIView):
         
         # Check if account is locked
         if settings_obj.is_locked():
-            return rate_limit_response(
-                'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'
-            )
+            return rate_limit_response('errors.account_locked_2fa')
         
         # Verify 2FA code
         verified = False

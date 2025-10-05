@@ -45,6 +45,7 @@
     "twofa": {
       "setup_initiated": "Scan QR code with your authenticator app",
       "verification_code_sent": "Verification code sent to your {{method}}",
+      "code_sent": "2FA code sent to your {{method}}",
       "setup_complete": "2FA enabled successfully. Save your recovery codes!",
       "disabled": "2FA disabled successfully",
       "preferred_method_updated": "Default 2FA method updated to {{method}}",

@@ -30,8 +30,9 @@ class CircleMembershipViewTests(TestCase):
         response = self.client.get(reverse('user-circle-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['circles']), 2)
-        circle_names = {item['circle']['name'] for item in response.data['circles']}
+        data = response.data.get('data', response.data)
+        self.assertEqual(len(data['circles']), 2)
+        circle_names = {item['circle']['name'] for item in data['circles']}
         self.assertIn(self.circle.name, circle_names)
         self.assertIn(other_circle.name, circle_names)
 
@@ -94,7 +95,8 @@ class CircleMembershipViewTests(TestCase):
         response = self.client.get(reverse('circle-member-list', args=[self.circle.id]))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        member_ids = {item['user']['id'] for item in response.data['members']}
+        data = response.data.get('data', response.data)
+        member_ids = {item['user']['id'] for item in data['members']}
         self.assertIn(member.id, member_ids)
         self.assertIn(self.admin.id, member_ids)
 
@@ -242,7 +244,8 @@ class CircleMembershipViewTests(TestCase):
         response = self.client.get(reverse('circle-activity', args=[self.circle.id]))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event_types = {event['type'] for event in response.data['events']}
+        data = response.data.get('data', response.data)
+        event_types = {event['type'] for event in data['events']}
         self.assertIn('member_joined', event_types)
         self.assertIn('invitation', event_types)
 

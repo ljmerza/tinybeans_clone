@@ -46,8 +46,7 @@ from .token_utils import (
     store_token,
     generate_partial_token,
 )
-from .response_utils import rate_limit_response as legacy_rate_limit_response
-from mysite.notification_utils import create_message, success_response, error_response
+from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
 
 
 class SignupView(APIView):
@@ -176,12 +175,16 @@ class LoginView(APIView):
                 # Generate partial token with IP binding for 2FA verification
                 partial_token = generate_partial_token(user, request)
                 
-                return Response({
-                    'requires_2fa': True,
-                    'method': twofa_settings.preferred_method,
-                    'partial_token': partial_token,
-                    'message': f'2FA code sent to your {twofa_settings.preferred_method}' if twofa_settings.preferred_method != 'totp' else 'Enter code from authenticator app',
-                })
+                # Return 2FA required response with i18n message
+                message_key = 'notifications.twofa.code_sent' if twofa_settings.preferred_method != 'totp' else 'notifications.twofa.enter_authenticator_code'
+                return success_response(
+                    {
+                        'requires_2fa': True,
+                        'method': twofa_settings.preferred_method,
+                        'partial_token': partial_token,
+                    },
+                    messages=[create_message(message_key, {'method': twofa_settings.preferred_method})]
+                )
                 
         except TwoFactorSettings.DoesNotExist:
             # No 2FA configured - proceed with normal login
@@ -255,13 +258,21 @@ class TokenRefreshCookieView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
         if not refresh_token:
-            return Response({'detail': _('Refresh token cookie missing.')}, status=status.HTTP_401_UNAUTHORIZED)
+            return error_response(
+                'refresh_token_missing',
+                [create_message('errors.token_invalid_expired', {})],
+                status.HTTP_401_UNAUTHORIZED
+            )
 
         serializer = TokenRefreshSerializer(data={'refresh': refresh_token})
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError:
-            response = Response({'detail': _('Invalid or expired refresh token.')}, status=status.HTTP_401_UNAUTHORIZED)
+            response = error_response(
+                'invalid_refresh_token',
+                [create_message('errors.token_invalid_expired', {})],
+                status.HTTP_401_UNAUTHORIZED
+            )
             clear_refresh_cookie(response)
             return response
 
@@ -269,7 +280,7 @@ class TokenRefreshCookieView(APIView):
         access_token = data['access']
         new_refresh = data.get('refresh', refresh_token)
 
-        response = Response({'access': access_token})
+        response = success_response({'access': access_token})
         set_refresh_cookie(response, new_refresh)
         return response
 
@@ -545,9 +556,7 @@ class MagicLoginVerifyView(APIView):
                 if twofa_settings.is_enabled:
                     # Check if account is locked
                     if twofa_settings.is_locked():
-                        return rate_limit_response(
-                            'Account temporarily locked due to too many failed 2FA attempts. Please try again later.'
-                        )
+                        return rate_limit_response('errors.account_locked_2fa')
                     
                     # Check if device is trusted
                     device_id = TrustedDeviceService.get_device_id_from_request(request)
@@ -570,7 +579,7 @@ class MagicLoginVerifyView(APIView):
                     
                     # 2FA required - check rate limiting
                     if TwoFactorService.is_rate_limited(user):
-                        return rate_limit_response('Too many 2FA requests. Please try again later.')
+                        return rate_limit_response('errors.rate_limit_2fa')
                     
                     # Send 2FA code based on preferred method
                     if twofa_settings.preferred_method in ['email', 'sms']:
@@ -584,12 +593,16 @@ class MagicLoginVerifyView(APIView):
                     from .token_utils import generate_partial_token
                     partial_token = generate_partial_token(user, request)
                     
-                    return Response({
-                        'requires_2fa': True,
-                        'method': twofa_settings.preferred_method,
-                        'partial_token': partial_token,
-                        'message': f'2FA code sent to your {twofa_settings.preferred_method}' if twofa_settings.preferred_method != 'totp' else 'Enter code from authenticator app',
-                    })
+                    # Return 2FA required response with i18n message
+                    message_key = 'notifications.twofa.code_sent' if twofa_settings.preferred_method != 'totp' else 'notifications.twofa.enter_authenticator_code'
+                    return success_response(
+                        {
+                            'requires_2fa': True,
+                            'method': twofa_settings.preferred_method,
+                            'partial_token': partial_token,
+                        },
+                        messages=[create_message(message_key, {'method': twofa_settings.preferred_method})]
+                    )
                     
             except TwoFactorSettings.DoesNotExist:
                 # No 2FA configured - proceed with normal login

@@ -61,7 +61,7 @@ class UserCircleListView(APIView):
             .order_by('circle__name')
         )
         serializer = CircleMembershipSerializer(memberships, many=True)
-        return Response({'circles': serializer.data})
+        return success_response({'circles': serializer.data})
 
     @extend_schema(
         description='Create a new circle owned by the authenticated user. Email verification is required.',
@@ -198,7 +198,7 @@ class CircleInvitationListView(APIView):
             status=CircleInvitationStatus.PENDING,
         ).select_related('circle')
         data = CircleInvitationSerializer(invitations, many=True).data
-        return Response({'invitations': data})
+        return success_response({'invitations': data})
 
 
 class CircleMemberListView(APIView):
@@ -222,7 +222,7 @@ class CircleMemberListView(APIView):
 
         memberships = CircleMembership.objects.filter(circle=circle).select_related('user').order_by('user__username')
         serializer = CircleMemberSerializer(memberships, many=True)
-        return Response({'circle': CircleSerializer(circle).data, 'members': serializer.data})
+        return success_response({'circle': CircleSerializer(circle).data, 'members': serializer.data})
 
     @extend_schema(
         description='Add an existing user to a circle with an optional role override.',
@@ -268,8 +268,8 @@ class CircleMemberRemoveView(APIView):
         if not membership_to_remove:
             return error_response(
                 'membership_not_found',
-                messages=[create_message('errors.membership_not_found')],
-                status_code=status.HTTP_404_NOT_FOUND
+                [create_message('errors.membership_not_found')],
+                status.HTTP_404_NOT_FOUND
             )
 
         requester_membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
@@ -283,7 +283,7 @@ class CircleMemberRemoveView(APIView):
                 raise PermissionDenied(_('Not a member of this circle'))
 
         membership_to_remove.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return success_response({}, status_code=status.HTTP_204_NO_CONTENT)
 
 
 class CircleActivityView(APIView):
@@ -332,7 +332,7 @@ class CircleActivityView(APIView):
 
         events.sort(key=lambda item: item['created_at'] or timezone.now(), reverse=True)
 
-        return Response({'circle': CircleSerializer(circle).data, 'events': events})
+        return success_response({'circle': CircleSerializer(circle).data, 'events': events})
 
 
 class CircleInvitationRespondView(APIView):
@@ -360,8 +360,9 @@ class CircleInvitationRespondView(APIView):
 
         if invitation.status != CircleInvitationStatus.PENDING:
             return error_response(
-                messages=[create_message('errors.invitation_not_pending')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'invitation_not_pending',
+                [create_message('errors.invitation_not_pending')],
+                status.HTTP_400_BAD_REQUEST
             )
 
         with transaction.atomic():
@@ -409,8 +410,9 @@ class CircleInvitationAcceptView(APIView):
         payload = pop_token('circle-invite', serializer.validated_data['token'])
         if not payload:
             return error_response(
-                messages=[create_message('errors.token_invalid_expired')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'token_invalid_expired',
+                [create_message('errors.token_invalid_expired')],
+                status.HTTP_400_BAD_REQUEST
             )
 
         invitation = CircleInvitation.objects.filter(
@@ -419,20 +421,23 @@ class CircleInvitationAcceptView(APIView):
         ).select_related('circle', 'invited_by').first()
         if not invitation:
             return error_response(
-                messages=[create_message('errors.invitation_not_found')],
-                status_code=status.HTTP_404_NOT_FOUND
+                'invitation_not_found',
+                [create_message('errors.invitation_not_found')],
+                status.HTTP_404_NOT_FOUND
             )
         if invitation.email.lower() != payload.get('email', '').lower():
             return error_response(
-                messages=[create_message('errors.invitation_mismatch')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'invitation_mismatch',
+                [create_message('errors.invitation_mismatch')],
+                status.HTTP_400_BAD_REQUEST
             )
 
         existing_user = User.objects.filter(email__iexact=invitation.email).first()
         if existing_user:
             return error_response(
-                messages=[create_message('errors.email_already_registered')],
-                status_code=status.HTTP_409_CONFLICT
+                'email_already_registered',
+                [create_message('errors.email_already_registered')],
+                status.HTTP_409_CONFLICT
             )
 
         username = serializer.validated_data['username']

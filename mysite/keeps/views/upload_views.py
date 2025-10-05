@@ -181,16 +181,18 @@ class MediaUploadStatusView(APIView):
             ).get(id=upload_id)
         except MediaUpload.DoesNotExist:
             return error_response(
-                messages=[create_message('errors.upload_not_found')],
-                status_code=status.HTTP_404_NOT_FOUND
+                'upload_not_found',
+                [create_message('errors.upload_not_found')],
+                status.HTTP_404_NOT_FOUND
             )
         
         # Verify user has access to the keep's circle
         if not upload.keep.circle.memberships.filter(user=request.user).exists():
             return error_response(
-                messages=[create_message('errors.access_denied')],
-                status_code=status.HTTP_403_FORBIDDEN
+                'access_denied',
+                [create_message('errors.access_denied')],
+                status.HTTP_403_FORBIDDEN
             )
         
         serializer = MediaUploadStatusSerializer(upload)
-        return Response(serializer.data)
+        return success_response(serializer.data)

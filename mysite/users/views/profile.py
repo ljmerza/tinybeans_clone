@@ -24,7 +24,7 @@ class UserProfileView(APIView):
     )
     def get(self, request):
         serializer = UserProfileSerializer(request.user)
-        return Response({'user': serializer.data})
+        return success_response({'user': serializer.data})
 
     @extend_schema(
         description='Update selected profile fields (name, etc.) for the authenticated user.',
@@ -71,7 +71,7 @@ class EmailPreferencesView(APIView):
     )
     def get(self, request):
         prefs = self.get_object(request)
-        return Response(EmailPreferencesSerializer(prefs).data)
+        return success_response(EmailPreferencesSerializer(prefs).data)
 
     @extend_schema(
         description='Update notification preferences globally or for a specific circle.',

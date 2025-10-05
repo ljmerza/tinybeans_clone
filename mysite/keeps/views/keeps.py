@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiTypes, OpenApiParameter
 
-from mysite.notification_utils import create_message, error_response
+from mysite.notification_utils import create_message, error_response, success_response
 from users.models import Circle
 from ..models import Keep, KeepType
 from ..serializers import (
@@ -347,7 +347,7 @@ class KeepByCircleView(APIView):
         ).order_by('-date_of_memory', '-created_at')
         
         serializer = KeepSerializer(keeps, many=True)
-        return Response(serializer.data)
+        return success_response(serializer.data)
 
 
 class KeepByTypeView(APIView):
@@ -401,4 +401,4 @@ class KeepByTypeView(APIView):
         ).order_by('-date_of_memory', '-created_at')
         
         serializer = KeepSerializer(keeps, many=True)
-        return Response(serializer.data)
+        return success_response(serializer.data)

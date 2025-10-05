@@ -26,8 +26,9 @@ class UserProfileViewTests(TestCase):
         response = self.client.get(reverse('user-profile'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['user']['id'], self.user.id)
-        self.assertEqual(response.data['user']['email'], self.user.email)
+        data = response.data.get('data', response.data)
+        self.assertEqual(data['user']['id'], self.user.id)
+        self.assertEqual(data['user']['email'], self.user.email)
 
     def test_get_profile_requires_authentication(self):
         response = self.client.get(reverse('user-profile'))
@@ -55,10 +56,11 @@ class NotificationPreferencesViewTests(TestCase):
         response = self.client.get(reverse('user-email-preferences'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('digest_frequency', response.data)
-        self.assertIn('push_enabled', response.data)
-        self.assertIn('per_circle_override', response.data)
-        self.assertFalse(response.data['per_circle_override'])
+        data = response.data.get('data', response.data)
+        self.assertIn('digest_frequency', data)
+        self.assertIn('push_enabled', data)
+        self.assertIn('per_circle_override', data)
+        self.assertFalse(data['per_circle_override'])
 
     def test_patch_updates_digest_and_push_preferences(self):
         self.client.force_authenticate(user=self.user)
@@ -81,7 +83,8 @@ class NotificationPreferencesViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data['per_circle_override'])
+        data = response.data.get('data', response.data)
+        self.assertTrue(data['per_circle_override'])
         override = UserNotificationPreferences.objects.get(user=self.user, circle=self.circle)
         self.assertIsNotNone(override)
 

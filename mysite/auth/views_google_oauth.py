@@ -36,9 +36,8 @@ from auth.serializers import (
     OAuthErrorSerializer,
 )
 from auth.token_utils import get_tokens_for_user, set_refresh_cookie
-from auth.response_utils import rate_limit_response
 from users.serializers import UserSerializer
-from mysite.notification_utils import error_response, success_response, validation_error_response, create_message
+from mysite.notification_utils import error_response, success_response, validation_error_response, create_message, rate_limit_response
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ class GoogleOAuthInitiateView(APIView):
         # Check rate limit
         was_limited = getattr(request, 'limited', False)
         if was_limited:
-            return rate_limit_response()
+            return rate_limit_response('errors.rate_limit')
         
         # Validate request
         serializer = OAuthInitiateRequestSerializer(data=request.data)
@@ -168,7 +167,7 @@ class GoogleOAuthCallbackView(APIView):
         # Check rate limit
         was_limited = getattr(request, 'limited', False)
         if was_limited:
-            return rate_limit_response()
+            return rate_limit_response('errors.rate_limit')
         
         # Validate request
         serializer = OAuthCallbackRequestSerializer(data=request.data)
@@ -303,7 +302,7 @@ class GoogleOAuthLinkView(APIView):
         # Check rate limit
         was_limited = getattr(request, 'limited', False)
         if was_limited:
-            return rate_limit_response()
+            return rate_limit_response('errors.rate_limit')
         
         # Validate request
         serializer = OAuthLinkRequestSerializer(data=request.data)
@@ -402,7 +401,7 @@ class GoogleOAuthUnlinkView(APIView):
         # Check rate limit
         was_limited = getattr(request, 'limited', False)
         if was_limited:
-            return rate_limit_response()
+            return rate_limit_response('errors.rate_limit')
         
         # Validate request
         serializer = OAuthUnlinkRequestSerializer(data=request.data)

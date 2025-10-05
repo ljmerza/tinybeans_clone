@@ -45,7 +45,7 @@ class CirclePetListView(APIView):
             
         pets = pets.order_by('name')
         serializer = PetProfileSerializer(pets, many=True)
-        return Response({'pets': serializer.data})
+        return success_response({'pets': serializer.data})
 
     @extend_schema(
         description='Add a new pet to the circle. Only circle admins can add pets.',
@@ -110,7 +110,7 @@ class PetProfileDetailView(APIView):
         """Get pet details."""
         pet = self._get_pet_and_check_permission(pet_id, request.user)
         serializer = PetProfileSerializer(pet)
-        return Response({'pet': serializer.data})
+        return success_response({'pet': serializer.data})
 
     @extend_schema(
         description='Update pet profile. Only circle admins can update pets.',
@@ -144,4 +144,4 @@ class PetProfileDetailView(APIView):
         """Delete pet profile."""
         pet = self._get_pet_and_check_permission(pet_id, request.user, admin_required=True)
         pet.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return success_response({}, status_code=status.HTTP_204_NO_CONTENT)

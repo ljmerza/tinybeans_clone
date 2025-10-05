@@ -101,8 +101,9 @@ class PetProfileViewTests(TestCase):
         response = self.client.get(reverse('circle-pet-list', args=[self.circle.id]))
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['pets']), 1)
-        self.assertEqual(response.data['pets'][0]['name'], 'Fluffy')
+        data = response.data.get('data', response.data)
+        self.assertEqual(len(data['pets']), 1)
+        self.assertEqual(data['pets'][0]['name'], 'Fluffy')
 
     def test_list_pets_exclude_inactive(self):
         """Test that inactive pets are excluded by default."""
@@ -124,8 +125,9 @@ class PetProfileViewTests(TestCase):
         response = self.client.get(reverse('circle-pet-list', args=[self.circle.id]))
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['pets']), 1)
-        self.assertEqual(response.data['pets'][0]['name'], 'Active Pet')
+        data = response.data.get('data', response.data)
+        self.assertEqual(len(data['pets']), 1)
+        self.assertEqual(data['pets'][0]['name'], 'Active Pet')
 
     def test_list_pets_include_inactive(self):
         """Test including inactive pets with query parameter."""
@@ -147,7 +149,8 @@ class PetProfileViewTests(TestCase):
         response = self.client.get(reverse('circle-pet-list', args=[self.circle.id]) + '?include_inactive=true')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['pets']), 2)
+        data = response.data.get('data', response.data)
+        self.assertEqual(len(data['pets']), 2)
 
     def test_create_pet_as_admin(self):
         """Test that circle admins can create pets."""
@@ -194,8 +197,9 @@ class PetProfileViewTests(TestCase):
         response = self.client.get(reverse('pet-detail', args=[pet.id]))
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['pet']['name'], 'Spot')
-        self.assertEqual(response.data['pet']['breed'], 'Dalmatian')
+        data = response.data.get('data', response.data)
+        self.assertEqual(data['pet']['name'], 'Spot')
+        self.assertEqual(data['pet']['breed'], 'Dalmatian')
 
     def test_update_pet_as_admin(self):
         """Test that admins can update pet profiles."""
