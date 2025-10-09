@@ -94,8 +94,10 @@ class AuthViewSecurityTests(TestCase):
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
         context = kwargs['context']
+        from django.conf import settings
+        expected_base = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
         self.assertIn('reset_link', context)
         self.assertIn('token', context)
         self.assertIn(context['token'], context['reset_link'])
-        self.assertTrue(context['reset_link'].startswith('http://localhost:3000/password/reset/confirm?'))
+        self.assertTrue(context['reset_link'].startswith(f'{expected_base}/password/reset/confirm?'))
         self.assertGreaterEqual(context.get('expires_in_minutes', 0), 1)
