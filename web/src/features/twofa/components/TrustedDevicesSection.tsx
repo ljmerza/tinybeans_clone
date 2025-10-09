@@ -4,6 +4,7 @@
  */
 
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 interface TrustedDevicesSectionProps {
 	onManage: () => void;
@@ -12,14 +13,18 @@ interface TrustedDevicesSectionProps {
 export function TrustedDevicesSection({
 	onManage,
 }: TrustedDevicesSectionProps) {
+	const { t } = useTranslation();
+
 	return (
 		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4">Trusted Devices</h2>
+			<h2 className="text-xl font-semibold mb-4">
+				{t("twofa.settings.trusted_devices.title")}
+			</h2>
 			<p className="text-gray-600 text-sm mb-4">
-				Manage devices that can skip 2FA verification for 30 days.
+				{t("twofa.settings.trusted_devices.description")}
 			</p>
 			<Button onClick={onManage} variant="outline">
-				Manage Trusted Devices
+				{t("twofa.settings.trusted_devices.manage_action")}
 			</Button>
 		</div>
 	);

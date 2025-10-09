@@ -171,7 +171,6 @@ class CircleInvitationCreateView(APIView):
         )
 
         data = CircleInvitationSerializer(invitation).data
-        data['token'] = token
         return success_response(
             {'invitation': data},
             messages=[create_message('notifications.circle.invitation_sent')],

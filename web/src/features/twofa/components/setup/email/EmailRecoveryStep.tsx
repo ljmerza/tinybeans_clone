@@ -1,4 +1,5 @@
 import { GenericRecoveryStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface EmailRecoveryStepProps {
 	recoveryCodes?: string[];
@@ -6,12 +7,13 @@ interface EmailRecoveryStepProps {
 }
 
 export function EmailRecoveryStep(props: EmailRecoveryStepProps) {
+	const { t } = useTranslation();
+
 	return (
 		<GenericRecoveryStep
 			config={{
-				title: "✅ Email 2FA Enabled",
-				description:
-					"Save your recovery codes to keep access if you can't reach your email.",
+				title: t("twofa.setup.email.recovery_title"),
+				description: t("twofa.setup.email.recovery_description"),
 			}}
 			recoveryCodes={props.recoveryCodes}
 			onComplete={props.onComplete}

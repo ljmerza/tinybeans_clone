@@ -8,8 +8,15 @@ import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
-import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
+import { extractApiError } from "@/features/auth/utils";
+import {
+	VerificationInput,
+	useVerify2FALogin,
+} from "@/features/twofa";
+import type {
+	TwoFactorMethod,
+	TwoFactorVerifyState,
+} from "@/features/twofa";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import {
 	Navigate,
@@ -17,32 +24,23 @@ import {
 	useLocation,
 	useNavigate,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-const TWO_FACTOR_METHODS: ReadonlyArray<TwoFactorMethod> = [
-	"totp",
-	"email",
-	"sms",
-];
+const recoveryCodeSchema = z.string().min(14);
 
-function isValidTwoFactorMethod(value: unknown): value is TwoFactorMethod {
-	return (
-		typeof value === "string" &&
-		TWO_FACTOR_METHODS.includes(value as TwoFactorMethod)
-	);
-}
-
-// Used in 2FA verify for recovery codes
-const recoveryCodeSchema = z
-	.string()
-	.min(14, "Recovery code must be at least 14 characters");
+const methodLabelKey: Record<TwoFactorMethod, string> = {
+	totp: "twofa.verify.methods.authenticator",
+	email: "twofa.verify.methods.email",
+	sms: "twofa.verify.methods.sms",
+};
 
 function TwoFactorVerifyPage() {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { t } = useTranslation();
 
-	// Read verify data directly from location state (no useEffect needed)
 	const [verifyData] = useState<TwoFactorVerifyState | null>(() => {
 		const state = location.state;
 		if (!state || typeof state !== "object") {
@@ -52,17 +50,19 @@ function TwoFactorVerifyPage() {
 		const candidate = state as Partial<TwoFactorVerifyState>;
 		const partialToken = candidate.partialToken;
 		const method = candidate.method;
-		if (typeof partialToken !== "string" || !isValidTwoFactorMethod(method)) {
+		if (
+			typeof partialToken !== "string" ||
+			!method ||
+			!(method in methodLabelKey)
+		) {
 			return null;
 		}
-		const parsed: TwoFactorVerifyState = {
+		return {
 			partialToken,
 			method,
 			message:
 				typeof candidate.message === "string" ? candidate.message : undefined,
-		};
-		console.log("2FA Verify Data from location state:", parsed);
-		return parsed;
+		} satisfies TwoFactorVerifyState;
 	});
 
 	const [code, setCode] = useState("");
@@ -71,29 +71,37 @@ function TwoFactorVerifyPage() {
 
 	const verify = useVerify2FALogin();
 
-	// Navigate to home on successful verification
 	useEffect(() => {
 		if (verify.isSuccess) {
 			navigate({ to: "/", replace: true });
 		}
 	}, [verify.isSuccess, navigate]);
 
-	// Redirect if no partial token (direct access or page refresh)
 	if (!verifyData?.partialToken || !verifyData?.method) {
 		return <Navigate to="/login" />;
 	}
 
 	const { partialToken, method, message } = verifyData;
 
+	const headerDescription = useMemo(() => {
+		if (useRecoveryCode) {
+			return t("twofa.verify.use_recovery");
+		}
+		if (message) {
+			return message;
+		}
+
+		return t("twofa.verify.enter_code", {
+			method: t(methodLabelKey[method]),
+		});
+	}, [method, message, t, useRecoveryCode]);
+
 	const handleVerify = () => {
-		// Validate code based on type
-		const validation = useRecoveryCode
-			? recoveryCodeSchema.safeParse(code)
-			: verificationCodeSchema.safeParse(code);
+		const schema = useRecoveryCode ? recoveryCodeSchema : verificationCodeSchema;
+		if (!schema.safeParse(code).success) {
+			return;
+		}
 
-		if (!validation.success) return;
-
-		console.log("Verifying 2FA code..."); // Debug log
 		verify.mutate({
 			partial_token: partialToken,
 			code,
@@ -101,27 +109,9 @@ function TwoFactorVerifyPage() {
 		});
 	};
 
-	const getMethodDisplay = () => {
-		if (useRecoveryCode) return "recovery code";
-		switch (method) {
-			case "totp":
-				return "authenticator app";
-			case "email":
-				return "email";
-			case "sms":
-				return "phone";
-			default:
-				return method;
-		}
-	};
-
-	const headerDescription = useRecoveryCode
-		? "Enter one of your recovery codes"
-		: (message ?? `Enter the 6-digit code from your ${getMethodDisplay()}`);
-
-	return (
+return (
 		<AuthCard
-			title="Two-Factor Authentication"
+			title={t("twofa.verify_title")}
 			description={headerDescription}
 			className="max-w-md"
 			footerClassName="border-t pt-4 text-center space-y-0"
@@ -132,7 +122,7 @@ function TwoFactorVerifyPage() {
 					disabled={verify.isPending}
 					className="text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
 				>
-					← Back to login
+					{t("common.back_to_login")}
 				</button>
 			}
 		>
@@ -145,11 +135,13 @@ function TwoFactorVerifyPage() {
 				/>
 			) : (
 				<div className="space-y-2">
-					<Label htmlFor="recovery-code">Recovery Code</Label>
+					<Label htmlFor="recovery-code">
+						{t("twofa.verify.recovery_label")}
+					</Label>
 					<Input
 						id="recovery-code"
 						type="text"
-						placeholder="XXXX-XXXX-XXXX"
+						placeholder={t("twofa.verify.recovery_placeholder")}
 						value={code}
 						onChange={(e) => setCode(e.target.value)}
 						disabled={verify.isPending}
@@ -157,7 +149,7 @@ function TwoFactorVerifyPage() {
 						maxLength={14}
 					/>
 					<p className="text-xs text-gray-500 text-center">
-						Format: XXXX-XXXX-XXXX (with dashes)
+						{t("twofa.verify.recovery_hint")}
 					</p>
 				</div>
 			)}
@@ -175,29 +167,27 @@ function TwoFactorVerifyPage() {
 					htmlFor="remember-me"
 					className="text-sm font-normal cursor-pointer"
 				>
-					Remember this device for 30 days
+					{t("twofa.verify.remember_device")}
 				</Label>
 			</div>
 
 			<Button
 				onClick={handleVerify}
 				disabled={
-					(useRecoveryCode
-						? !recoveryCodeSchema.safeParse(code).success
-						: !verificationCodeSchema.safeParse(code).success) ||
-					verify.isPending
+					verify.isPending ||
+					!(useRecoveryCode
+						? recoveryCodeSchema.safeParse(code).success
+						: verificationCodeSchema.safeParse(code).success)
 				}
 				className="w-full"
 			>
-				{verify.isPending ? "Verifying..." : "Verify"}
+				{verify.isPending ? t("twofa.verify.verifying") : t("twofa.verify.verify")}
 			</Button>
 
 			{verify.error && (
 				<div className="bg-red-50 border border-red-200 rounded p-3">
 					<StatusMessage variant="error" align="center">
-						{verify.error instanceof Error
-							? verify.error.message
-							: "Invalid code. Please try again."}
+						{extractApiError(verify.error, t("twofa.errors.invalid_code"))}
 					</StatusMessage>
 				</div>
 			)}
@@ -213,8 +203,8 @@ function TwoFactorVerifyPage() {
 					className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
 				>
 					{useRecoveryCode
-						? "← Use verification code instead"
-						: "Use recovery code instead →"}
+						? t("twofa.verify.use_code")
+						: t("twofa.verify.use_recovery_toggle")}
 				</button>
 			</div>
 		</AuthCard>

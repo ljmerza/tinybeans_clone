@@ -120,59 +120,56 @@ export const twoFactorApi = {
 		codes: string[],
 		format: "txt" | "pdf" = "txt",
 	) => {
-		try {
-			// Use the same auth mechanism as apiClient
-			const token = authStore.state.accessToken;
-			const csrfToken = getCsrfToken();
+		// Use the same auth mechanism as apiClient
+		const token = authStore.state.accessToken;
+		const csrfToken = getCsrfToken();
 
-			// Build headers
-			const headers: Record<string, string> = {
-				"Content-Type": "application/json",
-			};
+		// Build headers
+		const headers: Record<string, string> = {
+			"Content-Type": "application/json",
+		};
 
-			if (csrfToken) {
-				headers["X-CSRFToken"] = csrfToken;
-			}
-
-			if (token) {
-				headers.Authorization = `Bearer ${token}`;
-			}
-
-			// Make POST request with blob response
-			const response = await fetch(
-				`${API_BASE}/auth/2fa/recovery-codes/download/`,
-				{
-					method: "POST",
-					headers,
-					credentials: "include",
-					body: JSON.stringify({ codes, format }),
-				},
-			);
-
-			if (!response.ok) {
-				const errorText = await response.text();
-				console.error("Download failed:", response.status, errorText);
-				throw new Error(
-					`Failed to download recovery codes: ${response.statusText}`,
-				);
-			}
-
-			// Get the blob
-			const blob = await response.blob();
-
-			// Create download link
-			const downloadUrl = window.URL.createObjectURL(blob);
-			const link = document.createElement("a");
-			link.href = downloadUrl;
-			link.download = `tinybeans-recovery-codes.${format}`;
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-			window.URL.revokeObjectURL(downloadUrl);
-		} catch (error) {
-			console.error("Failed to download recovery codes:", error);
-			throw error;
+		if (csrfToken) {
+			headers["X-CSRFToken"] = csrfToken;
 		}
+
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+
+		// Make POST request with blob response
+		const response = await fetch(
+			`${API_BASE}/auth/2fa/recovery-codes/download/`,
+			{
+				method: "POST",
+				headers,
+				credentials: "include",
+				body: JSON.stringify({ codes, format }),
+			},
+		);
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			const reason = errorText || response.statusText;
+			throw new Error(
+				reason
+					? `Failed to download recovery codes: ${reason}`
+					: "Failed to download recovery codes.",
+			);
+		}
+
+		// Get the blob
+		const blob = await response.blob();
+
+		// Create download link
+		const downloadUrl = window.URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = downloadUrl;
+		link.download = `tinybeans-recovery-codes.${format}`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		window.URL.revokeObjectURL(downloadUrl);
 	},
 
 	/**

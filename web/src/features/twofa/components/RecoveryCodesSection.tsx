@@ -6,6 +6,7 @@
 import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { RecoveryCodeList } from "./RecoveryCodeList";
+import { useTranslation } from "react-i18next";
 
 interface RecoveryCodesSectionProps {
 	showNewCodes: boolean;
@@ -26,28 +27,34 @@ export function RecoveryCodesSection({
 	onViewCurrent,
 	onHideCodes,
 }: RecoveryCodesSectionProps) {
+	const { t } = useTranslation();
+
 	return (
 		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4">Recovery Codes</h2>
+			<h2 className="text-xl font-semibold mb-4">
+				{t("twofa.settings.recovery_codes_title")}
+			</h2>
 
 			{!showNewCodes ? (
 				<div className="space-y-4">
 					<p className="text-gray-600 text-sm">
-						Recovery codes can be used to access your account if you lose access
-						to your authenticator device. Each code can only be used once.
+						{t("twofa.settings.recovery_codes_description")}
 					</p>
 
-					<div className="flex gap-2">
+					<div className="flex gap-2 flex-col sm:flex-row">
 						<Button
 							onClick={onGenerate}
 							disabled={isGenerating}
 							variant="outline"
+							className="flex-1"
 						>
-							{isGenerating ? "Generating..." : "Generate New Recovery Codes"}
+							{isGenerating
+								? t("twofa.settings.recovery_codes_generating")
+								: t("twofa.settings.recovery_codes_generate")}
 						</Button>
 
-						<Button onClick={onViewCurrent} variant="outline">
-							View Current Codes
+						<Button onClick={onViewCurrent} variant="outline" className="flex-1">
+							{t("twofa.settings.recovery_codes_view")}
 						</Button>
 					</div>
 
@@ -58,8 +65,8 @@ export function RecoveryCodesSection({
 			) : (
 				<div className="space-y-4">
 					{codes && <RecoveryCodeList codes={codes} />}
-					<Button onClick={onHideCodes} variant="outline">
-						Done
+					<Button onClick={onHideCodes} variant="outline" className="w-full">
+						{t("common.done")}
 					</Button>
 				</div>
 			)}

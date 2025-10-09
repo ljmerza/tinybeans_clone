@@ -7,6 +7,7 @@ import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { VerificationInput } from "./VerificationInput";
+import { useTranslation } from "react-i18next";
 
 interface DisableTwoFactorSectionProps {
 	showDisableConfirm: boolean;
@@ -31,33 +32,38 @@ export function DisableTwoFactorSection({
 	onCodeChange,
 	onConfirmDisable,
 }: DisableTwoFactorSectionProps) {
+	const { t } = useTranslation();
+
 	return (
 		<div className="bg-white rounded-lg shadow-md p-6">
 			<h2 className="text-xl font-semibold mb-4 text-red-600">
-				Disable Two-Factor Authentication
+				{t("twofa.settings.disable.title")}
 			</h2>
 
 			<div className="space-y-4">
 				<p className="text-gray-600 text-sm">
-					Disabling 2FA will make your account less secure. You'll only need
-					your password to log in.
+					{t("twofa.settings.disable.description")}
 				</p>
 				<Button
 					onClick={onRequestDisable}
 					variant="outline"
 					className="text-red-600 border-red-300 hover:bg-red-50"
 				>
-					Disable 2FA
+					{t("twofa.settings.disable.action")}
 				</Button>
 			</div>
 
 			<ConfirmDialog
 				open={showDisableConfirm}
 				onOpenChange={(open) => !open && onCancelDisable()}
-				title="Disable Two-Factor Authentication"
-				description="Enter your 6-digit verification code to confirm disabling 2FA. This will make your account less secure."
-				confirmLabel={isDisabling ? "Disabling..." : "Confirm Disable"}
-				cancelLabel="Cancel"
+				title={t("twofa.settings.disable.dialog_title")}
+				description={t("twofa.settings.disable.dialog_description")}
+				confirmLabel={
+					isDisabling
+						? t("twofa.settings.disable.confirm_loading")
+						: t("twofa.settings.disable.confirm_label")
+				}
+				cancelLabel={t("common.cancel")}
 				variant="destructive"
 				isLoading={isDisabling}
 				disabled={!canDisable}

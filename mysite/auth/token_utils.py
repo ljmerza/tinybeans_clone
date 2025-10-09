@@ -14,6 +14,8 @@ from __future__ import annotations
 import os
 import uuid
 import logging
+import hashlib
+import hmac
 from typing import Any
 
 from django.conf import settings
@@ -197,6 +199,16 @@ def generate_partial_token(user: User, request=None, expires_in: int = 600) -> s
         payload['ip_address'] = get_client_ip(request)
     
     return store_token('partial', payload, ttl=expires_in)
+
+
+def hash_magic_login_token(raw_token: str) -> str:
+    """Generate an HMAC-SHA256 hash for magic login tokens."""
+    key = getattr(settings, 'MAGIC_LOGIN_TOKEN_SIGNING_KEY', settings.SECRET_KEY)
+    return hmac.new(
+        key.encode('utf-8'),
+        raw_token.encode('utf-8'),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def verify_partial_token(token: str, request=None) -> User | None:

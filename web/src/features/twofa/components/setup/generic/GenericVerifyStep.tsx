@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import { VerificationInput } from "../../VerificationInput";
 import type { VerifyStepConfig } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface GenericVerifyStepProps {
 	/** Configuration for the step */
@@ -100,6 +101,10 @@ export function GenericVerifyStep({
 	onSecondaryAction,
 }: GenericVerifyStepProps) {
 	const isCodeValid = verificationCodeSchema.safeParse(code).success;
+	const { t } = useTranslation();
+	const resendText = config.resendButtonText ?? t("twofa.setup.actions.resend");
+	const backText = config.backButtonText ?? t("common.back");
+	const cancelText = t("common.cancel");
 
 	return (
 		<>
@@ -118,7 +123,7 @@ export function GenericVerifyStep({
 							disabled={isResending}
 							className="sm:w-auto"
 						>
-							{config.resendButtonText || "Resend Code"}
+							{resendText}
 						</Button>
 						{onSecondaryAction && (
 							<Button
@@ -126,7 +131,7 @@ export function GenericVerifyStep({
 								onClick={onSecondaryAction}
 								className="sm:w-auto"
 							>
-								Cancel
+								{cancelText}
 							</Button>
 						)}
 					</ButtonGroup>
@@ -145,7 +150,7 @@ export function GenericVerifyStep({
 						disabled={isVerifying}
 						className="flex-1 sm:flex-none"
 					>
-						{config.backButtonText || "Back"}
+						{backText}
 					</Button>
 				)}
 				<Button

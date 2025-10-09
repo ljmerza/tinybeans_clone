@@ -4,8 +4,10 @@
  */
 
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import { useState } from "react";
 import { twoFactorApi } from "../api/twoFactorApi";
+import { useTranslation } from "react-i18next";
 
 interface RecoveryCodeListProps {
 	codes: string[];
@@ -17,6 +19,7 @@ export function RecoveryCodeList({
 	showDownloadButton = true,
 }: RecoveryCodeListProps) {
 	const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+	const { t } = useTranslation();
 
 	// Fallback copy function for browsers without clipboard API
 	const copyToClipboard = async (text: string): Promise<boolean> => {
@@ -44,7 +47,7 @@ export function RecoveryCodeList({
 			textArea.remove();
 			return success;
 		} catch (err) {
-			console.error("Copy failed:", err);
+			showToast({ message: t("twofa.errors.copy"), level: "error" });
 			return false;
 		}
 	};
@@ -55,7 +58,7 @@ export function RecoveryCodeList({
 			setCopiedIndex(index);
 			setTimeout(() => setCopiedIndex(null), 2000);
 		} else {
-			alert("Failed to copy. Please copy manually.");
+			showToast({ message: t("twofa.errors.copy_code"), level: "error" });
 		}
 	};
 
@@ -66,27 +69,30 @@ export function RecoveryCodeList({
 			setCopiedIndex(-1);
 			setTimeout(() => setCopiedIndex(null), 2000);
 		} else {
-			alert("Failed to copy. Please copy manually.");
+			showToast({ message: t("twofa.errors.copy_codes"), level: "error" });
 		}
 	};
+
+	const importantItems = t("twofa.setup.recovery.important_items", {
+		returnObjects: true,
+	}) as string[];
 
 	return (
 		<div className="space-y-4">
 			<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
 				<h3 className="text-lg font-semibold text-yellow-900 mb-2">
-					⚠️ Save These Codes
+					{t("twofa.setup.recovery.warning_title")}
 				</h3>
 				<p className="text-sm text-yellow-800">
-					These recovery codes can be used to access your account if you lose
-					access to your authenticator app. Each code can only be used once.
+					{t("twofa.setup.recovery.warning_body")}
 				</p>
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-				{codes.map((code, index) => (
-					<button
-						key={code}
-						type="button"
+		{codes.map((code, index) => (
+			<button
+				key={code}
+				type="button"
 						onClick={() => handleCopy(code, index)}
 						className="bg-gray-100 hover:bg-gray-200 p-3 rounded text-left font-mono text-sm transition-colors group relative"
 					>
@@ -96,7 +102,7 @@ export function RecoveryCodeList({
 						<span className="select-all">{code}</span>
 						{copiedIndex === index && (
 							<span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-green-600 font-semibold">
-								✓ Copied
+								{t("twofa.setup.recovery.copied")}
 							</span>
 						)}
 					</button>
@@ -110,7 +116,9 @@ export function RecoveryCodeList({
 					onClick={handleCopyAll}
 					className="flex-1"
 				>
-					{copiedIndex === -1 ? "✓ Copied All" : "Copy All Codes"}
+					{copiedIndex === -1
+						? t("twofa.setup.recovery.copied_all")
+						: t("twofa.setup.recovery.copy_all")}
 				</Button>
 				{showDownloadButton && (
 					<>
@@ -120,7 +128,7 @@ export function RecoveryCodeList({
 							onClick={() => twoFactorApi.downloadRecoveryCodes(codes, "txt")}
 							className="flex-1"
 						>
-							Download as TXT
+							{t("twofa.setup.recovery.download_txt")}
 						</Button>
 						<Button
 							type="button"
@@ -128,25 +136,20 @@ export function RecoveryCodeList({
 							onClick={() => twoFactorApi.downloadRecoveryCodes(codes, "pdf")}
 							className="flex-1"
 						>
-							Download as PDF
+							{t("twofa.setup.recovery.download_pdf")}
 						</Button>
 					</>
 				)}
 			</div>
 
 			<div className="bg-red-50 border border-red-200 rounded-lg p-4">
-				<h4 className="text-sm font-semibold text-red-900 mb-2">Important:</h4>
+				<h4 className="text-sm font-semibold text-red-900 mb-2">
+					{t("twofa.setup.recovery.important_title")}
+				</h4>
 				<ul className="text-sm text-red-800 space-y-1 list-disc list-inside">
-					<li>
-						Store these codes in a secure location (password manager, safe,
-						etc.)
-					</li>
-					<li>Each code can only be used once</li>
-					<li>Don't share these codes with anyone</li>
-					<li>
-						You can generate new codes at any time (this will invalidate old
-						ones)
-					</li>
+					{importantItems.map((item) => (
+						<li key={item}>{item}</li>
+					))}
 				</ul>
 			</div>
 		</div>

@@ -13,6 +13,7 @@ import {
 } from "@/components";
 import { Button } from "@/components/ui/button";
 import type { IntroStepConfig } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface GenericIntroStepProps {
 	/** Configuration for the step */
@@ -78,6 +79,8 @@ export function GenericIntroStep({
 	onAction,
 	onCancel,
 }: GenericIntroStepProps) {
+	const { t } = useTranslation();
+	const cancelLabel = t("common.cancel");
 	return (
 		<>
 			<WizardSection title={config.title} description={config.description}>
@@ -99,7 +102,7 @@ export function GenericIntroStep({
 				</Button>
 				{onCancel && (
 					<Button variant="outline" onClick={onCancel} className="flex-1">
-						Cancel
+						{cancelLabel}
 					</Button>
 				)}
 			</WizardFooter>

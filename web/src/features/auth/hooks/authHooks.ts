@@ -9,6 +9,7 @@ import type { ApiError, MutationResponse } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { apiClient } from "../api/authClient";
+import { authKeys } from "../api/queryKeys";
 import { setAccessToken } from "../store/authStore";
 import type {
 	LoginRequest,
@@ -39,7 +40,7 @@ export function useLogin() {
 			}
 
 			setAccessToken(data.tokens.access);
-			qc.invalidateQueries({ queryKey: ["auth"] });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
 			// Show success message if provided
 			if (data.messages) {
@@ -66,7 +67,7 @@ export function useSignup() {
 		mutationFn: (body) => apiClient.post<SignupResponse>("/auth/signup/", body),
 		onSuccess: (data) => {
 			setAccessToken(data.tokens.access);
-			qc.invalidateQueries({ queryKey: ["auth"] });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
 			// Show success message
 			if (data.messages) {
@@ -94,7 +95,7 @@ export function useLogout() {
 			return true;
 		},
 		onSuccess: (data: boolean) => {
-			qc.invalidateQueries({ queryKey: ["auth"] });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
 			// Show logout confirmation
 			if (data) {
@@ -184,7 +185,7 @@ export function useMagicLoginVerify() {
 				setAccessToken(data.tokens.access);
 			}
 
-			qc.invalidateQueries({ queryKey: ["auth"] });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
 			// Show success message
 			if (data?.messages) {

@@ -18,23 +18,11 @@ import {
 import type { TwoFactorMethod } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-
-// Labels and removal messages from setup page
-const METHOD_LABELS: Record<TwoFactorMethod, string> = {
-	totp: "Authenticator App",
-	email: "Email",
-	sms: "SMS",
-};
-
-const REMOVAL_CONFIRMATION: Record<TwoFactorMethod, string> = {
-	totp: "Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
-	sms: "Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
-	email:
-		"Removing email verification will disable receiving verification codes via email. You can set it up again at any time.",
-};
+import { useTranslation } from "react-i18next";
 
 function TwoFactorSettingsPage() {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const { data: status, isLoading } = use2FAStatus();
 	const removeMethod = useRemoveTwoFactorMethod();
 	const setPreferredMethod = useSetPreferredMethod();
@@ -68,10 +56,12 @@ function TwoFactorSettingsPage() {
 		setRemovalError(null);
 		try {
 			const result = await removeMethod.mutateAsync(methodToRemove);
-			setRemovalMessage(result?.message ?? "Method removed successfully.");
+			setRemovalMessage(result?.message ?? t("twofa.messages.method_removed"));
 			setMethodToRemove(null);
 		} catch (err) {
-			setRemovalError(extractApiError(err, "Failed to remove 2FA method."));
+			setRemovalError(
+				extractApiError(err, t("twofa.errors.remove_method")),
+			);
 		}
 	};
 
@@ -84,10 +74,12 @@ function TwoFactorSettingsPage() {
 		try {
 			const result = await setPreferredMethod.mutateAsync(method);
 			setSwitchMessage(
-				result?.message ?? "Default method updated successfully.",
+				result?.message ?? t("twofa.messages.default_method_updated"),
 			);
 		} catch (err) {
-			setSwitchError(extractApiError(err, "Failed to update default method."));
+			setSwitchError(
+				extractApiError(err, t("twofa.errors.update_default_method")),
+			);
 		}
 	};
 
@@ -100,8 +92,8 @@ function TwoFactorSettingsPage() {
 	if (isLoading) {
 		return (
 			<Layout.Loading
-				message="Loading 2FA settings..."
-				description="We are preparing your two-factor authentication options."
+				message={t("twofa.settings.loading_title")}
+				description={t("twofa.settings.loading_description")}
 			/>
 		);
 	}
@@ -112,9 +104,9 @@ function TwoFactorSettingsPage() {
 	if (!status) {
 		return (
 			<Layout.Error
-				title="Two-Factor Authentication"
-				description="We couldn't load your 2FA settings. Please try again."
-				actionLabel="Retry"
+				title={t("twofa.title")}
+				description={t("twofa.errors.load_settings")}
+				actionLabel={t("common.retry")}
 				onAction={() => navigate({ to: "/2fa/settings" })}
 			/>
 		);
@@ -129,22 +121,20 @@ function TwoFactorSettingsPage() {
 					<div className="flex items-start justify-between">
 						<div>
 							<h2 className="text-xl font-semibold mb-1">
-								Setup and Manage Methods
+								{t("twofa.settings.manage_title")}
 							</h2>
 							<p className="text-sm text-gray-600">
-								Choose your default method by setting up and configuring
-								available options below.
+								{t("twofa.settings.manage_description")}
 							</p>
 						</div>
 					</div>
 
 					{!status.is_enabled && (
 						<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-4">
-							<p className="font-semibold">2FA is not enabled.</p>
-							<p>
-								Start by setting up a method below. This will also generate
-								fresh recovery codes.
+							<p className="font-semibold">
+								{t("twofa.settings.not_enabled_title")}
 							</p>
+							<p>{t("twofa.settings.not_enabled_description")}</p>
 						</div>
 					)}
 
@@ -217,23 +207,38 @@ function TwoFactorSettingsPage() {
 						onClick={() => navigate({ to: "/" })}
 						className="text-sm text-gray-600 hover:text-gray-800"
 					>
-						← Back to home
+						{t("common.back_home")}
 					</button>
 				</div>
 			</div>
 
-			<ConfirmDialog
-				open={!!methodToRemove}
-				onOpenChange={(open) => !open && handleRemovalCancel()}
-				title={`Remove ${methodToRemove ? METHOD_LABELS[methodToRemove] : ""}?`}
-				description={methodToRemove ? REMOVAL_CONFIRMATION[methodToRemove] : ""}
-				confirmLabel="Remove"
-				cancelLabel="Cancel"
-				variant="destructive"
-				isLoading={removalInProgress}
-				onConfirm={handleRemovalConfirm}
-				onCancel={handleRemovalCancel}
-			/>
+			{(() => {
+				const methodLabel = methodToRemove
+					? t(`twofa.methods.${methodToRemove}`)
+					: "";
+				const removalDescription = methodToRemove
+					? t(`twofa.settings.remove_description.${methodToRemove}`)
+					: "";
+
+				return (
+					<ConfirmDialog
+						open={!!methodToRemove}
+						onOpenChange={(open) => !open && handleRemovalCancel()}
+						title={
+							methodToRemove
+								? t("twofa.settings.remove_title", { method: methodLabel })
+								: ""
+						}
+						description={removalDescription}
+						confirmLabel={t("common.remove")}
+						cancelLabel={t("common.cancel")}
+						variant="destructive"
+						isLoading={removalInProgress}
+						onConfirm={handleRemovalConfirm}
+						onCancel={handleRemovalCancel}
+					/>
+				);
+			})()}
 		</Layout>
 	);
 }

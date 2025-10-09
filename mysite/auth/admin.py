@@ -58,16 +58,17 @@ class TwoFactorAuditLogAdmin(admin.ModelAdmin):
 
 @admin.register(MagicLoginToken)
 class MagicLoginTokenAdmin(admin.ModelAdmin):
-    list_display = ['user', 'token_preview', 'is_used', 'expires_at', 'used_at', 'created_at']
+    list_display = ['user', 'token_hash_preview', 'is_used', 'expires_at', 'used_at', 'created_at']
     list_filter = ['is_used', 'created_at', 'expires_at']
-    search_fields = ['user__username', 'user__email', 'token']
-    readonly_fields = ['token', 'created_at', 'used_at']
+    search_fields = ['user__username', 'user__email', 'token_hash']
+    readonly_fields = ['token_hash', 'created_at', 'used_at']
+    exclude = ('token',)
     date_hierarchy = 'created_at'
     
-    def token_preview(self, obj):
-        """Show first 8 characters of token for identification"""
-        return f"{obj.token[:8]}..." if obj.token else "-"
-    token_preview.short_description = 'Token'
+    def token_hash_preview(self, obj):
+        """Show first 8 characters of token hash for identification."""
+        return f"{obj.token_hash[:8]}..." if obj.token_hash else "-"
+    token_hash_preview.short_description = 'Token Hash'
 
 
 @admin.register(GoogleOAuthState)

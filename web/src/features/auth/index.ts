@@ -9,4 +9,5 @@ export {
 	apiClient as authApi,
 	refreshAccessToken,
 } from "./api/authClient";
+export { authKeys, userKeys } from "./api/queryKeys";
 export type { RequestOptions as AuthRequestOptions } from "./api/authClient";

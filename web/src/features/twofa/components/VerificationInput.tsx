@@ -12,6 +12,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 interface VerificationInputProps {
 	length?: number;
@@ -37,6 +38,7 @@ export function VerificationInput({
 		() => Array.from({ length }, (_, index) => index),
 		[length],
 	);
+ 	const { t } = useTranslation();
 
 	// Sync external value to internal digits
 	useEffect(() => {
@@ -134,7 +136,7 @@ export function VerificationInput({
 					onKeyDown={(e) => handleKeyDown(index, e)}
 					disabled={disabled}
 					className="w-12 h-12 text-center text-2xl font-semibold"
-					aria-label={`Digit ${index + 1}`}
+					aria-label={t("twofa.verify.digit_label", { index: index + 1 })}
 				/>
 			))}
 		</div>

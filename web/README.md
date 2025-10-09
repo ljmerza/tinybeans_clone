@@ -41,6 +41,14 @@ npm run format
 npm run check
 ```
 
+## Forms & Validation
+
+- Forms are built with [`@tanstack/react-form`](https://tanstack.com/form/latest) and Zod schemas that live under `src/lib/validations`. See `src/features/auth/components/LoginCard.tsx` for a typical setup using `useForm` and schema-safe `zodValidator` blur checks.
+- Keep shared schema logic in `src/lib/validations/schemas` and reuse field validators rather than duplicating inline rules.
+- Surface field-level errors via the shared `FieldError` component and route/message feedback through `StatusMessage` or toast helpers provided by `useApiMessages`.
+- When submitting, prefer `mutateAsync` so you can catch errors and translate API messages with `useApiMessages` before presenting them to the user.
+- Localize any user-facing strings (labels, helper copy, error messages) using `useTranslation` and the `src/i18n/locales` dictionaries to keep UI copy consistent across languages.
+
 
 ## Shadcn
 

@@ -8,6 +8,21 @@ from auth.services.twofa_service import TwoFactorService
 User = get_user_model()
 
 
+def create_user(username='testuser', email=None, password='testpass'):
+    """Utility helper to satisfy required email field on custom user model."""
+    if email is None:
+        email = f"{username}@example.com"
+    return User.objects.create_user(username=username, email=email, password=password)
+
+
+def response_payload(response):
+    """Extract payload from success_response wrapper."""
+    data = response.data
+    if isinstance(data, dict) and 'data' in data:
+        return data['data']
+    return data
+
+
 @pytest.mark.django_db
 class TestTwoFactorService:
     """Test TwoFactorService methods"""
@@ -26,14 +41,16 @@ class TestTwoFactorService:
     
     def test_generate_recovery_codes(self):
         """Test recovery code generation"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user()
         codes = TwoFactorService.generate_recovery_codes(user, count=10)
         
         assert len(codes) == 10
         for code in codes:
-            assert isinstance(code, RecoveryCode)
-            assert len(code.code) == 14  # XXXX-XXXX-XXXX format
-            assert not code.is_used
+            assert isinstance(code, str)
+            assert len(code) == 14  # XXXX-XXXX-XXXX format
+            assert code.count('-') == 2
+        # Ensure hashed codes persisted
+        assert RecoveryCode.objects.filter(user=user, is_used=False).count() == 10
 
 
 @pytest.mark.django_db
@@ -42,16 +59,17 @@ class TestTwoFactorSetupView:
     
     def test_totp_setup(self):
         """Test TOTP setup"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user()
         client = APIClient()
         client.force_authenticate(user=user)
         
         response = client.post('/api/auth/2fa/setup/', {'method': 'totp'})
         
         assert response.status_code == 200
-        assert 'qr_code' in response.data
-        assert 'secret' in response.data
-        assert response.data['method'] == 'totp'
+        payload = response_payload(response)
+        assert 'qr_code' in payload
+        assert 'secret' in payload
+        assert payload['method'] == 'totp'
         
         # Check settings were created
         settings = TwoFactorSettings.objects.get(user=user)
@@ -60,19 +78,16 @@ class TestTwoFactorSetupView:
     
     def test_email_setup(self):
         """Test email 2FA setup"""
-        user = User.objects.create_user(
-            username='testuser',
-            password='testpass',
-            email='test@example.com'
-        )
+        user = create_user(email='test@example.com')
         client = APIClient()
         client.force_authenticate(user=user)
         
         response = client.post('/api/auth/2fa/setup/', {'method': 'email'})
         
         assert response.status_code == 200
-        assert response.data['method'] == 'email'
-        assert 'expires_in' in response.data
+        payload = response_payload(response)
+        assert payload['method'] == 'email'
+        assert 'expires_in' in payload
         
         # Check OTP code was created
         code = TwoFactorCode.objects.filter(user=user, purpose='setup').first()
@@ -86,23 +101,27 @@ class TestTwoFactorStatusView:
     
     def test_status_not_configured(self):
         """Test status when 2FA not configured"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user()
         client = APIClient()
         client.force_authenticate(user=user)
         
         response = client.get('/api/auth/2fa/status/')
         
         assert response.status_code == 200
-        assert response.data['is_enabled'] is False
+        payload = response_payload(response)
+        assert payload['is_enabled'] is False
     
     def test_status_configured(self):
         """Test status when 2FA is configured"""
-        user = User.objects.create_user(username='testuser', password='testpass')
-        TwoFactorSettings.objects.create(
+        user = create_user()
+        settings_obj = TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
             preferred_method='totp'
         )
+        settings_obj.totp_secret = TwoFactorService.generate_totp_secret()
+        settings_obj.totp_verified = True
+        settings_obj.save(update_fields=['_totp_secret_encrypted', 'totp_verified'])
         
         client = APIClient()
         client.force_authenticate(user=user)
@@ -110,8 +129,9 @@ class TestTwoFactorStatusView:
         response = client.get('/api/auth/2fa/status/')
         
         assert response.status_code == 200
-        assert response.data['is_enabled'] is True
-        assert response.data['preferred_method'] == 'totp'
+        payload = response_payload(response)
+        assert payload['is_enabled'] is True
+        assert payload['preferred_method'] == 'totp'
 
 
 @pytest.mark.django_db
@@ -120,7 +140,7 @@ class TestRecoveryCodeGeneration:
     
     def test_generate_recovery_codes(self):
         """Test recovery code generation endpoint"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user()
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -133,8 +153,9 @@ class TestRecoveryCodeGeneration:
         response = client.post('/api/auth/2fa/recovery-codes/generate/')
         
         assert response.status_code == 200
-        assert 'recovery_codes' in response.data
-        assert len(response.data['recovery_codes']) == 10
+        payload = response_payload(response)
+        assert 'recovery_codes' in payload
+        assert len(payload['recovery_codes']) == 10
         
         # Check codes were created in database
         codes = RecoveryCode.objects.filter(user=user, is_used=False)
@@ -147,7 +168,7 @@ class TestTrustedDevices:
     
     def test_list_trusted_devices(self):
         """Test listing trusted devices"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user()
         
         # Create a trusted device
         from datetime import timedelta
@@ -167,6 +188,7 @@ class TestTrustedDevices:
         response = client.get('/api/auth/2fa/trusted-devices/')
         
         assert response.status_code == 200
-        assert 'devices' in response.data
-        assert len(response.data['devices']) == 1
-        assert response.data['devices'][0]['device_name'] == 'Test Browser'
+        payload = response_payload(response)
+        assert 'devices' in payload
+        assert len(payload['devices']) == 1
+        assert payload['devices'][0]['device_name'] == 'Test Browser'

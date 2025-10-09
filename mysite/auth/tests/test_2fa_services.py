@@ -20,6 +20,13 @@ from auth.services.recovery_code_service import RecoveryCodeService
 User = get_user_model()
 
 
+def create_user(username='testuser', email=None, password='testpass', **extra):
+    """Utility helper to create users with required email field."""
+    if email is None:
+        email = f"{username}@example.com"
+    return User.objects.create_user(username=username, email=email, password=password, **extra)
+
+
 @pytest.mark.django_db
 class TestTwoFactorServiceOTP:
     """Test OTP generation and validation"""
@@ -39,7 +46,7 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_valid_code(self):
         """Test OTP verification with valid code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Create valid code
         code_obj = TwoFactorCode.objects.create(
@@ -61,14 +68,14 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_invalid_code(self):
         """Test OTP verification with wrong code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         result = TwoFactorService.verify_otp(user, '999999', purpose='login')
         assert result is False
     
     def test_verify_otp_expired_code(self):
         """Test OTP verification with expired code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Create expired code
         TwoFactorCode.objects.create(
@@ -86,7 +93,7 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_max_attempts_exceeded(self):
         """Test OTP verification fails after max attempts"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Create code with max attempts reached
         TwoFactorCode.objects.create(
@@ -105,7 +112,7 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_already_used(self):
         """Test OTP verification fails for already used code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Create used code
         TwoFactorCode.objects.create(
@@ -124,7 +131,7 @@ class TestTwoFactorServiceOTP:
 
     def test_send_otp_invalidates_previous_unused_codes(self):
         """Requesting a new OTP should invalidate previous unused codes for same purpose/method"""
-        user = User.objects.create_user(username='user1', password='x')
+        user = create_user(username='user1', password='x')
         TwoFactorSettings.objects.create(user=user, preferred_method='email', is_enabled=True)
 
         # Create an existing, unused code
@@ -176,7 +183,7 @@ class TestTwoFactorServiceTOTP:
     @patch('auth.services.twofa_service.qrcode.QRCode')
     def test_generate_totp_qr_code(self, mock_qrcode, mock_totp):
         """Test QR code generation"""
-        user = User.objects.create_user(
+        user = create_user(
             username='testuser',
             email='test@example.com',
             password='testpass'
@@ -204,7 +211,7 @@ class TestTwoFactorServiceTOTP:
     @patch('auth.services.twofa_service.pyotp.TOTP')
     def test_verify_totp_valid(self, mock_totp):
         """Test TOTP verification with valid code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -223,7 +230,7 @@ class TestTwoFactorServiceTOTP:
     @patch('auth.services.twofa_service.pyotp.TOTP')
     def test_verify_totp_invalid(self, mock_totp):
         """Test TOTP verification with invalid code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -241,7 +248,7 @@ class TestTwoFactorServiceTOTP:
     
     def test_verify_totp_no_secret(self):
         """Test TOTP verification fails without secret"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -259,7 +266,7 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_count(self):
         """Test correct number of recovery codes generated"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=10)
         
@@ -268,15 +275,16 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_format(self):
         """Test recovery code format"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=5)
         
         for code in codes:
             # Format: XXXX-XXXX-XXXX
-            assert len(code.code) == 14
-            assert code.code.count('-') == 2
-            parts = code.code.split('-')
+            assert isinstance(code, str)
+            assert len(code) == 14
+            assert code.count('-') == 2
+            parts = code.split('-')
             assert len(parts) == 3
             for part in parts:
                 assert len(part) == 4
@@ -284,69 +292,71 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_uniqueness(self):
         """Test recovery codes are unique"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=10)
-        code_values = [c.code for c in codes]
         
-        assert len(set(code_values)) == 10
+        assert len(set(codes)) == 10
     
     def test_generate_recovery_codes_deletes_old(self):
         """Test generating new codes deletes old unused codes"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Generate first batch
-        old_codes = TwoFactorService.generate_recovery_codes(user, count=5)
-        old_code_values = [c.code for c in old_codes]
+        TwoFactorService.generate_recovery_codes(user, count=5)
+        old_ids = set(
+            RecoveryCode.objects.filter(user=user).values_list('id', flat=True)
+        )
         
         # Generate new batch
-        new_codes = TwoFactorService.generate_recovery_codes(user, count=5)
-        new_code_values = [c.code for c in new_codes]
+        TwoFactorService.generate_recovery_codes(user, count=5)
+        new_ids = set(
+            RecoveryCode.objects.filter(user=user).values_list('id', flat=True)
+        )
         
         # Old codes should be deleted
-        for old_code in old_code_values:
-            assert not RecoveryCode.objects.filter(code=old_code).exists()
-        
+        assert old_ids.isdisjoint(new_ids)
         # New codes should exist
         assert RecoveryCode.objects.filter(user=user).count() == 5
     
     def test_verify_recovery_code_valid(self):
         """Test recovery code verification"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=1)
-        code_value = codes[0].code
+        code_value = codes[0]
         
         result = TwoFactorService.verify_recovery_code(user, code_value)
         
         assert result is True
-        codes[0].refresh_from_db()
-        assert codes[0].is_used is True
-        assert codes[0].used_at is not None
+        record = RecoveryCode.objects.get(user=user)
+        record.refresh_from_db()
+        assert record.is_used is True
+        assert record.used_at is not None
     
     def test_verify_recovery_code_case_insensitive(self):
         """Test recovery code verification is case insensitive"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=1)
-        code_value = codes[0].code.lower()  # Use lowercase
+        code_value = codes[0].lower()  # Use lowercase
         
         result = TwoFactorService.verify_recovery_code(user, code_value)
         assert result is True
     
     def test_verify_recovery_code_invalid(self):
         """Test recovery code verification with invalid code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         result = TwoFactorService.verify_recovery_code(user, 'INVALID-CODE-1234')
         assert result is False
     
     def test_verify_recovery_code_already_used(self):
         """Test recovery code verification fails for used code"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=1)
-        code_value = codes[0].code
+        code_value = codes[0]
         
         # Use code once
         TwoFactorService.verify_recovery_code(user, code_value)
@@ -357,7 +367,7 @@ class TestRecoveryCodeService:
     
     def test_export_recovery_codes_txt(self):
         """Test TXT export of recovery codes"""
-        user = User.objects.create_user(
+        user = create_user(
             username='testuser',
             email='test@example.com',
             password='testpass'
@@ -373,12 +383,12 @@ class TestRecoveryCodeService:
         
         # Check all codes are present
         for code in codes:
-            assert code.code in txt_content
+            assert code in txt_content
     
     @patch('auth.services.recovery_code_service.SimpleDocTemplate')
     def test_export_recovery_codes_pdf(self, mock_doc):
         """Test PDF export of recovery codes"""
-        user = User.objects.create_user(
+        user = create_user(
             username='testuser',
             email='test@example.com',
             password='testpass'
@@ -425,7 +435,7 @@ class TestTrustedDeviceService:
         # Should be unique due to random salt
         assert len(set(device_ids)) == 5
     
-    @patch('auth.services.trusted_device_service.parse')
+    @patch('user_agents.parse')
     def test_get_device_name(self, mock_parse):
         """Test device name extraction"""
         factory = RequestFactory()
@@ -448,7 +458,7 @@ class TestTrustedDeviceService:
     
     def test_add_trusted_device(self):
         """Test adding trusted device"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         factory = RequestFactory()
         request = factory.get('/')
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
@@ -470,7 +480,7 @@ class TestTrustedDeviceService:
     
     def test_add_trusted_device_max_limit(self):
         """Test max trusted devices limit"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         factory = RequestFactory()
         
         # Add max devices
@@ -490,7 +500,7 @@ class TestTrustedDeviceService:
     
     def test_is_trusted_device_valid(self):
         """Test checking trusted device"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         device = TrustedDevice.objects.create(
             user=user,
@@ -509,7 +519,7 @@ class TestTrustedDeviceService:
     
     def test_is_trusted_device_expired(self):
         """Test expired trusted device"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         TrustedDevice.objects.create(
             user=user,
@@ -525,14 +535,14 @@ class TestTrustedDeviceService:
     
     def test_is_trusted_device_not_found(self):
         """Test non-existent trusted device"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         result = TrustedDeviceService.is_trusted_device(user, 'non-existent')
         assert result is False
     
     def test_remove_trusted_device(self):
         """Test removing trusted device"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         TrustedDevice.objects.create(
             user=user,
@@ -557,7 +567,7 @@ class TestTrustedDeviceService:
     
     def test_get_trusted_devices(self):
         """Test getting all trusted devices"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Create active devices
         for i in range(3):
@@ -586,7 +596,7 @@ class TestTrustedDeviceService:
     
     def test_cleanup_expired_devices(self):
         """Test cleanup of expired devices"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        user = create_user(username='testuser', password='testpass')
         
         # Create expired devices
         for i in range(3):
@@ -619,9 +629,11 @@ class TestTrustedDeviceService:
 class TestRateLimiting:
     """Test rate limiting functionality"""
     
-    def test_is_rate_limited_under_limit(self):
+    def test_is_rate_limited_under_limit(self, settings):
         """Test rate limiting when under limit"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        settings.TWOFA_RATE_LIMIT_MAX = 3
+        settings.TWOFA_RATE_LIMIT_WINDOW = 900
+        user = create_user(username='testuser', password='testpass')
         
         # Create 2 codes (under limit of 3)
         for i in range(2):
@@ -636,9 +648,11 @@ class TestRateLimiting:
         result = TwoFactorService.is_rate_limited(user)
         assert result is False
     
-    def test_is_rate_limited_at_limit(self):
+    def test_is_rate_limited_at_limit(self, settings):
         """Test rate limiting when at limit"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        settings.TWOFA_RATE_LIMIT_MAX = 3
+        settings.TWOFA_RATE_LIMIT_WINDOW = 900
+        user = create_user(username='testuser', password='testpass')
         
         # Create 3 codes (at limit)
         for i in range(3):
@@ -653,9 +667,11 @@ class TestRateLimiting:
         result = TwoFactorService.is_rate_limited(user)
         assert result is True
     
-    def test_is_rate_limited_expired_codes(self):
+    def test_is_rate_limited_expired_codes(self, settings):
         """Test rate limiting ignores expired codes"""
-        user = User.objects.create_user(username='testuser', password='testpass')
+        settings.TWOFA_RATE_LIMIT_MAX = 3
+        settings.TWOFA_RATE_LIMIT_WINDOW = 900
+        user = create_user(username='testuser', password='testpass')
         
         # Create old codes (outside rate limit window)
         for i in range(5):

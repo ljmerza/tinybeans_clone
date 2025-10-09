@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { GenericIntroStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface SmsIntroStepProps {
 	phone: string;
@@ -11,37 +12,37 @@ interface SmsIntroStepProps {
 }
 
 export function SmsIntroStep(props: SmsIntroStepProps) {
+	const { t } = useTranslation();
+	const infoItems = t("twofa.setup.sms.info_items", {
+		returnObjects: true,
+	}) as string[];
+
 	return (
 		<GenericIntroStep
 			config={{
-				title: "Verify by SMS",
-				description:
-					"Receive a verification code via text message. Use E.164 format (e.g. +15551234567).",
+				title: t("twofa.setup.sms.title"),
+				description: t("twofa.setup.sms.intro"),
 				customContent: (
 					<div className="space-y-2 text-left">
 						<label
 							className="text-sm font-medium text-gray-700"
 							htmlFor="sms-phone"
 						>
-							Phone number
+							{t("twofa.setup.sms.phone_label")}
 						</label>
 						<Input
 							id="sms-phone"
 							value={props.phone}
 							onChange={(event) => props.onPhoneChange(event.target.value)}
-							placeholder="+15551234567"
+							placeholder={t("twofa.setup.sms.phone_placeholder")}
 							disabled={props.isSending}
 						/>
 					</div>
 				),
-				infoPanelTitle: "How it works",
-				infoPanelItems: [
-					"We send a 6-digit code via SMS.",
-					"Enter the code to enable SMS-based 2FA.",
-					"The SMS method becomes your default 2FA option.",
-				],
-				actionText: "Send Verification Code",
-				loadingText: "Sending...",
+				infoPanelTitle: t("twofa.setup.sms.info_title"),
+				infoPanelItems: infoItems,
+				actionText: t("twofa.setup.actions.start"),
+				loadingText: t("twofa.setup.actions.loading"),
 			}}
 			isLoading={props.isSending}
 			errorMessage={props.errorMessage}

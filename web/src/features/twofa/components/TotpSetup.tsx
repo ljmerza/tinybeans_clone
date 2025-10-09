@@ -1,5 +1,8 @@
 import { Wizard, WizardStep } from "@/components";
+import { extractApiError } from "@/features/auth/utils";
+import { showToast } from "@/lib/toast";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { TotpIntroStep } from "./setup/totp/TotpIntroStep";
 import { TotpRecoveryStep } from "./setup/totp/TotpRecoveryStep";
@@ -16,6 +19,7 @@ interface TotpSetupProps {
 export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
 	const [step, setStep] = useState<SetupStep>("intro");
 	const [code, setCode] = useState("");
+	const { t } = useTranslation();
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
@@ -34,7 +38,11 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
 							await initSetup.mutateAsync({ method: "totp" });
 							setStep("scan");
 						} catch (error) {
-							console.error("Setup initialization failed:", error);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.start_authenticator"),
+							);
+							showToast({ message, level: "error" });
 						}
 					}}
 					onCancel={onCancel}
@@ -60,7 +68,11 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
 							await verifySetup.mutateAsync(val ?? code);
 							setStep("recovery");
 						} catch (error) {
-							console.error("Verification failed:", error);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.verify_authenticator"),
+							);
+							showToast({ message, level: "error" });
 							setCode("");
 						}
 					}}

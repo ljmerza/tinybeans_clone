@@ -9,6 +9,7 @@ import { WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
 import { RecoveryCodeList } from "../../RecoveryCodeList";
 import type { RecoveryStepConfig } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface GenericRecoveryStepProps {
 	/** Configuration for the step */
@@ -59,6 +60,7 @@ export function GenericRecoveryStep({
 	recoveryCodes,
 	onComplete,
 }: GenericRecoveryStepProps) {
+	const { t } = useTranslation();
 	return (
 		<>
 			<WizardSection title={config.title} description={config.description}>
@@ -69,7 +71,7 @@ export function GenericRecoveryStep({
 			</WizardSection>
 			<WizardFooter>
 				<Button onClick={onComplete} className="w-full">
-					Done
+					{t("common.done")}
 				</Button>
 			</WizardFooter>
 		</>

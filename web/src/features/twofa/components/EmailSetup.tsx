@@ -1,5 +1,8 @@
 import { Wizard, WizardStep } from "@/components";
+import { extractApiError } from "@/features/auth/utils";
+import { showToast } from "@/lib/toast";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { EmailIntroStep } from "./setup/email/EmailIntroStep";
 import { EmailRecoveryStep } from "./setup/email/EmailRecoveryStep";
@@ -15,13 +18,14 @@ interface EmailSetupProps {
 export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 	const [step, setStep] = useState<SetupStep>("intro");
 	const [code, setCode] = useState("");
+ 	const { t } = useTranslation();
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
 
 	const recoveryCodes = verifySetup.data?.recovery_codes;
 	const latestMessage =
-		initSetup.data?.message ?? "Check your inbox for the verification code.";
+		initSetup.data?.message ?? t("twofa.setup.email.message");
 
 	return (
 		<Wizard currentStep={step}>
@@ -34,7 +38,11 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							await initSetup.mutateAsync({ method: "email" });
 							setStep("verify");
 						} catch (error) {
-							console.error("Email setup start failed:", error);
+						const message = extractApiError(
+							error,
+							t("twofa.errors.email_send"),
+						);
+							showToast({ message, level: "error" });
 						}
 					}}
 					onCancel={onCancel}
@@ -54,7 +62,11 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							await verifySetup.mutateAsync(val ?? code);
 							setStep("recovery");
 						} catch (error) {
-							console.error("Email setup verification failed:", error);
+						const message = extractApiError(
+							error,
+							t("twofa.errors.email_verify"),
+						);
+							showToast({ message, level: "error" });
 							setCode("");
 						}
 					}}
@@ -65,7 +77,11 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							setCode("");
 							verifySetup.reset();
 						} catch (error) {
-							console.error("Email setup resend failed:", error);
+						const message = extractApiError(
+							error,
+							t("twofa.errors.email_resend"),
+						);
+							showToast({ message, level: "error" });
 						}
 					}}
 					onCancel={onCancel}

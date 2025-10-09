@@ -2,9 +2,15 @@
  * Two-Factor Authentication React Query Hooks
  */
 
-import { setAccessToken } from "@/features/auth";
+import { authKeys, setAccessToken, userKeys } from "@/features/auth";
+import { extractApiError } from "@/features/auth/utils";
+import { useApiMessages } from "@/i18n";
+import type { HttpError } from "@/lib/httpClient";
+import { showToast } from "@/lib/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { twoFactorApi } from "../api/twoFactorApi";
+import { twoFaKeys } from "../api/queryKeys";
 import type {
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,
@@ -14,6 +20,23 @@ import type {
 	TwoFactorStatusResponse,
 	TwoFactorVerifyLoginResponse,
 } from "../types";
+
+type ShowAsToastFn = ReturnType<typeof useApiMessages>["showAsToast"];
+
+function notifyMutationError(
+	error: unknown,
+	fallback: string,
+	showAsToast: ShowAsToastFn,
+) {
+	const httpError = error as HttpError | undefined;
+	if (httpError?.messages?.length) {
+		showAsToast(httpError.messages, httpError.status ?? 400);
+		return;
+	}
+
+	const message = extractApiError(error, fallback);
+	showToast({ message, level: "error" });
+}
 
 /**
  * Initialize 2FA setup
@@ -39,7 +62,7 @@ export function useVerify2FASetup() {
 		mutationFn: (code) => twoFactorApi.verifySetup(code),
 		onSuccess: () => {
 			// Invalidate status to refresh
-			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
+			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
 		},
 	});
 }
@@ -49,7 +72,7 @@ export function useVerify2FASetup() {
  */
 export function use2FAStatus() {
 	return useQuery<TwoFactorStatusResponse>({
-		queryKey: ["2fa", "status"],
+		queryKey: twoFaKeys.status(),
 		queryFn: () => twoFactorApi.getStatus(),
 	});
 }
@@ -59,6 +82,8 @@ export function use2FAStatus() {
  */
 export function useVerify2FALogin() {
 	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
 
 	return useMutation<
 		TwoFactorVerifyLoginResponse,
@@ -68,35 +93,26 @@ export function useVerify2FALogin() {
 		mutationFn: ({ partial_token, code, remember_me }) =>
 			twoFactorApi.verifyLogin(partial_token, code, remember_me),
 		onSuccess: async (data) => {
-			console.log("2FA verify success:", data); // Debug log
-
 			// Store access token
-			if (data.tokens?.access) {
-				console.log(
-					"Setting access token:",
-					`${data.tokens.access.substring(0, 20)}...`,
-				); // Debug log
-				setAccessToken(data.tokens.access);
-			} else {
-				console.error("No access token in response:", data); // Debug log
+			if (!data.tokens?.access) {
 				throw new Error("No access token received");
 			}
+			setAccessToken(data.tokens.access);
 
 			// Device ID cookie is set by backend automatically
-			if (data.trusted_device) {
-				console.log("Device marked as trusted"); // Debug log
-			}
 
 			// Invalidate queries to refresh auth state
 			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["user"] }),
-				queryClient.invalidateQueries({ queryKey: ["auth"] }),
+				queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
+				queryClient.invalidateQueries({ queryKey: authKeys.session() }),
 			]);
-
-			console.log("Authentication successful, navigating to home"); // Debug log
 		},
 		onError: (error) => {
-			console.error("2FA verify error:", error); // Debug log
+			notifyMutationError(
+				error,
+				t("twofa.errors.verify_login"),
+				showAsToast,
+			);
 		},
 	});
 }
@@ -118,11 +134,19 @@ export function useRequestDisableCode() {
  */
 export function useDisable2FA() {
 	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
 
 	return useMutation<{ enabled: boolean; message: string }, Error, string>({
 		mutationFn: (code) => twoFactorApi.disable(code),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
+		onSuccess: (response) => {
+			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
+			if (response?.message) {
+				showToast({ message: response.message, level: "success" });
+			}
+		},
+		onError: (error) => {
+			notifyMutationError(error, t("twofa.errors.disable"), showAsToast);
 		},
 	});
 }
@@ -131,8 +155,23 @@ export function useDisable2FA() {
  * Generate new recovery codes
  */
 export function useGenerateRecoveryCodes() {
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
+
 	return useMutation<RecoveryCodesResponse, Error>({
 		mutationFn: () => twoFactorApi.generateRecoveryCodes(),
+		onSuccess: (data) => {
+			if (data?.message) {
+				showToast({ message: data.message, level: "success" });
+			}
+		},
+		onError: (error) => {
+			notifyMutationError(
+				error,
+				t("twofa.errors.generate_codes"),
+				showAsToast,
+			);
+		},
 	});
 }
 
@@ -141,7 +180,7 @@ export function useGenerateRecoveryCodes() {
  */
 export function useTrustedDevices() {
 	return useQuery<TrustedDevicesResponse>({
-		queryKey: ["2fa", "trusted-devices"],
+		queryKey: twoFaKeys.trustedDevices(),
 		queryFn: () => twoFactorApi.getTrustedDevices(),
 	});
 }
@@ -151,11 +190,24 @@ export function useTrustedDevices() {
  */
 export function useRemoveTrustedDevice() {
 	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
 
 	return useMutation<{ message?: string }, Error, string>({
 		mutationFn: (device_id) => twoFactorApi.removeTrustedDevice(device_id),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["2fa", "trusted-devices"] });
+			queryClient.invalidateQueries({ queryKey: twoFaKeys.trustedDevices() });
+			showToast({
+				message: t("twofa.messages.trusted_device_removed"),
+				level: "success",
+			});
+		},
+		onError: (error) => {
+			notifyMutationError(
+				error,
+				t("twofa.errors.remove_trusted_device"),
+				showAsToast,
+			);
 		},
 	});
 }
@@ -165,6 +217,8 @@ export function useRemoveTrustedDevice() {
  */
 export function useSetPreferredMethod() {
 	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
 
 	return useMutation<
 		{ preferred_method: string; message: string },
@@ -172,8 +226,23 @@ export function useSetPreferredMethod() {
 		TwoFactorMethod
 	>({
 		mutationFn: (method) => twoFactorApi.setPreferredMethod(method),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
+			if (data?.message) {
+				showToast({ message: data.message, level: "success" });
+			} else {
+				showToast({
+					message: t("twofa.messages.default_method_updated"),
+					level: "success",
+				});
+			}
+		},
+		onError: (error) => {
+			notifyMutationError(
+				error,
+				t("twofa.errors.update_default_method"),
+				showAsToast,
+			);
 		},
 	});
 }
@@ -183,11 +252,28 @@ export function useSetPreferredMethod() {
  */
 export function useRemoveTwoFactorMethod() {
 	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
 
 	return useMutation<TwoFactorMethodRemovalResponse, Error, TwoFactorMethod>({
 		mutationFn: (method) => twoFactorApi.removeMethod(method),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["2fa", "status"] });
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
+			if (data?.message) {
+				showToast({ message: data.message, level: "success" });
+			} else {
+				showToast({
+					message: t("twofa.messages.method_removed"),
+					level: "success",
+				});
+			}
+		},
+		onError: (error) => {
+			notifyMutationError(
+				error,
+				t("twofa.errors.remove_method"),
+				showAsToast,
+			);
 		},
 	});
 }

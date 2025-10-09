@@ -1,4 +1,5 @@
 import { GenericIntroStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface EmailIntroStepProps {
 	isSending: boolean;
@@ -8,20 +9,20 @@ interface EmailIntroStepProps {
 }
 
 export function EmailIntroStep(props: EmailIntroStepProps) {
+	const { t } = useTranslation();
+	const infoItems = t("twofa.setup.email.info_items", {
+		returnObjects: true,
+	}) as string[];
+
 	return (
 		<GenericIntroStep
 			config={{
-				title: "Verify by Email",
-				description:
-					"We will send a 6-digit verification code to your account email.",
-				infoPanelTitle: "How it works",
-				infoPanelItems: [
-					"We send a verification code to your primary email.",
-					"Enter the code to enable email-based 2FA.",
-					"The email method becomes your default 2FA option.",
-				],
-				actionText: "Send Verification Code",
-				loadingText: "Sending...",
+				title: t("twofa.setup.email.title"),
+				description: t("twofa.setup.email.intro"),
+				infoPanelTitle: t("twofa.setup.email.info_title"),
+				infoPanelItems: infoItems,
+				actionText: t("twofa.setup.actions.start"),
+				loadingText: t("twofa.setup.actions.loading"),
 			}}
 			isLoading={props.isSending}
 			errorMessage={props.errorMessage}

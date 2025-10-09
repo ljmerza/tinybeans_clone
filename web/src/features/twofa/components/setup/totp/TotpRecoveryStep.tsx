@@ -1,5 +1,6 @@
 import { InfoPanel } from "@/components";
 import { GenericRecoveryStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface TotpRecoveryStepProps {
 	recoveryCodes?: string[];
@@ -7,20 +8,21 @@ interface TotpRecoveryStepProps {
 }
 
 export function TotpRecoveryStep(props: TotpRecoveryStepProps) {
-	return (
-		<GenericRecoveryStep
-			config={{
-				title: "✅ 2FA Enabled!",
-				description:
-					"Save your recovery codes to regain access if you lose your device.",
-				additionalContent: (
-					<InfoPanel variant="success" className="text-center">
-						<p className="font-semibold">
-							✓ Two-factor authentication is now active
-						</p>
-					</InfoPanel>
-				),
-			}}
+  const { t } = useTranslation();
+
+  return (
+    <GenericRecoveryStep
+      config={{
+        title: t("twofa.setup.recovery.enabled_title"),
+        description: t("twofa.setup.recovery.description"),
+        additionalContent: (
+          <InfoPanel variant="success" className="text-center">
+            <p className="font-semibold">
+              {t("twofa.setup.recovery.enabled_message")}
+            </p>
+          </InfoPanel>
+        ),
+      }}
 			recoveryCodes={props.recoveryCodes}
 			onComplete={props.onComplete}
 		/>

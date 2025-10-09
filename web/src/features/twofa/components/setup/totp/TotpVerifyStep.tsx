@@ -1,4 +1,5 @@
 import { GenericVerifyStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface TotpVerifyStepProps {
 	code: string;
@@ -10,17 +11,19 @@ interface TotpVerifyStepProps {
 }
 
 export function TotpVerifyStep(props: TotpVerifyStepProps) {
-	return (
-		<GenericVerifyStep
-			config={{
-				title: "Verify Setup",
-				verifyButtonText: "Verify & Enable 2FA",
-				loadingText: "Verifying...",
-				showResend: false,
-				backButtonText: "Back to QR Code",
-			}}
-			code={props.code}
-			message="Enter the 6-digit code from your authenticator app."
+  const { t } = useTranslation();
+
+  return (
+    <GenericVerifyStep
+      config={{
+        title: t("twofa.setup.totp.verify_title"),
+        verifyButtonText: t("twofa.setup.actions.verify_enable"),
+        loadingText: t("twofa.setup.actions.verifying"),
+        showResend: false,
+        backButtonText: t("twofa.setup.actions.back_to_scan"),
+      }}
+      code={props.code}
+      message={t("twofa.setup.totp.enter_code")}
 			isVerifying={props.isVerifying}
 			errorMessage={props.errorMessage}
 			onCodeChange={props.onCodeChange}

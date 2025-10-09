@@ -1,4 +1,5 @@
 import { GenericRecoveryStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface SmsRecoveryStepProps {
 	recoveryCodes?: string[];
@@ -6,12 +7,13 @@ interface SmsRecoveryStepProps {
 }
 
 export function SmsRecoveryStep(props: SmsRecoveryStepProps) {
+	const { t } = useTranslation();
+
 	return (
 		<GenericRecoveryStep
 			config={{
-				title: "✅ SMS 2FA Enabled",
-				description:
-					"Save your recovery codes in a safe place in case you can't receive texts.",
+				title: t("twofa.setup.sms.recovery_title"),
+				description: t("twofa.setup.sms.recovery_description"),
 			}}
 			recoveryCodes={props.recoveryCodes}
 			onComplete={props.onComplete}

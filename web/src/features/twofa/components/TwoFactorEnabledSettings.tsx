@@ -4,9 +4,12 @@
  * Only visible when 2FA is enabled
  */
 
+import { extractApiError } from "@/features/auth/utils";
+import { showToast } from "@/lib/toast";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
 	useDisable2FA,
 	useGenerateRecoveryCodes,
@@ -18,6 +21,7 @@ import { TrustedDevicesSection } from "./TrustedDevicesSection";
 
 export function TwoFactorEnabledSettings() {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const disable2FA = useDisable2FA();
 	const requestDisableCode = useRequestDisableCode();
 	const generateCodes = useGenerateRecoveryCodes();
@@ -31,7 +35,11 @@ export function TwoFactorEnabledSettings() {
 			await requestDisableCode.mutateAsync();
 			setShowDisableConfirm(true);
 		} catch (error) {
-			console.error("Failed to request disable code:", error);
+			const message = extractApiError(
+				error,
+				t("twofa.errors.request_disable"),
+			);
+			showToast({ message, level: "error" });
 		}
 	};
 
@@ -44,6 +52,8 @@ export function TwoFactorEnabledSettings() {
 			navigate({ to: "/" });
 		} catch (error) {
 			setDisableCode("");
+			const message = extractApiError(error, t("twofa.errors.disable"));
+			showToast({ message, level: "error" });
 		}
 	};
 
@@ -52,7 +62,11 @@ export function TwoFactorEnabledSettings() {
 			await generateCodes.mutateAsync();
 			setShowNewCodes(true);
 		} catch (error) {
-			console.error("Failed to generate codes:", error);
+			const message = extractApiError(
+				error,
+				t("twofa.errors.generate_codes"),
+			);
+			showToast({ message, level: "error" });
 		}
 	};
 

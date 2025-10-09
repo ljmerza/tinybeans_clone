@@ -1,5 +1,8 @@
 import { Wizard, WizardStep } from "@/components";
+import { extractApiError } from "@/features/auth/utils";
+import { showToast } from "@/lib/toast";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { SmsIntroStep } from "./setup/sms/SmsIntroStep";
 import { SmsRecoveryStep } from "./setup/sms/SmsRecoveryStep";
@@ -21,13 +24,14 @@ export function SmsSetup({
 	const [step, setStep] = useState<SetupStep>("intro");
 	const [phone, setPhone] = useState(defaultPhone);
 	const [code, setCode] = useState("");
+ 	const { t } = useTranslation();
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
 
 	const recoveryCodes = verifySetup.data?.recovery_codes;
 	const latestMessage =
-		initSetup.data?.message ?? "Check your phone for the verification code.";
+		initSetup.data?.message ?? t("twofa.setup.sms.message");
 
 	return (
 		<Wizard currentStep={step}>
@@ -45,7 +49,11 @@ export function SmsSetup({
 							});
 							setStep("verify");
 						} catch (error) {
-							console.error("SMS setup start failed:", error);
+						const message = extractApiError(
+							error,
+							t("twofa.errors.sms_send"),
+						);
+							showToast({ message, level: "error" });
 						}
 					}}
 					onCancel={onCancel}
@@ -65,7 +73,11 @@ export function SmsSetup({
 							await verifySetup.mutateAsync(val ?? code);
 							setStep("recovery");
 						} catch (error) {
-							console.error("SMS setup verification failed:", error);
+						const message = extractApiError(
+							error,
+							t("twofa.errors.sms_verify"),
+						);
+							showToast({ message, level: "error" });
 							setCode("");
 						}
 					}}
@@ -79,7 +91,11 @@ export function SmsSetup({
 							setCode("");
 							verifySetup.reset();
 						} catch (error) {
-							console.error("SMS setup resend failed:", error);
+						const message = extractApiError(
+							error,
+							t("twofa.errors.sms_resend"),
+						);
+							showToast({ message, level: "error" });
 						}
 					}}
 					onCancel={onCancel}

@@ -45,6 +45,7 @@ from .token_utils import (
     pop_token,
     store_token,
     generate_partial_token,
+    hash_magic_login_token,
 )
 from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
 
@@ -472,11 +473,12 @@ class MagicLoginRequestView(APIView):
             
             # Generate unique token
             token = uuid.uuid4().hex
+            token_hash = hash_magic_login_token(token)
             
             # Create magic login token with 15-minute expiry
             magic_token = MagicLoginToken.objects.create(
                 user=user,
-                token=token,
+                token_hash=token_hash,
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
                 expires_at=timezone.now() + timedelta(minutes=15)
@@ -524,8 +526,10 @@ class MagicLoginVerifyView(APIView):
         
         token_value = serializer.validated_data['token']
         
+        token_hash = hash_magic_login_token(token_value)
+        
         try:
-            magic_token = MagicLoginToken.objects.select_related('user').get(token=token_value)
+            magic_token = MagicLoginToken.objects.select_related('user').get(token_hash=token_hash)
             
             if not magic_token.is_valid():
                 return error_response(

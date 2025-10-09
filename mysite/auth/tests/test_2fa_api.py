@@ -18,6 +18,14 @@ from auth.models import (
 User = get_user_model()
 
 
+def response_payload(response):
+    """Helper to unwrap success_response format."""
+    data = response.data
+    if isinstance(data, dict) and 'data' in data:
+        return data['data']
+    return data
+
+
 @pytest.mark.django_db
 class TestTwoFactorSetupAPI:
     """Test 2FA setup API endpoint"""
@@ -48,9 +56,10 @@ class TestTwoFactorSetupAPI:
         })
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['method'] == 'totp'
-        assert 'qr_code' in response.data
-        assert 'secret' in response.data
+        payload = response_payload(response)
+        assert payload['method'] == 'totp'
+        assert 'qr_code' in payload
+        assert 'secret' in payload
         
         # Verify settings were created
         settings_obj = TwoFactorSettings.objects.get(user=self.user)
@@ -70,8 +79,9 @@ class TestTwoFactorSetupAPI:
         })
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['method'] == 'email'
-        assert 'expires_in' in response.data
+        payload = response_payload(response)
+        assert payload['method'] == 'email'
+        assert 'expires_in' in payload
     
     @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_setup_rate_limited(self, mock_rate_limit):
@@ -91,7 +101,8 @@ class TestTwoFactorSetupAPI:
         })
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert 'phone number' in response.data['error'].lower()
+        payload = response_payload(response)
+        assert 'phone number' in payload['error'].lower()
     
     def test_setup_invalid_method(self):
         """Test setup with invalid method"""
@@ -143,7 +154,7 @@ class TestTwoFactorVerifySetupAPI:
         
         # Mock recovery codes
         mock_recovery_codes = [
-            Mock(code=f'CODE-{i:04d}-TEST') for i in range(10)
+            f'CODE-{i:04d}-TEST' for i in range(10)
         ]
         mock_codes.return_value = mock_recovery_codes
         
@@ -152,9 +163,10 @@ class TestTwoFactorVerifySetupAPI:
         })
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['enabled'] is True
-        assert response.data['method'] == 'totp'
-        assert len(response.data['recovery_codes']) == 10
+        payload = response_payload(response)
+        assert payload['enabled'] is True
+        assert payload['method'] == 'totp'
+        assert len(payload['recovery_codes']) == 10
         
         # Verify 2FA is enabled
         self.user.twofa_settings.refresh_from_db()
@@ -179,7 +191,8 @@ class TestTwoFactorVerifySetupAPI:
         })
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['enabled'] is True
+        payload = response_payload(response)
+        assert payload['enabled'] is True
     
     @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_verify_setup_invalid_code(self, mock_verify):
@@ -227,8 +240,9 @@ class TestTwoFactorStatusAPI:
         response = self.client.get('/api/auth/2fa/status/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['is_enabled'] is False
-        assert response.data['preferred_method'] is None
+        payload = response_payload(response)
+        assert payload['is_enabled'] is False
+        assert payload['preferred_method'] is None
     
     def test_status_configured_disabled(self):
         """Test status when 2FA configured but disabled"""
@@ -241,8 +255,9 @@ class TestTwoFactorStatusAPI:
         response = self.client.get('/api/auth/2fa/status/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['is_enabled'] is False
-        assert response.data['preferred_method'] == 'totp'
+        payload = response_payload(response)
+        assert payload['is_enabled'] is False
+        assert payload['preferred_method'] == 'totp'
     
     def test_status_configured_enabled(self):
         """Test status when 2FA enabled"""
@@ -255,8 +270,9 @@ class TestTwoFactorStatusAPI:
         response = self.client.get('/api/auth/2fa/status/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['is_enabled'] is True
-        assert response.data['preferred_method'] == 'email'
+        payload = response_payload(response)
+        assert payload['is_enabled'] is True
+        assert payload['preferred_method'] == 'email'
 
 
 @pytest.mark.django_db
@@ -290,7 +306,8 @@ class TestTwoFactorDisableAPI:
         })
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['enabled'] is False
+        payload = response_payload(response)
+        assert payload['enabled'] is False
         
         # Verify 2FA is disabled
         self.user.twofa_settings.refresh_from_db()
@@ -315,7 +332,8 @@ class TestTwoFactorDisableAPI:
         })
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['enabled'] is False
+        payload = response_payload(response)
+        assert payload['enabled'] is False
     
     def test_disable_not_enabled(self):
         """Test disable when 2FA not enabled"""
@@ -365,11 +383,12 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete('/api/auth/2fa/methods/totp/')
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['status']['preferred_method'] == 'sms'
-        assert response.data['status']['has_totp'] is False
-        assert response.data['status']['has_sms'] is True
-        assert response.data['preferred_method_changed'] is True
-        assert response.data['twofa_disabled'] is False
+        payload = response_payload(response)
+        assert payload['status']['preferred_method'] == 'sms'
+        assert payload['status']['has_totp'] is False
+        assert payload['status']['has_sms'] is True
+        assert payload['preferred_method_changed'] is True
+        assert payload['twofa_disabled'] is False
 
         settings_obj.refresh_from_db()
         assert settings_obj.totp_secret is None
@@ -392,9 +411,10 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete('/api/auth/2fa/methods/totp/')
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['twofa_disabled'] is True
-        assert response.data['status']['is_enabled'] is False
-        assert response.data['status']['has_totp'] is False
+        payload = response_payload(response)
+        assert payload['twofa_disabled'] is True
+        assert payload['status']['is_enabled'] is False
+        assert payload['status']['has_totp'] is False
 
         settings_obj.refresh_from_db()
         assert settings_obj.totp_secret is None
@@ -413,10 +433,11 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete('/api/auth/2fa/methods/sms/')
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['status']['preferred_method'] == 'totp'
-        assert response.data['status']['has_sms'] is False
-        assert response.data['preferred_method_changed'] is True
-        assert response.data['twofa_disabled'] is False
+        payload = response_payload(response)
+        assert payload['status']['preferred_method'] == 'totp'
+        assert payload['status']['has_sms'] is False
+        assert payload['preferred_method_changed'] is True
+        assert payload['twofa_disabled'] is False
 
         settings_obj.refresh_from_db()
         assert settings_obj.phone_number is None
@@ -436,9 +457,10 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete('/api/auth/2fa/methods/sms/')
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['twofa_disabled'] is True
-        assert response.data['status']['is_enabled'] is False
-        assert response.data['status']['has_sms'] is False
+        payload = response_payload(response)
+        assert payload['twofa_disabled'] is True
+        assert payload['status']['is_enabled'] is False
+        assert payload['status']['has_sms'] is False
 
         settings_obj.refresh_from_db()
         assert settings_obj.phone_number is None
@@ -454,6 +476,7 @@ class TestTwoFactorMethodRemovalAPI:
 
         response = self.client.delete('/api/auth/2fa/methods/totp/')
 
+        payload = response_payload(response)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'not configured' in response.data['error'].lower()
 
@@ -467,6 +490,7 @@ class TestTwoFactorMethodRemovalAPI:
 
         response = self.client.delete('/api/auth/2fa/methods/sms/')
 
+        payload = response_payload(response)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'not configured' in response.data['error'].lower()
 
@@ -475,11 +499,13 @@ class TestTwoFactorMethodRemovalAPI:
         # ensure authentication is required
         response = self.client.delete('/api/auth/2fa/methods/totp/')
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        payload = response_payload(response)
 
         # Re-authenticate and try without settings
         self.client.force_authenticate(user=self.user)
         response = self.client.delete('/api/auth/2fa/methods/totp/')
 
+        payload = response_payload(response)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'not configured' in response.data['error'].lower()
 
@@ -517,13 +543,14 @@ class TestRecoveryCodeAPI:
             is_enabled=True
         )
         
-        mock_codes = [Mock(code=f'CODE-{i:04d}-TEST') for i in range(10)]
+        mock_codes = [f'CODE-{i:04d}-TEST' for i in range(10)]
         mock_generate.return_value = mock_codes
         
         response = self.client.post('/api/auth/2fa/recovery-codes/generate/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data['recovery_codes']) == 10
+        payload = response_payload(response)
+        assert len(payload['recovery_codes']) == 10
     
     def test_generate_recovery_codes_not_enabled(self):
         """Test recovery code generation when 2FA not enabled"""
@@ -629,14 +656,16 @@ class TestTrustedDevicesAPI:
         response = self.client.get('/api/auth/2fa/trusted-devices/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data['devices']) == 3
+        payload = response_payload(response)
+        assert len(payload['devices']) == 3
     
     def test_list_trusted_devices_empty(self):
         """Test listing when no devices"""
         response = self.client.get('/api/auth/2fa/trusted-devices/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data['devices']) == 0
+        payload = response_payload(response)
+        assert len(payload['devices']) == 0
     
     @patch('auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
     def test_remove_trusted_device_success(self, mock_remove):

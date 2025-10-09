@@ -1,6 +1,7 @@
 import { StatusMessage, WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
 import { QRCodeDisplay } from "../../QRCodeDisplay";
+import { useTranslation } from "react-i18next";
 
 interface TotpScanStepProps {
 	qrCodeImage?: string;
@@ -13,23 +14,25 @@ export function TotpScanStep({
 	secret,
 	onContinue,
 }: TotpScanStepProps) {
+	const { t } = useTranslation();
+
 	return (
 		<>
 			<WizardSection
-				title="Scan QR Code"
-				description="Open your authenticator app and scan this QR code."
+				title={t("twofa.setup.totp.scan")}
+				description={t("twofa.setup.totp.scan_instructions")}
 			>
 				{qrCodeImage && secret ? (
 					<QRCodeDisplay qrCodeImage={qrCodeImage} secret={secret} />
 				) : (
 					<StatusMessage variant="error" align="center">
-						We couldn’t load your QR code. Please restart the setup process.
+						{t("twofa.errors.qr_load")}
 					</StatusMessage>
 				)}
 			</WizardSection>
 			<WizardFooter>
 				<Button onClick={onContinue} className="w-full">
-					I've Scanned the Code
+					{t("twofa.setup.actions.scan_complete")}
 				</Button>
 			</WizardFooter>
 		</>

@@ -1,4 +1,5 @@
 import { GenericVerifyStep } from "../generic";
+import { useTranslation } from "react-i18next";
 
 interface EmailVerifyStepProps {
 	code: string;
@@ -13,14 +14,16 @@ interface EmailVerifyStepProps {
 }
 
 export function EmailVerifyStep(props: EmailVerifyStepProps) {
+	const { t } = useTranslation();
+
 	return (
 		<GenericVerifyStep
 			config={{
-				title: "Enter Email Code",
-				verifyButtonText: "Verify & Enable Email",
-				loadingText: "Verifying...",
+				title: t("twofa.setup.email.verify_title"),
+				verifyButtonText: t("twofa.setup.email.verify_button"),
+				loadingText: t("twofa.setup.actions.verifying"),
 				showResend: true,
-				resendButtonText: "Resend Code",
+				resendButtonText: t("twofa.setup.actions.resend"),
 			}}
 			code={props.code}
 			message={props.message}
