@@ -10,6 +10,8 @@ import {
 	EmailMethodCard,
 	SmsMethodCard,
 	TotpMethodCard,
+	twoFaKeys,
+	twoFactorApi,
 	use2FAStatus,
 	useRemoveTwoFactorMethod,
 } from "@/features/twofa";
@@ -201,5 +203,10 @@ function TwoFactorSetupPage() {
 }
 
 export const Route = createFileRoute("/2fa/setup/")({
+	loader: ({ context: { queryClient } }) =>
+		queryClient.ensureQueryData({
+			queryKey: twoFaKeys.status(),
+			queryFn: () => twoFactorApi.getStatus(),
+		}),
 	component: TwoFactorSetupPage,
 });

@@ -14,6 +14,8 @@ import {
 	use2FAStatus,
 	useRemoveTwoFactorMethod,
 	useSetPreferredMethod,
+	twoFaKeys,
+	twoFactorApi,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -244,5 +246,10 @@ function TwoFactorSettingsPage() {
 }
 
 export const Route = createFileRoute("/2fa/settings")({
+	loader: ({ context: { queryClient } }) =>
+		queryClient.ensureQueryData({
+			queryKey: twoFaKeys.status(),
+			queryFn: () => twoFactorApi.getStatus(),
+		}),
 	component: TwoFactorSettingsPage,
 });

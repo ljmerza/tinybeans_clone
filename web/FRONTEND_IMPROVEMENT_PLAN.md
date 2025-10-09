@@ -29,9 +29,8 @@
   Added TanStack Form + Zod guidance to `web/README.md`, covering validation reuse, shared components, and internationalized messaging.
 
 ## Enhance (Mid Term)
-- **Router ↔ Query integration using loaders**  
-  - For data-driven routes (2FA settings, profile once added), introduce `Route.load` + `queryClient.ensureQueryData` to prefetch queries using the shared keys (`web/src/routes/2fa/settings.tsx:36`).  
-  - Expose the shared `queryClient` via router context (already done in `AppProviders`) to align with TanStack Router docs and enable suspenseful route transitions.
+- ✅ **Router ↔ Query integration using loaders**  
+  Added loaders for the 2FA routes so navigation prefetches via the shared QueryClient context (`web/src/routes/2fa/settings.tsx`, `web/src/routes/2fa/setup/index.tsx`, `web/src/routes/2fa/trusted-devices.tsx`).
 - **Centralized mutation feedback policy**  
   - Extend `AppProviders` with a custom `MutationCache` that pipes success/error states into `useApiMessages` / `sonner`, reducing per-hook boilerplate (`web/src/components/AppProviders.tsx:33`).  
   - Adopt TanStack Query’s `mutationCache.onError` patterns while preserving feature-level overrides via options.

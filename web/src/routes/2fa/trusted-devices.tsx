@@ -5,7 +5,12 @@
 import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useRemoveTrustedDevice, useTrustedDevices } from "@/features/twofa";
+import {
+	twoFaKeys,
+	twoFactorApi,
+	useRemoveTrustedDevice,
+	useTrustedDevices,
+} from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -148,5 +153,10 @@ function TrustedDevicesPage() {
 }
 
 export const Route = createFileRoute("/2fa/trusted-devices")({
+	loader: ({ context: { queryClient } }) =>
+		queryClient.ensureQueryData({
+			queryKey: twoFaKeys.trustedDevices(),
+			queryFn: () => twoFactorApi.getTrustedDevices(),
+		}),
 	component: TrustedDevicesPage,
 });

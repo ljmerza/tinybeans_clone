@@ -102,7 +102,7 @@ class TestTwoFactorSetupAPI:
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         payload = response_payload(response)
-        assert 'phone number' in payload['error'].lower()
+        assert payload['error'] == 'phone_number_required'
     
     def test_setup_invalid_method(self):
         """Test setup with invalid method"""
