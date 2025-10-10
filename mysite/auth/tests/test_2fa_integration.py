@@ -1,9 +1,11 @@
 """Integration tests for complete 2FA flows"""
+import hashlib
 import pytest
 from unittest.mock import patch, Mock
 from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from rest_framework.test import APIClient
 from rest_framework import status
 
@@ -14,8 +16,14 @@ from auth.models import (
     TrustedDevice,
     TwoFactorAuditLog
 )
+from auth.services.trusted_device_service import TrustedDeviceService
 
 User = get_user_model()
+
+
+def recovery_hash(value: str) -> str:
+    """Helper to compute recovery code hash."""
+    return hashlib.sha256(value.encode()).hexdigest()
 
 
 @pytest.mark.django_db
@@ -92,10 +100,11 @@ class TestCompleteEmailFlow:
         )
         self.client.force_authenticate(user=self.user)
     
+    @patch('auth.services.twofa_service.TwoFactorService.generate_otp', return_value='654321')
     @patch('emails.mailers.TwoFactorMailer.send_2fa_code')
     @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
     @patch('emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
-    def test_complete_email_setup_flow(self, mock_notif, mock_rate, mock_send):
+    def test_complete_email_setup_flow(self, mock_notif, mock_rate, mock_send, mock_generate):
         """Test complete email 2FA setup flow"""
         mock_rate.return_value = False
         
@@ -115,7 +124,7 @@ class TestCompleteEmailFlow:
         
         # Step 2: Verify with correct code
         verify_response = self.client.post('/api/auth/2fa/verify-setup/', {
-            'code': code_obj.code
+            'code': '654321'
         })
         
         assert verify_response.status_code == status.HTTP_200_OK
@@ -170,7 +179,7 @@ class TestRecoveryCodeFlow:
         assert first_code in download_response.content.decode()
         
         # Step 3: Verify code is unused
-        code_obj = RecoveryCode.objects.get(code=first_code)
+        code_obj = RecoveryCode.objects.get(code_hash=recovery_hash(first_code))
         assert not code_obj.is_used
         
         # Step 4: Use recovery code
@@ -199,14 +208,14 @@ class TestRecoveryCodeFlow:
         # Old codes should not exist
         for old_code in old_codes:
             assert not RecoveryCode.objects.filter(
-                code=old_code,
+                code_hash=recovery_hash(old_code),
                 is_used=False
             ).exists()
         
         # New codes should exist
         for new_code in new_codes:
             assert RecoveryCode.objects.filter(
-                code=new_code,
+                code_hash=recovery_hash(new_code),
                 is_used=False
             ).exists()
 
@@ -227,15 +236,12 @@ class TestTrustedDeviceFlow:
     def test_trusted_device_lifecycle(self):
         """Test adding, listing, and removing trusted devices"""
         # Step 1: Add trusted devices
-        for i in range(3):
-            TrustedDevice.objects.create(
-                user=self.user,
-                device_id=f'device-{i}',
-                device_name=f'Device {i}',
-                ip_address='127.0.0.1',
-                user_agent='TestBrowser',
-                expires_at=timezone.now() + timedelta(days=30)
-            )
+        factory = RequestFactory()
+        for _ in range(3):
+            request = factory.get('/')
+            request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
+            request.META['REMOTE_ADDR'] = '127.0.0.1'
+            TrustedDeviceService.add_trusted_device(self.user, request)
         
         # Step 2: List devices
         list_response = self.client.get('/api/auth/2fa/trusted-devices/')
@@ -323,17 +329,16 @@ class TestDisableFlow:
             preferred_method='totp'
         )
         
-        recovery_code = RecoveryCode.objects.create(
-            user=self.user,
-            code='ABCD-EFGH-IJKL'
-        )
+        plain_code = 'ABCD-EFGH-IJKL'
+        RecoveryCode.create_recovery_code(self.user, plain_code)
+        recovery_code = RecoveryCode.objects.get(code_hash=recovery_hash(plain_code))
         
         # Try with wrong TOTP
         mock_verify.return_value = False
         
         # Disable with recovery code
         disable_response = self.client.post('/api/auth/2fa/disable/', {
-            'code': recovery_code.code
+            'code': plain_code
         })
         
         assert disable_response.status_code == status.HTTP_200_OK

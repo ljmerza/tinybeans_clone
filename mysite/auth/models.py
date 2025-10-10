@@ -202,8 +202,8 @@ class TwoFactorCode(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code_hash = models.CharField(max_length=64)
-    code_preview = models.CharField(max_length=6, blank=True)
+    code_hash = models.CharField(max_length=64, default='')
+    code_preview = models.CharField(max_length=6, blank=True, default='')
     method = models.CharField(max_length=20)
     purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
     is_used = models.BooleanField(default=False)
@@ -277,8 +277,8 @@ class TrustedDevice(models.Model):
     device_name = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()
     user_agent = models.TextField()
-    ip_hash = models.CharField(max_length=64, blank=True)
-    ua_hash = models.CharField(max_length=64, blank=True)
+    ip_hash = models.CharField(max_length=64, blank=True, default='')
+    ua_hash = models.CharField(max_length=64, blank=True, default='')
     last_used_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)

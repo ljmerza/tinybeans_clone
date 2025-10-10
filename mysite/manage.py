@@ -6,7 +6,15 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+    if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+        env = os.environ.get('DJANGO_ENVIRONMENT', 'local').lower()
+        settings_map = {
+            'local': 'mysite.config.settings.local',
+            'staging': 'mysite.config.settings.staging',
+            'production': 'mysite.config.settings.production',
+            'test': 'mysite.config.settings.test',
+        }
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_map.get(env, 'mysite.config.settings.local'))
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

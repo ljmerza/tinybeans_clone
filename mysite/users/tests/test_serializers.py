@@ -373,7 +373,10 @@ class CircleCreateSerializerTests(TestCase):
         
         serializer = CircleCreateSerializer(data=data, context={'user': self.unverified_user})
         self.assertFalse(serializer.is_valid())
-        self.assertIn('Email verification is required', str(serializer.errors))
+        self.assertIn('non_field_errors', serializer.errors)
+        error = serializer.errors['non_field_errors'][0]
+        self.assertIsInstance(error, dict)
+        self.assertEqual(error.get('i18n_key'), 'errors.email_verification_required')
 
     def test_empty_name_validation(self):
         """Test that empty name is rejected."""

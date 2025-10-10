@@ -16,6 +16,7 @@ import uuid
 import logging
 import hashlib
 import hmac
+import secrets
 from typing import Any
 
 from django.conf import settings
@@ -197,6 +198,9 @@ def generate_partial_token(user: User, request=None, expires_in: int = 600) -> s
     # Add IP binding for enhanced security
     if request:
         payload['ip_address'] = get_client_ip(request)
+        user_agent = (request.META.get('HTTP_USER_AGENT') or '').strip()
+        if user_agent:
+            payload['user_agent_hash'] = hashlib.sha256(user_agent.encode('utf-8')).hexdigest()
     
     return store_token('partial', payload, ttl=expires_in)
 
@@ -235,6 +239,12 @@ def verify_partial_token(token: str, request=None) -> User | None:
         if payload['ip_address'] != client_ip:
             # IP mismatch - potential token theft
             return None
+        user_agent = (request.META.get('HTTP_USER_AGENT') or '').strip()
+        expected_hash = payload.get('user_agent_hash')
+        if expected_hash:
+            current_hash = hashlib.sha256(user_agent.encode('utf-8')).hexdigest()
+            if not secrets.compare_digest(expected_hash, current_hash):
+                return None
     
     user_id = payload.get('user_id')
     if user_id is None:

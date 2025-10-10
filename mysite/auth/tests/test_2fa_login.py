@@ -151,8 +151,11 @@ class TestLoginWithTrustedDevice:
     @patch('auth.services.trusted_device_service.TrustedDeviceService.get_device_id_from_request')
     def test_login_skips_2fa_for_trusted_device(self, mock_get_device, mock_is_trusted):
         """Test 2FA is skipped for trusted devices"""
-        mock_get_device.return_value = 'device-123'
-        mock_is_trusted.return_value = True
+        mock_get_device.return_value = TrustedDeviceToken(
+            device_id='device-123',
+            signed_value='signed-device-123'
+        )
+        mock_is_trusted.return_value = (True, None)
         
         response = self.client.post('/api/auth/login/', {
             'username': 'testuser',
@@ -169,8 +172,11 @@ class TestLoginWithTrustedDevice:
     @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_login_requires_2fa_for_untrusted_device(self, mock_rate, mock_get_device, mock_is_trusted):
         """Test 2FA is required for untrusted devices"""
-        mock_get_device.return_value = 'device-123'
-        mock_is_trusted.return_value = False
+        mock_get_device.return_value = TrustedDeviceToken(
+            device_id='device-123',
+            signed_value='signed-device-123'
+        )
+        mock_is_trusted.return_value = (False, None)
         mock_rate.return_value = False
         
         response = self.client.post('/api/auth/login/', {
@@ -344,7 +350,8 @@ class TestRememberMeFeature:
         mock_verify.return_value = True
         mock_device = Mock()
         mock_device.device_id = 'new-device-123'
-        mock_add_device.return_value = mock_device
+        mock_token = TrustedDeviceToken(device_id='new-device-123', signed_value='signed-new-device-123')
+        mock_add_device.return_value = (mock_device, mock_token)
         
         partial_token = generate_partial_token(self.user)
         

@@ -11,6 +11,14 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+    env = os.environ.get('DJANGO_ENVIRONMENT', 'local').lower()
+    settings_map = {
+        'local': 'mysite.config.settings.local',
+        'staging': 'mysite.config.settings.staging',
+        'production': 'mysite.config.settings.production',
+        'test': 'mysite.config.settings.test',
+    }
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_map.get(env, 'mysite.config.settings.local'))
 
 application = get_wsgi_application()

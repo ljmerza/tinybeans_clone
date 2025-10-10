@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from django.contrib.auth import authenticate
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from users.models import User
+from mysite.notification_utils import create_message
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -28,9 +28,9 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = authenticate(username=attrs['username'], password=attrs['password'])
         if not user:
-            raise serializers.ValidationError(_('Invalid username or password'))
+            raise serializers.ValidationError(create_message('errors.invalid_credentials'))
         if not user.is_active:
-            raise serializers.ValidationError(_('User account is inactive'))
+            raise serializers.ValidationError(create_message('errors.account_inactive'))
         attrs['user'] = user
         return attrs
 
@@ -45,7 +45,7 @@ class EmailVerificationSerializer(serializers.Serializer):
         except User.DoesNotExist:
             user = User.objects.filter(email__iexact=identifier).first()
         if not user:
-            raise serializers.ValidationError(_('User not found'))
+            raise serializers.ValidationError(create_message('errors.user_not_found'))
         attrs['user'] = user
         return attrs
 
@@ -73,7 +73,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm': _('Passwords do not match')})
+            raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
         return attrs
 
 
@@ -85,9 +85,9 @@ class PasswordChangeSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context['request'].user
         if not user.check_password(attrs['current_password']):
-            raise serializers.ValidationError({'current_password': _('Current password is incorrect')})
+            raise serializers.ValidationError({'current_password': create_message('errors.auth.invalid_password')})
         if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm': _('Passwords do not match')})
+            raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
         return attrs
 
 

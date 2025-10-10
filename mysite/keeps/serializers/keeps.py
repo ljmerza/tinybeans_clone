@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema_field
 from ..models import Keep, KeepType, KeepMedia, Milestone
 from users.models import CircleMembership, UserRole
 from .core import KeepMediaSerializer, MilestoneSerializer
+from mysite.notification_utils import create_message
 
 
 class KeepSerializer(serializers.ModelSerializer):
@@ -129,25 +130,25 @@ class KeepCreateSerializer(serializers.ModelSerializer):
                 CircleMembership.objects.get(user=user, circle=circle)
             except CircleMembership.DoesNotExist:
                 raise serializers.ValidationError({
-                    'circle': 'You must be a member of this circle to create keeps.'
+                    'circle': create_message('errors.circle_membership_required')
                 })
         
         # Milestone keeps should have milestone data
         if keep_type == KeepType.MILESTONE and not milestone_data:
             raise serializers.ValidationError({
-                'milestone_data': 'Milestone data is required for milestone keeps.'
+                'milestone_data': create_message('errors.milestone_required')
             })
         
         # Non-milestone keeps shouldn't have milestone data
         if keep_type != KeepType.MILESTONE and milestone_data:
             raise serializers.ValidationError({
-                'milestone_data': 'Milestone data should only be provided for milestone keeps.'
+                'milestone_data': create_message('errors.milestone_not_allowed')
             })
         
         # Media keeps should have media files
         if keep_type == KeepType.MEDIA and not media_files:
             raise serializers.ValidationError({
-                'media_files': 'Media keeps should include media files.'
+                'media_files': create_message('errors.media_files_required')
             })
         
         # Note keeps don't require media files but can have them
@@ -208,5 +209,5 @@ class KeepUpdateSerializer(serializers.ModelSerializer):
             pass
         
         raise serializers.ValidationError(
-            "You can only update keeps you created or as a circle admin."
+            create_message('errors.keep_update_forbidden')
         )

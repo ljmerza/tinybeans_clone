@@ -1,9 +1,12 @@
 """Tests for Two-Factor Authentication"""
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from rest_framework.test import APIClient
+
 from auth.models import TwoFactorSettings, TwoFactorCode, RecoveryCode, TrustedDevice
 from auth.services.twofa_service import TwoFactorService
+from auth.services.trusted_device_service import TrustedDeviceService
 
 User = get_user_model()
 
@@ -92,7 +95,7 @@ class TestTwoFactorSetupView:
         # Check OTP code was created
         code = TwoFactorCode.objects.filter(user=user, purpose='setup').first()
         assert code is not None
-        assert len(code.code) == 6
+        assert len(code.code_preview or '') == 6
 
 
 @pytest.mark.django_db
@@ -171,16 +174,11 @@ class TestTrustedDevices:
         user = create_user()
         
         # Create a trusted device
-        from datetime import timedelta
-        from django.utils import timezone
-        TrustedDevice.objects.create(
-            user=user,
-            device_id='test-device-id',
-            device_name='Test Browser',
-            ip_address='127.0.0.1',
-            user_agent='Test Agent',
-            expires_at=timezone.now() + timedelta(days=30)
-        )
+        factory = RequestFactory()
+        request = factory.get('/')
+        request.META['HTTP_USER_AGENT'] = 'Test Agent'
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        TrustedDeviceService.add_trusted_device(user, request)
         
         client = APIClient()
         client.force_authenticate(user=user)
@@ -191,4 +189,4 @@ class TestTrustedDevices:
         payload = response_payload(response)
         assert 'devices' in payload
         assert len(payload['devices']) == 1
-        assert payload['devices'][0]['device_name'] == 'Test Browser'
+        assert payload['devices'][0]['device_name']

@@ -1,9 +1,9 @@
 """Serializers for child profile upgrade flows."""
 from __future__ import annotations
 
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from mysite.notification_utils import create_message
 from ..models import (
     ChildProfile,
     ChildProfileUpgradeStatus,
@@ -44,13 +44,13 @@ class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
     def validate(self, attrs):
         child = self.context['child']
         if child.upgrade_status == ChildProfileUpgradeStatus.LINKED:
-            raise serializers.ValidationError(_('Child profile already linked'))
+            raise serializers.ValidationError(create_message('errors.child_already_linked'))
         attrs['email'] = attrs['email'].lower()
         if User.objects.filter(email__iexact=attrs['email']).exists():
-            raise serializers.ValidationError({'email': _('A user with this email already exists. Ask them to log in.')})
+            raise serializers.ValidationError({'email': create_message('errors.email_already_registered')})
         username = attrs.get('username')
         if username and User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({'username': _('Username is already taken')})
+            raise serializers.ValidationError({'username': create_message('errors.username_taken')})
         if 'consent_metadata' not in attrs or attrs['consent_metadata'] is None:
             attrs['consent_metadata'] = {}
         return attrs
@@ -64,9 +64,9 @@ class ChildProfileUpgradeConfirmSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm': _('Passwords do not match')})
+            raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
         if User.objects.filter(username=attrs['username']).exists():
-            raise serializers.ValidationError({'username': _('Username is already taken')})
+            raise serializers.ValidationError({'username': create_message('errors.username_taken')})
         return attrs
 
 

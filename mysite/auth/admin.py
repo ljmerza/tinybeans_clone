@@ -20,10 +20,14 @@ class TwoFactorSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(TwoFactorCode)
 class TwoFactorCodeAdmin(admin.ModelAdmin):
-    list_display = ['user', 'code', 'method', 'purpose', 'is_used', 'expires_at']
+    list_display = ['user', 'code_preview', 'code_hash_preview', 'method', 'purpose', 'is_used', 'expires_at']
     list_filter = ['is_used', 'method', 'purpose']
-    search_fields = ['user__username', 'code']
-    readonly_fields = ['created_at']
+    search_fields = ['user__username', 'user__email', 'code_preview']
+    readonly_fields = ['created_at', 'code_hash']
+
+    def code_hash_preview(self, obj):
+        return f"{obj.code_hash[:8]}..." if obj.code_hash else '-'
+    code_hash_preview.short_description = 'Code Hash'
 
 
 @admin.register(RecoveryCode)

@@ -1,7 +1,7 @@
 """Tests for token utilities and authentication helpers."""
 from datetime import timedelta
 from unittest.mock import patch
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -14,6 +14,8 @@ from auth.token_utils import (
     set_refresh_cookie,
     store_token,
     pop_token,
+    generate_partial_token,
+    verify_partial_token,
 )
 
 
@@ -198,6 +200,43 @@ class TokenSecurityTests(TestCase):
         self.assertNotEqual(tokens1['access'], tokens2['access'])
         self.assertNotEqual(tokens1['refresh'], tokens2['refresh'])
         self.assertNotEqual(tokens1['access'], tokens3['access'])
+
+
+class PartialTokenBindingTests(TestCase):
+    """Ensure partial tokens are bound to client fingerprints."""
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(
+            username='uauser',
+            email='ua@example.com',
+            password='password123'
+        )
+
+    def _build_request(self, user_agent: str):
+        request = self.factory.post('/auth/login/')
+        request.META['HTTP_USER_AGENT'] = user_agent
+        request.META['REMOTE_ADDR'] = '203.0.113.5'
+        return request
+
+    def test_partial_token_accepts_matching_user_agent(self):
+        enroll_request = self._build_request('TestAgent/1.0')
+        token = generate_partial_token(self.user, enroll_request)
+
+        verify_request = self._build_request('TestAgent/1.0')
+        verified_user = verify_partial_token(token, verify_request)
+
+        self.assertIsNotNone(verified_user)
+        self.assertEqual(verified_user.pk, self.user.pk)
+
+    def test_partial_token_rejects_user_agent_changes(self):
+        enroll_request = self._build_request('TestAgent/1.0')
+        token = generate_partial_token(self.user, enroll_request)
+
+        mismatched_request = self._build_request('DifferentAgent/2.0')
+        result = verify_partial_token(token, mismatched_request)
+
+        self.assertIsNone(result)
         self.assertNotEqual(tokens1['refresh'], tokens3['refresh'])
 
     def test_stored_keys_are_unique(self):

@@ -184,7 +184,7 @@ class TestTwoFactorVerifySetupAPI:
         )
         
         mock_verify.return_value = True
-        mock_codes.return_value = [Mock(code='CODE-0000-TEST')]
+        mock_codes.return_value = ['CODE-0000-TEST']
         
         response = self.client.post('/api/auth/2fa/verify-setup/', {
             'code': '123456'
