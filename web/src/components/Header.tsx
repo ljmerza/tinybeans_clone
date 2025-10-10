@@ -20,7 +20,7 @@ function AuthenticatedHeaderActions() {
 	const { t } = useTranslation();
 	return (
 		<>
-			<Link to="/2fa/settings" className="btn-ghost">
+			<Link to="/profile/general" className="btn-ghost">
 				{t("nav.twofa_settings")}
 			</Link>
 			<Link to="/logout" className="btn-ghost">

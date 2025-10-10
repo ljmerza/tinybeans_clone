@@ -8,11 +8,15 @@
 All 2FA routes have been successfully added to the TanStack Router file-based routing system:
 
 ```
-web/src/routes/2fa/
-├── verify.tsx          - /2fa/verify
-├── setup.tsx           - /2fa/setup  
-├── settings.tsx        - /2fa/settings
-└── trusted-devices.tsx - /2fa/trusted-devices
+web/src/routes/profile/2fa/
+├── verify.tsx                 - /profile/2fa/verify
+├── settings.tsx               - /profile/2fa/settings
+├── trusted-devices.tsx        - /profile/2fa/trusted-devices
+└── setup/
+    ├── index.tsx              - /profile/2fa/setup/
+    ├── email.tsx              - /profile/2fa/setup/email
+    ├── sms.tsx                - /profile/2fa/setup/sms
+    └── totp.tsx               - /profile/2fa/setup/totp
 ```
 
 ## Build Status
@@ -24,8 +28,8 @@ web/src/routes/2fa/
 
 ## Route Details
 
-### 1. `/2fa/verify` - Verification Page
-- **File:** `src/routes/2fa/verify.tsx`
+### 1. `/profile/2fa/verify` - Verification Page
+- **File:** `src/routes/profile/2fa/verify.tsx`
 - **Purpose:** 2FA code verification during login
 - **Features:**
   - 6-digit code input
@@ -34,8 +38,8 @@ web/src/routes/2fa/
   - Auto-submit on complete
   - Back to login link
 
-### 2. `/2fa/setup` - Setup Page
-- **File:** `src/routes/2fa/setup.tsx`
+### 2. `/profile/2fa/setup/` - Setup Page
+- **File:** `src/routes/profile/2fa/setup/index.tsx`
 - **Purpose:** Enable and configure 2FA
 - **Features:**
   - Method selection (TOTP/Email/SMS)
@@ -43,8 +47,8 @@ web/src/routes/2fa/
   - Email/SMS placeholders
   - Skip for now option
 
-### 3. `/2fa/settings` - Settings Page
-- **File:** `src/routes/2fa/settings.tsx`
+### 3. `/profile/2fa/settings` - Settings Page
+- **File:** `src/routes/profile/2fa/settings.tsx`
 - **Purpose:** Manage 2FA configuration
 - **Features:**
   - View status
@@ -53,8 +57,8 @@ web/src/routes/2fa/
   - Disable 2FA
   - Manage trusted devices link
 
-### 4. `/2fa/trusted-devices` - Device Management
-- **File:** `src/routes/2fa/trusted-devices.tsx`
+### 4. `/profile/2fa/trusted-devices` - Device Management
+- **File:** `src/routes/profile/2fa/trusted-devices.tsx`
 - **Purpose:** Manage trusted devices
 - **Features:**
   - List all devices
@@ -71,10 +75,10 @@ npm run dev
 ```
 
 The routes will be:
-- `/2fa/verify`
-- `/2fa/setup`
-- `/2fa/settings`
-- `/2fa/trusted-devices`
+- `/profile/2fa/verify`
+- `/profile/2fa/setup`
+- `/profile/2fa/settings`
+- `/profile/2fa/trusted-devices`
 
 ## Import Paths Corrected
 
@@ -201,11 +205,15 @@ navigate({ to: '/2fa/setup' })
 ### Created/Modified Files
 
 ```
-web/src/routes/2fa/
-├── verify.tsx           ✅ Created (5.5 KB)
-├── setup.tsx            ✅ Created (7.0 KB)
-├── settings.tsx         ✅ Created (8.0 KB)
-└── trusted-devices.tsx  ✅ Created (4.6 KB)
+web/src/routes/profile/2fa/
+├── verify.tsx                 ✅ Created (5.5 KB)
+├── settings.tsx               ✅ Created (8.0 KB)
+├── trusted-devices.tsx        ✅ Created (4.6 KB)
+└── setup/
+    ├── index.tsx              ✅ Created (7.0 KB)
+    ├── email.tsx              ✅ Created
+    ├── sms.tsx                ✅ Created
+    └── totp.tsx               ✅ Created
 
 web/src/features/twofa/
 ├── types.ts             ✅ Created
@@ -291,4 +299,3 @@ navigate({ to: '/2fa/verify', state: { ... } as any })
 **Status:** ✅ Routes Added and Building Successfully  
 **Ready For:** Development Server Testing  
 **Next:** Start dev server and test with backend
-

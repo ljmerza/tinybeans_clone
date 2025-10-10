@@ -9,14 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { extractApiError } from "@/features/auth/utils";
-import {
-	VerificationInput,
-	useVerify2FALogin,
-} from "@/features/twofa";
-import type {
-	TwoFactorMethod,
-	TwoFactorVerifyState,
-} from "@/features/twofa";
+import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
+import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import {
 	Navigate,
@@ -97,7 +91,9 @@ function TwoFactorVerifyPage() {
 	}, [method, message, t, useRecoveryCode]);
 
 	const handleVerify = () => {
-		const schema = useRecoveryCode ? recoveryCodeSchema : verificationCodeSchema;
+		const schema = useRecoveryCode
+			? recoveryCodeSchema
+			: verificationCodeSchema;
 		if (!schema.safeParse(code).success) {
 			return;
 		}
@@ -109,7 +105,7 @@ function TwoFactorVerifyPage() {
 		});
 	};
 
-return (
+	return (
 		<AuthCard
 			title={t("twofa.verify_title")}
 			description={headerDescription}
@@ -181,7 +177,9 @@ return (
 				}
 				className="w-full"
 			>
-				{verify.isPending ? t("twofa.verify.verifying") : t("twofa.verify.verify")}
+				{verify.isPending
+					? t("twofa.verify.verifying")
+					: t("twofa.verify.verify")}
 			</Button>
 
 			{verify.error && (
@@ -211,6 +209,6 @@ return (
 	);
 }
 
-export const Route = createFileRoute("/2fa/verify")({
+export const Route = createFileRoute("/profile/2fa/verify")({
 	component: TwoFactorVerifyPage,
 });

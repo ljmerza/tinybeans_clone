@@ -82,16 +82,20 @@ Routes don't appear in navigation
 
 2. Verify route file structure:
    ```
-   web/src/routes/2fa/
+   web/src/routes/profile/2fa/
    ├── verify.tsx
-   ├── setup.tsx
    ├── settings.tsx
-   └── trusted-devices.tsx
+   ├── trusted-devices.tsx
+   └── setup/
+       ├── index.tsx
+       ├── email.tsx
+       ├── sms.tsx
+       └── totp.tsx
    ```
 
 3. Check route exports use `createFileRoute`:
    ```typescript
-   export const Route = createFileRoute('/2fa/verify')({
+   export const Route = createFileRoute('/profile/2fa/verify')({
      component: TwoFactorVerifyPage,
    })
    ```

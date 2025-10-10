@@ -108,11 +108,7 @@ export function useVerify2FALogin() {
 			]);
 		},
 		onError: (error) => {
-			notifyMutationError(
-				error,
-				t("twofa.errors.verify_login"),
-				showAsToast,
-			);
+			notifyMutationError(error, t("twofa.errors.verify_login"), showAsToast);
 		},
 	});
 }
@@ -166,11 +162,7 @@ export function useGenerateRecoveryCodes() {
 			}
 		},
 		onError: (error) => {
-			notifyMutationError(
-				error,
-				t("twofa.errors.generate_codes"),
-				showAsToast,
-			);
+			notifyMutationError(error, t("twofa.errors.generate_codes"), showAsToast);
 		},
 	});
 }
@@ -269,11 +261,7 @@ export function useRemoveTwoFactorMethod() {
 			}
 		},
 		onError: (error) => {
-			notifyMutationError(
-				error,
-				t("twofa.errors.remove_method"),
-				showAsToast,
-			);
+			notifyMutationError(error, t("twofa.errors.remove_method"), showAsToast);
 		},
 	});
 }

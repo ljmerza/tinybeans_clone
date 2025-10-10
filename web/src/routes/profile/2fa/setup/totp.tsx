@@ -9,14 +9,14 @@ function TotpSetupRoute() {
 		<Layout>
 			<div className="max-w-2xl mx-auto">
 				<TotpSetup
-					onComplete={() => navigate({ to: "/2fa/settings" })}
-					onCancel={() => navigate({ to: "/2fa/settings" })}
+					onComplete={() => navigate({ to: "/profile/2fa" })}
+					onCancel={() => navigate({ to: "/profile/2fa" })}
 				/>
 			</div>
 		</Layout>
 	);
 }
 
-export const Route = createFileRoute("/2fa/setup/totp")({
+export const Route = createFileRoute("/profile/2fa/setup/totp")({
 	component: TotpSetupRoute,
 });

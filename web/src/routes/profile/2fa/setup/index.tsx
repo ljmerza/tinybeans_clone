@@ -170,14 +170,14 @@ function TwoFactorSetupPage() {
 							configured={totpConfigured}
 							removalInProgress={removalInProgress}
 							methodToRemove={methodToRemove}
-							onSetup={() => navigate({ to: "/2fa/setup/totp" })}
+							onSetup={() => navigate({ to: "/profile/2fa/setup/totp" })}
 							onRequestRemoval={() => handleRemovalRequest("totp")}
 						/>
 
 						<EmailMethodCard
 							isCurrent={currentMethod === "email"}
 							configured={emailConfigured}
-							onSetup={() => navigate({ to: "/2fa/setup/email" })}
+							onSetup={() => navigate({ to: "/profile/2fa/setup/email" })}
 						/>
 
 						<SmsMethodCard
@@ -186,7 +186,7 @@ function TwoFactorSetupPage() {
 							phoneNumber={status?.phone_number}
 							removalInProgress={removalInProgress}
 							methodToRemove={methodToRemove}
-							onSetup={() => navigate({ to: "/2fa/setup/sms" })}
+							onSetup={() => navigate({ to: "/profile/2fa/setup/sms" })}
 							onRequestRemoval={() => handleRemovalRequest("sms")}
 						/>
 					</div>
@@ -202,7 +202,7 @@ function TwoFactorSetupPage() {
 	);
 }
 
-export const Route = createFileRoute("/2fa/setup/")({
+export const Route = createFileRoute("/profile/2fa/setup/")({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),

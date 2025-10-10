@@ -18,7 +18,7 @@ interface EmailSetupProps {
 export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 	const [step, setStep] = useState<SetupStep>("intro");
 	const [code, setCode] = useState("");
- 	const { t } = useTranslation();
+	const { t } = useTranslation();
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
@@ -38,10 +38,10 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							await initSetup.mutateAsync({ method: "email" });
 							setStep("verify");
 						} catch (error) {
-						const message = extractApiError(
-							error,
-							t("twofa.errors.email_send"),
-						);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.email_send"),
+							);
 							showToast({ message, level: "error" });
 						}
 					}}
@@ -62,10 +62,10 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							await verifySetup.mutateAsync(val ?? code);
 							setStep("recovery");
 						} catch (error) {
-						const message = extractApiError(
-							error,
-							t("twofa.errors.email_verify"),
-						);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.email_verify"),
+							);
 							showToast({ message, level: "error" });
 							setCode("");
 						}
@@ -77,10 +77,10 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							setCode("");
 							verifySetup.reset();
 						} catch (error) {
-						const message = extractApiError(
-							error,
-							t("twofa.errors.email_resend"),
-						);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.email_resend"),
+							);
 							showToast({ message, level: "error" });
 						}
 					}}

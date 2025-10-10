@@ -38,7 +38,7 @@ export function VerificationInput({
 		() => Array.from({ length }, (_, index) => index),
 		[length],
 	);
- 	const { t } = useTranslation();
+	const { t } = useTranslation();
 
 	// Sync external value to internal digits
 	useEffect(() => {

@@ -41,7 +41,7 @@ export function handleTwoFactorRedirect(
 			method: data.method,
 			message: data.message,
 		};
-		navigate({ to: "/2fa/verify", state });
+		navigate({ to: "/profile/2fa/verify", state });
 		return true;
 	}
 	return false;

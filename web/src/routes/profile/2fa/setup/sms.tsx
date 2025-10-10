@@ -11,14 +11,14 @@ function SmsSetupRoute() {
 			<div className="max-w-2xl mx-auto">
 				<SmsSetup
 					defaultPhone={status?.phone_number ?? ""}
-					onComplete={() => navigate({ to: "/2fa/settings" })}
-					onCancel={() => navigate({ to: "/2fa/settings" })}
+					onComplete={() => navigate({ to: "/profile/2fa" })}
+					onCancel={() => navigate({ to: "/profile/2fa" })}
 				/>
 			</div>
 		</Layout>
 	);
 }
 
-export const Route = createFileRoute("/2fa/setup/sms")({
+export const Route = createFileRoute("/profile/2fa/setup/sms")({
 	component: SmsSetupRoute,
 });

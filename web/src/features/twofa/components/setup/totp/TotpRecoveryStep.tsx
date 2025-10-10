@@ -8,21 +8,21 @@ interface TotpRecoveryStepProps {
 }
 
 export function TotpRecoveryStep(props: TotpRecoveryStepProps) {
-  const { t } = useTranslation();
+	const { t } = useTranslation();
 
-  return (
-    <GenericRecoveryStep
-      config={{
-        title: t("twofa.setup.recovery.enabled_title"),
-        description: t("twofa.setup.recovery.description"),
-        additionalContent: (
-          <InfoPanel variant="success" className="text-center">
-            <p className="font-semibold">
-              {t("twofa.setup.recovery.enabled_message")}
-            </p>
-          </InfoPanel>
-        ),
-      }}
+	return (
+		<GenericRecoveryStep
+			config={{
+				title: t("twofa.setup.recovery.enabled_title"),
+				description: t("twofa.setup.recovery.description"),
+				additionalContent: (
+					<InfoPanel variant="success" className="text-center">
+						<p className="font-semibold">
+							{t("twofa.setup.recovery.enabled_message")}
+						</p>
+					</InfoPanel>
+				),
+			}}
 			recoveryCodes={props.recoveryCodes}
 			onComplete={props.onComplete}
 		/>

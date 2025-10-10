@@ -11,19 +11,19 @@ interface TotpVerifyStepProps {
 }
 
 export function TotpVerifyStep(props: TotpVerifyStepProps) {
-  const { t } = useTranslation();
+	const { t } = useTranslation();
 
-  return (
-    <GenericVerifyStep
-      config={{
-        title: t("twofa.setup.totp.verify_title"),
-        verifyButtonText: t("twofa.setup.actions.verify_enable"),
-        loadingText: t("twofa.setup.actions.verifying"),
-        showResend: false,
-        backButtonText: t("twofa.setup.actions.back_to_scan"),
-      }}
-      code={props.code}
-      message={t("twofa.setup.totp.enter_code")}
+	return (
+		<GenericVerifyStep
+			config={{
+				title: t("twofa.setup.totp.verify_title"),
+				verifyButtonText: t("twofa.setup.actions.verify_enable"),
+				loadingText: t("twofa.setup.actions.verifying"),
+				showResend: false,
+				backButtonText: t("twofa.setup.actions.back_to_scan"),
+			}}
+			code={props.code}
+			message={t("twofa.setup.totp.enter_code")}
 			isVerifying={props.isVerifying}
 			errorMessage={props.errorMessage}
 			onCodeChange={props.onCodeChange}

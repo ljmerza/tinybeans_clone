@@ -13,7 +13,7 @@ After calling `/auth/2fa/verify-login/` with correct code, the response is succe
 - ✅ Navigation attempt
 - ✅ Any errors
 
-### Location 2: `web/src/routes/2fa/verify.tsx`
+### Location 2: `web/src/routes/profile/2fa/verify.tsx`
 **Verification page now logs:**
 - ✅ When verify button is clicked
 - ✅ Code being sent
@@ -24,7 +24,7 @@ After calling `/auth/2fa/verify-login/` with correct code, the response is succe
 Press `F12` or right-click → Inspect → Console tab
 
 ### 2. Login with 2FA Account
-Should navigate to `/2fa/verify`
+Should navigate to `/profile/2fa/verify`
 
 ### 3. Enter Your 2FA Code
 Watch console for these logs in order:
@@ -106,7 +106,7 @@ curl -X POST http://localhost:8000/auth/2fa/verify-login/ \
 - Check Response tab - does it have tokens?
 - Check if any error transforming response
 
-### Issue: "Navigating to home page" but stays on /2fa/verify
+### Issue: "Navigating to home page" but stays on /profile/2fa/verify
 
 **Possible Causes:**
 

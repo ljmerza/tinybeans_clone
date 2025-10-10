@@ -24,14 +24,13 @@ export function SmsSetup({
 	const [step, setStep] = useState<SetupStep>("intro");
 	const [phone, setPhone] = useState(defaultPhone);
 	const [code, setCode] = useState("");
- 	const { t } = useTranslation();
+	const { t } = useTranslation();
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
 
 	const recoveryCodes = verifySetup.data?.recovery_codes;
-	const latestMessage =
-		initSetup.data?.message ?? t("twofa.setup.sms.message");
+	const latestMessage = initSetup.data?.message ?? t("twofa.setup.sms.message");
 
 	return (
 		<Wizard currentStep={step}>
@@ -49,10 +48,10 @@ export function SmsSetup({
 							});
 							setStep("verify");
 						} catch (error) {
-						const message = extractApiError(
-							error,
-							t("twofa.errors.sms_send"),
-						);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.sms_send"),
+							);
 							showToast({ message, level: "error" });
 						}
 					}}
@@ -73,10 +72,10 @@ export function SmsSetup({
 							await verifySetup.mutateAsync(val ?? code);
 							setStep("recovery");
 						} catch (error) {
-						const message = extractApiError(
-							error,
-							t("twofa.errors.sms_verify"),
-						);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.sms_verify"),
+							);
 							showToast({ message, level: "error" });
 							setCode("");
 						}
@@ -91,10 +90,10 @@ export function SmsSetup({
 							setCode("");
 							verifySetup.reset();
 						} catch (error) {
-						const message = extractApiError(
-							error,
-							t("twofa.errors.sms_resend"),
-						);
+							const message = extractApiError(
+								error,
+								t("twofa.errors.sms_resend"),
+							);
 							showToast({ message, level: "error" });
 						}
 					}}

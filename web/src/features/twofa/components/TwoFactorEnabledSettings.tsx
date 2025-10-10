@@ -35,10 +35,7 @@ export function TwoFactorEnabledSettings() {
 			await requestDisableCode.mutateAsync();
 			setShowDisableConfirm(true);
 		} catch (error) {
-			const message = extractApiError(
-				error,
-				t("twofa.errors.request_disable"),
-			);
+			const message = extractApiError(error, t("twofa.errors.request_disable"));
 			showToast({ message, level: "error" });
 		}
 	};
@@ -62,10 +59,7 @@ export function TwoFactorEnabledSettings() {
 			await generateCodes.mutateAsync();
 			setShowNewCodes(true);
 		} catch (error) {
-			const message = extractApiError(
-				error,
-				t("twofa.errors.generate_codes"),
-			);
+			const message = extractApiError(error, t("twofa.errors.generate_codes"));
 			showToast({ message, level: "error" });
 		}
 	};
@@ -80,12 +74,12 @@ export function TwoFactorEnabledSettings() {
 				errMessage={generateCodes.error?.message}
 				codes={generateCodes.data?.recovery_codes}
 				onGenerate={handleGenerateNewCodes}
-				onViewCurrent={() => navigate({ to: "/2fa/settings" })}
+				onViewCurrent={() => navigate({ to: "/profile/2fa" })}
 				onHideCodes={() => setShowNewCodes(false)}
 			/>
 
 			<TrustedDevicesSection
-				onManage={() => navigate({ to: "/2fa/trusted-devices" })}
+				onManage={() => navigate({ to: "/profile/2fa/trusted-devices" })}
 			/>
 
 			<DisableTwoFactorSection

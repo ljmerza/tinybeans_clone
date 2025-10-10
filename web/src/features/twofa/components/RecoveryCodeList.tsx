@@ -89,10 +89,10 @@ export function RecoveryCodeList({
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-		{codes.map((code, index) => (
-			<button
-				key={code}
-				type="button"
+				{codes.map((code, index) => (
+					<button
+						key={code}
+						type="button"
 						onClick={() => handleCopy(code, index)}
 						className="bg-gray-100 hover:bg-gray-200 p-3 rounded text-left font-mono text-sm transition-colors group relative"
 					>

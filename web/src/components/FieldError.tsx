@@ -14,7 +14,7 @@ interface FieldErrorProps {
 
 export function FieldError({ field }: FieldErrorProps) {
 	const { t } = useTranslation();
-	
+
 	if (!field.state.meta.isTouched || !field.state.meta.errors?.[0]) {
 		return null;
 	}

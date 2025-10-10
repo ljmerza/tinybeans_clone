@@ -18,9 +18,15 @@ import {
 	twoFactorApi,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
+import {
+	ProfileGeneralSettingsCard,
+	ProfileSettingsTabs,
+} from "@/features/profile";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+
+const twoFactorSettingsPath = "/profile/2fa" as const;
 
 function TwoFactorSettingsPage() {
 	const navigate = useNavigate();
@@ -61,9 +67,7 @@ function TwoFactorSettingsPage() {
 			setRemovalMessage(result?.message ?? t("twofa.messages.method_removed"));
 			setMethodToRemove(null);
 		} catch (err) {
-			setRemovalError(
-				extractApiError(err, t("twofa.errors.remove_method")),
-			);
+			setRemovalError(extractApiError(err, t("twofa.errors.remove_method")));
 		}
 	};
 
@@ -100,7 +104,7 @@ function TwoFactorSettingsPage() {
 		);
 	}
 
-	// Always show consolidated setup on settings page. If 2FA is not enabled, show an inline callout instead of routing to a separate /2fa/setup page.
+	// Always show consolidated setup on settings page. If 2FA is not enabled, show an inline callout instead of routing to a separate /profile/2fa/setup page.
 	// This ensures there is no dependency on a non-existent setup route.
 
 	if (!status) {
@@ -109,110 +113,115 @@ function TwoFactorSettingsPage() {
 				title={t("twofa.title")}
 				description={t("twofa.errors.load_settings")}
 				actionLabel={t("common.retry")}
-				onAction={() => navigate({ to: "/2fa/settings" })}
+				onAction={() => navigate({ to: "/profile/2fa" })}
 			/>
 		);
 	}
 
 	return (
 		<Layout>
-			<div className="max-w-3xl mx-auto space-y-6">
-				<TwoFactorStatusHeader status={status} />
+			<ProfileSettingsTabs
+				general={<ProfileGeneralSettingsCard />}
+				twoFactor={
+					<div className="space-y-6">
+						<TwoFactorStatusHeader status={status} />
 
-				<div className="bg-white rounded-lg shadow-md p-6 space-y-6">
-					<div className="flex items-start justify-between">
-						<div>
-							<h2 className="text-xl font-semibold mb-1">
-								{t("twofa.settings.manage_title")}
-							</h2>
-							<p className="text-sm text-gray-600">
-								{t("twofa.settings.manage_description")}
-							</p>
+						<div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+							<div className="flex items-start justify-between">
+								<div>
+									<h2 className="text-xl font-semibold mb-1">
+										{t("twofa.settings.manage_title")}
+									</h2>
+									<p className="text-sm text-gray-600">
+										{t("twofa.settings.manage_description")}
+									</p>
+								</div>
+							</div>
+
+							{!status.is_enabled && (
+								<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-4">
+									<p className="font-semibold">
+										{t("twofa.settings.not_enabled_title")}
+									</p>
+									<p>{t("twofa.settings.not_enabled_description")}</p>
+								</div>
+							)}
+
+							{removalMessage && (
+								<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
+									{removalMessage}
+								</p>
+							)}
+
+							{removalError && (
+								<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+									{removalError}
+								</p>
+							)}
+
+							{switchMessage && (
+								<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
+									{switchMessage}
+								</p>
+							)}
+
+							{switchError && (
+								<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+									{switchError}
+								</p>
+							)}
+
+							<div className="space-y-4">
+								<TotpMethodCard
+									isCurrent={preferredMethod === "totp"}
+									configured={totpConfigured}
+									removalInProgress={removalInProgress}
+									methodToRemove={methodToRemove}
+									onSetup={() => navigate({ to: "/profile/2fa/setup/totp" })}
+									onRequestRemoval={() => handleRemovalRequest("totp")}
+									onSetAsDefault={() => handleSetAsDefault("totp")}
+									setAsDefaultInProgress={switchInProgress}
+								/>
+
+								<EmailMethodCard
+									isCurrent={preferredMethod === "email"}
+									configured={emailConfigured}
+									onSetup={() => navigate({ to: "/profile/2fa/setup/email" })}
+									onSetAsDefault={() => handleSetAsDefault("email")}
+									setAsDefaultInProgress={switchInProgress}
+									onRequestRemoval={() => handleRemovalRequest("email")}
+									removalInProgress={removalInProgress}
+									methodToRemove={methodToRemove}
+								/>
+
+								<SmsMethodCard
+									isCurrent={preferredMethod === "sms"}
+									configured={smsConfigured}
+									phoneNumber={phoneNumber}
+									removalInProgress={removalInProgress}
+									methodToRemove={methodToRemove}
+									onSetup={() => navigate({ to: "/profile/2fa/setup/sms" })}
+									onRequestRemoval={() => handleRemovalRequest("sms")}
+									onSetAsDefault={() => handleSetAsDefault("sms")}
+									setAsDefaultInProgress={switchInProgress}
+								/>
+							</div>
+						</div>
+
+						{status.is_enabled && <TwoFactorEnabledSettings />}
+
+						<div className="text-center">
+							<button
+								type="button"
+								onClick={() => navigate({ to: "/" })}
+								className="text-sm text-gray-600 hover:text-gray-800"
+							>
+								{t("common.back_home")}
+							</button>
 						</div>
 					</div>
-
-					{!status.is_enabled && (
-						<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-4">
-							<p className="font-semibold">
-								{t("twofa.settings.not_enabled_title")}
-							</p>
-							<p>{t("twofa.settings.not_enabled_description")}</p>
-						</div>
-					)}
-
-					{removalMessage && (
-						<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
-							{removalMessage}
-						</p>
-					)}
-
-					{removalError && (
-						<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
-							{removalError}
-						</p>
-					)}
-
-					{switchMessage && (
-						<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
-							{switchMessage}
-						</p>
-					)}
-
-					{switchError && (
-						<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
-							{switchError}
-						</p>
-					)}
-
-					<div className="space-y-4">
-						<TotpMethodCard
-							isCurrent={preferredMethod === "totp"}
-							configured={totpConfigured}
-							removalInProgress={removalInProgress}
-							methodToRemove={methodToRemove}
-							onSetup={() => navigate({ to: "/2fa/setup/totp" })}
-							onRequestRemoval={() => handleRemovalRequest("totp")}
-							onSetAsDefault={() => handleSetAsDefault("totp")}
-							setAsDefaultInProgress={switchInProgress}
-						/>
-
-						<EmailMethodCard
-							isCurrent={preferredMethod === "email"}
-							configured={emailConfigured}
-							onSetup={() => navigate({ to: "/2fa/setup/email" })}
-							onSetAsDefault={() => handleSetAsDefault("email")}
-							setAsDefaultInProgress={switchInProgress}
-							onRequestRemoval={() => handleRemovalRequest("email")}
-							removalInProgress={removalInProgress}
-							methodToRemove={methodToRemove}
-						/>
-
-						<SmsMethodCard
-							isCurrent={preferredMethod === "sms"}
-							configured={smsConfigured}
-							phoneNumber={phoneNumber}
-							removalInProgress={removalInProgress}
-							methodToRemove={methodToRemove}
-							onSetup={() => navigate({ to: "/2fa/setup/sms" })}
-							onRequestRemoval={() => handleRemovalRequest("sms")}
-							onSetAsDefault={() => handleSetAsDefault("sms")}
-							setAsDefaultInProgress={switchInProgress}
-						/>
-					</div>
-				</div>
-
-				{status.is_enabled && <TwoFactorEnabledSettings />}
-
-				<div className="text-center">
-					<button
-						type="button"
-						onClick={() => navigate({ to: "/" })}
-						className="text-sm text-gray-600 hover:text-gray-800"
-					>
-						{t("common.back_home")}
-					</button>
-				</div>
-			</div>
+				}
+			/>
 
 			{(() => {
 				const methodLabel = methodToRemove
@@ -245,7 +254,7 @@ function TwoFactorSettingsPage() {
 	);
 }
 
-export const Route = createFileRoute("/2fa/settings")({
+export const Route = createFileRoute(twoFactorSettingsPath)({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),

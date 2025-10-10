@@ -53,7 +53,11 @@ export function RecoveryCodesSection({
 								: t("twofa.settings.recovery_codes_generate")}
 						</Button>
 
-						<Button onClick={onViewCurrent} variant="outline" className="flex-1">
+						<Button
+							onClick={onViewCurrent}
+							variant="outline"
+							className="flex-1"
+						>
 							{t("twofa.settings.recovery_codes_view")}
 						</Button>
 					</div>

@@ -17,8 +17,6 @@ export {
 export { InfoPanel } from "./InfoPanel";
 export { ButtonGroup } from "./ButtonGroup";
 export { Wizard, WizardStep, WizardSection, WizardFooter } from "./Wizard";
-export { ProtectedRoute } from "./ProtectedRoute";
-export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { Layout } from "./Layout";
 export { Header } from "./Header";
 export { ConfirmDialog } from "./ui/confirm-dialog";

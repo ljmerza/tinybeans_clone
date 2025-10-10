@@ -20,9 +20,7 @@ export function TwoFactorStatusHeader({ status }: TwoFactorStatusHeaderProps) {
 		<div className="bg-white rounded-lg shadow-md p-6">
 			<div className="flex items-start justify-between">
 				<div>
-					<h1 className="text-2xl font-semibold mb-2">
-						{t("twofa.title")}
-					</h1>
+					<h1 className="text-2xl font-semibold mb-2">{t("twofa.title")}</h1>
 					<div className="flex items-center gap-2">
 						{status.is_enabled ? (
 							<>

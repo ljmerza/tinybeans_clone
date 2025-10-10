@@ -124,7 +124,7 @@ function TrustedDevicesPage() {
 					<div className="mt-6 pt-6 border-t flex justify-between">
 						<button
 							type="button"
-							onClick={() => navigate({ to: "/2fa/settings" })}
+							onClick={() => navigate({ to: "/profile/2fa" })}
 							className="text-sm text-gray-600 hover:text-gray-800"
 						>
 							← Back to 2FA Settings
@@ -152,7 +152,7 @@ function TrustedDevicesPage() {
 	);
 }
 
-export const Route = createFileRoute("/2fa/trusted-devices")({
+export const Route = createFileRoute("/profile/2fa/trusted-devices")({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData({
 			queryKey: twoFaKeys.trustedDevices(),
