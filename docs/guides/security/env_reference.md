@@ -22,4 +22,4 @@ The table below summarizes the required runtime environment variables for the Dj
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth credentials. | Empty | Staging, Production |
 | `ACCOUNT_FRONTEND_BASE_URL` | Base URL for account-related email links. | `http://localhost:3000` | All |
 
-For additional feature-specific toggles see inline documentation in `mysite/config/settings/base.py`.
+For additional feature-specific toggles see inline documentation in `mysite/mysite/config/settings/base.py`.

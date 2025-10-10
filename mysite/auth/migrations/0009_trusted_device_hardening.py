@@ -6,8 +6,8 @@ from django.db import migrations, models
 
 
 def populate_security_fields(apps, schema_editor):
-    TwoFactorCode = apps.get_model('auth', 'TwoFactorCode')
-    TrustedDevice = apps.get_model('auth', 'TrustedDevice')
+    TwoFactorCode = apps.get_model('auth_app', 'TwoFactorCode')
+    TrustedDevice = apps.get_model('auth_app', 'TrustedDevice')
 
     for code in TwoFactorCode.objects.all().iterator():
         plain = getattr(code, 'code', '') or ''
@@ -31,7 +31,7 @@ def populate_security_fields(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0008_magic_login_token_hardening'),
+        ('auth_app', '0008_magic_login_token_hardening'),
     ]
 
     operations = [
