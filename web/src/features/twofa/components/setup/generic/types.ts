@@ -7,6 +7,13 @@
 
 import type { ReactNode } from "react";
 
+export interface InfoPanelItem {
+	/** Unique identifier for the info panel item */
+	id: string;
+	/** Display content for the item */
+	content: ReactNode;
+}
+
 /**
  * Configuration for the Intro step
  */
@@ -18,7 +25,7 @@ export interface IntroStepConfig {
 	/** Info panel title */
 	infoPanelTitle: string;
 	/** Info panel content items */
-	infoPanelItems: ReactNode[];
+	infoPanelItems: InfoPanelItem[];
 	/** Custom content (e.g., phone input for SMS) */
 	customContent?: ReactNode;
 	/** Action button text */

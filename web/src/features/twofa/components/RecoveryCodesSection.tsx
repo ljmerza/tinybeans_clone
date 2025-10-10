@@ -14,7 +14,6 @@ interface RecoveryCodesSectionProps {
 	errMessage?: string;
 	codes?: string[];
 	onGenerate: () => void;
-	onViewCurrent: () => void;
 	onHideCodes: () => void;
 }
 
@@ -24,7 +23,6 @@ export function RecoveryCodesSection({
 	errMessage,
 	codes,
 	onGenerate,
-	onViewCurrent,
 	onHideCodes,
 }: RecoveryCodesSectionProps) {
 	const { t } = useTranslation();

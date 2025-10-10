@@ -36,12 +36,18 @@ function TwoFactorVerifyPage() {
 	const { t } = useTranslation();
 
 	const [verifyData] = useState<TwoFactorVerifyState | null>(() => {
-		const state = location.state;
-		if (!state || typeof state !== "object") {
+		type TwoFactorHistoryState = {
+			twoFactor?: unknown;
+		};
+
+		const historyState =
+			location.state as typeof location.state & TwoFactorHistoryState;
+		const rawState = historyState?.twoFactor;
+		if (!rawState || typeof rawState !== "object") {
 			return null;
 		}
 
-		const candidate = state as Partial<TwoFactorVerifyState>;
+		const candidate = rawState as Partial<TwoFactorVerifyState>;
 		const partialToken = candidate.partialToken;
 		const method = candidate.method;
 		if (

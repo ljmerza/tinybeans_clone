@@ -1,5 +1,6 @@
 import {
 	createContext,
+	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
@@ -95,9 +96,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 		return undefined;
 	}, [preference]);
 
-	const setPreference = (nextPreference: ThemePreference) => {
+	const setPreference = useCallback((nextPreference: ThemePreference) => {
 		setPreferenceState(nextPreference);
-	};
+	}, []);
 
 	const value = useMemo(
 		() => ({
@@ -105,7 +106,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 			resolvedTheme,
 			setPreference,
 		}),
-		[preference, resolvedTheme],
+		[preference, resolvedTheme, setPreference],
 	);
 
 	return (

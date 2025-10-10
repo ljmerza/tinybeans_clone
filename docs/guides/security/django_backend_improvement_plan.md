@@ -22,52 +22,52 @@ Scope: `mysite/` Django project (apps: `auth`, `users`, `keeps`, `messaging`, `e
 | **P2** | Configuration ergonomics | Single monolithic `settings.py` mixes dev/prod concerns, making misconfiguration likely. | Adopt `config/settings/{base,local,staging,production}.py` or pydantic settings, add `.env` schema, and ensure secrets never default in code. | `mysite/mysite/settings.py:1-399` | [ ] Pending |
 
 ## Configuration & Platform Hardening (P0/P1)
-- **HTTPS & proxy awareness:** Add the full security stanza (`SECURE_SSL_REDIRECT`, `SECURE_PROXY_SSL_HEADER`, `USE_X_FORWARDED_HOST`, `SECURE_HSTS_SECONDS`, `SECURE_REFERRER_POLICY`, `SECURE_CONTENT_TYPE_NOSNIFF`, `SECURE_CROSS_ORIGIN_OPENER_POLICY`, `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAMESITE='Lax'`, `CSRF_COOKIE_SECURE`, `CSRF_COOKIE_SAMESITE='Strict'`, `CSRF_TRUSTED_ORIGINS` from env). Reference Django deployment checklist. (Implemented behind `DJANGO_SECURE_*`, `DJANGO_SESSION_*`, `DJANGO_CSRF_*`, and `DJANGO_CSRF_TRUSTED_ORIGINS` env vars.)
-- **CORS / CSRF separation:** Move CORS allow-lists to environment variables (both dev and prod) and ensure `CORS_ALLOW_CREDENTIALS` only when the origin list is explicit.
-- **Database & cache:** Configure `CONN_MAX_AGE`, SSL (`OPTIONS={'sslmode': 'require'}`) for Postgres, and add health checks for Redis. Consider `django-health-check` for operational readiness.
-- **Settings layout:** Split settings into `base.py`, `local.py`, `staging.py`, `production.py` using `django-environ` or `pydantic-settings`. Provide a `docs/guides/security/env_reference.md` enumerating required env vars (SECRET_KEY, TWOFA_ENCRYPTION_KEY, JWT signing key, Mail/SMS creds, MinIO/S3 parameters).
-- **STORAGES API:** Switch from custom loader to Django 5 `STORAGES = {'default': ..., 'staticfiles': ...}` so S3/MinIO can leverage official backends when moving to AWS.
-- **SimpleJWT:** Enable refresh rotation (`ROTATE_REFRESH_TOKENS=True`) and store blacklisted tokens in Redis to mitigate replay. Expose rotation window via settings.
+- [x] **HTTPS & proxy awareness:** Add the full security stanza (`SECURE_SSL_REDIRECT`, `SECURE_PROXY_SSL_HEADER`, `USE_X_FORWARDED_HOST`, `SECURE_HSTS_SECONDS`, `SECURE_REFERRER_POLICY`, `SECURE_CONTENT_TYPE_NOSNIFF`, `SECURE_CROSS_ORIGIN_OPENER_POLICY`, `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAMESITE='Lax'`, `CSRF_COOKIE_SECURE`, `CSRF_COOKIE_SAMESITE='Strict'`, `CSRF_TRUSTED_ORIGINS` from env). Reference Django deployment checklist. (Implemented behind `DJANGO_SECURE_*`, `DJANGO_SESSION_*`, `DJANGO_CSRF_*`, and `DJANGO_CSRF_TRUSTED_ORIGINS` env vars.)
+- [ ] **CORS / CSRF separation:** Move CORS allow-lists to environment variables (both dev and prod) and ensure `CORS_ALLOW_CREDENTIALS` only when the origin list is explicit.
+- [ ] **Database & cache:** Configure `CONN_MAX_AGE`, SSL (`OPTIONS={'sslmode': 'require'}`) for Postgres, and add health checks for Redis. Consider `django-health-check` for operational readiness.
+- [ ] **Settings layout:** Split settings into `base.py`, `local.py`, `staging.py`, `production.py` using `django-environ` or `pydantic-settings`. Provide a `docs/guides/security/env_reference.md` enumerating required env vars (SECRET_KEY, TWOFA_ENCRYPTION_KEY, JWT signing key, Mail/SMS creds, MinIO/S3 parameters).
+- [ ] **STORAGES API:** Switch from custom loader to Django 5 `STORAGES = {'default': ..., 'staticfiles': ...}` so S3/MinIO can leverage official backends when moving to AWS.
+- [ ] **SimpleJWT:** Enable refresh rotation (`ROTATE_REFRESH_TOKENS=True`) and store blacklisted tokens in Redis to mitigate replay. Expose rotation window via settings.
 
 ## Authentication & Authorization
 1. **Invite token leakage (P0):** Status [x] – response payload now omits invite tokens; follow-up tests still recommended.
 2. **Magic login hashing (P0):** Status [x] – tokens persisted via `token_hash`; ensure test suite covers lookup and reuse prevention.
 3. **Rate limiting coverage (P1):** Status [ ] – password reset and verification flows still need explicit throttles.
-4. **Trusted-device improvements (P2):**
-   - Sign the `device_id` cookie with `django.core.signing.Signer` to prevent alteration (`auth/views_2fa.py:807-813`).
-   - Rotate/expire device fingerprints after N uses, and log IP/UA drift for anomaly detection.
-   - Expose an API for users to rename devices (UX + audit).
-5. **2FA OTP storage (stretch):** Hash `TwoFactorCode.code` (store salt + hash) and compare with `secrets.compare_digest`. Update tests for OTP flows to handle hashed values.
-6. **Partial token binding:** Extend `generate_partial_token` payload to include user agent hash and enforce equality during verification, not just the IP (`auth/token_utils.py:118-172`). Document the need for trusted proxy headers once deployed behind a load balancer.
+4. **Trusted-device improvements (P2):** Status [ ] – long-lived cookies remain unsigned and unbound to UA/IP.
+    - Sign the `device_id` cookie with `django.core.signing.Signer` to prevent alteration (`auth/views_2fa.py:807-813`).
+    - Rotate/expire device fingerprints after N uses, and log IP/UA drift for anomaly detection.
+    - Expose an API for users to rename devices (UX + audit).
+5. **2FA OTP storage (stretch):** Status [ ] – codes still stored in clear text; hash `TwoFactorCode.code` (store salt + hash) and compare with `secrets.compare_digest`. Update tests for OTP flows to handle hashed values.
+6. **Partial token binding:** Status [ ] – extend `generate_partial_token` payload to include user agent hash and enforce equality during verification, not just the IP (`auth/token_utils.py:118-172`). Document the need for trusted proxy headers once deployed behind a load balancer.
 
 ## Media & File Handling
-- **Secure temp storage (P1):** Replace `tempfile.gettempdir()` with `NamedTemporaryFile` inside a dedicated `MEDIA_UPLOAD_TMP` directory owned by the app. Guard with `os.open(..., 0o600)` to prevent other containers from reading uploads. (`mysite/keeps/views/upload_views.py:112-121`)
-- **Content validation pipeline (P1):**
+- [ ] **Secure temp storage (P1):** Replace `tempfile.gettempdir()` with `NamedTemporaryFile` inside a dedicated `MEDIA_UPLOAD_TMP` directory owned by the app. Guard with `os.open(..., 0o600)` to prevent other containers from reading uploads. (`mysite/keeps/views/upload_views.py:112-121`)
+- [ ] **Content validation pipeline (P1):**
   - **Images:** Set `Image.MAX_IMAGE_PIXELS` to cap decompression bombs, re-open images after `.verify()` to avoid truncated file issues, and block unsupported formats.
   - **Videos:** Run `ffprobe`/`mediainfo` to check codecs, duration, and stream count before accepting. Enforce whitelist of containers/codecs.
   - **Antivirus:** Integrate ClamAV (via `clamd`) or a managed malware scanning service and fail the upload until clean.
   - **Content moderation (optional):** Provide hook for future Nudity/CSAM detection before publishing.
-- **Storage backend (P1):**
+- [ ] **Storage backend (P1):**
   - Reuse a singleton MinIO/S3 client (`lru_cache` around `get_storage_backend`) to reduce connection churn.
   - Add server-side encryption (`sse`, `ssec`) and object retention flags for compliance.
   - Use deterministic derivative keys (`f"{base_key}_thumb.jpg"`) and a single `storage.save` call; keep the returned key instead of issuing duplicate writes (`mysite/keeps/tasks.py:126-160`).
   - Add signed URL expirations aligned with product requirements and restrict MIME types when serving downloads.
-- **Async task resilience (P1/P2):** Wrap thumbnail generation in a try/finally block that always closes images, and capture metrics (duration, success/failure counts) via Celery signals.
+- [ ] **Async task resilience (P1/P2):** Wrap thumbnail generation in a try/finally block that always closes images, and capture metrics (duration, success/failure counts) via Celery signals.
 
 ## Observability & Operational Readiness
-- **Structured logging (P1):** Configure Django/DRF logging to emit JSON with request IDs, user IDs, and correlation IDs. Mirror the config in Celery workers.
-- **Tracing & metrics:** Instrument key flows (login, upload, Celery tasks) with OpenTelemetry spans and Prometheus counters/histograms. Deploy Flower behind authentication.
-- **Health endpoints (P1):** Add `/health/live` and `/health/ready` views that check database, cache, Celery queue depth, and MinIO connectivity. Use Django’s `check` framework or `django-health-check`.
-- **Alerting:** Emit warnings when rate limits trip, 2FA lockouts occur, or storage errors happen. Hook into Sentry or AWS SNS for paging.
+- [ ] **Structured logging (P1):** Configure Django/DRF logging to emit JSON with request IDs, user IDs, and correlation IDs. Mirror the config in Celery workers.
+- [ ] **Tracing & metrics:** Instrument key flows (login, upload, Celery tasks) with OpenTelemetry spans and Prometheus counters/histograms. Deploy Flower behind authentication.
+- [ ] **Health endpoints (P1):** Add `/health/live` and `/health/ready` views that check database, cache, Celery queue depth, and MinIO connectivity. Use Django’s `check` framework or `django-health-check`.
+- [ ] **Alerting:** Emit warnings when rate limits trip, 2FA lockouts occur, or storage errors happen. Hook into Sentry or AWS SNS for paging.
 
 ## Testing & Governance
-- Extend test coverage to include:
+- [ ] Extend test coverage to include:
   - Invite flow regression (token not leaked).
   - Magic-login hash validation, reuse prevention, and rate-limited failure paths.
   - Media pipeline negative tests (oversized images, malformed videos, quarantined malware).
-- Add `pytest` markers for smoke tests that run in CI (`pytest --maxfail=1 --disable-warnings -m "not slow"`).
-- Update QA checklist in `docs/guides/security/SECURITY_AUDIT.md` to reflect new controls and add verification steps for each config toggle.
-- Introduce bandit/pylint checks focusing on security anti-patterns (`bandit -r mysite` in CI).
+- [ ] Add `pytest` markers for smoke tests that run in CI (`pytest --maxfail=1 --disable-warnings -m "not slow"`).
+- [ ] Update QA checklist in `docs/guides/security/SECURITY_AUDIT.md` to reflect new controls and add verification steps for each config toggle.
+- [ ] Introduce bandit/pylint checks focusing on security anti-patterns (`bandit -r mysite` in CI).
 
 ## Suggested Execution Order
 1. **Config baseline:** Implement secure settings split + HTTPS headers, add REST framework defaults, update documentation (.env template).

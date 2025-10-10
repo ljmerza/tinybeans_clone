@@ -16,6 +16,10 @@ export function SmsIntroStep(props: SmsIntroStepProps) {
 	const infoItems = t("twofa.setup.sms.info_items", {
 		returnObjects: true,
 	}) as string[];
+	const infoPanelItems = infoItems.map((item, index) => ({
+		id: `sms-info-${index}`,
+		content: item,
+	}));
 
 	return (
 		<GenericIntroStep
@@ -40,7 +44,7 @@ export function SmsIntroStep(props: SmsIntroStepProps) {
 					</div>
 				),
 				infoPanelTitle: t("twofa.setup.sms.info_title"),
-				infoPanelItems: infoItems,
+				infoPanelItems,
 				actionText: t("twofa.setup.actions.start"),
 				loadingText: t("twofa.setup.actions.loading"),
 			}}

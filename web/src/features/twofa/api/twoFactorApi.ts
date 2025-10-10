@@ -86,7 +86,9 @@ export const twoFactorApi = {
 		code: string,
 		remember_me = false,
 	) => {
-		const response = await apiClient.post<TwoFactorVerifyLoginResponse>(
+		const response = await apiClient.post<
+			ApiResponseWithMessages<TwoFactorVerifyLoginResponse>
+		>(
 			"/auth/2fa/verify-login/",
 			{
 				partial_token,

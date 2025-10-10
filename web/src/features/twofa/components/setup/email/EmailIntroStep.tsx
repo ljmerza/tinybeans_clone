@@ -13,6 +13,10 @@ export function EmailIntroStep(props: EmailIntroStepProps) {
 	const infoItems = t("twofa.setup.email.info_items", {
 		returnObjects: true,
 	}) as string[];
+	const infoPanelItems = infoItems.map((item, index) => ({
+		id: `email-info-${index}`,
+		content: item,
+	}));
 
 	return (
 		<GenericIntroStep
@@ -20,7 +24,7 @@ export function EmailIntroStep(props: EmailIntroStepProps) {
 				title: t("twofa.setup.email.title"),
 				description: t("twofa.setup.email.intro"),
 				infoPanelTitle: t("twofa.setup.email.info_title"),
-				infoPanelItems: infoItems,
+				infoPanelItems,
 				actionText: t("twofa.setup.actions.start"),
 				loadingText: t("twofa.setup.actions.loading"),
 			}}

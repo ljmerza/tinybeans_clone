@@ -30,7 +30,13 @@ export function useLogin() {
 			const payload = (response.data ?? response) as LoginResponse;
 			const redirectState = handleTwoFactorRedirect(payload);
 			if (redirectState) {
-				navigate({ to: "/profile/2fa/verify", state: redirectState as any });
+				navigate({
+					to: "/profile/2fa/verify",
+					state: (previous) => ({
+						...previous,
+						twoFactor: redirectState,
+					}),
+				});
 				return;
 			}
 

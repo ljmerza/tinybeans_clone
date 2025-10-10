@@ -42,8 +42,8 @@ interface GenericIntroStepProps {
  *     description: "We will send a 6-digit verification code to your account email.",
  *     infoPanelTitle: "How it works",
  *     infoPanelItems: [
- *       <li key="1">We send a verification code to your primary email.</li>,
- *       <li key="2">Enter the code to enable email-based 2FA.</li>,
+ *       { id: "email-send", content: "We send a verification code to your primary email." },
+ *       { id: "email-enter", content: "Enter the code to enable email-based 2FA." },
  *     ],
  *     actionText: "Send Verification Code",
  *     loadingText: "Sending...",
@@ -87,8 +87,8 @@ export function GenericIntroStep({
 				{config.customContent}
 				<InfoPanel title={config.infoPanelTitle}>
 					<ul className="space-y-1 list-disc list-inside">
-						{config.infoPanelItems.map((item, index) => (
-							<li key={index}>{item}</li>
+						{config.infoPanelItems.map((item) => (
+							<li key={item.id}>{item.content}</li>
 						))}
 					</ul>
 				</InfoPanel>

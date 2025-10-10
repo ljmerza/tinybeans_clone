@@ -74,7 +74,6 @@ export function TwoFactorEnabledSettings() {
 				errMessage={generateCodes.error?.message}
 				codes={generateCodes.data?.recovery_codes}
 				onGenerate={handleGenerateNewCodes}
-				onViewCurrent={() => navigate({ to: "/profile/2fa" })}
 				onHideCodes={() => setShowNewCodes(false)}
 			/>
 

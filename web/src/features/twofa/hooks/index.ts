@@ -86,7 +86,7 @@ export function useVerify2FALogin() {
 	const { showAsToast } = useApiMessages();
 	const { t } = useTranslation();
 
-return useMutation<
+	return useMutation<
 		ApiResponseWithMessages<TwoFactorVerifyLoginResponse>,
 		Error,
 		{ partial_token: string; code: string; remember_me?: boolean }

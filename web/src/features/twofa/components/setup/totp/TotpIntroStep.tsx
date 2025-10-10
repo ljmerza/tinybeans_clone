@@ -13,6 +13,10 @@ export function TotpIntroStep(props: TotpIntroStepProps) {
 	const infoItems = t("twofa.setup.totp.info_items", {
 		returnObjects: true,
 	}) as string[];
+	const infoPanelItems = infoItems.map((item, index) => ({
+		id: `totp-info-${index}`,
+		content: item,
+	}));
 
 	return (
 		<GenericIntroStep
@@ -20,7 +24,7 @@ export function TotpIntroStep(props: TotpIntroStepProps) {
 				title: t("twofa.setup.totp.title"),
 				description: t("twofa.setup.totp.intro"),
 				infoPanelTitle: t("twofa.setup.totp.info_title"),
-				infoPanelItems: infoItems,
+				infoPanelItems: infoPanelItems,
 				actionText: t("twofa.setup.actions.start"),
 				loadingText: t("twofa.setup.actions.loading"),
 			}}
