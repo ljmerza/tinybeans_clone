@@ -48,7 +48,8 @@ function TwoFactorSetupPage() {
 	const totpConfigured = Boolean(status?.has_totp);
 	const smsConfigured = Boolean(status?.has_sms);
 	const emailConfigured = Boolean(status?.has_email);
-	const emailAddress = status?.email_address ?? status?.backup_email ?? undefined;
+	const emailAddress =
+		status?.email_address ?? status?.backup_email ?? undefined;
 	const removalInProgress = removeMethod.isPending;
 
 	const handleRemovalRequest = (method: RemovableMethod) => {
