@@ -1,5 +1,5 @@
-import { GenericIntroStep } from "../generic";
 import { useTranslation } from "react-i18next";
+import { GenericIntroStep } from "../generic";
 
 interface TotpIntroStepProps {
 	isInitializing: boolean;

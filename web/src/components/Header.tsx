@@ -21,7 +21,7 @@ function AuthenticatedHeaderActions() {
 	return (
 		<>
 			<Link to="/profile/general" className="btn-ghost">
-				{t("nav.twofa_settings")}
+				{t("nav.settings")}
 			</Link>
 			<Link to="/logout" className="btn-ghost">
 				{t("nav.logout")}

@@ -6,8 +6,8 @@
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/lib/toast";
 import { useState } from "react";
-import { twoFactorApi } from "../api/twoFactorApi";
 import { useTranslation } from "react-i18next";
+import { twoFactorApi } from "../api/twoFactorApi";
 
 interface RecoveryCodeListProps {
 	codes: string[];

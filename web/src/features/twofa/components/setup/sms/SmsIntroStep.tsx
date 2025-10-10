@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
-import { GenericIntroStep } from "../generic";
 import { useTranslation } from "react-i18next";
+import { GenericIntroStep } from "../generic";
 
 interface SmsIntroStepProps {
 	phone: string;

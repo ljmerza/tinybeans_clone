@@ -13,9 +13,9 @@ import {
 } from "@/components";
 import { Button } from "@/components/ui/button";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
+import { useTranslation } from "react-i18next";
 import { VerificationInput } from "../../VerificationInput";
 import type { VerifyStepConfig } from "./types";
-import { useTranslation } from "react-i18next";
 
 interface GenericVerifyStepProps {
 	/** Configuration for the step */

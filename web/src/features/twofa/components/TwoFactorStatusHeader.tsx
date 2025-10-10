@@ -3,8 +3,8 @@
  * Displays the current 2FA status and preferred method
  */
 
-import type { TwoFactorStatusResponse } from "../types";
 import { useTranslation } from "react-i18next";
+import type { TwoFactorStatusResponse } from "../types";
 
 interface TwoFactorStatusHeaderProps {
 	status: TwoFactorStatusResponse;

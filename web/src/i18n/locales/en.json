@@ -27,8 +27,7 @@
 		"login": "Login",
 		"signup": "Sign up",
 		"logout": "Logout",
-		"settings": "Settings",
-		"twofa_settings": "2FA Settings"
+		"settings": "Settings"
 	},
 	"auth": {
 		"login": {

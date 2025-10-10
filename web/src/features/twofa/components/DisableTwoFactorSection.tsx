@@ -6,8 +6,8 @@
 import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { VerificationInput } from "./VerificationInput";
 import { useTranslation } from "react-i18next";
+import { VerificationInput } from "./VerificationInput";
 
 interface DisableTwoFactorSectionProps {
 	showDisableConfirm: boolean;

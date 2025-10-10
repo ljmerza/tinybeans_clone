@@ -6,22 +6,22 @@
 import { ConfirmDialog, Layout } from "@/components";
 import { extractApiError } from "@/features/auth/utils";
 import {
+	ProfileGeneralSettingsCard,
+	ProfileSettingsTabs,
+} from "@/features/profile";
+import {
 	EmailMethodCard,
 	SmsMethodCard,
 	TotpMethodCard,
 	TwoFactorEnabledSettings,
 	TwoFactorStatusHeader,
+	twoFaKeys,
+	twoFactorApi,
 	use2FAStatus,
 	useRemoveTwoFactorMethod,
 	useSetPreferredMethod,
-	twoFaKeys,
-	twoFactorApi,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
-import {
-	ProfileGeneralSettingsCard,
-	ProfileSettingsTabs,
-} from "@/features/profile";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

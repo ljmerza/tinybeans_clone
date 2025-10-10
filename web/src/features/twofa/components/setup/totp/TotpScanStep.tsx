@@ -1,7 +1,7 @@
 import { StatusMessage, WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
-import { QRCodeDisplay } from "../../QRCodeDisplay";
 import { useTranslation } from "react-i18next";
+import { QRCodeDisplay } from "../../QRCodeDisplay";
 
 interface TotpScanStepProps {
 	qrCodeImage?: string;

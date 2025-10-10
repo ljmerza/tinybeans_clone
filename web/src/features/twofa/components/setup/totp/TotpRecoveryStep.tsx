@@ -1,6 +1,6 @@
 import { InfoPanel } from "@/components";
-import { GenericRecoveryStep } from "../generic";
 import { useTranslation } from "react-i18next";
+import { GenericRecoveryStep } from "../generic";
 
 interface TotpRecoveryStepProps {
 	recoveryCodes?: string[];

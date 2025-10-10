@@ -1,5 +1,5 @@
-import { GenericVerifyStep } from "../generic";
 import { useTranslation } from "react-i18next";
+import { GenericVerifyStep } from "../generic";
 
 interface EmailVerifyStepProps {
 	code: string;

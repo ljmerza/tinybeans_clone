@@ -5,8 +5,8 @@
 
 import { StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
-import { RecoveryCodeList } from "./RecoveryCodeList";
 import { useTranslation } from "react-i18next";
+import { RecoveryCodeList } from "./RecoveryCodeList";
 
 interface RecoveryCodesSectionProps {
 	showNewCodes: boolean;

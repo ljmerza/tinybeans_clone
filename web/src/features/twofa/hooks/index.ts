@@ -9,8 +9,8 @@ import type { HttpError } from "@/lib/httpClient";
 import { showToast } from "@/lib/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { twoFactorApi } from "../api/twoFactorApi";
 import { twoFaKeys } from "../api/queryKeys";
+import { twoFactorApi } from "../api/twoFactorApi";
 import type {
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,

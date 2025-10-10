@@ -12,8 +12,8 @@ import {
 	WizardSection,
 } from "@/components";
 import { Button } from "@/components/ui/button";
-import type { IntroStepConfig } from "./types";
 import { useTranslation } from "react-i18next";
+import type { IntroStepConfig } from "./types";
 
 interface GenericIntroStepProps {
 	/** Configuration for the step */

@@ -1,5 +1,5 @@
-import { GenericRecoveryStep } from "../generic";
 import { useTranslation } from "react-i18next";
+import { GenericRecoveryStep } from "../generic";
 
 interface EmailRecoveryStepProps {
 	recoveryCodes?: string[];

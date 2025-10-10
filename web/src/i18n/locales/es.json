@@ -27,8 +27,7 @@
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
 		"logout": "Cerrar sesión",
-		"settings": "Configuración",
-		"twofa_settings": "Configuración 2FA"
+		"settings": "Configuración"
 	},
 	"auth": {
 		"login": {

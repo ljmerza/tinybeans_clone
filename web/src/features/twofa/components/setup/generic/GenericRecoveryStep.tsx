@@ -7,9 +7,9 @@
 
 import { WizardFooter, WizardSection } from "@/components";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { RecoveryCodeList } from "../../RecoveryCodeList";
 import type { RecoveryStepConfig } from "./types";
-import { useTranslation } from "react-i18next";
 
 interface GenericRecoveryStepProps {
 	/** Configuration for the step */
