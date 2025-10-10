@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
-import {
-	type MagicLinkRequestFormData,
-	magicLinkRequestSchema,
-} from "@/lib/validations/schemas/magic-link";
+import { magicLinkRequestSchema } from "@/lib/validations/schemas/magic-link";
 import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -24,7 +21,7 @@ export function MagicLinkRequestCard() {
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	const form = useForm<MagicLinkRequestFormData>({
+	const form = useForm({
 		defaultValues: { email: "" },
 		onSubmit: async ({ value }) => {
 			// Clear previous messages

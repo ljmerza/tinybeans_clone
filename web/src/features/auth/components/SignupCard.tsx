@@ -4,11 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
-import {
-	type SignupFormData,
-	signupSchema,
-	signupSchemaBase,
-} from "@/lib/validations/schemas/signup";
+import { signupSchemaBase } from "@/lib/validations/schemas/signup";
 import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -27,7 +23,7 @@ export function SignupCard() {
 	const [generalError, setGeneralError] = useState("");
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-	const form = useForm<SignupFormData>({
+	const form = useForm({
 		defaultValues: {
 			username: "",
 			email: "",

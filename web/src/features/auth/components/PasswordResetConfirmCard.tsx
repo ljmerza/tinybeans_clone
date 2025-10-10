@@ -3,10 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
-import {
-	type PasswordResetConfirmFormData,
-	passwordResetConfirmSchema,
-} from "@/lib/validations/schemas/password-reset";
+import { passwordResetConfirmFieldSchemas } from "@/lib/validations/schemas/password-reset";
 import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -29,7 +26,7 @@ export function PasswordResetConfirmCard({
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 	const [successMessage, setSuccessMessage] = useState("");
 
-	const form = useForm<PasswordResetConfirmFormData>({
+	const form = useForm({
 		defaultValues: {
 			password: "",
 			password_confirm: "",
@@ -113,13 +110,15 @@ export function PasswordResetConfirmCard({
 					</p>
 				</div>
 
-				{/* Display general error */}
-				{generalError && <StatusMessage type="error" message={generalError} />}
+			{/* Display general error */}
+			{generalError && (
+				<StatusMessage variant="error">{generalError}</StatusMessage>
+			)}
 
-				{/* Display success message */}
-				{successMessage && (
-					<StatusMessage type="success" message={successMessage} />
-				)}
+			{/* Display success message */}
+			{successMessage && (
+				<StatusMessage variant="success">{successMessage}</StatusMessage>
+			)}
 
 				<form
 					onSubmit={(event) => {
@@ -132,7 +131,7 @@ export function PasswordResetConfirmCard({
 					<form.Field
 						name="password"
 						validators={{
-							onBlur: zodValidator(passwordResetConfirmSchema.shape.password),
+							onBlur: zodValidator(passwordResetConfirmFieldSchemas.password),
 						}}
 					>
 						{(field) => (
@@ -161,7 +160,7 @@ export function PasswordResetConfirmCard({
 						name="password_confirm"
 						validators={{
 							onBlur: zodValidator(
-								passwordResetConfirmSchema.shape.password_confirm,
+								passwordResetConfirmFieldSchemas.password_confirm,
 							),
 						}}
 					>

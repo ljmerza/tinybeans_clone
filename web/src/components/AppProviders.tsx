@@ -21,6 +21,9 @@ interface AppProvidersProps {
 
 const router = createRouter({
 	routeTree,
+	context: {
+		queryClient: undefined as unknown as QueryClient,
+	},
 	defaultPreload: "intent",
 	scrollRestoration: true,
 	defaultStructuralSharing: true,
@@ -31,6 +34,9 @@ const router = createRouter({
 declare module "@tanstack/react-router" {
 	interface Register {
 		router: typeof router;
+		context: {
+			queryClient: QueryClient;
+		};
 	}
 }
 

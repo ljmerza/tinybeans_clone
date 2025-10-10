@@ -1,11 +1,5 @@
 import { useApiMessages } from "@/i18n";
-import type { ApiError, MutationResponse } from "@/types";
-/**
- * Auth Hooks with Explicit Message Handling
- *
- * These hooks provide explicit control over message display for context-aware notifications.
- * Components decide when and how to show success/error messages.
- */
+import type { ApiError, ApiResponseWithMessages } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { apiClient } from "../api/authClient";
@@ -19,74 +13,64 @@ import type {
 } from "../types";
 import { handleTwoFactorRedirect } from "../utils";
 
-/**
- * Login hook with explicit message handling
- */
 export function useLogin() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<LoginResponse, Error, LoginRequest>({
+	return useMutation<LoginResponse, ApiError, LoginRequest>({
 		mutationFn: async (body) => {
-			// Clear any existing auth token
 			setAccessToken(null);
 			return apiClient.post<LoginResponse>("/auth/login/", body);
 		},
-		onSuccess: ({ data }: MutationResponse<LoginResponse>) => {
-			// Check if 2FA is required
-			if (handleTwoFactorRedirect(data, navigate)) {
+		onSuccess: (data) => {
+			const redirectState = handleTwoFactorRedirect(data);
+			if (redirectState) {
+				navigate({ to: "/profile/2fa/verify", state: redirectState as any });
 				return;
 			}
 
-			setAccessToken(data.tokens.access);
+			if (data.tokens?.access) {
+				setAccessToken(data.tokens.access);
+			}
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			// Show success message if provided
-			if (data.messages) {
+			if (data.messages?.length) {
 				showAsToast(data.messages, 200);
 			}
 
 			navigate({ to: "/" });
 		},
-		onError: (error: ApiError) => {
+		onError: (error) => {
 			console.error("Login error:", error);
-			// Error messages handled by component for inline display
 		},
 	});
 }
 
-/**
- * Signup hook with explicit message handling
- */
 export function useSignup() {
 	const qc = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<SignupResponse, Error, SignupRequest>({
+	return useMutation<SignupResponse, ApiError, SignupRequest>({
 		mutationFn: (body) => apiClient.post<SignupResponse>("/auth/signup/", body),
 		onSuccess: (data) => {
-			setAccessToken(data.tokens.access);
+			if (data.tokens?.access) {
+				setAccessToken(data.tokens.access);
+			}
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			// Show success message
-			if (data.messages) {
+			if (data.messages?.length) {
 				showAsToast(data.messages, 201);
 			}
 		},
-		onError: (error: ApiError) => {
+		onError: (error) => {
 			console.error("Signup error:", error);
-			// Error messages handled by component
 		},
 	});
 }
 
-/**
- * * logout hook with explicit message handling
- */
 export function useLogout() {
 	const qc = useQueryClient();
-	const { showAsToast } = useApiMessages();
 
 	return useMutation({
 		mutationFn: async () => {
@@ -94,110 +78,105 @@ export function useLogout() {
 			setAccessToken(null);
 			return true;
 		},
-		onSuccess: (data: boolean) => {
+		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: authKeys.session() });
-
-			// Show logout confirmation
-			if (data) {
-				// Logout successful
-			}
 		},
 	});
 }
 
-/**
- * * password reset request hook
- */
 export function usePasswordResetRequest() {
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<ApiResponseWithMessages, Error, { identifier: string }>({
-		mutationFn: (body) => apiClient.post("/auth/password/reset/request/", body),
-		onSuccess: (data) => {
-			// Show success message
-			if (data?.messages) {
-				showAsToast(data.messages, 200);
-			}
+	return useMutation<ApiResponseWithMessages, ApiError, { identifier: string }>(
+		{
+			mutationFn: (body) =>
+				apiClient.post<ApiResponseWithMessages>(
+					"/auth/password/reset/request/",
+					body,
+				),
+			onSuccess: (data) => {
+				if (data?.messages?.length) {
+					showAsToast(data.messages, 200);
+				}
+			},
+			onError: (error) => {
+				console.error("Password reset error:", error);
+			},
 		},
-		onError: (error: ApiError) => {
-			console.error("Password reset error:", error);
-			// Error messages handled by component
-		},
-	});
+	);
 }
 
-/**
- * * password reset confirm hook
- */
 export function usePasswordResetConfirm() {
 	const { showAsToast } = useApiMessages();
 
 	return useMutation<
 		ApiResponseWithMessages,
-		Error,
+		ApiError,
 		{
 			token: string;
 			password: string;
 			password_confirm: string;
 		}
 	>({
-		mutationFn: (body) => apiClient.post("/auth/password/reset/confirm/", body),
+		mutationFn: (body) =>
+			apiClient.post<ApiResponseWithMessages>(
+				"/auth/password/reset/confirm/",
+				body,
+			),
 		onSuccess: (data) => {
-			// Show success message
-			if (data?.messages) {
+			if (data?.messages?.length) {
 				showAsToast(data.messages, 200);
 			}
 		},
-		onError: (error: ApiError) => {
+		onError: (error) => {
 			console.error("Password reset confirm error:", error);
-			// Error messages handled by component
 		},
 	});
 }
 
-/**
- * * magic link request hook
- */
 export function useMagicLinkRequest() {
-	const { showAsToast } = useApiMessages();
-
-	return useMutation<ApiResponseWithMessages, Error, { email: string }>({
-		mutationFn: (body) => apiClient.post("/auth/magic-login/request/", body),
-		onError: (error: ApiError) => {
-			console.error("Magic link request error:", error);
+	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>(
+		{
+			mutationFn: (body) =>
+				apiClient.post<ApiResponseWithMessages>(
+					"/auth/magic-login/request/",
+					body,
+				),
+			onError: (error) => {
+				console.error("Magic link request error:", error);
+			},
 		},
-	});
+	);
 }
 
-/**
- * * magic login verify hook
- */
 export function useMagicLoginVerify() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<ApiResponseWithMessages, Error, { token: string }>({
-		mutationFn: (body) => apiClient.post("/auth/magic-login/verify/", body),
-		onSuccess: (data) => {
-			// Set auth token
-			if (data?.tokens?.access) {
-				setAccessToken(data.tokens.access);
-			}
+	return useMutation<ApiResponseWithMessages, ApiError, { token: string }>(
+		{
+			mutationFn: (body) =>
+				apiClient.post<ApiResponseWithMessages>(
+					"/auth/magic-login/verify/",
+					body,
+				),
+			onSuccess: (data) => {
+				if (data?.tokens?.access) {
+					setAccessToken(data.tokens.access);
+				}
 
-			qc.invalidateQueries({ queryKey: authKeys.session() });
+				qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			// Show success message
-			if (data?.messages) {
-				showAsToast(data.messages, 200);
-			}
+				if (data?.messages?.length) {
+					showAsToast(data.messages, 200);
+				}
 
-			// Navigate to home
-			navigate({ to: "/" });
+				navigate({ to: "/" });
+			},
+			onError: (error) => {
+				console.error("Magic login verify error:", error);
+			},
 		},
-		onError: (error: ApiError) => {
-			console.error("Magic login verify error:", error);
-			// Error messages handled by component
-		},
-	});
+	);
 }

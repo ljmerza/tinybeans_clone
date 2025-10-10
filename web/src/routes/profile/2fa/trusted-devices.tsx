@@ -3,6 +3,7 @@
  */
 
 import { Layout } from "@/components";
+import type { QueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -163,10 +164,12 @@ function TrustedDevicesPage() {
 }
 
 export const Route = createFileRoute("/profile/2fa/trusted-devices")({
-	loader: ({ context: { queryClient } }) =>
-		queryClient.ensureQueryData({
+	loader: ({ context }) => {
+		const { queryClient } = context as { queryClient: QueryClient };
+		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.trustedDevices(),
 			queryFn: () => twoFactorApi.getTrustedDevices(),
-		}),
+		});
+	},
 	component: TrustedDevicesPage,
 });

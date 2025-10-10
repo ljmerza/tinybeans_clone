@@ -17,6 +17,7 @@ import {
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {
@@ -203,10 +204,12 @@ function TwoFactorSetupPage() {
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/")({
-	loader: ({ context: { queryClient } }) =>
-		queryClient.ensureQueryData({
+	loader: ({ context }) => {
+		const { queryClient } = context as { queryClient: QueryClient };
+		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
 			queryFn: () => twoFactorApi.getStatus(),
-		}),
+		});
+	},
 	component: TwoFactorSetupPage,
 });

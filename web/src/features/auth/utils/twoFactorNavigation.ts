@@ -8,21 +8,19 @@ import type { TwoFactorMethod } from "@/features/twofa";
 import type { TwoFactorNavigateState } from "../types";
 
 /**
- * Handles 2FA redirect after login/signup when 2FA is required
+ * Extracts the 2FA navigation state from an authentication response.
  *
- * Extracts 2FA state from response and navigates to verification page
+ * Callers can use the returned state to navigate to the verification route.
  *
  * @param data - Login/signup response data
- * @param navigate - TanStack Router navigate function
- * @returns true if 2FA redirect was triggered, false otherwise
+ * @returns redirect state when 2FA is required, otherwise null
  *
  * @example
  * ```typescript
- * onSuccess: ({ data }) => {
- *   if (handleTwoFactorRedirect(data, navigate)) {
- *     return; // 2FA required, stop processing
- *   }
- *   // Continue with normal login flow
+ * const redirectState = handleTwoFactorRedirect(data);
+ * if (redirectState) {
+ *   navigate({ to: "/profile/2fa/verify", state: redirectState });
+ *   return;
  * }
  * ```
  */
@@ -33,16 +31,13 @@ export function handleTwoFactorRedirect(
 		method?: TwoFactorMethod;
 		message?: string;
 	},
-	navigate: (options: { to: string; state?: TwoFactorNavigateState }) => void,
-): boolean {
+): TwoFactorNavigateState | null {
 	if (data.requires_2fa && data.partial_token && data.method) {
-		const state: TwoFactorNavigateState = {
+		return {
 			partialToken: data.partial_token,
 			method: data.method,
 			message: data.message,
 		};
-		navigate({ to: "/profile/2fa/verify", state });
-		return true;
 	}
-	return false;
+	return null;
 }

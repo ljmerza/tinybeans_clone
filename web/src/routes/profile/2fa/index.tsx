@@ -4,6 +4,7 @@
  */
 
 import { ConfirmDialog, Layout } from "@/components";
+import type { QueryClient } from "@tanstack/react-query";
 import { extractApiError } from "@/features/auth/utils";
 import {
 	ProfileGeneralSettingsCard,
@@ -26,7 +27,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const twoFactorSettingsPath = "/profile/2fa" as const;
+const twoFactorSettingsPath = "/profile/2fa/" as const;
 
 function TwoFactorSettingsPage() {
 	const navigate = useNavigate();
@@ -257,10 +258,12 @@ function TwoFactorSettingsPage() {
 }
 
 export const Route = createFileRoute(twoFactorSettingsPath)({
-	loader: ({ context: { queryClient } }) =>
-		queryClient.ensureQueryData({
+	loader: ({ context }) => {
+		const { queryClient } = context as { queryClient: QueryClient };
+		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
 			queryFn: () => twoFactorApi.getStatus(),
-		}),
+		});
+	},
 	component: TwoFactorSettingsPage,
 });

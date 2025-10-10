@@ -1,4 +1,5 @@
 import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
+import type { ApiMessage } from "@/types";
 
 export interface AuthTokens {
 	access: string;
@@ -20,6 +21,7 @@ export interface LoginRequiresTwoFactor {
 	partial_token: string;
 	method: TwoFactorMethod;
 	message?: string;
+	messages?: ApiMessage[];
 	trusted_device?: false;
 	tokens?: undefined;
 }
@@ -30,6 +32,7 @@ export interface LoginSuccess {
 	tokens: AuthTokens;
 	method?: TwoFactorMethod;
 	message?: string;
+	messages?: ApiMessage[];
 	partial_token?: undefined;
 }
 
@@ -44,6 +47,7 @@ export interface SignupRequest {
 export interface SignupResponse {
 	user: AuthUser;
 	tokens: AuthTokens;
+	messages?: ApiMessage[];
 }
 
 export interface MeResponse {

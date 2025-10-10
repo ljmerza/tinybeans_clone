@@ -12,10 +12,13 @@ const variantClasses: Record<
 	Exclude<InfoPanelProps["variant"], undefined>,
 	string
 > = {
-	info: "bg-blue-50 border-blue-200 text-blue-900",
-	success: "bg-green-50 border-green-200 text-green-900",
-	warning: "bg-yellow-50 border-yellow-200 text-yellow-900",
-	danger: "bg-red-50 border-red-200 text-red-900",
+	info: "bg-sky-500/15 border border-sky-500/30 dark:border-sky-500/40 text-sky-700 dark:text-sky-200 transition-colors",
+	success:
+		"bg-emerald-500/15 border border-emerald-500/20 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-200 transition-colors",
+	warning:
+		"bg-amber-500/15 border border-amber-500/30 dark:border-amber-500/40 text-amber-700 dark:text-amber-200 transition-colors",
+	danger:
+		"bg-destructive/10 border border-destructive/30 dark:border-destructive/40 text-destructive transition-colors",
 };
 
 export function InfoPanel({
@@ -27,7 +30,7 @@ export function InfoPanel({
 	return (
 		<div
 			className={cn(
-				"rounded-lg border p-4",
+				"rounded-lg p-4 transition-colors",
 				variantClasses[variant],
 				className,
 			)}

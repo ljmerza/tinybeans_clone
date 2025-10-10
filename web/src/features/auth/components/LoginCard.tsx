@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
-import {
-	type LoginFormData,
-	loginSchema,
-} from "@/lib/validations/schemas/login";
+import { loginSchema } from "@/lib/validations/schemas/login";
 import type { ApiError } from "@/types";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
@@ -35,7 +32,7 @@ export function LoginCard() {
 	const { getGeneral } = useApiMessages();
 	const [generalError, setGeneralError] = useState<string>("");
 
-	const form = useForm<LoginFormData>({
+	const form = useForm({
 		defaultValues: {
 			username: "",
 			password: "",

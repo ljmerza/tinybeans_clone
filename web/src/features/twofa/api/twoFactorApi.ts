@@ -31,7 +31,7 @@ export const twoFactorApi = {
 				phone_number,
 			},
 		);
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -43,7 +43,7 @@ export const twoFactorApi = {
 			"/auth/2fa/verify-setup/",
 			{ code },
 		);
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -52,7 +52,7 @@ export const twoFactorApi = {
 	getStatus: async () => {
 		const response =
 			await apiClient.get<TwoFactorStatusResponse>("/auth/2fa/status/");
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -73,7 +73,7 @@ export const twoFactorApi = {
 				remember_me,
 			},
 		);
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -85,7 +85,7 @@ export const twoFactorApi = {
 			message: string;
 			expires_in?: number;
 		}>("/auth/2fa/disable/request/", {});
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -98,7 +98,7 @@ export const twoFactorApi = {
 		}>("/auth/2fa/disable/", {
 			code,
 		});
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -109,7 +109,7 @@ export const twoFactorApi = {
 			"/auth/2fa/recovery-codes/generate/",
 			{},
 		);
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -179,7 +179,7 @@ export const twoFactorApi = {
 		const response = await apiClient.get<TrustedDevicesResponse>(
 			"/auth/2fa/trusted-devices/",
 		);
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -189,7 +189,7 @@ export const twoFactorApi = {
 		const response = await apiClient.delete<{ message?: string }>(
 			`/auth/2fa/trusted-devices/${device_id}/`,
 		);
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -200,7 +200,7 @@ export const twoFactorApi = {
 			preferred_method: string;
 			message: string;
 		}>("/auth/2fa/preferred-method/", { method });
-		return response.data;
+		return response;
 	},
 
 	/**
@@ -210,6 +210,6 @@ export const twoFactorApi = {
 		const response = await apiClient.delete<TwoFactorMethodRemovalResponse>(
 			`/auth/2fa/methods/${method}/`,
 		);
-		return response.data;
+		return response;
 	},
 };

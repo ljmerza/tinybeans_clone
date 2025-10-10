@@ -13,10 +13,10 @@ interface StatusMessageProps {
 }
 
 const variantStyles: Record<StatusVariant, string> = {
-	info: "text-blue-600",
-	success: "text-green-600",
-	warning: "text-yellow-700",
-	error: "text-red-600",
+	info: "text-sky-600 dark:text-sky-300",
+	success: "text-emerald-600 dark:text-emerald-300",
+	warning: "text-amber-600 dark:text-amber-300",
+	error: "text-destructive",
 };
 
 const alignStyles: Record<NonNullable<StatusMessageProps["align"]>, string> = {

@@ -1,4 +1,4 @@
-import type { ApiError, ApiResponseWithMessages } from "@/types";
+import type { ApiError } from "@/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
-import {
-	type PasswordResetRequestFormData,
-	passwordResetRequestSchema,
-} from "@/lib/validations/schemas/password-reset";
+import { passwordResetRequestSchema } from "@/lib/validations/schemas/password-reset";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
@@ -24,7 +21,7 @@ export function PasswordResetRequestCard() {
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	const form = useForm<PasswordResetRequestFormData>({
+	const form = useForm({
 		defaultValues: { identifier: "" },
 		onSubmit: async ({ value }) => {
 			setSuccessMessage(null);

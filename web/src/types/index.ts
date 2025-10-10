@@ -8,5 +8,4 @@ export type {
 	ApiResponseWithMessages,
 	ApiError,
 	FormField,
-	MutationResponse,
 } from "./common";

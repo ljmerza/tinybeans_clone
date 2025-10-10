@@ -2,7 +2,7 @@
  * Common type definitions used across the application
  */
 
-import type { FieldApi } from "@tanstack/react-form";
+import type { AnyFieldApi } from "@tanstack/react-form";
 import type { ApiMessage } from "./api";
 
 /**
@@ -32,15 +32,5 @@ export interface ApiError extends Error {
  * Form field type from TanStack Form
  * Represents a field from the form API
  */
-export type FormField<TData = unknown, TFormData = unknown> = FieldApi<
-	TFormData,
-	TData
->;
+export type FormField = AnyFieldApi;
 
-/**
- * Mutation response type with data wrapper
- * Used by TanStack Query mutations that wrap response in { data: T }
- */
-export interface MutationResponse<T> {
-	data: T;
-}
