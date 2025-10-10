@@ -40,8 +40,8 @@ function TwoFactorVerifyPage() {
 			twoFactor?: unknown;
 		};
 
-		const historyState =
-			location.state as typeof location.state & TwoFactorHistoryState;
+		const historyState = location.state as typeof location.state &
+			TwoFactorHistoryState;
 		const rawState = historyState?.twoFactor;
 		if (!rawState || typeof rawState !== "object") {
 			return null;

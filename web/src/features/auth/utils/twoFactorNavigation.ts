@@ -24,14 +24,12 @@ import type { TwoFactorNavigateState } from "../types";
  * }
  * ```
  */
-export function handleTwoFactorRedirect(
-	data: {
-		requires_2fa?: boolean;
-		partial_token?: string;
-		method?: TwoFactorMethod;
-		message?: string;
-	},
-): TwoFactorNavigateState | null {
+export function handleTwoFactorRedirect(data: {
+	requires_2fa?: boolean;
+	partial_token?: string;
+	method?: TwoFactorMethod;
+	message?: string;
+}): TwoFactorNavigateState | null {
 	if (data.requires_2fa && data.partial_token && data.method) {
 		return {
 			partialToken: data.partial_token,

@@ -44,10 +44,7 @@ export function DisableTwoFactorSection({
 				<p className="text-muted-foreground text-sm">
 					{t("twofa.settings.disable.description")}
 				</p>
-				<Button
-					onClick={onRequestDisable}
-					variant="destructive"
-				>
+				<Button onClick={onRequestDisable} variant="destructive">
 					{t("twofa.settings.disable.action")}
 				</Button>
 			</div>

@@ -94,7 +94,8 @@ export function useVerify2FALogin() {
 		mutationFn: ({ partial_token, code, remember_me }) =>
 			twoFactorApi.verifyLogin(partial_token, code, remember_me),
 		onSuccess: async (response) => {
-			const payload = (response.data ?? response) as TwoFactorVerifyLoginResponse;
+			const payload = (response.data ??
+				response) as TwoFactorVerifyLoginResponse;
 			// Store access token
 			const tokens = payload.tokens ?? response.tokens;
 			if (!tokens?.access) {

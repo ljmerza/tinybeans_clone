@@ -25,7 +25,9 @@ export function StandardLoading({
 				<p className="text-lg font-medium text-foreground">{message}</p>
 			)}
 			{description && (
-				<p className="text-sm text-muted-foreground max-w-prose">{description}</p>
+				<p className="text-sm text-muted-foreground max-w-prose">
+					{description}
+				</p>
 			)}
 		</div>
 	);

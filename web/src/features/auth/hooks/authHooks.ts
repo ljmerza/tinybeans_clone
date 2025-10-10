@@ -18,7 +18,11 @@ export function useLogin() {
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<ApiResponseWithMessages<LoginResponse>, ApiError, LoginRequest>({
+	return useMutation<
+		ApiResponseWithMessages<LoginResponse>,
+		ApiError,
+		LoginRequest
+	>({
 		mutationFn: async (body) => {
 			setAccessToken(null);
 			return apiClient.post<ApiResponseWithMessages<LoginResponse>>(
@@ -147,18 +151,16 @@ export function usePasswordResetConfirm() {
 }
 
 export function useMagicLinkRequest() {
-	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>(
-		{
-			mutationFn: (body) =>
-				apiClient.post<ApiResponseWithMessages>(
-					"/auth/magic-login/request/",
-					body,
-				),
-			onError: (error) => {
-				console.error("Magic link request error:", error);
-			},
+	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>({
+		mutationFn: (body) =>
+			apiClient.post<ApiResponseWithMessages>(
+				"/auth/magic-login/request/",
+				body,
+			),
+		onError: (error) => {
+			console.error("Magic link request error:", error);
 		},
-	);
+	});
 }
 
 export function useMagicLoginVerify() {
@@ -166,29 +168,27 @@ export function useMagicLoginVerify() {
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<ApiResponseWithMessages, ApiError, { token: string }>(
-		{
-			mutationFn: (body) =>
-				apiClient.post<ApiResponseWithMessages>(
-					"/auth/magic-login/verify/",
-					body,
-				),
-			onSuccess: (data) => {
-				if (data?.tokens?.access) {
-					setAccessToken(data.tokens.access);
-				}
+	return useMutation<ApiResponseWithMessages, ApiError, { token: string }>({
+		mutationFn: (body) =>
+			apiClient.post<ApiResponseWithMessages>(
+				"/auth/magic-login/verify/",
+				body,
+			),
+		onSuccess: (data) => {
+			if (data?.tokens?.access) {
+				setAccessToken(data.tokens.access);
+			}
 
-				qc.invalidateQueries({ queryKey: authKeys.session() });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-				if (data?.messages?.length) {
-					showAsToast(data.messages, 200);
-				}
+			if (data?.messages?.length) {
+				showAsToast(data.messages, 200);
+			}
 
-				navigate({ to: "/" });
-			},
-			onError: (error) => {
-				console.error("Magic login verify error:", error);
-			},
+			navigate({ to: "/" });
 		},
-	);
+		onError: (error) => {
+			console.error("Magic login verify error:", error);
+		},
+	});
 }

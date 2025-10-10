@@ -88,14 +88,11 @@ export const twoFactorApi = {
 	) => {
 		const response = await apiClient.post<
 			ApiResponseWithMessages<TwoFactorVerifyLoginResponse>
-		>(
-			"/auth/2fa/verify-login/",
-			{
-				partial_token,
-				code,
-				remember_me,
-			},
-		);
+		>("/auth/2fa/verify-login/", {
+			partial_token,
+			code,
+			remember_me,
+		});
 		return response;
 	},
 
@@ -199,11 +196,11 @@ export const twoFactorApi = {
 	 * Get list of trusted devices
 	 */
 	getTrustedDevices: async () => {
-		const response =
-			await apiClient.get<ApiResponseWithMessages<TrustedDevicesResponse>>(
-				"/auth/2fa/trusted-devices/",
-			);
-		const payload = (response?.data ?? response) as Partial<TrustedDevicesResponse>;
+		const response = await apiClient.get<
+			ApiResponseWithMessages<TrustedDevicesResponse>
+		>("/auth/2fa/trusted-devices/");
+		const payload = (response?.data ??
+			response) as Partial<TrustedDevicesResponse>;
 
 		if (payload && Array.isArray(payload.devices)) {
 			return { devices: payload.devices };

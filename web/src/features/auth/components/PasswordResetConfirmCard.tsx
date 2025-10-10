@@ -110,15 +110,15 @@ export function PasswordResetConfirmCard({
 					</p>
 				</div>
 
-			{/* Display general error */}
-			{generalError && (
-				<StatusMessage variant="error">{generalError}</StatusMessage>
-			)}
+				{/* Display general error */}
+				{generalError && (
+					<StatusMessage variant="error">{generalError}</StatusMessage>
+				)}
 
-			{/* Display success message */}
-			{successMessage && (
-				<StatusMessage variant="success">{successMessage}</StatusMessage>
-			)}
+				{/* Display success message */}
+				{successMessage && (
+					<StatusMessage variant="success">{successMessage}</StatusMessage>
+				)}
 
 				<form
 					onSubmit={(event) => {
