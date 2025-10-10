@@ -1,9 +1,11 @@
+import { StatusMessage } from "@/components";
 import type { TwoFactorMethod } from "@/features/twofa/types";
 import { GenericMethodCard } from "./GenericMethodCard";
 
 interface EmailMethodCardProps {
 	isCurrent: boolean;
 	configured: boolean;
+	emailAddress?: string;
 	onSetup: () => void;
 	onSetAsDefault?: () => void;
 	setAsDefaultInProgress?: boolean;
@@ -27,6 +29,13 @@ export function EmailMethodCard(props: EmailMethodCardProps) {
 			}}
 			isCurrent={props.isCurrent}
 			configured={props.configured}
+			additionalInfo={
+				props.configured && props.emailAddress ? (
+					<StatusMessage variant="info" className="text-xs">
+						Currently sending to {props.emailAddress}
+					</StatusMessage>
+				) : undefined
+			}
 			removalInProgress={props.removalInProgress ?? false}
 			methodToRemove={props.methodToRemove ?? null}
 			onSetup={props.onSetup}

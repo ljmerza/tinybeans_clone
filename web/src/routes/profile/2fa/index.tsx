@@ -95,6 +95,7 @@ function TwoFactorSettingsPage() {
 	const smsConfigured = Boolean(status?.has_sms);
 	const emailConfigured = Boolean(status?.has_email);
 	const phoneNumber = status?.phone_number;
+	const emailAddress = status?.backup_email ?? undefined;
 
 	if (isLoading) {
 		return (
@@ -189,6 +190,7 @@ function TwoFactorSettingsPage() {
 								<EmailMethodCard
 									isCurrent={preferredMethod === "email"}
 									configured={emailConfigured}
+									emailAddress={emailAddress}
 									onSetup={() => navigate({ to: "/profile/2fa/setup/email" })}
 									onSetAsDefault={() => handleSetAsDefault("email")}
 									setAsDefaultInProgress={switchInProgress}

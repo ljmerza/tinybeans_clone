@@ -48,6 +48,7 @@ function TwoFactorSetupPage() {
 	const totpConfigured = Boolean(status?.has_totp);
 	const smsConfigured = Boolean(status?.has_sms);
 	const emailConfigured = Boolean(status?.has_email);
+	const emailAddress = status?.backup_email ?? undefined;
 	const removalInProgress = removeMethod.isPending;
 
 	const handleRemovalRequest = (method: RemovableMethod) => {
@@ -178,6 +179,7 @@ function TwoFactorSetupPage() {
 						<EmailMethodCard
 							isCurrent={currentMethod === "email"}
 							configured={emailConfigured}
+							emailAddress={emailAddress}
 							onSetup={() => navigate({ to: "/profile/2fa/setup/email" })}
 						/>
 
