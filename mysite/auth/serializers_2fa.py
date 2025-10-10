@@ -50,6 +50,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
     has_sms = serializers.SerializerMethodField()
     has_email = serializers.SerializerMethodField()
     preferred_method = serializers.SerializerMethodField()
+    email_address = serializers.SerializerMethodField()
 
     class Meta:
         model = TwoFactorSettings
@@ -58,6 +59,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
             'preferred_method',
             'phone_number',
             'backup_email',
+            'email_address',
             'created_at',
             'updated_at',
             'has_totp',
@@ -89,6 +91,12 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
         if not has_any_method:
             return None
         return obj.preferred_method
+
+    def get_email_address(self, obj):
+        # Prefer backup email when present, otherwise fall back to primary account email
+        if obj.backup_email:
+            return obj.backup_email
+        return getattr(obj.user, 'email', None)
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):

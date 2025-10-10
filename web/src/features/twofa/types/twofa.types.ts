@@ -42,6 +42,7 @@ export interface TwoFactorStatusResponse {
 	preferred_method: TwoFactorMethod | null;
 	phone_number?: string;
 	backup_email?: string;
+	email_address?: string;
 	created_at?: string;
 	updated_at?: string;
 	message?: string;

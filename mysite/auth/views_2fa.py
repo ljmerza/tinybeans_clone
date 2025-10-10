@@ -197,6 +197,7 @@ class TwoFactorStatusView(APIView):
                 'preferred_method': None,
                 'phone_number': None,
                 'backup_email': None,
+                'email_address': request.user.email,
                 'has_totp': False,
                 'has_sms': False,
                 'has_email': False,
