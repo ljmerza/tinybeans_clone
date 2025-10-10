@@ -1,5 +1,7 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/features/theme";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useGoogleOAuth } from "./hooks";
 
@@ -23,6 +25,8 @@ export function GoogleOAuthButton({
 }: GoogleOAuthButtonProps) {
 	const { t } = useTranslation();
 	const { initiateOAuth, isLoading } = useGoogleOAuth();
+	const { resolvedTheme } = useTheme();
+	const isDark = resolvedTheme === "dark";
 
 	const handleClick = () => {
 		initiateOAuth();
@@ -48,16 +52,14 @@ export function GoogleOAuthButton({
 			type="button"
 			onClick={handleClick}
 			disabled={isLoading || disabled}
-			className={`
-				relative w-full
-				bg-white hover:bg-gray-50 
-				text-gray-700 
-				border border-gray-300 
-				shadow-sm hover:shadow
-				transition-all duration-200
-				font-medium
-				${className}
-			`}
+			className={cn(
+				"relative w-full border shadow-sm hover:shadow transition-all duration-200 font-medium",
+				isDark
+					? "bg-[#1f1f1f] hover:bg-[#2a2a2a] text-white border-[#3c4043]"
+					: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300",
+				"flex items-center justify-center",
+				className,
+			)}
 			aria-label={ariaLabel}
 		>
 			{isLoading ? (

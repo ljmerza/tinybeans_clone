@@ -25,7 +25,7 @@ export function SmsIntroStep(props: SmsIntroStepProps) {
 				customContent: (
 					<div className="space-y-2 text-left">
 						<label
-							className="text-sm font-medium text-gray-700"
+							className="text-sm font-medium text-foreground"
 							htmlFor="sms-phone"
 						>
 							{t("twofa.setup.sms.phone_label")}

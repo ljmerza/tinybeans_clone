@@ -39,7 +39,7 @@ export function AuthCard({
 	return (
 		<div
 			className={cn(
-				"min-h-screen flex items-center justify-center bg-gray-50 px-4",
+				"min-h-screen flex items-center justify-center bg-background px-4 transition-colors",
 				containerClassName,
 			)}
 		>

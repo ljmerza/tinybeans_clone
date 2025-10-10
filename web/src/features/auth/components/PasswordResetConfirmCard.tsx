@@ -81,8 +81,8 @@ export function PasswordResetConfirmCard({
 
 	if (!token) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-				<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
+			<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
+				<div className="w-full max-w-sm bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 space-y-4 transition-colors">
 					<h1 className="text-2xl font-semibold text-center">
 						Invalid or expired link
 					</h1>
@@ -93,7 +93,7 @@ export function PasswordResetConfirmCard({
 					<div className="text-center">
 						<Link
 							to="/password/reset/request"
-							className="font-semibold text-blue-600 hover:text-blue-800"
+							className="font-semibold text-primary hover:text-primary/80 transition-colors"
 						>
 							Request a new link
 						</Link>
@@ -104,8 +104,8 @@ export function PasswordResetConfirmCard({
 	}
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-			<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
+		<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
+			<div className="w-full max-w-sm bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 space-y-4 transition-colors">
 				<div className="space-y-2 text-center">
 					<h1 className="text-2xl font-semibold">Set a new password</h1>
 					<p className="text-sm text-muted-foreground">

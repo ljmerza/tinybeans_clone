@@ -35,11 +35,13 @@ function DevtoolPanel() {
 
 	return (
 		<div className="p-4 grid gap-4 grid-cols-[1fr_10fr]">
-			<div className="text-sm font-bold text-gray-500 whitespace-nowrap">
+			<div className="text-sm font-bold text-muted-foreground whitespace-nowrap">
 				Access Token
 			</div>
 			<div className="text-sm break-all font-mono">
-				{state?.accessToken || <span className="text-gray-400">null</span>}
+				{state?.accessToken || (
+					<span className="text-muted-foreground">null</span>
+				)}
 			</div>
 		</div>
 	);

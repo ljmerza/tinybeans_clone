@@ -67,10 +67,10 @@ export function LoginCard() {
 			footerClassName="space-y-4 text-center"
 			footer={
 				<>
-					<div className="pt-4 border-t border-gray-200">
+					<div className="pt-4 border-t border-border transition-colors">
 						<Link
 							to="/magic-link-request"
-							className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+							className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
 						>
 							{t("auth.login.with_magic_link")}
 						</Link>
@@ -79,7 +79,7 @@ export function LoginCard() {
 						{t("auth.login.no_account")}{" "}
 						<Link
 							to="/signup"
-							className="font-semibold text-blue-600 hover:text-blue-800"
+							className="font-semibold text-primary hover:text-primary/80 transition-colors"
 						>
 							{t("nav.signup")}
 						</Link>
@@ -92,10 +92,10 @@ export function LoginCard() {
 
 				<div className="relative">
 					<div className="absolute inset-0 flex items-center">
-						<div className="w-full border-t border-gray-300" />
+						<div className="w-full border-t border-border/60 dark:border-border/40 transition-colors" />
 					</div>
 					<div className="relative flex justify-center text-sm">
-						<span className="px-2 bg-white text-gray-500">
+						<span className="px-2 bg-card text-muted-foreground transition-colors">
 							{t("common.or")}
 						</span>
 					</div>
@@ -160,7 +160,7 @@ export function LoginCard() {
 				<div className="flex justify-end">
 					<Link
 						to="/password/reset/request"
-						className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+						className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
 					>
 						{t("auth.login.forgot_password")}
 					</Link>

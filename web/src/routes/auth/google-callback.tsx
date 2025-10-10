@@ -102,13 +102,13 @@ function GoogleCallbackPage() {
 	// Show error state
 	if (error || clientError) {
 		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+			<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
 				<div className="max-w-md w-full space-y-6 text-center">
-					<div className="bg-white p-8 rounded-lg shadow-lg">
+					<div className="bg-card text-card-foreground border border-border p-8 rounded-lg shadow-lg transition-colors">
 						{/* Error Icon */}
-						<div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+						<div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-destructive/10 mb-4">
 							<svg
-								className="h-6 w-6 text-red-600"
+								className="h-6 w-6 text-destructive"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
@@ -124,12 +124,12 @@ function GoogleCallbackPage() {
 						</div>
 
 						{/* Error Title */}
-						<h2 className="text-2xl font-bold text-gray-900 mb-2">
+						<h2 className="text-2xl font-bold text-foreground mb-2">
 							Sign-in Failed
 						</h2>
 
 						{/* Error Message */}
-						<p className="text-gray-600 mb-6">
+						<p className="text-muted-foreground mb-6">
 							{clientError ||
 								"An error occurred during sign-in. Please try again."}
 						</p>
@@ -151,9 +151,9 @@ function GoogleCallbackPage() {
 
 	// Show loading state
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+		<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
 			<div className="max-w-md w-full space-y-6 text-center">
-				<div className="bg-white p-8 rounded-lg shadow-lg">
+				<div className="bg-card text-card-foreground border border-border p-8 rounded-lg shadow-lg transition-colors">
 					{/* Google Logo */}
 					<div className="mx-auto flex items-center justify-center h-16 w-16 mb-4">
 						<svg
@@ -185,10 +185,10 @@ function GoogleCallbackPage() {
 					<LoadingSpinner />
 
 					{/* Loading Text */}
-					<h2 className="text-xl font-semibold text-gray-900 mt-4 mb-2">
+					<h2 className="text-xl font-semibold text-foreground mt-4 mb-2">
 						Completing sign-in with Google...
 					</h2>
-					<p className="text-gray-600 text-sm">
+					<p className="text-muted-foreground text-sm">
 						Please wait while we verify your account
 					</p>
 				</div>

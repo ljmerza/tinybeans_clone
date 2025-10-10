@@ -72,7 +72,7 @@ export function SignupCard() {
 					{t("auth.signup.already_have_account")}{" "}
 					<Link
 						to="/login"
-						className="font-semibold text-blue-600 hover:text-blue-800"
+						className="font-semibold text-primary hover:text-primary/80 transition-colors"
 					>
 						{t("nav.login")}
 					</Link>
@@ -84,10 +84,10 @@ export function SignupCard() {
 
 				<div className="relative">
 					<div className="absolute inset-0 flex items-center">
-						<div className="w-full border-t border-gray-300" />
+						<div className="w-full border-t border-border/60 dark:border-border/40 transition-colors" />
 					</div>
 					<div className="relative flex justify-center text-sm">
-						<span className="px-2 bg-white text-gray-500">
+						<span className="px-2 bg-card text-muted-foreground transition-colors">
 							{t("common.or")}
 						</span>
 					</div>

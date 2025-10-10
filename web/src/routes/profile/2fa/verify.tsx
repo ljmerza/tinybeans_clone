@@ -116,7 +116,7 @@ function TwoFactorVerifyPage() {
 					type="button"
 					onClick={() => navigate({ to: "/login" })}
 					disabled={verify.isPending}
-					className="text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+					className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
 				>
 					{t("common.back_to_login")}
 				</button>
@@ -144,7 +144,7 @@ function TwoFactorVerifyPage() {
 						className="text-center font-mono text-lg"
 						maxLength={14}
 					/>
-					<p className="text-xs text-gray-500 text-center">
+					<p className="text-xs text-muted-foreground text-center">
 						{t("twofa.verify.recovery_hint")}
 					</p>
 				</div>
@@ -157,7 +157,7 @@ function TwoFactorVerifyPage() {
 					checked={rememberMe}
 					onChange={(e) => setRememberMe(e.target.checked)}
 					disabled={verify.isPending}
-					className="h-4 w-4 rounded border-gray-300"
+					className="h-4 w-4 rounded border border-border"
 				/>
 				<Label
 					htmlFor="remember-me"
@@ -183,7 +183,7 @@ function TwoFactorVerifyPage() {
 			</Button>
 
 			{verify.error && (
-				<div className="bg-red-50 border border-red-200 rounded p-3">
+				<div className="bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded p-3 transition-colors">
 					<StatusMessage variant="error" align="center">
 						{extractApiError(verify.error, t("twofa.errors.invalid_code"))}
 					</StatusMessage>
@@ -198,7 +198,7 @@ function TwoFactorVerifyPage() {
 						setCode("");
 					}}
 					disabled={verify.isPending}
-					className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+					className="text-sm text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
 				>
 					{useRecoveryCode
 						? t("twofa.verify.use_code")

@@ -58,8 +58,8 @@ export function PasswordResetRequestCard() {
 	});
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-			<div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6 space-y-4">
+		<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
+			<div className="w-full max-w-sm bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 space-y-4 transition-colors">
 				<div className="space-y-2 text-center">
 					<h1 className="text-2xl font-semibold">
 						{t("auth.password_reset.request_title")}
@@ -70,13 +70,13 @@ export function PasswordResetRequestCard() {
 				</div>
 
 				{successMessage && (
-					<div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded p-3">
+					<div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-sm rounded p-3 transition-colors">
 						{successMessage}
 					</div>
 				)}
 
 				{errorMessage && (
-					<div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded p-3">
+					<div className="bg-destructive/10 border border-destructive/30 dark:border-destructive/40 text-destructive text-sm rounded p-3 transition-colors">
 						{errorMessage}
 					</div>
 				)}
@@ -128,7 +128,7 @@ export function PasswordResetRequestCard() {
 				<div className="text-center text-sm">
 					<Link
 						to="/login"
-						className="font-semibold text-blue-600 hover:text-blue-800"
+						className="font-semibold text-primary hover:text-primary/80 transition-colors"
 					>
 						{t("auth.password_reset.back_to_login")}
 					</Link>
