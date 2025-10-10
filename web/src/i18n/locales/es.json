@@ -326,7 +326,6 @@
 			"recovery_codes_description": "Los códigos de recuperación pueden usarse para acceder a tu cuenta si pierdes acceso a tu dispositivo autenticador. Cada código solo se puede usar una vez.",
 			"recovery_codes_generate": "Generar nuevos códigos de recuperación",
 			"recovery_codes_generating": "Generando...",
-			"recovery_codes_view": "Ver códigos actuales",
 			"disable": {
 				"title": "Deshabilitar autenticación de dos factores",
 				"description": "Deshabilitar 2FA hará que tu cuenta sea menos segura. Solo necesitarás tu contraseña para iniciar sesión.",

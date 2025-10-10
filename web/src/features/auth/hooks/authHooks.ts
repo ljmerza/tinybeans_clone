@@ -18,25 +18,31 @@ export function useLogin() {
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<LoginResponse, ApiError, LoginRequest>({
+	return useMutation<ApiResponseWithMessages<LoginResponse>, ApiError, LoginRequest>({
 		mutationFn: async (body) => {
 			setAccessToken(null);
-			return apiClient.post<LoginResponse>("/auth/login/", body);
+			return apiClient.post<ApiResponseWithMessages<LoginResponse>>(
+				"/auth/login/",
+				body,
+			);
 		},
-		onSuccess: (data) => {
-			const redirectState = handleTwoFactorRedirect(data);
+		onSuccess: (response) => {
+			const payload = (response.data ?? response) as LoginResponse;
+			const redirectState = handleTwoFactorRedirect(payload);
 			if (redirectState) {
 				navigate({ to: "/profile/2fa/verify", state: redirectState as any });
 				return;
 			}
 
-			if (data.tokens?.access) {
-				setAccessToken(data.tokens.access);
+			const tokens = payload.tokens ?? response.tokens;
+			if (tokens?.access) {
+				setAccessToken(tokens.access);
 			}
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			if (data.messages?.length) {
-				showAsToast(data.messages, 200);
+			const messages = response.messages ?? payload.messages;
+			if (messages?.length) {
+				showAsToast(messages, 200);
 			}
 
 			navigate({ to: "/" });

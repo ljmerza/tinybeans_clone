@@ -15,6 +15,19 @@ import type {
 	TwoFactorVerifyLoginResponse,
 } from "../types";
 
+import type { ApiResponseWithMessages } from "@/types";
+
+function isTwoFactorStatusResponse(
+	value: unknown,
+): value is TwoFactorStatusResponse {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"is_enabled" in value &&
+		"preferred_method" in value
+	);
+}
+
 export const twoFactorApi = {
 	/**
 	 * Initialize 2FA setup
@@ -51,8 +64,16 @@ export const twoFactorApi = {
 	 */
 	getStatus: async () => {
 		const response =
-			await apiClient.get<TwoFactorStatusResponse>("/auth/2fa/status/");
-		return response;
+			await apiClient.get<ApiResponseWithMessages<TwoFactorStatusResponse>>(
+				"/auth/2fa/status/",
+			);
+		const payload = (response?.data ?? response) as unknown;
+
+		if (isTwoFactorStatusResponse(payload)) {
+			return payload;
+		}
+
+		return { is_enabled: false, preferred_method: null };
 	},
 
 	/**
@@ -176,10 +197,17 @@ export const twoFactorApi = {
 	 * Get list of trusted devices
 	 */
 	getTrustedDevices: async () => {
-		const response = await apiClient.get<TrustedDevicesResponse>(
-			"/auth/2fa/trusted-devices/",
-		);
-		return response;
+		const response =
+			await apiClient.get<ApiResponseWithMessages<TrustedDevicesResponse>>(
+				"/auth/2fa/trusted-devices/",
+			);
+		const payload = (response?.data ?? response) as Partial<TrustedDevicesResponse>;
+
+		if (payload && Array.isArray(payload.devices)) {
+			return { devices: payload.devices };
+		}
+
+		return { devices: [] };
 	},
 
 	/**

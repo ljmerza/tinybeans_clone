@@ -8,6 +8,9 @@ import { resolve } from "node:path";
 
 export default defineConfig({
 	plugins: [TanStackRouterVite(), viteReact(), tailwindcss()],
+	build: {
+		chunkSizeWarningLimit: 1024,
+	},
 	server: {
 		host: "0.0.0.0",
 		port: 3000,

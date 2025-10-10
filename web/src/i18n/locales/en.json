@@ -326,7 +326,6 @@
 			"recovery_codes_description": "Recovery codes can be used to access your account if you lose access to your authenticator device. Each code can only be used once.",
 			"recovery_codes_generate": "Generate New Recovery Codes",
 			"recovery_codes_generating": "Generating...",
-			"recovery_codes_view": "View Current Codes",
 			"disable": {
 				"title": "Disable Two-Factor Authentication",
 				"description": "Disabling 2FA will make your account less secure. You'll only need your password to log in.",

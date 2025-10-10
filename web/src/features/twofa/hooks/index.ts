@@ -6,6 +6,7 @@ import { authKeys, setAccessToken, userKeys } from "@/features/auth";
 import { extractApiError } from "@/features/auth/utils";
 import { useApiMessages } from "@/i18n";
 import type { HttpError } from "@/lib/httpClient";
+import type { ApiResponseWithMessages } from "@/types";
 import { showToast } from "@/lib/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -85,19 +86,21 @@ export function useVerify2FALogin() {
 	const { showAsToast } = useApiMessages();
 	const { t } = useTranslation();
 
-	return useMutation<
-		TwoFactorVerifyLoginResponse,
+return useMutation<
+		ApiResponseWithMessages<TwoFactorVerifyLoginResponse>,
 		Error,
 		{ partial_token: string; code: string; remember_me?: boolean }
 	>({
 		mutationFn: ({ partial_token, code, remember_me }) =>
 			twoFactorApi.verifyLogin(partial_token, code, remember_me),
-		onSuccess: async (data) => {
+		onSuccess: async (response) => {
+			const payload = (response.data ?? response) as TwoFactorVerifyLoginResponse;
 			// Store access token
-			if (!data.tokens?.access) {
+			const tokens = payload.tokens ?? response.tokens;
+			if (!tokens?.access) {
 				throw new Error("No access token received");
 			}
-			setAccessToken(data.tokens.access);
+			setAccessToken(tokens.access);
 
 			// Device ID cookie is set by backend automatically
 
