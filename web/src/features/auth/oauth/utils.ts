@@ -1,4 +1,4 @@
-import type { OAuthError, OAuthErrorCode, OAuthErrorInfo } from "./types";
+import type { OAuthErrorCode, OAuthErrorInfo } from "./types";
 
 /**
  * OAuth Error Messages
@@ -64,27 +64,6 @@ export const OAUTH_ERROR_MESSAGES: Record<OAuthErrorCode, OAuthErrorInfo> = {
 		severity: "error",
 	},
 };
-
-/**
- * Get user-friendly error message from OAuth error
- */
-export function getOAuthErrorMessage(error: unknown): OAuthErrorInfo {
-	// Check if it's an OAuth error response
-	if (error && typeof error === "object" && "data" in error) {
-		const data = (error as { data: unknown }).data;
-		if (data && typeof data === "object" && "error" in data) {
-			const oauthError = data as OAuthError;
-			const errorCode = oauthError.error?.code as OAuthErrorCode;
-			const errorInfo = OAUTH_ERROR_MESSAGES[errorCode];
-			if (errorInfo) {
-				return errorInfo;
-			}
-		}
-	}
-
-	// Fallback to unknown error
-	return OAUTH_ERROR_MESSAGES.UNKNOWN_ERROR;
-}
 
 /**
  * Validate OAuth state token matches stored state

@@ -68,15 +68,6 @@ export interface OAuthUnlinkResponse {
 	messages?: ApiMessage[];
 }
 
-export interface OAuthError {
-	error: {
-		code: string;
-		message: string;
-		email?: string;
-		help_url?: string;
-	};
-}
-
 export type OAuthErrorCode =
 	| "UNVERIFIED_ACCOUNT_EXISTS"
 	| "INVALID_REDIRECT_URI"
