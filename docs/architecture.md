@@ -1900,7 +1900,10 @@ tinybeans_copy/
 ├── requirements.txt           # Python dependencies
 ├── docker-compose.yml         # Development orchestration
 ├── Dockerfile                 # Backend container
-├── .env.example               # Environment template
+├── .env.example               # Shared variable reference
+├── .env.development           # Development defaults (loaded by Docker Compose)
+├── .env.staging               # Staging template (fill via secrets manager)
+├── .env.production            # Production template (fill via secrets manager)
 └── README.md
 
 ```
@@ -1926,9 +1929,8 @@ tinybeans_copy/
 git clone <repository-url>
 cd tinybeans_copy
 
-# Copy environment file
-cp .env.example .env
-# Edit .env with your local settings
+# Review the bundled development environment file
+# Edit .env.development with your local settings
 
 # Start all services with Docker Compose
 docker compose up --build

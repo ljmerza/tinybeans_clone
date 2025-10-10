@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 from kombu import Queue
 from django.core.exceptions import ImproperlyConfigured
 
@@ -21,6 +21,13 @@ def _env_flag(name: str, default: bool = False) -> bool:
     if value is None:
         return default
     return value.lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _env_list(name: str, default=None):
+    value = os.environ.get(name)
+    if not value:
+        return list(default or [])
+    return [item.strip() for item in value.split(',') if item.strip()]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -308,13 +315,16 @@ IMAGE_SIZES = {
     'full': None,  # Original size
 }
 
+# Shared dev origins for local UI integrations
+_DEV_FRONTEND_ORIGINS = [
+    "http://localhost:3053",
+    "http://127.0.0.1:3053",
+    "http://192.168.1.76:3053",
+]
+
 # CORS Configuration for Development
 if DEBUG:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3053",
-        "http://127.0.0.1:3053",
-        "http://192.168.1.76:3053",
-    ]
+    CORS_ALLOWED_ORIGINS = _DEV_FRONTEND_ORIGINS
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOW_HEADERS = [
         'accept',
@@ -398,3 +408,36 @@ GOOGLE_OAUTH_SCOPES = [
 
 # Rate limiting (django-ratelimit)
 RATELIMIT_ENABLE = _env_flag('RATELIMIT_ENABLE', default=not DEBUG)
+
+# HTTPS & security headers
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = _env_flag('DJANGO_SECURE_SSL_REDIRECT', default=not DEBUG)
+
+if DEBUG:
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+else:
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_flag('DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
+    SECURE_HSTS_PRELOAD = _env_flag('DJANGO_SECURE_HSTS_PRELOAD', default=True)
+
+SECURE_REFERRER_POLICY = os.environ.get('DJANGO_SECURE_REFERRER_POLICY', 'same-origin')
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_CROSS_ORIGIN_OPENER_POLICY = os.environ.get('DJANGO_SECURE_COOP', 'same-origin')
+
+SESSION_COOKIE_SECURE = _env_flag('DJANGO_SESSION_COOKIE_SECURE', default=not DEBUG)
+SESSION_COOKIE_SAMESITE = os.environ.get('DJANGO_SESSION_COOKIE_SAMESITE', 'Lax')
+
+CSRF_COOKIE_SECURE = _env_flag('DJANGO_CSRF_COOKIE_SECURE', default=not DEBUG)
+CSRF_COOKIE_HTTPONLY = _env_flag('DJANGO_CSRF_COOKIE_HTTPONLY', default=False)
+CSRF_COOKIE_SAMESITE = os.environ.get('DJANGO_CSRF_COOKIE_SAMESITE', 'Strict')
+
+CSRF_TRUSTED_ORIGINS = _env_list(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    default=_DEV_FRONTEND_ORIGINS if DEBUG else None,
+)
+
+if not DEBUG and not CSRF_TRUSTED_ORIGINS:
+    raise ImproperlyConfigured('DJANGO_CSRF_TRUSTED_ORIGINS must be set when DEBUG is False')

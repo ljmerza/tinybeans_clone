@@ -39,18 +39,18 @@ class ErrorBoundaryComponent extends Component<Props, State> {
 			const { t } = this.props;
 
 			return (
-				<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-					<div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-						<h2 className="text-2xl font-semibold text-red-600 mb-4">
+				<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
+					<div className="max-w-md w-full bg-card text-card-foreground rounded-lg shadow-md border border-border p-6 text-center transition-colors">
+						<h2 className="text-2xl font-semibold text-destructive mb-4">
 							{t("pages.error.something_wrong")}
 						</h2>
-						<p className="text-gray-600 mb-4">
+						<p className="text-muted-foreground mb-4">
 							{this.state.error?.message || t("pages.error.unexpected_error")}
 						</p>
 						<button
 							type="button"
 							onClick={this.handleGoHome}
-							className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+							className="btn-primary"
 						>
 							{t("pages.error.go_home")}
 						</button>

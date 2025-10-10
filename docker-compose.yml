@@ -3,6 +3,17 @@ x-common-env: &django-common-env
   DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-local}
   DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],web,192.168.1.76}
+  DJANGO_SECURE_SSL_REDIRECT: ${DJANGO_SECURE_SSL_REDIRECT:-0}
+  DJANGO_SECURE_HSTS_SECONDS: ${DJANGO_SECURE_HSTS_SECONDS:-0}
+  DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS: ${DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS:-0}
+  DJANGO_SECURE_HSTS_PRELOAD: ${DJANGO_SECURE_HSTS_PRELOAD:-0}
+  DJANGO_SECURE_REFERRER_POLICY: ${DJANGO_SECURE_REFERRER_POLICY:-same-origin}
+  DJANGO_SECURE_COOP: ${DJANGO_SECURE_COOP:-same-origin}
+  DJANGO_SESSION_COOKIE_SECURE: ${DJANGO_SESSION_COOKIE_SECURE:-0}
+  DJANGO_SESSION_COOKIE_SAMESITE: ${DJANGO_SESSION_COOKIE_SAMESITE:-Lax}
+  DJANGO_CSRF_COOKIE_SECURE: ${DJANGO_CSRF_COOKIE_SECURE:-0}
+  DJANGO_CSRF_COOKIE_SAMESITE: ${DJANGO_CSRF_COOKIE_SAMESITE:-Strict}
+  DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://192.168.1.76:3053,http://localhost:3053,http://127.0.0.1:3053}
   POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
   POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
@@ -44,6 +55,8 @@ services:
     working_dir: /app/mysite
     volumes:
       - ./:/app
+    env_file:
+      - ./.env.development
     environment:
       <<: *django-common-env
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
@@ -78,6 +91,8 @@ services:
     working_dir: /app/mysite
     volumes:
       - ./:/app
+    env_file:
+      - ./.env.development
     environment:
       <<: *django-common-env
     depends_on:
@@ -90,6 +105,8 @@ services:
     working_dir: /app/mysite
     volumes:
       - ./:/app
+    env_file:
+      - ./.env.development
     environment:
       <<: *django-common-env
     depends_on:
@@ -102,6 +119,8 @@ services:
     working_dir: /app/mysite
     volumes:
       - ./:/app
+    env_file:
+      - ./.env.development
     environment:
       <<: *django-common-env
     depends_on:
@@ -114,6 +133,8 @@ services:
     working_dir: /app/mysite
     volumes:
       - ./:/app
+    env_file:
+      - ./.env.development
     environment:
       <<: *django-common-env
     depends_on:
@@ -127,6 +148,8 @@ services:
     volumes:
       - ./:/app
       - flower_data:/data
+    env_file:
+      - ./.env.development
     environment:
       <<: *django-common-env
     depends_on:

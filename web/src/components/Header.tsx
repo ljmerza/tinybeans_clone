@@ -62,13 +62,13 @@ function GuestHeaderActions() {
 export function Header({ isAuthenticated }: HeaderProps) {
 	const { t } = useTranslation();
 	return (
-		<header className="bg-white shadow-sm">
+		<header className="bg-card text-card-foreground border-b border-border shadow-sm transition-colors">
 			<div className="container-page">
 				<div className="flex justify-between items-center h-16">
 					<div className="flex items-center">
 						<Link
 							to="/"
-							className="text-xl font-bold text-gray-900 hover:text-gray-700"
+							className="text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
 						>
 							{t("nav.home")}
 						</Link>

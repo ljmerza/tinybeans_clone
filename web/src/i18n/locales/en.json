@@ -288,7 +288,30 @@
 			},
 			"general": {
 				"title": "General settings",
-				"description": "Update your account information and preferences."
+				"description": "Update your account information and preferences.",
+				"theme": {
+					"title": "Appearance",
+					"description": "Choose how Tinybeans looks on your device.",
+					"select_label": "Theme preference",
+					"select_description": "Pick a theme or follow your browser’s color scheme.",
+					"select_placeholder": "Select a theme",
+					"current_value": "Currently using {{value}} theme.",
+					"current_value_system": "Following browser preference (currently {{value}}).",
+					"options": {
+						"light": {
+							"title": "Light",
+							"description": "Bright backgrounds with dark text."
+						},
+						"dark": {
+							"title": "Dark",
+							"description": "Dim backgrounds that are easier on the eyes at night."
+						},
+						"system": {
+							"title": "Match browser",
+							"description": "Keep Tinybeans in sync with your browser preference."
+						}
+					}
+				}
 			},
 			"not_enabled_title": "2FA is not enabled.",
 			"not_enabled_description": "Start by setting up a method below. This will also generate fresh recovery codes.",

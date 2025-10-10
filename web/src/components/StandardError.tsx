@@ -28,20 +28,22 @@ export function StandardError({
 			{icon}
 			<div className="space-y-2">
 				{title && (
-					<h2 className="text-2xl font-semibold text-red-600">{title}</h2>
+					<h2 className="text-2xl font-semibold text-destructive">{title}</h2>
 				)}
 				{message && (
-					<p className="text-base font-medium text-gray-800">{message}</p>
+					<p className="text-base font-medium text-foreground">{message}</p>
 				)}
 				{description && (
-					<p className="text-sm text-gray-500 max-w-prose">{description}</p>
+					<p className="text-sm text-muted-foreground max-w-prose">
+						{description}
+					</p>
 				)}
 			</div>
 			{actionLabel && onAction && (
 				<button
 					type="button"
 					onClick={onAction}
-					className="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700"
+					className="btn-primary shadow-sm"
 				>
 					{actionLabel}
 				</button>

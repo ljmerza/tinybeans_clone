@@ -177,16 +177,16 @@ code {
 
 	/* Buttons (composable base styles) */
 	.btn-primary {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-white bg-blue-600 hover:bg-blue-700;
+		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-primary-foreground bg-primary hover:bg-primary/90;
 	}
 	.btn-secondary {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 bg-white hover:bg-gray-50 border border-gray-300;
+		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-secondary-foreground bg-secondary hover:bg-secondary/80 border border-border;
 	}
 	.btn-ghost {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100;
+		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-foreground hover:bg-muted/40;
 	}
 	.btn-danger {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-white bg-red-600 hover:bg-red-700;
+		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-destructive-foreground bg-destructive hover:bg-destructive/90;
 	}
 
 	/* Layout containers */
@@ -202,10 +202,10 @@ code {
 
 	/* Cards */
 	.card {
-		@apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+		@apply bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6;
 	}
 	.card-hover {
-		@apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow;
+		@apply bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6 hover:shadow-md transition-shadow;
 	}
 
 	/* Form elements */
@@ -213,10 +213,10 @@ code {
 		@apply space-y-2;
 	}
 	.form-label {
-		@apply block text-sm font-medium text-gray-700;
+		@apply block text-sm font-medium text-foreground;
 	}
 	.form-error {
-		@apply text-sm text-red-600;
+		@apply text-sm text-destructive;
 	}
 	.form-help {
 		@apply text-sm text-gray-500;

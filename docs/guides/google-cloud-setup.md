@@ -108,7 +108,7 @@ After creating the OAuth client, a modal will appear with your credentials:
 
 ## Step 6: Configure Application Environment
 
-### Development (.env file)
+### Development (`.env.development`)
 ```bash
 GOOGLE_OAUTH_CLIENT_ID=123456789-abcdefg.apps.googleusercontent.com
 GOOGLE_OAUTH_CLIENT_SECRET=GOCSPX-abcdefghijklmnop
@@ -121,7 +121,7 @@ Set these as environment variables in your production environment:
 - `GOOGLE_OAUTH_CLIENT_SECRET`
 - `GOOGLE_OAUTH_REDIRECT_URI`
 
-⚠️ **Never commit secrets to Git!** Add `.env` to your `.gitignore`.
+⚠️ **Never commit secrets to Git!** Keep `.env.development`, `.env.staging`, and `.env.production` templates in version control only—store real values in your secret manager or local overrides.
 
 ## Step 7: Test OAuth Configuration
 

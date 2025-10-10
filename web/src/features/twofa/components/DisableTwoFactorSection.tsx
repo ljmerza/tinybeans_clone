@@ -35,19 +35,18 @@ export function DisableTwoFactorSection({
 	const { t } = useTranslation();
 
 	return (
-		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4 text-red-600">
+		<div className="bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 transition-colors">
+			<h2 className="text-xl font-semibold mb-4 text-destructive">
 				{t("twofa.settings.disable.title")}
 			</h2>
 
 			<div className="space-y-4">
-				<p className="text-gray-600 text-sm">
+				<p className="text-muted-foreground text-sm">
 					{t("twofa.settings.disable.description")}
 				</p>
 				<Button
 					onClick={onRequestDisable}
-					variant="outline"
-					className="text-red-600 border-red-300 hover:bg-red-50"
+					variant="destructive"
 				>
 					{t("twofa.settings.disable.action")}
 				</Button>

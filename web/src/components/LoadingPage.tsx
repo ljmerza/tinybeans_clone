@@ -11,14 +11,14 @@ export function LoadingPage({
 	fullScreen = true,
 }: LoadingPageProps) {
 	const containerClasses = fullScreen
-		? "min-h-screen w-full flex items-center justify-center bg-gray-50"
-		: "w-full flex items-center justify-center bg-gray-50 py-16";
+		? "min-h-screen w-full flex items-center justify-center bg-background transition-colors"
+		: "w-full flex items-center justify-center bg-background py-16 transition-colors";
 
 	return (
 		<div className={containerClasses}>
 			<div className="text-center">
 				<LoadingSpinner size="lg" className="mx-auto mb-4" />
-				<p className="text-gray-600">{message}</p>
+				<p className="text-muted-foreground">{message}</p>
 			</div>
 		</div>
 	);

@@ -16,7 +16,7 @@ function LayoutBase({ children, showHeader = true }: LayoutProps) {
 	const session = useAuthSession();
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-background text-foreground transition-colors">
 			{showHeader && <Header isAuthenticated={session.isAuthenticated} />}
 
 			<main className={showHeader ? "container-page section-spacing" : ""}>

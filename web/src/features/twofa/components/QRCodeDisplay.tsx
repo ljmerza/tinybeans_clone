@@ -24,7 +24,7 @@ export function QRCodeDisplay({
 	return (
 		<div className="space-y-4">
 			{/* QR Code */}
-			<div className="bg-white p-6 rounded-lg border-2 border-gray-200 flex justify-center">
+			<div className="bg-card text-card-foreground p-6 rounded-lg border-2 border-border flex justify-center transition-colors">
 				<img
 					src={qrCodeImage}
 					alt={t("twofa.setup.totp.qr_alt")}
@@ -33,8 +33,10 @@ export function QRCodeDisplay({
 			</div>
 
 			{/* Instructions */}
-			<div className="text-sm text-gray-600 space-y-2">
-				<p className="font-semibold">{t("twofa.setup.totp.scan_prompt")}</p>
+			<div className="text-sm text-muted-foreground space-y-2">
+				<p className="font-semibold text-foreground">
+					{t("twofa.setup.totp.scan_prompt")}
+				</p>
 				<ul className="list-disc list-inside space-y-1 ml-2">
 					{appList.map((app) => (
 						<li key={app}>{app}</li>
@@ -44,16 +46,16 @@ export function QRCodeDisplay({
 
 			{/* Manual Entry */}
 			{showManualEntry && (
-				<div className="bg-gray-50 p-4 rounded-lg">
-					<p className="text-sm font-semibold text-gray-700 mb-2">
+				<div className="bg-muted/40 p-4 rounded-lg transition-colors">
+					<p className="text-sm font-semibold text-foreground mb-2">
 						{t("twofa.setup.totp.manual_title")}
 					</p>
-					<div className="bg-white p-3 rounded border border-gray-300">
+					<div className="bg-card text-card-foreground p-3 rounded border border-border transition-colors">
 						<code className="text-lg font-mono select-all break-all">
 							{secret}
 						</code>
 					</div>
-					<p className="text-xs text-gray-500 mt-2">
+					<p className="text-xs text-muted-foreground mt-2">
 						{t("twofa.setup.totp.manual_help")}
 					</p>
 				</div>

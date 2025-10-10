@@ -126,47 +126,49 @@ function TwoFactorSettingsPage() {
 					<div className="space-y-6">
 						<TwoFactorStatusHeader status={status} />
 
-						<div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+						<div className="bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 space-y-6 transition-colors">
 							<div className="flex items-start justify-between">
 								<div>
-									<h2 className="text-xl font-semibold mb-1">
+									<h2 className="text-xl font-semibold text-foreground mb-1">
 										{t("twofa.settings.manage_title")}
 									</h2>
-									<p className="text-sm text-gray-600">
+									<p className="text-sm text-muted-foreground">
 										{t("twofa.settings.manage_description")}
 									</p>
 								</div>
 							</div>
 
 							{!status.is_enabled && (
-								<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-4">
+								<div className="bg-amber-500/15 border border-amber-500/30 dark:border-amber-500/40 text-sm rounded-lg p-4 transition-colors">
 									<p className="font-semibold">
 										{t("twofa.settings.not_enabled_title")}
 									</p>
-									<p>{t("twofa.settings.not_enabled_description")}</p>
+									<p className="text-muted-foreground">
+										{t("twofa.settings.not_enabled_description")}
+									</p>
 								</div>
 							)}
 
 							{removalMessage && (
-								<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
+								<p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded px-4 py-3 transition-colors">
 									{removalMessage}
 								</p>
 							)}
 
 							{removalError && (
-								<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+								<p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded px-4 py-3 transition-colors">
 									{removalError}
 								</p>
 							)}
 
 							{switchMessage && (
-								<p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-3">
+								<p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded px-4 py-3 transition-colors">
 									{switchMessage}
 								</p>
 							)}
 
 							{switchError && (
-								<p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+								<p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded px-4 py-3 transition-colors">
 									{switchError}
 								</p>
 							)}
@@ -214,7 +216,7 @@ function TwoFactorSettingsPage() {
 							<button
 								type="button"
 								onClick={() => navigate({ to: "/" })}
-								className="text-sm text-gray-600 hover:text-gray-800"
+								className="text-sm text-muted-foreground hover:text-foreground transition-colors"
 							>
 								{t("common.back_home")}
 							</button>

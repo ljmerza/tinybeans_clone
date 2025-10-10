@@ -22,10 +22,10 @@ export function StandardLoading({
 		>
 			{icon ?? <LoadingSpinner size={spinnerSize} className="mx-auto" />}
 			{message && (
-				<p className="text-lg font-medium text-gray-800">{message}</p>
+				<p className="text-lg font-medium text-foreground">{message}</p>
 			)}
 			{description && (
-				<p className="text-sm text-gray-500 max-w-prose">{description}</p>
+				<p className="text-sm text-muted-foreground max-w-prose">{description}</p>
 			)}
 		</div>
 	);

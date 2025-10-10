@@ -79,11 +79,11 @@ export function RecoveryCodeList({
 
 	return (
 		<div className="space-y-4">
-			<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-				<h3 className="text-lg font-semibold text-yellow-900 mb-2">
+			<div className="bg-amber-500/15 border border-amber-500/30 dark:border-amber-500/40 rounded-lg p-4 transition-colors">
+				<h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">
 					{t("twofa.setup.recovery.warning_title")}
 				</h3>
-				<p className="text-sm text-yellow-800">
+				<p className="text-sm text-amber-700 dark:text-amber-100">
 					{t("twofa.setup.recovery.warning_body")}
 				</p>
 			</div>
@@ -94,14 +94,14 @@ export function RecoveryCodeList({
 						key={code}
 						type="button"
 						onClick={() => handleCopy(code, index)}
-						className="bg-gray-100 hover:bg-gray-200 p-3 rounded text-left font-mono text-sm transition-colors group relative"
+						className="bg-muted/60 hover:bg-muted p-3 rounded text-left font-mono text-sm transition-colors group relative dark:bg-muted/20 dark:hover:bg-muted/30"
 					>
-						<span className="font-semibold text-gray-500 mr-2">
+						<span className="font-semibold text-muted-foreground mr-2">
 							{index + 1}.
 						</span>
 						<span className="select-all">{code}</span>
 						{copiedIndex === index && (
-							<span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-green-600 font-semibold">
+							<span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-emerald-600 dark:text-emerald-300 font-semibold">
 								{t("twofa.setup.recovery.copied")}
 							</span>
 						)}
@@ -142,11 +142,11 @@ export function RecoveryCodeList({
 				)}
 			</div>
 
-			<div className="bg-red-50 border border-red-200 rounded-lg p-4">
-				<h4 className="text-sm font-semibold text-red-900 mb-2">
+			<div className="bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded-lg p-4 transition-colors">
+				<h4 className="text-sm font-semibold text-destructive mb-2">
 					{t("twofa.setup.recovery.important_title")}
 				</h4>
-				<ul className="text-sm text-red-800 space-y-1 list-disc list-inside">
+				<ul className="text-sm text-destructive-foreground space-y-1 list-disc list-inside">
 					{importantItems.map((item) => (
 						<li key={item}>{item}</li>
 					))}

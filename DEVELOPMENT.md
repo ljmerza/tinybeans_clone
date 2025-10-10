@@ -27,8 +27,7 @@ Follow these steps to exercise Google sign-up and sign-in flows against the loca
    - Download or copy the generated **Client ID** and **Client secret**.
 
 2. **Populate local environment variables**
-   - Copy `.env.example` to `.env` (already done once for the project).
-   - Update these entries in `.env` with the values from Google Cloud:
+   - Update `.env.development` with the values from Google Cloud (Compose loads this file automatically).
 
      ```dotenv
      GOOGLE_OAUTH_CLIENT_ID=your-real-client-id.apps.googleusercontent.com

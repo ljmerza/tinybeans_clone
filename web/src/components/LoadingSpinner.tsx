@@ -18,7 +18,7 @@ export function LoadingSpinner({
 
 	return (
 		<div className={`inline-block ${sizeClasses[size]} ${className}`}>
-			<div className="w-full h-full border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+			<div className="w-full h-full border-4 border-border/60 border-t-primary rounded-full animate-spin" />
 		</div>
 	);
 }

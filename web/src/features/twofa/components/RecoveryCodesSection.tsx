@@ -30,14 +30,14 @@ export function RecoveryCodesSection({
 	const { t } = useTranslation();
 
 	return (
-		<div className="bg-white rounded-lg shadow-md p-6">
-			<h2 className="text-xl font-semibold mb-4">
+		<div className="bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 transition-colors">
+			<h2 className="text-xl font-semibold text-foreground mb-4">
 				{t("twofa.settings.recovery_codes_title")}
 			</h2>
 
 			{!showNewCodes ? (
 				<div className="space-y-4">
-					<p className="text-gray-600 text-sm">
+					<p className="text-muted-foreground text-sm">
 						{t("twofa.settings.recovery_codes_description")}
 					</p>
 

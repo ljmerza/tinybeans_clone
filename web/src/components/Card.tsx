@@ -14,7 +14,10 @@ export function Card({
 }: CardProps) {
 	return (
 		<Component
-			className={cn("rounded-lg border border-gray-200 bg-white", className)}
+			className={cn(
+				"rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors",
+				className,
+			)}
 		>
 			{children}
 		</Component>
@@ -36,7 +39,11 @@ interface CardTitleProps {
 }
 
 export function CardTitle({ children, className }: CardTitleProps) {
-	return <h3 className={cn("text-lg font-semibold", className)}>{children}</h3>;
+	return (
+		<h3 className={cn("text-lg font-semibold text-foreground", className)}>
+			{children}
+		</h3>
+	);
 }
 
 interface CardDescriptionProps {
@@ -45,7 +52,9 @@ interface CardDescriptionProps {
 }
 
 export function CardDescription({ children, className }: CardDescriptionProps) {
-	return <p className={cn("text-sm text-gray-600", className)}>{children}</p>;
+	return (
+		<p className={cn("text-sm text-muted-foreground", className)}>{children}</p>
+	);
 }
 
 interface CardContentProps {

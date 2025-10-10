@@ -4,6 +4,7 @@
  */
 
 import { AuthSessionProvider } from "@/features/auth/context/AuthSessionProvider";
+import { ThemeProvider } from "@/features/theme";
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -41,12 +42,19 @@ export function AppProviders({
 	isInitializing = false,
 }: AppProvidersProps) {
 	return (
-		<QueryClientProvider client={queryClient}>
-			<AuthSessionProvider isInitializing={isInitializing}>
-				<RouterProvider router={router} context={{ queryClient }} />
-				<Toaster richColors position="top-right" duration={3000} closeButton />
-			</AuthSessionProvider>
-		</QueryClientProvider>
+		<ThemeProvider>
+			<QueryClientProvider client={queryClient}>
+				<AuthSessionProvider isInitializing={isInitializing}>
+					<RouterProvider router={router} context={{ queryClient }} />
+					<Toaster
+						richColors
+						position="top-right"
+						duration={3000}
+						closeButton
+					/>
+				</AuthSessionProvider>
+			</QueryClientProvider>
+		</ThemeProvider>
 	);
 }
 
