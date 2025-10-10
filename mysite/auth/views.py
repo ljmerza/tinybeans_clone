@@ -141,9 +141,15 @@ class LoginView(APIView):
                     )
                 
                 # Check if device is trusted (Remember Me feature)
-                device_id = TrustedDeviceService.get_device_id_from_request(request)
+                device_token = TrustedDeviceService.get_device_id_from_request(request)
                 
-                if device_id and TrustedDeviceService.is_trusted_device(user, device_id):
+                is_trusted, rotated_token = TrustedDeviceService.is_trusted_device(
+                    user,
+                    device_token,
+                    request,
+                ) if device_token else (False, None)
+                
+                if is_trusted:
                     # Trusted device - skip 2FA and proceed with normal login
                     tokens = get_tokens_for_user(user)
                     user_data = UserSerializer(user).data
@@ -155,6 +161,8 @@ class LoginView(APIView):
                         messages=[create_message('notifications.auth.login_success')]
                     )
                     set_refresh_cookie(response_data, tokens['refresh'])
+                    if rotated_token:
+                        TrustedDeviceService.set_trusted_device_cookie(response_data, rotated_token)
                     return response_data
                 
                 # 2FA required - check rate limiting
@@ -565,9 +573,14 @@ class MagicLoginVerifyView(APIView):
                         return rate_limit_response('errors.account_locked_2fa')
                     
                     # Check if device is trusted
-                    device_id = TrustedDeviceService.get_device_id_from_request(request)
+                    device_token = TrustedDeviceService.get_device_id_from_request(request)
+                    is_trusted, rotated_token = TrustedDeviceService.is_trusted_device(
+                        user,
+                        device_token,
+                        request,
+                    ) if device_token else (False, None)
                     
-                    if device_id and TrustedDeviceService.is_trusted_device(user, device_id):
+                    if is_trusted:
                         # Trusted device - proceed with login
                         tokens = get_tokens_for_user(user)
                         data = {
@@ -581,6 +594,8 @@ class MagicLoginVerifyView(APIView):
                             status_code=status.HTTP_200_OK
                         )
                         set_refresh_cookie(response, tokens['refresh'])
+                        if rotated_token:
+                            TrustedDeviceService.set_trusted_device_cookie(response, rotated_token)
                         return response
                     
                     # 2FA required - check rate limiting

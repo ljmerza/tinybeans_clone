@@ -1,14 +1,18 @@
 """Two-Factor Authentication Service"""
+import base64
+import hmac
+import hashlib
+import io
 import secrets
 import string
+from datetime import timedelta
+
 import pyotp
 import qrcode
-import io
-import base64
-from datetime import timedelta
-from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 from ..models import TwoFactorSettings, TwoFactorCode, RecoveryCode, TwoFactorAuditLog
 
 User = get_user_model()
@@ -21,6 +25,16 @@ class TwoFactorService:
     def generate_otp() -> str:
         """Generate 6-digit OTP code for email/SMS"""
         return ''.join(secrets.choice(string.digits) for _ in range(6))
+    
+    @staticmethod
+    def _hash_otp(code: str) -> str:
+        """Hash OTP code using HMAC-SHA256 with secret key."""
+        key = getattr(settings, 'TWOFA_CODE_SIGNING_KEY', settings.SECRET_KEY)
+        return hmac.new(
+            key.encode('utf-8'),
+            code.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
     
     @staticmethod
     def generate_totp_secret() -> str:
@@ -87,9 +101,11 @@ class TwoFactorService:
         ).update(is_used=True, expires_at=timezone.now())
 
         # Create new code record
+        code_hash = TwoFactorService._hash_otp(code)
         code_obj = TwoFactorCode.objects.create(
             user=user,
-            code=code,
+            code_hash=code_hash,
+            code_preview=code[-6:],
             method=method,
             purpose=purpose,
             expires_at=timezone.now() + timedelta(minutes=expiry_minutes)
@@ -111,9 +127,10 @@ class TwoFactorService:
     def verify_otp(user, code, purpose='login') -> bool:
         """Verify OTP code and mark as used"""
         try:
+            code_hash = TwoFactorService._hash_otp(str(code))
             code_obj = TwoFactorCode.objects.filter(
                 user=user,
-                code=code,
+                code_hash=code_hash,
                 purpose=purpose,
                 is_used=False
             ).first()

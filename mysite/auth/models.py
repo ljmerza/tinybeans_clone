@@ -202,7 +202,8 @@ class TwoFactorCode(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6)
+    code_hash = models.CharField(max_length=64)
+    code_preview = models.CharField(max_length=6, blank=True)
     method = models.CharField(max_length=20)
     purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
     is_used = models.BooleanField(default=False)
@@ -213,14 +214,15 @@ class TwoFactorCode(models.Model):
     
     class Meta:
         indexes = [
-            models.Index(fields=['user', 'code', 'is_used']),
+            models.Index(fields=['user', 'code_hash', 'is_used']),
             models.Index(fields=['expires_at']),
         ]
         verbose_name = 'Two-Factor Code'
         verbose_name_plural = 'Two-Factor Codes'
     
     def __str__(self):
-        return f"{self.user.username} - {self.code} ({self.purpose})"
+        preview = self.code_preview or '******'
+        return f"{self.user.username} - {preview} ({self.purpose})"
     
     def is_valid(self):
         """Check if code is still valid"""
@@ -275,6 +277,8 @@ class TrustedDevice(models.Model):
     device_name = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()
     user_agent = models.TextField()
+    ip_hash = models.CharField(max_length=64, blank=True)
+    ua_hash = models.CharField(max_length=64, blank=True)
     last_used_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)

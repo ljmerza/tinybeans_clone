@@ -5,9 +5,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 import type { ThemePreference } from "../ThemeProvider";
 import { useTheme } from "../ThemeProvider";
-import { useTranslation } from "react-i18next";
 
 const THEME_OPTIONS = ["light", "dark", "system"] as const;
 

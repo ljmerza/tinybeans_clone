@@ -4,7 +4,6 @@
  */
 
 import { ConfirmDialog, Layout } from "@/components";
-import type { QueryClient } from "@tanstack/react-query";
 import { extractApiError } from "@/features/auth/utils";
 import {
 	ProfileGeneralSettingsCard,
@@ -23,6 +22,7 @@ import {
 	useSetPreferredMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
+import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

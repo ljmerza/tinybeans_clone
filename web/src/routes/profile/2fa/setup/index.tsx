@@ -16,8 +16,8 @@ import {
 	useRemoveTwoFactorMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {

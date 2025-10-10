@@ -14,7 +14,7 @@ from auth.models import (
     TwoFactorAuditLog
 )
 from auth.services.twofa_service import TwoFactorService
-from auth.services.trusted_device_service import TrustedDeviceService
+from auth.services.trusted_device_service import TrustedDeviceService, TrustedDeviceToken
 from auth.services.recovery_code_service import RecoveryCodeService
 
 User = get_user_model()
@@ -25,6 +25,22 @@ def create_user(username='testuser', email=None, password='testpass', **extra):
     if email is None:
         email = f"{username}@example.com"
     return User.objects.create_user(username=username, email=email, password=password, **extra)
+
+
+def create_code(user, code='123456', **kwargs):
+    """Helper to create hashed TwoFactorCode records."""
+    defaults = {
+        'code_hash': TwoFactorService._hash_otp(code),
+        'code_preview': code[-6:],
+        'method': 'email',
+        'purpose': 'login',
+        'is_used': False,
+        'attempts': 0,
+        'max_attempts': 5,
+        'expires_at': timezone.now() + timedelta(minutes=10),
+    }
+    defaults.update(kwargs)
+    return TwoFactorCode.objects.create(user=user, **defaults)
 
 
 @pytest.mark.django_db
@@ -49,15 +65,7 @@ class TestTwoFactorServiceOTP:
         user = create_user(username='testuser', password='testpass')
         
         # Create valid code
-        code_obj = TwoFactorCode.objects.create(
-            user=user,
-            code='123456',
-            method='email',
-            purpose='login',
-            is_used=False,
-            attempts=0,
-            expires_at=timezone.now() + timedelta(minutes=10)
-        )
+        code_obj = create_code(user, code='123456')
         
         result = TwoFactorService.verify_otp(user, '123456', purpose='login')
         
@@ -78,13 +86,9 @@ class TestTwoFactorServiceOTP:
         user = create_user(username='testuser', password='testpass')
         
         # Create expired code
-        TwoFactorCode.objects.create(
-            user=user,
+        create_code(
+            user,
             code='123456',
-            method='email',
-            purpose='login',
-            is_used=False,
-            attempts=0,
             expires_at=timezone.now() - timedelta(minutes=1)
         )
         
@@ -96,15 +100,11 @@ class TestTwoFactorServiceOTP:
         user = create_user(username='testuser', password='testpass')
         
         # Create code with max attempts reached
-        TwoFactorCode.objects.create(
-            user=user,
+        create_code(
+            user,
             code='123456',
-            method='email',
-            purpose='login',
-            is_used=False,
             attempts=5,
-            max_attempts=5,
-            expires_at=timezone.now() + timedelta(minutes=10)
+            max_attempts=5
         )
         
         result = TwoFactorService.verify_otp(user, '123456', purpose='login')
@@ -115,14 +115,11 @@ class TestTwoFactorServiceOTP:
         user = create_user(username='testuser', password='testpass')
         
         # Create used code
-        TwoFactorCode.objects.create(
-            user=user,
+        create_code(
+            user,
             code='123456',
-            method='email',
-            purpose='login',
             is_used=True,
-            attempts=1,
-            expires_at=timezone.now() + timedelta(minutes=10)
+            attempts=1
         )
         
         result = TwoFactorService.verify_otp(user, '123456', purpose='login')
@@ -135,13 +132,12 @@ class TestTwoFactorServiceOTP:
         TwoFactorSettings.objects.create(user=user, preferred_method='email', is_enabled=True)
 
         # Create an existing, unused code
-        old_code = TwoFactorCode.objects.create(
-            user=user,
+        old_code = create_code(
+            user,
             code='111111',
-            method='email',
             purpose='setup',
+            method='email',
             is_used=False,
-            attempts=0,
             expires_at=timezone.now() + timedelta(minutes=10),
         )
 
@@ -464,12 +460,14 @@ class TestTrustedDeviceService:
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
         request.META['REMOTE_ADDR'] = '127.0.0.1'
         
-        device = TrustedDeviceService.add_trusted_device(user, request, days=30)
+        device, token = TrustedDeviceService.add_trusted_device(user, request, days=30)
         
         assert device.user == user
-        assert device.device_id is not None
+        assert device.device_id == token.device_id
         assert device.ip_address == '127.0.0.1'
         assert device.expires_at > timezone.now()
+        assert device.ip_hash
+        assert device.ua_hash
         
         # Check audit log
         log = TwoFactorAuditLog.objects.filter(
@@ -502,18 +500,16 @@ class TestTrustedDeviceService:
         """Test checking trusted device"""
         user = create_user(username='testuser', password='testpass')
         
-        device = TrustedDevice.objects.create(
-            user=user,
-            device_id='test-device-123',
-            device_name='Test Device',
-            ip_address='127.0.0.1',
-            user_agent='TestBrowser',
-            expires_at=timezone.now() + timedelta(days=30)
-        )
+        request = RequestFactory().get('/')
+        request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
         
-        result = TrustedDeviceService.is_trusted_device(user, 'test-device-123')
+        device, token = TrustedDeviceService.add_trusted_device(user, request, days=30)
+        
+        result, rotated = TrustedDeviceService.is_trusted_device(user, token, request)
         
         assert result is True
+        assert rotated is None or isinstance(rotated, TrustedDeviceToken)
         device.refresh_from_db()
         assert device.last_used_at is not None
     
@@ -521,24 +517,30 @@ class TestTrustedDeviceService:
         """Test expired trusted device"""
         user = create_user(username='testuser', password='testpass')
         
-        TrustedDevice.objects.create(
-            user=user,
-            device_id='test-device-123',
-            device_name='Test Device',
-            ip_address='127.0.0.1',
-            user_agent='TestBrowser',
-            expires_at=timezone.now() - timedelta(days=1)
-        )
+        request = RequestFactory().get('/')
+        request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
         
-        result = TrustedDeviceService.is_trusted_device(user, 'test-device-123')
+        device, token = TrustedDeviceService.add_trusted_device(user, request, days=1)
+        device.expires_at = timezone.now() - timedelta(days=1)
+        device.save(update_fields=['expires_at'])
+        
+        result, rotated = TrustedDeviceService.is_trusted_device(user, token, request)
         assert result is False
+        assert rotated is None
     
     def test_is_trusted_device_not_found(self):
         """Test non-existent trusted device"""
         user = create_user(username='testuser', password='testpass')
         
-        result = TrustedDeviceService.is_trusted_device(user, 'non-existent')
+        request = RequestFactory().get('/')
+        request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        
+        token = TrustedDeviceToken(device_id='non-existent', signed_value='invalid')
+        result, rotated = TrustedDeviceService.is_trusted_device(user, token, request)
         assert result is False
+        assert rotated is None
     
     def test_remove_trusted_device(self):
         """Test removing trusted device"""
@@ -637,11 +639,9 @@ class TestRateLimiting:
         
         # Create 2 codes (under limit of 3)
         for i in range(2):
-            TwoFactorCode.objects.create(
-                user=user,
+            create_code(
+                user,
                 code=f'12345{i}',
-                method='email',
-                purpose='login',
                 expires_at=timezone.now() + timedelta(minutes=10)
             )
         
@@ -656,11 +656,9 @@ class TestRateLimiting:
         
         # Create 3 codes (at limit)
         for i in range(3):
-            TwoFactorCode.objects.create(
-                user=user,
+            create_code(
+                user,
                 code=f'12345{i}',
-                method='email',
-                purpose='login',
                 expires_at=timezone.now() + timedelta(minutes=10)
             )
         
@@ -675,11 +673,9 @@ class TestRateLimiting:
         
         # Create old codes (outside rate limit window)
         for i in range(5):
-            code = TwoFactorCode.objects.create(
-                user=user,
+            code = create_code(
+                user,
                 code=f'12345{i}',
-                method='email',
-                purpose='login',
                 expires_at=timezone.now() + timedelta(minutes=10)
             )
             # Manually set created_at to 20 minutes ago

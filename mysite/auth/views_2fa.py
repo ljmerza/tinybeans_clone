@@ -788,10 +788,9 @@ class TwoFactorVerifyLoginView(APIView):
         )
         
         # Create trusted device if remember_me is True
-        device_id = None
+        device_token = None
         if remember_me and getattr(settings, 'TWOFA_TRUSTED_DEVICE_ENABLED', True):
-            trusted_device = TrustedDeviceService.add_trusted_device(user, request)
-            device_id = trusted_device.device_id
+            _, device_token = TrustedDeviceService.add_trusted_device(user, request)
         
         # Generate full tokens
         tokens = get_tokens_for_user(user)
@@ -804,15 +803,7 @@ class TwoFactorVerifyLoginView(APIView):
         set_refresh_cookie(response, tokens['refresh'])
         
         # Set device_id cookie if remember_me
-        if device_id:
-            secure = not settings.DEBUG
-            response.set_cookie(
-                key='device_id',
-                value=device_id,
-                max_age=30 * 24 * 60 * 60,  # 30 days
-                httponly=True,
-                secure=secure,
-                samesite='Strict' if secure else 'Lax',
-            )
+        if device_token:
+            TrustedDeviceService.set_trusted_device_cookie(response, device_token)
         
         return response

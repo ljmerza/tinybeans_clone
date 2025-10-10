@@ -15,6 +15,7 @@ from auth.models import (
     TwoFactorAuditLog
 )
 from auth.token_utils import generate_partial_token
+from auth.services.trusted_device_service import TrustedDeviceToken
 
 User = get_user_model()
 

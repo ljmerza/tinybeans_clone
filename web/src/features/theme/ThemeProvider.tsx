@@ -1,11 +1,11 @@
 import {
+	type ReactNode,
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
 	useState,
-	type ReactNode,
 } from "react";
 
 type ThemePreference = "light" | "dark" | "system";

@@ -3,7 +3,6 @@
  */
 
 import { Layout } from "@/components";
-import type { QueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -12,6 +11,7 @@ import {
 	useRemoveTrustedDevice,
 	useTrustedDevices,
 } from "@/features/twofa";
+import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
