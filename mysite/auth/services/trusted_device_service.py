@@ -147,7 +147,11 @@ class TrustedDeviceService:
             from emails.mailers import TwoFactorMailer
             TwoFactorMailer.send_trusted_device_added(user, trusted_device)
         except Exception:
-            pass
+            logger.exception(
+                "Failed to send trusted device notification email for user %s (device %s)",
+                user.pk,
+                device_id,
+            )
         
         # Log the action
         TwoFactorAuditLog.objects.create(

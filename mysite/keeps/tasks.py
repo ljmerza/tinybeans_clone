@@ -1,6 +1,5 @@
 """Celery tasks for media upload and processing."""
 import os
-import tempfile
 from io import BytesIO
 from PIL import Image, ImageOps
 from django.conf import settings
@@ -175,6 +174,7 @@ def cleanup_failed_uploads():
         created_at__lt=cutoff
     )
     
+    removed_count = 0
     for upload in failed_uploads:
         # Remove temporary file
         if upload.temp_file_path and os.path.exists(upload.temp_file_path):
@@ -186,8 +186,9 @@ def cleanup_failed_uploads():
         
         # Delete upload record
         upload.delete()
+        removed_count += 1
     
-    logger.info(f"Cleaned up {failed_uploads.count()} failed uploads")
+    logger.info(f"Cleaned up {removed_count} failed uploads")
 
 
 @shared_task
