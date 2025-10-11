@@ -1,6 +1,5 @@
 """Tests for user serializers."""
 from datetime import date
-from django.contrib.auth import authenticate
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
@@ -518,12 +517,10 @@ class ChildProfileUpgradeRequestSerializerTests(TestCase):
         }
         
         serializer = ChildProfileUpgradeRequestSerializer(
-            data=data, 
+            data=data,
             context={'child': self.child}
         )
-        if not serializer.is_valid():
-            print("Validation errors:", serializer.errors)  # Debug output
-        self.assertTrue(serializer.is_valid())
+        self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertEqual(
             serializer.validated_data['consent_method'],
             GuardianConsentMethod.DIGITAL_SIGNATURE
