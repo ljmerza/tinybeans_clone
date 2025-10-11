@@ -4,6 +4,10 @@ import { showToast } from "@/lib/toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
+import type {
+	RecoveryCodesResponse,
+	TwoFactorSetupResponse,
+} from "../types";
 import { TotpIntroStep } from "./setup/totp/TotpIntroStep";
 import { TotpRecoveryStep } from "./setup/totp/TotpRecoveryStep";
 import { TotpScanStep } from "./setup/totp/TotpScanStep";
@@ -24,8 +28,22 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
 
-	const setupData = initSetup.data;
-	const recoveryCodes = verifySetup.data?.recovery_codes;
+	const unwrapApiResponse = <T,>(response: unknown): T | undefined => {
+		if (!response || typeof response !== "object") {
+			return response as T | undefined;
+		}
+
+		if ("data" in response && response.data !== undefined) {
+			return (response as { data?: T }).data;
+		}
+
+		return response as T;
+	};
+
+	const setupData = unwrapApiResponse<TwoFactorSetupResponse>(initSetup.data);
+	const recoveryPayload =
+		unwrapApiResponse<RecoveryCodesResponse>(verifySetup.data);
+	const recoveryCodes = recoveryPayload?.recovery_codes;
 
 	return (
 		<Wizard currentStep={step}>

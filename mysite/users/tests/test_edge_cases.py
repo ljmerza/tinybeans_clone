@@ -26,6 +26,15 @@ class AuthViewEdgeCaseTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
+    def _response_fields(self, response):
+        data = response.json()
+        messages = data.get('messages', [])
+        return [
+            message.get('context', {}).get('field')
+            for message in messages
+            if message.get('context', {}).get('field')
+        ]
+
     def test_signup_duplicate_username(self):
         """Test signup with duplicate username."""
         User.objects.create_user(
@@ -41,7 +50,7 @@ class AuthViewEdgeCaseTests(TestCase):
         }, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('username', response.json())
+        self.assertIn('username', self._response_fields(response))
 
     def test_signup_duplicate_email(self):
         """Test signup with duplicate email."""
@@ -58,7 +67,7 @@ class AuthViewEdgeCaseTests(TestCase):
         }, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('email', response.json())
+        self.assertIn('email', self._response_fields(response))
 
     def test_password_reset_nonexistent_user(self):
         """Test password reset for non-existent user."""
@@ -304,7 +313,13 @@ class ChildProfileViewEdgeCaseTests(TestCase):
         )
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('email', response.json())
+        data = response.json()
+        fields = [
+            message.get('context', {}).get('field')
+            for message in data.get('messages', [])
+            if message.get('context')
+        ]
+        self.assertIn('email', fields)
 
     def test_upgrade_confirm_with_expired_token(self):
         """Test upgrade confirmation with expired token."""

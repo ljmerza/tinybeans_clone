@@ -123,4 +123,10 @@ class InvitationRoleTests(TestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('role', response.data)
+        payload = response.json()
+        fields = [
+            message.get('context', {}).get('field')
+            for message in payload.get('messages', [])
+            if message.get('context')
+        ]
+        self.assertIn('role', fields)

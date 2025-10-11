@@ -10,8 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import base64
+import binascii
+import hashlib
 import os
+import warnings
 from pathlib import Path
+
 from kombu import Queue
 from django.core.exceptions import ImproperlyConfigured
 
@@ -35,6 +40,24 @@ def _env_int(name: str, default: int) -> int:
     if value is None or value == '':
         return default
     return int(value)
+
+
+def _validate_fernet_key(candidate: str):
+    clean = (candidate or '').strip()
+    if not clean:
+        return None
+
+    padded = clean + '=' * (-len(clean) % 4)
+    try:
+        decoded = base64.urlsafe_b64decode(padded.encode('utf-8'))
+    except (binascii.Error, ValueError):
+        return None
+
+    if len(decoded) != 32:
+        return None
+
+    # Return a normalized base64 string to guarantee padding is present.
+    return base64.urlsafe_b64encode(decoded).decode('utf-8')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -388,12 +411,23 @@ TWOFA_ISSUER_NAME = os.environ.get('TWOFA_ISSUER_NAME', 'Tinybeans')
 
 # 2FA Security - Encryption Key for TOTP Secrets
 # SECURITY WARNING: Keep this secret! Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-TWOFA_ENCRYPTION_KEY = os.environ.get('TWOFA_ENCRYPTION_KEY')
-if not TWOFA_ENCRYPTION_KEY:
+_raw_twofa_key = os.environ.get('TWOFA_ENCRYPTION_KEY')
+_normalized_twofa_key = _validate_fernet_key(_raw_twofa_key)
+if _normalized_twofa_key:
+    TWOFA_ENCRYPTION_KEY = _normalized_twofa_key
+else:
     if DEBUG:
-        TWOFA_ENCRYPTION_KEY = '5pK6Bm8rEICTnaRJvv0eQilwcmHeuTU1dRYrI-4VvEc='
+        # Derive a deterministic development key from SECRET_KEY so local setups work out of the box.
+        _derived_key = base64.urlsafe_b64encode(hashlib.sha256(SECRET_KEY.encode('utf-8')).digest()).decode('utf-8')
+        TWOFA_ENCRYPTION_KEY = _derived_key
+        if _raw_twofa_key:
+            warnings.warn(
+                'TWOFA_ENCRYPTION_KEY is not a valid Fernet key; using key derived from SECRET_KEY (development only).',
+                RuntimeWarning,
+                stacklevel=2,
+            )
     else:
-        raise ImproperlyConfigured('TWOFA_ENCRYPTION_KEY must be set when DEBUG is False')
+        raise ImproperlyConfigured('TWOFA_ENCRYPTION_KEY must be set to a Fernet-compatible key when DEBUG is False')
 
 # 2FA Account Lockout
 TWOFA_LOCKOUT_ENABLED = _env_flag('TWOFA_LOCKOUT_ENABLED', default=True)

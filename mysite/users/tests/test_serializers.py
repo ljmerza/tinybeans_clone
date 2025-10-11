@@ -189,7 +189,11 @@ class LoginSerializerTests(TestCase):
         
         serializer = LoginSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('i18n_key', serializer.errors)
+        self.assertEqual(
+            str(serializer.errors['i18n_key'][0]),
+            'errors.invalid_credentials',
+        )
 
     def test_missing_fields(self):
         """Test login with missing fields."""
@@ -233,7 +237,11 @@ class EmailVerificationSerializerTests(TestCase):
         
         serializer = EmailVerificationSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('i18n_key', serializer.errors)
+        self.assertEqual(
+            str(serializer.errors['i18n_key'][0]),
+            'errors.user_not_found',
+        )
 
 
 class PasswordChangeSerializerTests(TestCase):
@@ -373,10 +381,11 @@ class CircleCreateSerializerTests(TestCase):
         
         serializer = CircleCreateSerializer(data=data, context={'user': self.unverified_user})
         self.assertFalse(serializer.is_valid())
-        self.assertIn('non_field_errors', serializer.errors)
-        error = serializer.errors['non_field_errors'][0]
-        self.assertIsInstance(error, dict)
-        self.assertEqual(error.get('i18n_key'), 'errors.email_verification_required')
+        self.assertIn('i18n_key', serializer.errors)
+        self.assertEqual(
+            str(serializer.errors['i18n_key'][0]),
+            'errors.email_verification_required',
+        )
 
     def test_empty_name_validation(self):
         """Test that empty name is rejected."""
@@ -585,7 +594,11 @@ class ChildProfileUpgradeRequestSerializerTests(TestCase):
             context={'child': linked_child}
         )
         self.assertFalse(serializer.is_valid())
-        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('i18n_key', serializer.errors)
+        self.assertEqual(
+            str(serializer.errors['i18n_key'][0]),
+            'errors.child_already_linked',
+        )
 
     def test_existing_user_email(self):
         """Test that serializer rejects email of existing user."""

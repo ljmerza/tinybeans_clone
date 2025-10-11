@@ -13,6 +13,8 @@ from .base import *  # noqa: F401,F403
 # Override email backend for tests
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
+TEST_RUNNER = 'mysite.test_runner.ProjectDiscoverRunner'
+
 # Disable Mailjet by default in tests
 MAILJET_ENABLED = False
 MAILJET_API_KEY = None

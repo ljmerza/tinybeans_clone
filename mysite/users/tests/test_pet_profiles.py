@@ -272,14 +272,14 @@ class PetProfileSerializerTests(TestCase):
         serializer = PetProfileCreateSerializer(data=data)
         
         self.assertFalse(serializer.is_valid())
-        self.assertIn('Pet name cannot be empty', str(serializer.errors['name']))
+        self.assertIn('errors.pet_name_required', str(serializer.errors['name']))
         
         # Test whitespace-only name (custom validation)
         data = {'name': '   ', 'pet_type': PetType.DOG}
         serializer = PetProfileCreateSerializer(data=data)
         
         self.assertFalse(serializer.is_valid())
-        self.assertIn('Pet name cannot be empty', str(serializer.errors['name']))
+        self.assertIn('errors.pet_name_required', str(serializer.errors['name']))
         
         # Test valid name with whitespace
         data = {'name': '  Buddy  ', 'pet_type': PetType.DOG}
