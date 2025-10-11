@@ -212,6 +212,16 @@ class PartialTokenBindingTests(TestCase):
             email='ua@example.com',
             password='password123'
         )
+        self.user1 = User.objects.create_user(
+            username='binding-user-1',
+            email='binding1@example.com',
+            password='password123'
+        )
+        self.user2 = User.objects.create_user(
+            username='binding-user-2',
+            email='binding2@example.com',
+            password='password123'
+        )
 
     def _build_request(self, user_agent: str):
         request = self.factory.post('/auth/login/')
@@ -237,7 +247,6 @@ class PartialTokenBindingTests(TestCase):
         result = verify_partial_token(token, mismatched_request)
 
         self.assertIsNone(result)
-        self.assertNotEqual(tokens1['refresh'], tokens3['refresh'])
 
     def test_stored_keys_are_unique(self):
         """Test that stored token keys are unique."""

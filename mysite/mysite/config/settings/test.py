@@ -6,6 +6,7 @@ os.environ.setdefault('DJANGO_ENVIRONMENT', 'test')
 os.environ.setdefault('DJANGO_SECRET_KEY', 'test-secret-key')
 os.environ.setdefault('TWOFA_ENCRYPTION_KEY', '5pK6Bm8rEICTnaRJvv0eQilwcmHeuTU1dRYrI-4VvEc=')
 os.environ.setdefault('DJANGO_CSRF_TRUSTED_ORIGINS', 'http://localhost:3000')
+os.environ.setdefault('DJANGO_SECURE_SSL_REDIRECT', '0')
 
 from .base import *  # noqa: F401,F403
 
