@@ -81,6 +81,8 @@ ANOTHER_SETTING = {
 
 ## Alternatives Considered
 
+> **Guidance:** Enumerate every viable alternative explored, even if briefly considered. For each option, capture a short description, pros, cons, and a clear rejection rationale.
+
 ### Alternative 1: [Name]
 **Description**: [What this alternative would involve]
 
@@ -287,4 +289,3 @@ This decision will be considered successful when:
 |------|---------|--------|---------|
 | YYYY-MM-DD | 1.0 | [Name] | Initial ADR creation |
 | YYYY-MM-DD | 1.1 | [Name] | Updated after review feedback |
-
