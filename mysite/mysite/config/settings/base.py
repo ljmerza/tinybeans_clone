@@ -29,6 +29,13 @@ def _env_list(name: str, default=None):
         return list(default or [])
     return [item.strip() for item in value.split(',') if item.strip()]
 
+
+def _env_int(name: str, default: int) -> int:
+    value = os.environ.get(name)
+    if value is None or value == '':
+        return default
+    return int(value)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -72,6 +79,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
+    'health_check',
+    'health_check.db',
+    'health_check.cache',
+    'health_check.storage',
+    'health_check.contrib.redis',
     'auth.apps.AuthConfig',
     'users.apps.UsersConfig',
     'keeps.apps.KeepsConfig',
@@ -112,6 +124,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
+POSTGRES_CONN_MAX_AGE = _env_int('POSTGRES_CONN_MAX_AGE', 60)
+POSTGRES_SSL_MODE = os.environ.get('POSTGRES_SSL_MODE', 'require')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -120,6 +135,10 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'tinybeans'),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'CONN_MAX_AGE': POSTGRES_CONN_MAX_AGE,
+        'OPTIONS': {
+            'sslmode': POSTGRES_SSL_MODE or 'require',
+        },
     }
 }
 
