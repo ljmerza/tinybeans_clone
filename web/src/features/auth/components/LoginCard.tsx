@@ -1,4 +1,4 @@
-import { FieldError, StatusMessage } from "@/components";
+import { FormActions, FormField } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import { loginSchema } from "@/lib/validations/schemas/login";
 import type { ApiError } from "@/types";
-import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -114,19 +113,19 @@ export function LoginCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name}>{t("auth.login.username")}</Label>
-							<Input
-								id={field.name}
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="username"
-								disabled={login.isPending}
-								required
-							/>
-							<FieldError field={field} />
-						</div>
+						<FormField field={field} label={t("auth.login.username")}>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="username"
+									disabled={login.isPending}
+									required
+								/>
+							)}
+						</FormField>
 					)}
 				</form.Field>
 
@@ -137,47 +136,55 @@ export function LoginCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name}>{t("auth.login.password")}</Label>
-							<Input
-								id={field.name}
-								type="password"
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="current-password"
-								disabled={login.isPending}
-								required
-							/>
-							<FieldError field={field} />
-						</div>
+						<FormField field={field} label={t("auth.login.password")}>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									type="password"
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="current-password"
+									disabled={login.isPending}
+									required
+								/>
+							)}
+						</FormField>
 					)}
 				</form.Field>
 
-				<div className="flex justify-end">
-					<Link
-						to="/password/reset/request"
-						className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-					>
-						{t("auth.login.forgot_password")}
-					</Link>
-				</div>
-
-				<Button type="submit" className="w-full" disabled={login.isPending}>
-					{login.isPending ? (
-						<span className="flex items-center justify-center gap-2">
-							<LoadingSpinner size="sm" />
-							{t("auth.login.signing_in")}
-						</span>
-					) : (
-						t("auth.login.sign_in")
-					)}
-				</Button>
-
-				{/* Show general error message */}
-				{generalError && (
-					<StatusMessage variant="error">{generalError}</StatusMessage>
-				)}
+				<FormActions
+					secondary={
+						<Link
+							to="/password/reset/request"
+							className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+						>
+							{t("auth.login.forgot_password")}
+						</Link>
+					}
+					messages={
+						generalError
+							? [
+									{
+										id: "login-general-error",
+										variant: "error" as const,
+										content: generalError,
+									},
+								]
+							: undefined
+					}
+				>
+					<Button type="submit" className="w-full" disabled={login.isPending}>
+						{login.isPending ? (
+							<span className="flex items-center justify-center gap-2">
+								<LoadingSpinner size="sm" />
+								{t("auth.login.signing_in")}
+							</span>
+						) : (
+							t("auth.login.sign_in")
+						)}
+					</Button>
+				</FormActions>
 			</form>
 		</AuthCard>
 	);

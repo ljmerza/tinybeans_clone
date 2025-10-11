@@ -1,11 +1,10 @@
-import { FieldError, StatusMessage } from "@/components";
+import { FormActions, FormField, StatusMessage } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import { passwordResetConfirmFieldSchemas } from "@/lib/validations/schemas/password-reset";
 import type { ApiError } from "@/types";
-import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -131,28 +130,32 @@ export function PasswordResetConfirmCard({
 					<form.Field
 						name="password"
 						validators={{
-							onBlur: zodValidator(passwordResetConfirmFieldSchemas.password),
+							onBlur: zodValidator(
+								passwordResetConfirmFieldSchemas.password,
+							),
 						}}
 					>
 						{(field) => (
-							<div className="form-group">
-								<Label htmlFor={field.name}>New password</Label>
-								<Input
-									id={field.name}
-									type="password"
-									autoComplete="new-password"
-									value={field.state.value}
-									onChange={(event) => field.handleChange(event.target.value)}
-									onBlur={field.handleBlur}
-									disabled={confirmReset.isPending}
-									required
-								/>
-								{/* Show field-level validation error or server error */}
-								<FieldError field={field} />
-								{fieldErrors.password && (
-									<p className="form-error">{fieldErrors.password}</p>
+							<FormField
+								field={field}
+								label="New password"
+								error={fieldErrors.password}
+							>
+								{({ id, field: fieldApi }) => (
+									<Input
+										id={id}
+										type="password"
+										autoComplete="new-password"
+										value={fieldApi.state.value}
+										onChange={(event) =>
+											fieldApi.handleChange(event.target.value)
+										}
+										onBlur={fieldApi.handleBlur}
+										disabled={confirmReset.isPending}
+										required
+									/>
 								)}
-							</div>
+							</FormField>
 						)}
 					</form.Field>
 
@@ -165,34 +168,38 @@ export function PasswordResetConfirmCard({
 						}}
 					>
 						{(field) => (
-							<div className="form-group">
-								<Label htmlFor={field.name}>Confirm password</Label>
-								<Input
-									id={field.name}
-									type="password"
-									autoComplete="new-password"
-									value={field.state.value}
-									onChange={(event) => field.handleChange(event.target.value)}
-									onBlur={field.handleBlur}
-									disabled={confirmReset.isPending}
-									required
-								/>
-								{/* Show field-level validation error or server error */}
-								<FieldError field={field} />
-								{fieldErrors.password_confirm && (
-									<p className="form-error">{fieldErrors.password_confirm}</p>
+							<FormField
+								field={field}
+								label="Confirm password"
+								error={fieldErrors.password_confirm}
+							>
+								{({ id, field: fieldApi }) => (
+									<Input
+										id={id}
+										type="password"
+										autoComplete="new-password"
+										value={fieldApi.state.value}
+										onChange={(event) =>
+											fieldApi.handleChange(event.target.value)
+										}
+										onBlur={fieldApi.handleBlur}
+										disabled={confirmReset.isPending}
+										required
+									/>
 								)}
-							</div>
+							</FormField>
 						)}
 					</form.Field>
 
-					<Button
-						type="submit"
-						className="w-full"
-						disabled={confirmReset.isPending}
-					>
-						{confirmReset.isPending ? "Updating…" : "Update password"}
-					</Button>
+					<FormActions>
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={confirmReset.isPending}
+						>
+							{confirmReset.isPending ? "Updating…" : "Update password"}
+						</Button>
+					</FormActions>
 				</form>
 
 				<div className="text-center text-sm">

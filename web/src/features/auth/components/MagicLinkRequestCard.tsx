@@ -1,4 +1,4 @@
-import { FieldError, StatusMessage } from "@/components";
+import { FormActions, FormField } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,6 @@ import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import { magicLinkRequestSchema } from "@/lib/validations/schemas/magic-link";
 import type { ApiError } from "@/types";
-import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -94,39 +93,51 @@ export function MagicLinkRequestCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name}>{t("auth.magic_link.email")}</Label>
-							<Input
-								id={field.name}
-								type="email"
-								placeholder="your@email.com"
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="email"
-								required
-							/>
-							<FieldError field={field} />
-						</div>
+						<FormField field={field} label={t("auth.magic_link.email")}>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									type="email"
+									placeholder="your@email.com"
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="email"
+									required
+								/>
+							)}
+						</FormField>
 					)}
 				</form.Field>
 
-				<Button
-					type="submit"
-					className="w-full"
-					disabled={magicLoginRequest.isPending}
+				<FormActions
+					messages={[
+						successMessage
+							? {
+									id: "magic-link-success",
+									variant: "success" as const,
+									content: successMessage,
+								}
+							: null,
+						errorMessage
+							? {
+									id: "magic-link-error",
+									variant: "error" as const,
+									content: errorMessage,
+								}
+							: null,
+					].filter((message): message is NonNullable<typeof message> => !!message)}
 				>
-					{magicLoginRequest.isPending
-						? t("auth.magic_link.sending")
-						: t("auth.magic_link.send_magic_link")}
-				</Button>
-
-				{successMessage && (
-					<StatusMessage variant="success">{successMessage}</StatusMessage>
-				)}
-				{errorMessage && (
-					<StatusMessage variant="error">{errorMessage}</StatusMessage>
-				)}
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={magicLoginRequest.isPending}
+					>
+						{magicLoginRequest.isPending
+							? t("auth.magic_link.sending")
+							: t("auth.magic_link.send_magic_link")}
+					</Button>
+				</FormActions>
 			</form>
 		</AuthCard>
 	);

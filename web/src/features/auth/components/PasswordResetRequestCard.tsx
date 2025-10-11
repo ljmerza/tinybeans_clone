@@ -2,13 +2,12 @@ import type { ApiError } from "@/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { FieldError } from "@/components";
+import { FormActions, FormField } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import { passwordResetRequestSchema } from "@/lib/validations/schemas/password-reset";
-import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 
@@ -89,37 +88,44 @@ export function PasswordResetRequestCard() {
 					<form.Field
 						name="identifier"
 						validators={{
-							onBlur: zodValidator(passwordResetRequestSchema.shape.identifier),
+							onBlur: zodValidator(
+								passwordResetRequestSchema.shape.identifier,
+							),
 						}}
 					>
 						{(field) => (
-							<div className="form-group">
-								<Label htmlFor={field.name}>
-									{t("auth.password_reset.email_or_username")}
-								</Label>
-								<Input
-									id={field.name}
-									autoComplete="email"
-									value={field.state.value}
-									onChange={(event) => field.handleChange(event.target.value)}
-									onBlur={field.handleBlur}
-									disabled={resetRequest.isPending}
-									required
-								/>
-								<FieldError field={field} />
-							</div>
+							<FormField
+								field={field}
+								label={t("auth.password_reset.email_or_username")}
+							>
+								{({ id, field: fieldApi }) => (
+									<Input
+										id={id}
+										autoComplete="email"
+										value={fieldApi.state.value}
+										onChange={(event) =>
+											fieldApi.handleChange(event.target.value)
+										}
+										onBlur={fieldApi.handleBlur}
+										disabled={resetRequest.isPending}
+										required
+									/>
+								)}
+							</FormField>
 						)}
 					</form.Field>
 
-					<Button
-						type="submit"
-						className="w-full"
-						disabled={resetRequest.isPending}
-					>
-						{resetRequest.isPending
-							? t("auth.password_reset.sending")
-							: t("auth.password_reset.send_reset_link")}
-					</Button>
+					<FormActions>
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={resetRequest.isPending}
+						>
+							{resetRequest.isPending
+								? t("auth.password_reset.sending")
+								: t("auth.password_reset.send_reset_link")}
+						</Button>
+					</FormActions>
 				</form>
 
 				<div className="text-center text-sm">

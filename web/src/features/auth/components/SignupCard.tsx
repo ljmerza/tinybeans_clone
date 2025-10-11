@@ -1,4 +1,4 @@
-import { FieldError, StatusMessage } from "@/components";
+import { FormActions, FormField } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,6 @@ import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import { signupSchemaBase } from "@/lib/validations/schemas/signup";
 import type { ApiError } from "@/types";
-import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -105,24 +104,23 @@ export function SignupCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name} className="form-label">
-								{t("auth.signup.username")}
-							</Label>
-							<Input
-								id={field.name}
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="username"
-								disabled={signup.isPending}
-								required
-							/>
-							<FieldError field={field} />
-							{fieldErrors.username && (
-								<p className="form-error">{fieldErrors.username}</p>
+						<FormField
+							field={field}
+							label={t("auth.signup.username")}
+							error={fieldErrors.username}
+						>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="username"
+									disabled={signup.isPending}
+									required
+								/>
 							)}
-						</div>
+						</FormField>
 					)}
 				</form.Field>
 
@@ -133,25 +131,24 @@ export function SignupCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name} className="form-label">
-								{t("auth.signup.email")}
-							</Label>
-							<Input
-								id={field.name}
-								type="email"
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="email"
-								disabled={signup.isPending}
-								required
-							/>
-							<FieldError field={field} />
-							{fieldErrors.email && (
-								<p className="form-error">{fieldErrors.email}</p>
+						<FormField
+							field={field}
+							label={t("auth.signup.email")}
+							error={fieldErrors.email}
+						>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									type="email"
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="email"
+									disabled={signup.isPending}
+									required
+								/>
 							)}
-						</div>
+						</FormField>
 					)}
 				</form.Field>
 
@@ -162,22 +159,20 @@ export function SignupCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name} className="form-label">
-								{t("auth.signup.password")}
-							</Label>
-							<Input
-								id={field.name}
-								type="password"
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="new-password"
-								disabled={signup.isPending}
-								required
-							/>
-							<FieldError field={field} />
-						</div>
+						<FormField field={field} label={t("auth.signup.password")}>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									type="password"
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="new-password"
+									disabled={signup.isPending}
+									required
+								/>
+							)}
+						</FormField>
 					)}
 				</form.Field>
 
@@ -188,34 +183,49 @@ export function SignupCard() {
 					}}
 				>
 					{(field) => (
-						<div className="form-group">
-							<Label htmlFor={field.name} className="form-label">
-								{t("auth.signup.confirm_password")}
-							</Label>
-							<Input
-								id={field.name}
-								type="password"
-								value={field.state.value}
-								onChange={(event) => field.handleChange(event.target.value)}
-								onBlur={field.handleBlur}
-								autoComplete="new-password"
-								disabled={signup.isPending}
-								required
-							/>
-							<FieldError field={field} />
-						</div>
+						<FormField
+							field={field}
+							label={t("auth.signup.confirm_password")}
+						>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									type="password"
+									value={fieldApi.state.value}
+									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="new-password"
+									disabled={signup.isPending}
+									required
+								/>
+							)}
+						</FormField>
 					)}
 				</form.Field>
 
-				<Button type="submit" className="w-full" disabled={signup.isPending}>
-					{signup.isPending
-						? t("auth.signup.creating_account")
-						: t("auth.signup.create_account")}
-				</Button>
-
-				{generalError && (
-					<StatusMessage variant="error">{generalError}</StatusMessage>
-				)}
+				<FormActions
+					messages={
+						generalError
+							? [
+									{
+										id: "signup-general-error",
+										variant: "error" as const,
+										content: generalError,
+									},
+								]
+							: undefined
+					}
+				>
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={signup.isPending}
+					>
+						{signup.isPending
+							? t("auth.signup.creating_account")
+							: t("auth.signup.create_account")}
+					</Button>
+				</FormActions>
 			</form>
 		</AuthCard>
 	);

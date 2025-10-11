@@ -187,6 +187,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Legacy storage setting for third-party packages until they support Django's STORAGES API.
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -335,17 +338,16 @@ IMAGE_SIZES = {
     'full': None,  # Original size
 }
 
-# Shared dev origins for local UI integrations
+# CORS configuration sourced from environment for all environments.
 _DEV_FRONTEND_ORIGINS = [
     "http://localhost:3053",
     "http://127.0.0.1:3053",
     "http://192.168.1.76:3053",
 ]
-
-# CORS Configuration for Development
-if DEBUG:
-    CORS_ALLOWED_ORIGINS = _DEV_FRONTEND_ORIGINS
-    CORS_ALLOW_CREDENTIALS = True
+_default_cors_origins = _DEV_FRONTEND_ORIGINS if DEBUG else []
+CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS', default=_default_cors_origins)
+if CORS_ALLOWED_ORIGINS:
+    CORS_ALLOW_CREDENTIALS = _env_flag('CORS_ALLOW_CREDENTIALS', default=True)
     CORS_ALLOW_HEADERS = [
         'accept',
         'accept-encoding',
@@ -357,6 +359,8 @@ if DEBUG:
         'x-csrftoken',
         'x-requested-with',
     ]
+else:
+    CORS_ALLOW_CREDENTIALS = False
 
 # 2FA Settings
 TWOFA_ENABLED = _env_flag('TWOFA_ENABLED', default=True)
