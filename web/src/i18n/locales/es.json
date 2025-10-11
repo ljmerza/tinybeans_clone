@@ -351,6 +351,9 @@
 	},
 	"validation": {
 		"username_required": "Se requiere nombre de usuario",
+		"username_min_length": "El nombre de usuario debe tener al menos 3 caracteres",
+		"username_max_length": "El nombre de usuario debe tener como máximo 30 caracteres",
+		"username_invalid_chars": "El nombre de usuario solo puede contener letras, números y guiones bajos",
 		"email_required": "Se requiere correo electrónico",
 		"email_valid": "Se requiere correo electrónico válido",
 		"password_required": "Se requiere contraseña",

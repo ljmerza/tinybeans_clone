@@ -50,6 +50,18 @@ from .token_utils import (
 from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
 
 
+def _rate_from_settings(setting_name: str, default: str):
+    def _rate(group, request):
+        return getattr(settings, setting_name, default)
+    return _rate
+
+
+PASSWORD_RESET_RATE = _rate_from_settings('PASSWORD_RESET_RATELIMIT', '5/15m')
+PASSWORD_RESET_CONFIRM_RATE = _rate_from_settings('PASSWORD_RESET_CONFIRM_RATELIMIT', '10/15m')
+EMAIL_VERIFICATION_RESEND_RATE = _rate_from_settings('EMAIL_VERIFICATION_RESEND_RATELIMIT', '5/15m')
+EMAIL_VERIFICATION_CONFIRM_RATE = _rate_from_settings('EMAIL_VERIFICATION_CONFIRM_RATELIMIT', '10/15m')
+
+
 class SignupView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = SignupSerializer
@@ -221,7 +233,21 @@ class EmailVerificationResendView(APIView):
         request=EmailVerificationSerializer,
         responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Verification email scheduled')},
     )
+    @method_decorator(ratelimit(
+        key='ip',
+        rate=EMAIL_VERIFICATION_RESEND_RATE,
+        method='POST',
+        block=False,
+    ))
+    @method_decorator(ratelimit(
+        key='post:identifier',
+        rate=EMAIL_VERIFICATION_RESEND_RATE,
+        method='POST',
+        block=False,
+    ))
     def post(self, request):
+        if getattr(request, 'limited', False):
+            return rate_limit_response('errors.rate_limit')
         serializer = EmailVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -303,7 +329,21 @@ class EmailVerificationConfirmView(APIView):
         request=EmailVerificationConfirmSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Email successfully verified')},
     )
+    @method_decorator(ratelimit(
+        key='ip',
+        rate=EMAIL_VERIFICATION_CONFIRM_RATE,
+        method='POST',
+        block=False,
+    ))
+    @method_decorator(ratelimit(
+        key='post:token',
+        rate=EMAIL_VERIFICATION_CONFIRM_RATE,
+        method='POST',
+        block=False,
+    ))
     def post(self, request):
+        if getattr(request, 'limited', False):
+            return rate_limit_response('errors.rate_limit')
         serializer = EmailVerificationConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = pop_token('verify-email', serializer.validated_data['token'])
@@ -338,7 +378,21 @@ class PasswordResetRequestView(APIView):
         request=PasswordResetRequestSerializer,
         responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password reset email scheduled')},
     )
+    @method_decorator(ratelimit(
+        key='ip',
+        rate=PASSWORD_RESET_RATE,
+        method='POST',
+        block=False,
+    ))
+    @method_decorator(ratelimit(
+        key='post:identifier',
+        rate=PASSWORD_RESET_RATE,
+        method='POST',
+        block=False,
+    ))
     def post(self, request):
+        if getattr(request, 'limited', False):
+            return rate_limit_response('errors.rate_limit')
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -379,7 +433,21 @@ class PasswordResetConfirmView(APIView):
         request=PasswordResetConfirmSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password reset completed')},
     )
+    @method_decorator(ratelimit(
+        key='ip',
+        rate=PASSWORD_RESET_CONFIRM_RATE,
+        method='POST',
+        block=False,
+    ))
+    @method_decorator(ratelimit(
+        key='post:token',
+        rate=PASSWORD_RESET_CONFIRM_RATE,
+        method='POST',
+        block=False,
+    ))
     def post(self, request):
+        if getattr(request, 'limited', False):
+            return rate_limit_response('errors.rate_limit')
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = pop_token('password-reset', serializer.validated_data['token'])

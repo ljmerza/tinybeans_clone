@@ -1,5 +1,4 @@
-import type { ApiMessage, ApiResponse } from "@/types";
-/**
+/** 
  * Notification Utilities
  *
  * Utilities for handling standardized API messages with i18n support.
@@ -32,21 +31,36 @@ export function inferSeverity(status: number): "success" | "warning" | "error" {
  * const messages = translateMessages(response.messages, t);
  * ```
  */
+type MessageLike = ApiMessage | string;
+
+const isApiMessage = (message: MessageLike): message is ApiMessage => {
+	return typeof message === "object" && message !== null && "i18n_key" in message;
+};
+
+const ERROR_DETAIL_REGEX = /ErrorDetail\(string=['"]([^'"]+)['"]/;
+
+const normalizeMessageKey = (key: string): string => {
+	let normalized = key.trim();
+
+	if (normalized.startsWith("[") && normalized.endsWith("]")) {
+		normalized = normalized.slice(1, -1).trim();
+	}
+
+	const match = normalized.match(ERROR_DETAIL_REGEX);
+	if (match?.[1]) {
+		return match[1];
+	}
+
+	return normalized;
+};
+
 export function translateMessages(
 	messages: ApiMessage[] | undefined,
 	t: TFunction,
 ): string[] {
 	if (!messages || messages.length === 0) return [];
 
-	return messages.map((msg) => {
-		try {
-			return t(msg.i18n_key, msg.context || {});
-		} catch (error) {
-			// Fallback to key if translation fails
-			console.warn(`Translation failed for key: ${msg.i18n_key}`, error);
-			return msg.i18n_key;
-		}
-	});
+	return (messages as MessageLike[]).map((msg) => translateMessage(msg, t));
 }
 
 /**
@@ -56,12 +70,25 @@ export function translateMessages(
  * @param t - Translation function from useTranslation()
  * @returns Translated message string
  */
-export function translateMessage(message: ApiMessage, t: TFunction): string {
+export function translateMessage(message: MessageLike, t: TFunction): string {
+	if (typeof message === "string") {
+		const normalized = normalizeMessageKey(message);
+		return t(normalized, { defaultValue: normalized });
+	}
+
 	try {
-		return t(message.i18n_key, message.context || {});
+		const normalizedKey = normalizeMessageKey(message.i18n_key);
+		return t(normalizedKey, {
+			defaultValue: normalizedKey,
+			...(message.context ?? {}),
+		});
 	} catch (error) {
 		console.warn(`Translation failed for key: ${message.i18n_key}`, error);
-		return message.i18n_key;
+		const normalizedKey = normalizeMessageKey(message.i18n_key);
+		return t(normalizedKey, {
+			defaultValue: normalizedKey,
+			...(message.context ?? {}),
+		});
 	}
 }
 
@@ -98,7 +125,9 @@ export function extractFieldErrors(
 
 	const fieldErrors: Record<string, string> = {};
 
-	for (const msg of messages) {
+	for (const msg of messages as MessageLike[]) {
+		if (!isApiMessage(msg)) continue;
+
 		const field = msg.context?.field;
 		if (field && typeof field === "string") {
 			fieldErrors[field] = translateMessage(msg, t);
@@ -121,7 +150,7 @@ export function getGeneralErrors(
 ): string[] {
 	if (!messages || messages.length === 0) return [];
 
-	return messages
-		.filter((msg) => !msg.context?.field)
+	return (messages as MessageLike[])
+		.filter((msg) => !isApiMessage(msg) || !msg.context?.field)
 		.map((msg) => translateMessage(msg, t));
 }

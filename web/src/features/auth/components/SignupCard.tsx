@@ -52,7 +52,13 @@ export function SignupCard() {
 					setGeneralError(generalErrors.join(". "));
 				} else if (!Object.keys(errors).length) {
 					// Fallback if no structured errors
-					setGeneralError(apiError.message ?? t("auth.signup.signup_failed"));
+					const fallback =
+						apiError.message && typeof apiError.message === "string"
+							? t(apiError.message, {
+									defaultValue: apiError.message,
+								})
+							: t("auth.signup.signup_failed");
+					setGeneralError(fallback);
 				}
 			}
 		},

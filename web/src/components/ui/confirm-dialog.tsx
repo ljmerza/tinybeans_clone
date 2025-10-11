@@ -7,15 +7,18 @@
 
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type * as React from "react";
+import { useId } from "react";
 
 /**
  * Props for the ConfirmDialog component.
@@ -124,52 +127,100 @@ export function ConfirmDialog({
 	isLoading = false,
 	disabled = false,
 }: ConfirmDialogProps) {
-	const handleConfirm = async () => {
-		await onConfirm();
+	const descriptionId = useId();
+
+	const handleOpenChange = (newOpen: boolean) => {
+		if (!newOpen) {
+			if (isLoading) {
+				return;
+			}
+			onCancel?.();
+			onOpenChange(false);
+		} else {
+			onOpenChange(true);
+		}
 	};
 
-	const handleCancel = () => {
-		if (onCancel) {
-			onCancel();
+	const handleCancelClick = (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+	) => {
+		event.preventDefault();
+		if (isLoading) {
+			return;
 		}
+		onCancel?.();
 		onOpenChange(false);
 	};
 
-	const handleOpenChange = (newOpen: boolean) => {
-		if (!newOpen && !isLoading) {
-			handleCancel();
+	const handleConfirmClick = async (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+	) => {
+		event.preventDefault();
+		if (disabled || isLoading) {
+			return;
 		}
+		await onConfirm();
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent
+		<AlertDialog open={open} onOpenChange={handleOpenChange}>
+			<AlertDialogContent
+				aria-describedby={description ? descriptionId : undefined}
 				className={cn(
 					variant === "destructive" && "border-destructive/50 bg-destructive/5",
 				)}
+				onEscapeKeyDown={(event) => {
+					if (isLoading) {
+						event.preventDefault();
+					}
+				}}
+				onPointerDownOutside={(event) => {
+					if (isLoading) {
+						event.preventDefault();
+					}
+				}}
+				onInteractOutside={(event) => {
+					if (isLoading) {
+						event.preventDefault();
+					}
+				}}
 			>
-				<DialogHeader>
-					<DialogTitle
+				<AlertDialogHeader>
+					<AlertDialogTitle
 						className={cn(variant === "destructive" && "text-destructive")}
 					>
 						{title}
-					</DialogTitle>
-					{description && <DialogDescription>{description}</DialogDescription>}
-				</DialogHeader>
+					</AlertDialogTitle>
+					{description ? (
+						<AlertDialogDescription id={descriptionId}>
+							{description}
+						</AlertDialogDescription>
+					) : null}
+				</AlertDialogHeader>
 				{children && <div className="py-4">{children}</div>}
-				<DialogFooter>
-					<Button variant="outline" onClick={handleCancel} disabled={isLoading}>
-						{cancelLabel}
-					</Button>
-					<Button
-						variant={variant === "destructive" ? "destructive" : "default"}
-						onClick={handleConfirm}
-						disabled={disabled || isLoading}
-					>
-						{isLoading ? "Processing..." : confirmLabel}
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+				<AlertDialogFooter>
+					<AlertDialogCancel asChild>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={handleCancelClick}
+							disabled={isLoading}
+						>
+							{cancelLabel}
+						</Button>
+					</AlertDialogCancel>
+					<AlertDialogAction asChild>
+						<Button
+							type="button"
+							variant={variant === "destructive" ? "destructive" : "default"}
+							onClick={handleConfirmClick}
+							disabled={disabled || isLoading}
+						>
+							{isLoading ? "Processing..." : confirmLabel}
+						</Button>
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	);
 }

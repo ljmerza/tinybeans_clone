@@ -3,6 +3,9 @@ import os
 
 os.environ.setdefault('DJANGO_DEBUG', '0')
 os.environ.setdefault('DJANGO_ENVIRONMENT', 'test')
+os.environ.setdefault('DJANGO_SECRET_KEY', 'test-secret-key')
+os.environ.setdefault('TWOFA_ENCRYPTION_KEY', '5pK6Bm8rEICTnaRJvv0eQilwcmHeuTU1dRYrI-4VvEc=')
+os.environ.setdefault('DJANGO_CSRF_TRUSTED_ORIGINS', 'http://localhost:3000')
 
 from .base import *  # noqa: F401,F403
 

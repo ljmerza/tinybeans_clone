@@ -57,6 +57,7 @@ export function AppProviders({
 						position="top-right"
 						duration={3000}
 						closeButton
+						containerAriaLabel="Notifications"
 					/>
 				</AuthSessionProvider>
 			</QueryClientProvider>

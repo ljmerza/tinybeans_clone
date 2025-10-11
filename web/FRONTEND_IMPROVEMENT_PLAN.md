@@ -31,12 +31,13 @@
 ## Enhance (Mid Term)
 - ✅ **Router ↔ Query integration using loaders**  
   Added loaders for the 2FA routes so navigation prefetches via the shared QueryClient context (`web/src/routes/profile/2fa/settings.tsx`, `web/src/routes/profile/2fa/setup/index.tsx`, `web/src/routes/profile/2fa/trusted-devices.tsx`).
+- ✅ **Shared form primitives & status messaging**  
+  Introduced reusable `FormField`/`FormActions` wrappers and a shared `FieldError` renderer to normalize labels, helper text, and API feedback across auth experiences (`web/src/components/form/FormField.tsx:1`, `web/src/components/form/FormActions.tsx:1`, `web/src/components/FieldError.tsx:1`). Updated login, signup, password reset, and magic link flows to use the new primitives (`web/src/features/auth/components/LoginCard.tsx:1`, `web/src/features/auth/components/SignupCard.tsx:1`, `web/src/features/auth/components/PasswordResetRequestCard.tsx:1`, `web/src/features/auth/components/PasswordResetConfirmCard.tsx:1`, `web/src/features/auth/components/MagicLinkRequestCard.tsx:1`).
 - **Centralized mutation feedback policy**  
   - Extend `AppProviders` with a custom `MutationCache` that pipes success/error states into `useApiMessages` / `sonner`, reducing per-hook boilerplate (`web/src/components/AppProviders.tsx:33`).  
   - Adopt TanStack Query’s `mutationCache.onError` patterns while preserving feature-level overrides via options.
-- **Shared form primitives & accessibility checks**  
-  - Extract reusable `FormField` / `FormActions` components so forms share label, helper, and error semantics (e.g. consolidate the pattern from `LoginCard` and `SignupCard`).  
-  - Audit aria attributes and focus management for dialogs and toasts to stay aligned with Radix/shadcn accessibility guarantees.
+- **Accessibility checks for dialogs & toasts**  
+  - Audit aria attributes and focus management for dialogs, toasts, and new form wrappers to stay aligned with Radix/shadcn accessibility guarantees; document any required follow-up work.
 - **Design system alignment**  
   - Map the CSS custom properties in `web/src/styles.css:21` to Tailwind theme tokens and document usage, ensuring shadcn components consume the same palette.  
   - Create a Storybook-lite environment (or a Vite route) showcasing UI atoms for visual regression and team onboarding.

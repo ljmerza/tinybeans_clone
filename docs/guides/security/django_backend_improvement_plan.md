@@ -32,7 +32,7 @@ Scope: `mysite/` Django project (apps: `auth`, `users`, `keeps`, `messaging`, `e
 ## Authentication & Authorization
 1. **Invite token leakage (P0):** Status [x] – response payload now omits invite tokens; follow-up tests still recommended.
 2. **Magic login hashing (P0):** Status [x] – tokens persisted via `token_hash`; ensure test suite covers lookup and reuse prevention.
-3. **Rate limiting coverage (P1):** Status [ ] – password reset and verification flows still need explicit throttles.
+3. **Rate limiting coverage (P1):** Status [x] – password reset and verification flows now enforce IP + identifier/token throttles with consistent 429 responses (`auth/views.py`).
 4. **Trusted-device improvements (P2):** Status [x] – cookies now signed and rotated with UA/IP hash binding (`auth/services/trusted_device_service.py`).
     - Added signed cookies (`django.core.signing.TimestampSigner`) and per-request fingerprint validation.
     - Rotation window driven via `TWOFA_TRUSTED_DEVICE_ROTATION_DAYS` with automatic reissue.

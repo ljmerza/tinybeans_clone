@@ -198,14 +198,28 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
+DRF_USER_THROTTLE_RATE = os.environ.get('DRF_USER_THROTTLE_RATE', '1000/hour')
+DRF_ANON_THROTTLE_RATE = os.environ.get('DRF_ANON_THROTTLE_RATE', '100/hour')
+
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'user': DRF_USER_THROTTLE_RATE,
+        'anon': DRF_ANON_THROTTLE_RATE,
+    },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'EXCEPTION_HANDLER': 'mysite.exception_handlers.custom_exception_handler',
 }
@@ -433,6 +447,10 @@ GOOGLE_OAUTH_SCOPES = [
 
 # Rate limiting (django-ratelimit)
 RATELIMIT_ENABLE = _env_flag('RATELIMIT_ENABLE', default=not DEBUG)
+PASSWORD_RESET_RATELIMIT = os.environ.get('PASSWORD_RESET_RATELIMIT', '5/15m')
+PASSWORD_RESET_CONFIRM_RATELIMIT = os.environ.get('PASSWORD_RESET_CONFIRM_RATELIMIT', '10/15m')
+EMAIL_VERIFICATION_RESEND_RATELIMIT = os.environ.get('EMAIL_VERIFICATION_RESEND_RATELIMIT', '5/15m')
+EMAIL_VERIFICATION_CONFIRM_RATELIMIT = os.environ.get('EMAIL_VERIFICATION_CONFIRM_RATELIMIT', '10/15m')
 
 # HTTPS & security headers
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

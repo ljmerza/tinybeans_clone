@@ -351,6 +351,9 @@
 	},
 	"validation": {
 		"username_required": "Username is required",
+		"username_min_length": "Username must be at least 3 characters",
+		"username_max_length": "Username must be at most 30 characters",
+		"username_invalid_chars": "Username can only contain letters, numbers, and underscores",
 		"email_required": "Email is required",
 		"email_valid": "Valid email required",
 		"password_required": "Password is required",

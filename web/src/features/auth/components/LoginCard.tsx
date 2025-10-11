@@ -50,8 +50,14 @@ export function LoginCard() {
 				if (generalErrors.length > 0) {
 					setGeneralError(generalErrors.join(". "));
 				} else {
-					// Fallback to error message
-					setGeneralError(apiError.message ?? t("auth.login.login_failed"));
+					// Fallback to translated error message or default
+					const fallback =
+						apiError.message && typeof apiError.message === "string"
+							? t(apiError.message, {
+									defaultValue: apiError.message,
+								})
+							: t("auth.login.login_failed");
+					setGeneralError(fallback);
 				}
 			}
 		},

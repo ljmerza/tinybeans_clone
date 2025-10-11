@@ -3,7 +3,7 @@ import unittest
 
 from django.conf import settings
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -101,3 +101,61 @@ class AuthViewSecurityTests(TestCase):
         self.assertIn(context['token'], context['reset_link'])
         self.assertTrue(context['reset_link'].startswith(f'{expected_base}/password/reset/confirm?'))
         self.assertGreaterEqual(context.get('expires_in_minutes', 0), 1)
+
+    @override_settings(RATELIMIT_ENABLE=True, PASSWORD_RESET_RATELIMIT='2/m')
+    @patch('auth.views.send_email_task.delay')
+    def test_password_reset_request_rate_limit(self, mock_delay):
+        user = User.objects.create_user(
+            username='limited-reset',
+            email='limited-reset@example.com',
+            password='pw123456',
+        )
+
+        payload = {'identifier': user.email}
+        for _ in range(2):
+            response = self.client.post(
+                reverse('auth-password-reset-request'),
+                payload,
+                format='json',
+            )
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        limited = self.client.post(
+            reverse('auth-password-reset-request'),
+            payload,
+            format='json',
+        )
+        self.assertEqual(limited.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        body = limited.json()
+        self.assertEqual(body['error'], 'rate_limit_exceeded')
+        self.assertEqual(body['messages'][0]['i18n_key'], 'errors.rate_limit')
+        self.assertEqual(mock_delay.call_count, 2)
+
+    @override_settings(RATELIMIT_ENABLE=True, EMAIL_VERIFICATION_RESEND_RATELIMIT='2/m')
+    @patch('auth.views.send_email_task.delay')
+    def test_email_verification_resend_rate_limit(self, mock_delay):
+        user = User.objects.create_user(
+            username='limited-verify',
+            email='limited-verify@example.com',
+            password='pw123456',
+        )
+
+        payload = {'identifier': user.email}
+        for _ in range(2):
+            response = self.client.post(
+                reverse('auth-verify-resend'),
+                payload,
+                format='json',
+            )
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        limited = self.client.post(
+            reverse('auth-verify-resend'),
+            payload,
+            format='json',
+        )
+        self.assertEqual(limited.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        body = limited.json()
+        self.assertEqual(body['error'], 'rate_limit_exceeded')
+        self.assertEqual(body['messages'][0]['i18n_key'], 'errors.rate_limit')
+        self.assertEqual(mock_delay.call_count, 2)
