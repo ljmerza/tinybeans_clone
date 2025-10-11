@@ -8,7 +8,14 @@ from emails.models import TemplateRenderer
 from emails.services import email_dispatch_service, register_email_template
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_jitter=True, retry_kwargs={'max_retries': 5})
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_jitter=True,
+    retry_kwargs={'max_retries': 5},
+    queue='email',
+)
 def send_email_task(self, *, to_email: str, template_id: str, context: dict[str, Any]) -> None:
     dispatched = email_dispatch_service.send_email(
         to_email=to_email,

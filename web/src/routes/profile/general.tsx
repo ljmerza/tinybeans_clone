@@ -1,4 +1,5 @@
 import { Layout } from "@/components";
+import { requireAuth } from "@/features/auth";
 import {
 	ProfileGeneralSettingsCard,
 	ProfileSettingsTabs,
@@ -17,5 +18,6 @@ function ProfileGeneralSettingsPage() {
 }
 
 export const Route = createFileRoute("/profile/general")({
+	beforeLoad: requireAuth,
 	component: ProfileGeneralSettingsPage,
 });

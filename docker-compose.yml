@@ -99,34 +99,6 @@ services:
       - redis
       - postgres
 
-  celery-worker-2:
-    build: .
-    command: celery -A mysite worker -l INFO -n worker2@%h -Q email,sms,media,maintenance
-    working_dir: /app/mysite
-    volumes:
-      - ./:/app
-    env_file:
-      - ./.env.development
-    environment:
-      <<: *django-common-env
-    depends_on:
-      - redis
-      - postgres
-
-  celery-worker-3:
-    build: .
-    command: celery -A mysite worker -l INFO -n worker3@%h -Q email,sms,media,maintenance
-    working_dir: /app/mysite
-    volumes:
-      - ./:/app
-    env_file:
-      - ./.env.development
-    environment:
-      <<: *django-common-env
-    depends_on:
-      - redis
-      - postgres
-
   celery-beat:
     build: .
     command: celery -A mysite beat -l INFO

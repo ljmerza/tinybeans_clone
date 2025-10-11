@@ -115,3 +115,8 @@ $RECYCLE.BIN/
 *.pid
 *.seed
 *.retry
+
+# Local bind mounts
+volumes/
+!volumes/.gitignore
+!volumes/README.md

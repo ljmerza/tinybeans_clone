@@ -1,6 +1,4 @@
 from __future__ import annotations
-from __future__ import annotations
-
 
 import logging
 from typing import Any
@@ -15,10 +13,12 @@ logger = logging.getLogger(__name__)
 
 class MailerConfigurationError(RuntimeError):
     """Raised when Mailjet is not configured but attempted to be used."""
+
 # Lazy import to avoid circular import at module load time
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # only for type checkers
     from emails.services import EmailDispatchService
+
 
 def _dispatch_service():
     # Import here to break circular import chain
@@ -107,6 +107,28 @@ class TwoFactorMailer:
     """Mailer for 2FA related emails (uses Django template-based emails)"""
 
     @staticmethod
+    def _enqueue_email(to_email: str, template_id: str, context: dict[str, Any]) -> None:
+        """
+        Try to enqueue an email via Celery. If Celery is unavailable fall back to the local dispatcher.
+        """
+        try:
+            from emails.tasks import send_email_task
+
+            send_email_task.delay(
+                to_email=to_email,
+                template_id=template_id,
+                context=context,
+            )
+            return
+        except Exception as exc:
+            logger.warning("Falling back to synchronous email send for %s: %s", template_id, exc)
+            _dispatch_service().send_email(
+                to_email=to_email,
+                template_id=template_id,
+                context=context,
+            )
+
+    @staticmethod
     def send_2fa_code(user, code):
         """Send 2FA verification code via email using template"""
         context = {
@@ -116,7 +138,7 @@ class TwoFactorMailer:
             'expires_in_minutes': getattr(settings, 'TWOFA_CODE_EXPIRY_MINUTES', 10),
         }
         try:
-            _dispatch_service().send_email(
+            TwoFactorMailer._enqueue_email(
                 to_email=user.email,
                 template_id=TWOFA_CODE_TEMPLATE,
                 context=context,
@@ -132,7 +154,7 @@ class TwoFactorMailer:
             'username': getattr(user, 'username', None) or user.email,
         }
         try:
-            _dispatch_service().send_email(
+            TwoFactorMailer._enqueue_email(
                 to_email=user.email,
                 template_id=TWOFA_ENABLED_TEMPLATE,
                 context=context,
@@ -148,7 +170,7 @@ class TwoFactorMailer:
             'username': getattr(user, 'username', None) or user.email,
         }
         try:
-            _dispatch_service().send_email(
+            TwoFactorMailer._enqueue_email(
                 to_email=user.email,
                 template_id=TWOFA_DISABLED_TEMPLATE,
                 context=context,
@@ -167,7 +189,7 @@ class TwoFactorMailer:
             'created_at': device.created_at.strftime('%Y-%m-%d %H:%M:%S UTC'),
         }
         try:
-            _dispatch_service().send_email(
+            TwoFactorMailer._enqueue_email(
                 to_email=user.email,
                 template_id=TWOFA_TRUSTED_DEVICE_ADDED_TEMPLATE,
                 context=context,
@@ -186,7 +208,7 @@ class TwoFactorMailer:
             'used_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
         }
         try:
-            _dispatch_service().send_email(
+            TwoFactorMailer._enqueue_email(
                 to_email=user.email,
                 template_id=TWOFA_RECOVERY_CODE_USED_TEMPLATE,
                 context=context,

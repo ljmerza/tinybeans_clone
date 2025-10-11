@@ -4,6 +4,7 @@
  */
 
 import { ConfirmDialog, Layout } from "@/components";
+import { requireAuth } from "@/features/auth";
 import { extractApiError } from "@/features/auth/utils";
 import {
 	ProfileGeneralSettingsCard,
@@ -261,6 +262,7 @@ function TwoFactorSettingsPage() {
 }
 
 export const Route = createFileRoute(twoFactorSettingsPath)({
+	beforeLoad: requireAuth,
 	loader: ({ context }) => {
 		const { queryClient } = context as { queryClient: QueryClient };
 		return queryClient.ensureQueryData({

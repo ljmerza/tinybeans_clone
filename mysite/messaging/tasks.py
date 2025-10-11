@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@shared_task(queue='sms')
 def send_sms_async(phone_number: str, message: str):
     """
     Async task to send SMS
@@ -27,7 +27,7 @@ def send_sms_async(phone_number: str, message: str):
         return False
 
 
-@shared_task
+@shared_task(queue='sms')
 def send_2fa_sms(phone_number: str, code: str):
     """
     Async task to send 2FA code via SMS

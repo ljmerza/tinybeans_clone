@@ -3,6 +3,7 @@
  */
 
 import { Layout } from "@/components";
+import { requireAuth } from "@/features/auth";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -164,6 +165,7 @@ function TrustedDevicesPage() {
 }
 
 export const Route = createFileRoute("/profile/2fa/trusted-devices")({
+	beforeLoad: requireAuth,
 	loader: ({ context }) => {
 		const { queryClient } = context as { queryClient: QueryClient };
 		return queryClient.ensureQueryData({

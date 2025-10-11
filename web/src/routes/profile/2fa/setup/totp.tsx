@@ -1,4 +1,5 @@
 import { Layout } from "@/components";
+import { requireAuth } from "@/features/auth";
 import { TotpSetup } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
@@ -18,5 +19,6 @@ function TotpSetupRoute() {
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/totp")({
+	beforeLoad: requireAuth,
 	component: TotpSetupRoute,
 });

@@ -1,4 +1,5 @@
 import { Layout } from "@/components";
+import { requireAuth } from "@/features/auth";
 import { EmailSetup } from "@/features/twofa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
@@ -18,5 +19,6 @@ function EmailSetupRoute() {
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/email")({
+	beforeLoad: requireAuth,
 	component: EmailSetupRoute,
 });

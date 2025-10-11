@@ -4,6 +4,7 @@
  */
 
 import { ButtonGroup, Layout } from "@/components";
+import { requireAuth } from "@/features/auth";
 import { Button } from "@/components/ui/button";
 import { extractApiError } from "@/features/auth/utils";
 import {
@@ -207,6 +208,7 @@ function TwoFactorSetupPage() {
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/")({
+	beforeLoad: requireAuth,
 	loader: ({ context }) => {
 		const { queryClient } = context as { queryClient: QueryClient };
 		return queryClient.ensureQueryData({
