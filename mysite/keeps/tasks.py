@@ -123,17 +123,7 @@ def generate_image_sizes(self, media_id: int):
         thumbnail_image.save(thumbnail_io, format='JPEG', quality=85, optimize=True)
         thumbnail_data = thumbnail_io.getvalue()
         
-        # Generate thumbnail storage key
-        base_key, ext = os.path.splitext(media.storage_key_original)
-        thumbnail_key = f"{base_key}_thumb.jpg"
-        
-        # Save thumbnail to storage
-        storage.save(
-            file_content=thumbnail_data,
-            filename="thumbnail.jpg",
-            content_type="image/jpeg"
-        )
-        # Update the media record with actual key returned by storage
+        # Save thumbnail to storage and capture returned key
         media.storage_key_thumbnail = storage.save(
             file_content=thumbnail_data,
             filename="thumbnail.jpg",
@@ -148,9 +138,6 @@ def generate_image_sizes(self, media_id: int):
         gallery_io = BytesIO()
         gallery_image.save(gallery_io, format='JPEG', quality=90, optimize=True)
         gallery_data = gallery_io.getvalue()
-        
-        # Generate gallery storage key
-        gallery_key = f"{base_key}_gallery.jpg"
         
         # Save gallery version to storage
         media.storage_key_gallery = storage.save(
