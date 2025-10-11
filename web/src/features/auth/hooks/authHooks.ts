@@ -101,8 +101,6 @@ export function useLogout() {
 }
 
 export function usePasswordResetRequest() {
-	const { showAsToast } = useApiMessages();
-
 	return useMutation<ApiResponseWithMessages, ApiError, { identifier: string }>(
 		{
 			mutationFn: (body) =>
@@ -110,11 +108,6 @@ export function usePasswordResetRequest() {
 					"/auth/password/reset/request/",
 					body,
 				),
-			onSuccess: (data) => {
-				if (data?.messages?.length) {
-					showAsToast(data.messages, 200);
-				}
-			},
 			onError: (error) => {
 				console.error("Password reset error:", error);
 			},
@@ -123,8 +116,6 @@ export function usePasswordResetRequest() {
 }
 
 export function usePasswordResetConfirm() {
-	const { showAsToast } = useApiMessages();
-
 	return useMutation<
 		ApiResponseWithMessages,
 		ApiError,
@@ -134,16 +125,11 @@ export function usePasswordResetConfirm() {
 			password_confirm: string;
 		}
 	>({
-		mutationFn: (body) =>
-			apiClient.post<ApiResponseWithMessages>(
-				"/auth/password/reset/confirm/",
-				body,
-			),
-		onSuccess: (data) => {
-			if (data?.messages?.length) {
-				showAsToast(data.messages, 200);
-			}
-		},
+			mutationFn: (body) =>
+				apiClient.post<ApiResponseWithMessages>(
+					"/auth/password/reset/confirm/",
+					body,
+				),
 		onError: (error) => {
 			console.error("Password reset confirm error:", error);
 		},
@@ -166,7 +152,6 @@ export function useMagicLinkRequest() {
 export function useMagicLoginVerify() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
-	const { showAsToast } = useApiMessages();
 
 	return useMutation<ApiResponseWithMessages, ApiError, { token: string }>({
 		mutationFn: (body) =>
@@ -180,10 +165,6 @@ export function useMagicLoginVerify() {
 			}
 
 			qc.invalidateQueries({ queryKey: authKeys.session() });
-
-			if (data?.messages?.length) {
-				showAsToast(data.messages, 200);
-			}
 
 			navigate({ to: "/" });
 		},

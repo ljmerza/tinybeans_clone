@@ -80,6 +80,10 @@ export interface TrustedDevicesResponse {
 	devices: TrustedDevice[];
 }
 
+export interface AddTrustedDeviceResponse {
+	device: TrustedDevice;
+}
+
 // Router state for 2FA verification page
 export interface TwoFactorVerifyState {
 	partialToken: string;

@@ -47,6 +47,10 @@ export function DisableTwoFactorSection({
 				<Button onClick={onRequestDisable} variant="destructive">
 					{t("twofa.settings.disable.action")}
 				</Button>
+
+				{errMessage && !showDisableConfirm && (
+					<StatusMessage variant="error">{errMessage}</StatusMessage>
+				)}
 			</div>
 
 			<ConfirmDialog

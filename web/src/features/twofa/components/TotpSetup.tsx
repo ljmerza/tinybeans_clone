@@ -8,6 +8,7 @@ import type {
 	RecoveryCodesResponse,
 	TwoFactorSetupResponse,
 } from "../types";
+import { unwrapApiResponse } from "../utils/unwrapApiResponse";
 import { TotpIntroStep } from "./setup/totp/TotpIntroStep";
 import { TotpRecoveryStep } from "./setup/totp/TotpRecoveryStep";
 import { TotpScanStep } from "./setup/totp/TotpScanStep";
@@ -27,18 +28,6 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
-
-	const unwrapApiResponse = <T,>(response: unknown): T | undefined => {
-		if (!response || typeof response !== "object") {
-			return response as T | undefined;
-		}
-
-		if ("data" in response && response.data !== undefined) {
-			return (response as { data?: T }).data;
-		}
-
-		return response as T;
-	};
 
 	const setupData = unwrapApiResponse<TwoFactorSetupResponse>(initSetup.data);
 	const recoveryPayload =

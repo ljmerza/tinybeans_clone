@@ -7,6 +7,7 @@ import { apiClient } from "@/features/auth/api/authClient";
 import { authStore } from "@/features/auth/store/authStore";
 import { API_BASE, getCsrfToken } from "@/lib/httpClient";
 import type {
+	AddTrustedDeviceResponse,
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,
 	TwoFactorMethodRemovalResponse,
@@ -216,6 +217,16 @@ export const twoFactorApi = {
 		const response = await apiClient.delete<{ message?: string }>(
 			`/auth/2fa/trusted-devices/${device_id}/`,
 		);
+		return response;
+	},
+
+	/**
+	 * Add the current device to trusted list
+	 */
+	addTrustedDevice: async () => {
+		const response = await apiClient.post<
+			ApiResponseWithMessages<AddTrustedDeviceResponse>
+		>("/auth/2fa/trusted-devices/", {});
 		return response;
 	},
 

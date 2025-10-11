@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { twoFaKeys } from "../api/queryKeys";
 import { twoFactorApi } from "../api/twoFactorApi";
 import type {
+	AddTrustedDeviceResponse,
 	RecoveryCodesResponse,
 	TrustedDevicesResponse,
 	TwoFactorMethod,
@@ -178,6 +179,42 @@ export function useTrustedDevices() {
 	return useQuery<TrustedDevicesResponse>({
 		queryKey: twoFaKeys.trustedDevices(),
 		queryFn: () => twoFactorApi.getTrustedDevices(),
+	});
+}
+
+/**
+ * Add the current device as trusted
+ */
+export function useAddTrustedDevice() {
+	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
+
+	return useMutation<
+		ApiResponseWithMessages<AddTrustedDeviceResponse>,
+		Error,
+		void
+	>({
+		mutationFn: () => twoFactorApi.addTrustedDevice(),
+		onSuccess: (response) => {
+			queryClient.invalidateQueries({ queryKey: twoFaKeys.trustedDevices() });
+
+			if (response?.messages?.length) {
+				showAsToast(response.messages, 201);
+			} else {
+				showToast({
+					message: t("twofa.messages.trusted_device_added"),
+					level: "success",
+				});
+			}
+		},
+		onError: (error) => {
+			notifyMutationError(
+				error,
+				t("twofa.errors.add_trusted_device"),
+				showAsToast,
+			);
+		},
 	});
 }
 

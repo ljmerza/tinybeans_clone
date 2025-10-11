@@ -9,5 +9,6 @@ export type {
 	RecoveryCodesResponse,
 	TrustedDevice,
 	TrustedDevicesResponse,
+	AddTrustedDeviceResponse,
 	TwoFactorVerifyState,
 } from "./twofa.types";

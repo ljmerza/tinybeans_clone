@@ -5,7 +5,6 @@ import {
 	useGoogleOAuth,
 	validateOAuthState,
 } from "@/features/auth";
-import { useApiMessages } from "@/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -27,7 +26,6 @@ function GoogleCallbackPage() {
 	const navigate = useNavigate();
 	const searchParams = Route.useSearch();
 	const { handleCallback, error } = useGoogleOAuth();
-	const { showAsToast } = useApiMessages();
 	const [hasProcessed, setHasProcessed] = useState(false);
 	const [clientError, setClientError] = useState<string | null>(null);
 
@@ -38,15 +36,6 @@ function GoogleCallbackPage() {
 		// Check for Google OAuth error
 		if (searchParams.error) {
 			const errorMsg = searchParams.error_description || searchParams.error;
-			showAsToast(
-				[
-					{
-						i18n_key: "errors.oauth.google_cancelled",
-						context: {},
-					},
-				],
-				400,
-			);
 			setClientError(
 				errorMsg === "access_denied"
 					? "You cancelled the Google sign-in process."
@@ -59,15 +48,6 @@ function GoogleCallbackPage() {
 
 		// Validate required parameters
 		if (!searchParams.code || !searchParams.state) {
-			showAsToast(
-				[
-					{
-						i18n_key: "errors.oauth.invalid_callback",
-						context: {},
-					},
-				],
-				400,
-			);
 			setClientError("Missing required OAuth parameters. Please try again.");
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
@@ -77,15 +57,6 @@ function GoogleCallbackPage() {
 		// Validate state token (CSRF protection)
 		const storedState = getOAuthState();
 		if (!validateOAuthState(searchParams.state, storedState)) {
-			showAsToast(
-				[
-					{
-						i18n_key: "errors.oauth.state_mismatch",
-						context: {},
-					},
-				],
-				400,
-			);
 			setClientError(
 				"Security validation failed. Please try signing in again.",
 			);
@@ -97,7 +68,7 @@ function GoogleCallbackPage() {
 		// Process the callback
 		setHasProcessed(true);
 		handleCallback(searchParams.code, searchParams.state);
-	}, [searchParams, handleCallback, navigate, hasProcessed, showAsToast]);
+	}, [searchParams, handleCallback, navigate, hasProcessed]);
 
 	// Show error state
 	if (error || clientError) {

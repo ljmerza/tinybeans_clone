@@ -3,6 +3,8 @@ import { extractApiError } from "@/features/auth/utils";
 import { showToast } from "@/lib/toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { combineMessages, useApiMessages } from "@/i18n";
+import type { HttpError } from "@/lib/httpClient";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { SmsIntroStep } from "./setup/sms/SmsIntroStep";
 import { SmsRecoveryStep } from "./setup/sms/SmsRecoveryStep";
@@ -25,12 +27,38 @@ export function SmsSetup({
 	const [phone, setPhone] = useState(defaultPhone);
 	const [code, setCode] = useState("");
 	const { t } = useTranslation();
+	const { showAsToast, getGeneral } = useApiMessages();
 
 	const initSetup = useInitialize2FASetup();
 	const verifySetup = useVerify2FASetup();
 
 	const recoveryCodes = verifySetup.data?.recovery_codes;
 	const latestMessage = initSetup.data?.message ?? t("twofa.setup.sms.message");
+
+	const resolveErrorMessage = (error: unknown) => {
+		const httpError = error as HttpError | undefined;
+		if (httpError?.messages?.length) {
+			const generalErrors = getGeneral(httpError.messages);
+			if (generalErrors.length > 0) {
+				return combineMessages(generalErrors);
+			}
+		}
+		return (error as Error | undefined)?.message;
+	};
+
+	const introErrorMessage = resolveErrorMessage(initSetup.error);
+	const verifyErrorMessage = resolveErrorMessage(verifySetup.error);
+
+	const handleRequestError = (error: unknown, fallbackKey: string) => {
+		const httpError = error as HttpError | undefined;
+		if (httpError?.messages?.length) {
+			showAsToast(httpError.messages, httpError.status ?? 400);
+			return;
+		}
+
+		const message = extractApiError(error, t(fallbackKey));
+		showToast({ message, level: "error" });
+	};
 
 	return (
 		<Wizard currentStep={step}>
@@ -39,7 +67,7 @@ export function SmsSetup({
 					phone={phone}
 					onPhoneChange={setPhone}
 					isSending={initSetup.isPending}
-					errorMessage={initSetup.error?.message}
+					errorMessage={introErrorMessage}
 					onSend={async () => {
 						try {
 							await initSetup.mutateAsync({
@@ -48,11 +76,7 @@ export function SmsSetup({
 							});
 							setStep("verify");
 						} catch (error) {
-							const message = extractApiError(
-								error,
-								t("twofa.errors.sms_send"),
-							);
-							showToast({ message, level: "error" });
+							handleRequestError(error, "twofa.errors.sms_send");
 						}
 					}}
 					onCancel={onCancel}
@@ -65,18 +89,14 @@ export function SmsSetup({
 					message={latestMessage}
 					isVerifying={verifySetup.isPending}
 					isResending={initSetup.isPending}
-					errorMessage={verifySetup.error?.message}
+					errorMessage={verifyErrorMessage}
 					onCodeChange={setCode}
 					onVerify={async (val) => {
 						try {
 							await verifySetup.mutateAsync(val ?? code);
 							setStep("recovery");
 						} catch (error) {
-							const message = extractApiError(
-								error,
-								t("twofa.errors.sms_verify"),
-							);
-							showToast({ message, level: "error" });
+							handleRequestError(error, "twofa.errors.sms_verify");
 							setCode("");
 						}
 					}}
@@ -90,11 +110,7 @@ export function SmsSetup({
 							setCode("");
 							verifySetup.reset();
 						} catch (error) {
-							const message = extractApiError(
-								error,
-								t("twofa.errors.sms_resend"),
-							);
-							showToast({ message, level: "error" });
+							handleRequestError(error, "twofa.errors.sms_resend");
 						}
 					}}
 					onCancel={onCancel}

@@ -14,6 +14,7 @@ from auth.models import (
     TrustedDevice,
     TwoFactorAuditLog,
 )
+from auth.services.trusted_device_service import TrustedDeviceToken
 
 User = get_user_model()
 
@@ -703,3 +704,36 @@ class TestTrustedDevicesAPI:
         response = self.client.delete('/api/auth/2fa/trusted-devices/test-device-123/')
         
         assert response.status_code == status.HTTP_200_OK
+
+    @patch('auth.services.trusted_device_service.TrustedDeviceService.set_trusted_device_cookie')
+    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    def test_add_trusted_device_success(self, mock_add, mock_set_cookie):
+        """Test adding current device as trusted"""
+        device = TrustedDevice.objects.create(
+            user=self.user,
+            device_id='device-123',
+            device_name='Test Device',
+            ip_address='127.0.0.1',
+            user_agent='TestAgent/1.0',
+            expires_at=timezone.now() + timedelta(days=30)
+        )
+        token = TrustedDeviceToken(device_id=device.device_id, signed_value='signed-value')
+        mock_add.return_value = (device, token)
+        
+        response = self.client.post('/api/auth/2fa/trusted-devices/')
+        
+        assert response.status_code == status.HTTP_201_CREATED
+        payload = response_payload(response)
+        assert payload['device']['device_id'] == device.device_id
+        mock_add.assert_called_once()
+        mock_set_cookie.assert_called_once()
+
+    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    def test_add_trusted_device_failure(self, mock_add):
+        """Test handling errors when adding trusted device"""
+        mock_add.side_effect = Exception("boom")
+        
+        response = self.client.post('/api/auth/2fa/trusted-devices/')
+        
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data['error'] == 'device_add_failed'

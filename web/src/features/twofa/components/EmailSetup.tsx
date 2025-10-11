@@ -72,10 +72,16 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 					}}
 					onResend={async () => {
 						try {
-							await initSetup.mutateAsync({ method: "email" });
+							const response = await initSetup.mutateAsync({
+								method: "email",
+							});
 							// Invalidate old code locally
 							setCode("");
 							verifySetup.reset();
+							const successMessage =
+								response?.message ??
+								t("twofa.messages.code_resent_email");
+							showToast({ message: successMessage, level: "success" });
 						} catch (error) {
 							const message = extractApiError(
 								error,

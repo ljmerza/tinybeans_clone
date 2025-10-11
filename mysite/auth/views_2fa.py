@@ -1,4 +1,6 @@
 """Two-Factor Authentication Views"""
+import logging
+
 from django.http import HttpResponse
 from django.conf import settings
 from django.utils.decorators import method_decorator
@@ -24,6 +26,9 @@ from .serializers_2fa import (
 from .services.twofa_service import TwoFactorService
 from .services.trusted_device_service import TrustedDeviceService
 from .services.recovery_code_service import RecoveryCodeService
+
+
+logger = logging.getLogger(__name__)
 
 
 class TwoFactorSetupView(APIView):
@@ -675,6 +680,35 @@ class TrustedDevicesListView(APIView):
                 [create_message('errors.twofa.device_not_found')],
                 status.HTTP_404_NOT_FOUND
             )
+    
+    @extend_schema(
+        responses={201: TrustedDeviceSerializer}
+    )
+    def post(self, request):
+        """Add current device as a trusted device"""
+        try:
+            trusted_device, token = TrustedDeviceService.add_trusted_device(request.user, request)
+        except Exception:
+            logger.exception("Failed to add trusted device for user %s", request.user.pk)
+            return error_response(
+                'device_add_failed',
+                [create_message('errors.twofa.device_add_failed')],
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        serializer = TrustedDeviceSerializer(trusted_device)
+        response = success_response(
+            {'device': serializer.data},
+            messages=[
+                create_message(
+                    'notifications.twofa.device_added',
+                    {'device_name': trusted_device.device_name}
+                )
+            ],
+            status_code=status.HTTP_201_CREATED
+        )
+        TrustedDeviceService.set_trusted_device_cookie(response, token)
+        return response
 
 
 class TrustedDeviceRemoveView(APIView):

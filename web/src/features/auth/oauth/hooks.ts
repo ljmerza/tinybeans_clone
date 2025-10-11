@@ -52,8 +52,7 @@ export function useGoogleOAuth() {
 			navigate({ to: "/" });
 		},
 		onError: (error: ApiError) => {
-			// Handle errors with i18n translation
-			handleError(error);
+			console.error("Google OAuth callback error:", error);
 			// Clear state on error
 			clearOAuthState();
 		},

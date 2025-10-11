@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
 	twoFaKeys,
 	twoFactorApi,
+	useAddTrustedDevice,
 	useRemoveTrustedDevice,
 	useTrustedDevices,
 } from "@/features/twofa";
@@ -20,6 +21,7 @@ function TrustedDevicesPage() {
 	const navigate = useNavigate();
 	const { data, isLoading } = useTrustedDevices();
 	const removeDevice = useRemoveTrustedDevice();
+	const addDevice = useAddTrustedDevice();
 	const [deviceToRemove, setDeviceToRemove] = useState<{
 		id: string;
 		name: string;
@@ -51,14 +53,24 @@ function TrustedDevicesPage() {
 		<Layout>
 			<div className="max-w-4xl mx-auto">
 				<div className="bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 transition-colors">
-					<div className="mb-6">
-						<h1 className="text-2xl font-semibold text-foreground mb-2">
-							Trusted Devices
-						</h1>
-						<p className="text-muted-foreground text-sm">
-							These devices can skip 2FA verification for 30 days. Remove a
-							device to require 2FA on next login.
-						</p>
+					<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+						<div>
+							<h1 className="text-2xl font-semibold text-foreground mb-2">
+								Trusted Devices
+							</h1>
+							<p className="text-muted-foreground text-sm">
+								These devices can skip 2FA verification for 30 days. Remove a
+								device to require 2FA on next login.
+							</p>
+						</div>
+						<Button
+							variant="secondary"
+							onClick={() => addDevice.mutate()}
+							disabled={addDevice.isPending}
+							className="w-full sm:w-auto"
+						>
+							{addDevice.isPending ? "Trusting device..." : "Trust this device"}
+						</Button>
 					</div>
 
 					{devices.length === 0 ? (
@@ -66,8 +78,8 @@ function TrustedDevicesPage() {
 							<div className="text-6xl mb-4">🔒</div>
 							<p className="text-muted-foreground mb-2">No trusted devices</p>
 							<p className="text-sm text-muted-foreground">
-								Enable "Remember this device" during 2FA verification to add
-								trusted devices
+								Trust this device from here or enable "Remember this device"
+								during 2FA verification to add trusted devices.
 							</p>
 						</div>
 					) : (

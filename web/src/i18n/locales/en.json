@@ -141,12 +141,14 @@
 		"messages": {
 			"method_removed": "Method removed successfully.",
 			"default_method_updated": "Default method updated successfully.",
-			"trusted_device_removed": "Trusted device removed."
+			"trusted_device_removed": "Trusted device removed.",
+			"trusted_device_added": "Trusted device added."
 		},
 		"errors": {
 			"verify_login": "Failed to verify 2FA code.",
 			"disable": "Failed to disable 2FA.",
 			"generate_codes": "Failed to generate recovery codes.",
+			"add_trusted_device": "Failed to add trusted device.",
 			"remove_trusted_device": "Failed to remove trusted device.",
 			"update_default_method": "Failed to update default method.",
 			"remove_method": "Failed to remove 2FA method.",

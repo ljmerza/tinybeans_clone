@@ -40,9 +40,7 @@ function TwoFactorSettingsPage() {
 	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(
 		null,
 	);
-	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
 	const [removalError, setRemovalError] = useState<string | null>(null);
-	const [switchMessage, setSwitchMessage] = useState<string | null>(null);
 	const [switchError, setSwitchError] = useState<string | null>(null);
 
 	const removalInProgress = removeMethod.isPending;
@@ -50,9 +48,7 @@ function TwoFactorSettingsPage() {
 
 	const handleRemovalRequest = (method: TwoFactorMethod) => {
 		setRemovalError(null);
-		setRemovalMessage(null);
 		setSwitchError(null);
-		setSwitchMessage(null);
 		setMethodToRemove(method);
 	};
 
@@ -65,8 +61,7 @@ function TwoFactorSettingsPage() {
 		if (!methodToRemove) return;
 		setRemovalError(null);
 		try {
-			const result = await removeMethod.mutateAsync(methodToRemove);
-			setRemovalMessage(result?.message ?? t("twofa.messages.method_removed"));
+			await removeMethod.mutateAsync(methodToRemove);
 			setMethodToRemove(null);
 		} catch (err) {
 			setRemovalError(extractApiError(err, t("twofa.errors.remove_method")));
@@ -75,15 +70,10 @@ function TwoFactorSettingsPage() {
 
 	const handleSetAsDefault = async (method: TwoFactorMethod) => {
 		setSwitchError(null);
-		setSwitchMessage(null);
 		setRemovalError(null);
-		setRemovalMessage(null);
 
 		try {
-			const result = await setPreferredMethod.mutateAsync(method);
-			setSwitchMessage(
-				result?.message ?? t("twofa.messages.default_method_updated"),
-			);
+			await setPreferredMethod.mutateAsync(method);
 		} catch (err) {
 			setSwitchError(
 				extractApiError(err, t("twofa.errors.update_default_method")),
@@ -153,25 +143,13 @@ function TwoFactorSettingsPage() {
 								</div>
 							)}
 
-							{removalMessage && (
-								<p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded px-4 py-3 transition-colors">
-									{removalMessage}
-								</p>
-							)}
-
 							{removalError && (
 								<p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded px-4 py-3 transition-colors">
 									{removalError}
 								</p>
 							)}
 
-							{switchMessage && (
-								<p className="text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded px-4 py-3 transition-colors">
-									{switchMessage}
-								</p>
-							)}
-
-							{switchError && (
+								{switchError && (
 								<p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded px-4 py-3 transition-colors">
 									{switchError}
 								</p>
