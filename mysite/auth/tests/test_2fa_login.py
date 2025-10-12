@@ -351,7 +351,7 @@ class TestRememberMeFeature:
         mock_device = Mock()
         mock_device.device_id = 'new-device-123'
         mock_token = TrustedDeviceToken(device_id='new-device-123', signed_value='signed-new-device-123')
-        mock_add_device.return_value = (mock_device, mock_token)
+        mock_add_device.return_value = (mock_device, mock_token, True)
         
         partial_token = generate_partial_token(self.user)
         

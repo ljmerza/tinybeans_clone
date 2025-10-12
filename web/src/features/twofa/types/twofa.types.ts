@@ -82,6 +82,7 @@ export interface TrustedDevicesResponse {
 
 export interface AddTrustedDeviceResponse {
 	device: TrustedDevice;
+	created: boolean;
 }
 
 // Router state for 2FA verification page

@@ -142,7 +142,8 @@
 			"method_removed": "Method removed successfully.",
 			"default_method_updated": "Default method updated successfully.",
 			"trusted_device_removed": "Trusted device removed.",
-			"trusted_device_added": "Trusted device added."
+			"trusted_device_added": "Trusted device added.",
+			"trusted_device_already": "This device is already trusted."
 		},
 		"errors": {
 			"verify_login": "Failed to verify 2FA code.",
@@ -419,7 +420,9 @@
 			"method_removed_preferred_changed": "Preferred method updated to {{preferred_method}}",
 			"enter_authenticator_code": "Enter your authenticator code to disable 2FA",
 			"recovery_codes_generated": "New recovery codes generated. Old codes have been invalidated",
-			"device_removed": "Device removed successfully"
+			"device_removed": "Device removed successfully",
+			"device_added": "{{device_name}} is now trusted",
+			"device_already_trusted": "{{device_name}} is already trusted"
 		}
 	},
 	"errors": {

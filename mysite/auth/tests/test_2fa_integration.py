@@ -237,10 +237,10 @@ class TestTrustedDeviceFlow:
         """Test adding, listing, and removing trusted devices"""
         # Step 1: Add trusted devices
         factory = RequestFactory()
-        for _ in range(3):
+        for i in range(3):
             request = factory.get('/')
-            request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
-            request.META['REMOTE_ADDR'] = '127.0.0.1'
+            request.META['HTTP_USER_AGENT'] = f'TestBrowser/{i}.0'
+            request.META['REMOTE_ADDR'] = f'127.0.0.{i}'
             TrustedDeviceService.add_trusted_device(self.user, request)
         
         # Step 2: List devices

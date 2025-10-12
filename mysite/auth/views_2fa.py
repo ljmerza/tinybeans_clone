@@ -687,7 +687,7 @@ class TrustedDevicesListView(APIView):
     def post(self, request):
         """Add current device as a trusted device"""
         try:
-            trusted_device, token = TrustedDeviceService.add_trusted_device(request.user, request)
+            trusted_device, token, created = TrustedDeviceService.add_trusted_device(request.user, request)
         except Exception:
             logger.exception("Failed to add trusted device for user %s", request.user.pk)
             return error_response(
@@ -697,15 +697,21 @@ class TrustedDevicesListView(APIView):
             )
         
         serializer = TrustedDeviceSerializer(trusted_device)
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        message_key = (
+            'notifications.twofa.device_added'
+            if created
+            else 'notifications.twofa.device_already_trusted'
+        )
         response = success_response(
-            {'device': serializer.data},
+            {'device': serializer.data, 'created': created},
             messages=[
                 create_message(
-                    'notifications.twofa.device_added',
+                    message_key,
                     {'device_name': trusted_device.device_name}
                 )
             ],
-            status_code=status.HTTP_201_CREATED
+            status_code=status_code
         )
         TrustedDeviceService.set_trusted_device_cookie(response, token)
         return response
@@ -825,7 +831,7 @@ class TwoFactorVerifyLoginView(APIView):
         # Create trusted device if remember_me is True
         device_token = None
         if remember_me and getattr(settings, 'TWOFA_TRUSTED_DEVICE_ENABLED', True):
-            _, device_token = TrustedDeviceService.add_trusted_device(user, request)
+            _, device_token, _ = TrustedDeviceService.add_trusted_device(user, request)
         
         # Generate full tokens
         tokens = get_tokens_for_user(user)

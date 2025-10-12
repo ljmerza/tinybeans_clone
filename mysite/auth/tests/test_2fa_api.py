@@ -718,7 +718,7 @@ class TestTrustedDevicesAPI:
             expires_at=timezone.now() + timedelta(days=30)
         )
         token = TrustedDeviceToken(device_id=device.device_id, signed_value='signed-value')
-        mock_add.return_value = (device, token)
+        mock_add.return_value = (device, token, True)
         
         response = self.client.post('/api/auth/2fa/trusted-devices/')
         
@@ -737,3 +737,26 @@ class TestTrustedDevicesAPI:
         
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data['error'] == 'device_add_failed'
+
+    @patch('auth.services.trusted_device_service.TrustedDeviceService.set_trusted_device_cookie')
+    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    def test_add_trusted_device_already_trusted(self, mock_add, mock_set_cookie):
+        """Adding an already-trusted device returns existing record"""
+        device = TrustedDevice.objects.create(
+            user=self.user,
+            device_id='device-456',
+            device_name='Existing Device',
+            ip_address='127.0.0.1',
+            user_agent='TestAgent/1.0',
+            expires_at=timezone.now() + timedelta(days=30)
+        )
+        token = TrustedDeviceToken(device_id=device.device_id, signed_value='signed-existing')
+        mock_add.return_value = (device, token, False)
+
+        response = self.client.post('/api/auth/2fa/trusted-devices/')
+
+        assert response.status_code == status.HTTP_200_OK
+        payload = response_payload(response)
+        assert payload['device']['device_id'] == device.device_id
+        assert payload['created'] is False
+        mock_set_cookie.assert_called_once()

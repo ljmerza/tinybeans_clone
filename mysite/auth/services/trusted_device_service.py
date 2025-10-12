@@ -103,23 +103,79 @@ class TrustedDeviceService:
     
     @staticmethod
     def add_trusted_device(user, request, days=None):
-        """Add current device to trusted devices list"""
+        """Add current device to trusted devices list.
+
+        Returns existing device when fingerprints match to ensure idempotency.
+        """
         if days is None:
             days = getattr(settings, 'TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS', 30)
-        
-        device_id = TrustedDeviceService._generate_device_id()
+
         device_name = TrustedDeviceService.get_device_name(request)
         ip_address = get_client_ip(request) or request.META.get('REMOTE_ADDR', '0.0.0.0')
         user_agent = request.META.get('HTTP_USER_AGENT', '')
         ua_hash, ip_hash = TrustedDeviceService._fingerprint(request)
-        
+        expires_at = timezone.now() + timedelta(days=days)
+
+        # Prefer cookie-bound match for the current browser
+        existing_device: Optional[TrustedDevice] = None
+        device_token = TrustedDeviceService.get_device_id_from_request(request)
+        if device_token:
+            existing_device = TrustedDevice.objects.filter(
+                user=user,
+                device_id=device_token.device_id,
+                expires_at__gt=timezone.now(),
+            ).first()
+
+        # Fallback to fingerprint matching if no cookie match found
+        if existing_device is None:
+            existing_device = TrustedDevice.objects.filter(
+                user=user,
+                ua_hash=ua_hash,
+                ip_hash=ip_hash,
+                expires_at__gt=timezone.now(),
+            ).order_by('-created_at').first()
+
+        if existing_device:
+            existing_device.device_name = device_name
+            existing_device.ip_address = ip_address
+            existing_device.user_agent = user_agent
+            existing_device.ua_hash = ua_hash
+            existing_device.ip_hash = ip_hash
+            existing_device.expires_at = expires_at
+            existing_device.last_used_at = timezone.now()
+            existing_device.save(
+                update_fields=[
+                    'device_name',
+                    'ip_address',
+                    'user_agent',
+                    'ua_hash',
+                    'ip_hash',
+                    'expires_at',
+                    'last_used_at',
+                ]
+            )
+
+            TwoFactorAuditLog.objects.create(
+                user=user,
+                action='trusted_device_refreshed',
+                method='device_trust',
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_id=existing_device.device_id,
+                success=True,
+            )
+
+            return existing_device, TrustedDeviceService._build_token(existing_device), False
+
+        device_id = TrustedDeviceService._generate_device_id()
+
         # Check if user has too many trusted devices
         max_devices = getattr(settings, 'TWOFA_TRUSTED_DEVICE_MAX_COUNT', 5)
         existing_count = TrustedDevice.objects.filter(
             user=user,
             expires_at__gt=timezone.now()
         ).count()
-        
+
         if existing_count >= max_devices:
             # Remove oldest device
             oldest = TrustedDevice.objects.filter(
@@ -128,9 +184,7 @@ class TrustedDeviceService:
             ).order_by('created_at').first()
             if oldest:
                 oldest.delete()
-        
-        expires_at = timezone.now() + timedelta(days=days)
-        
+
         trusted_device = TrustedDevice.objects.create(
             user=user,
             device_id=device_id,
@@ -141,7 +195,7 @@ class TrustedDeviceService:
             ua_hash=ua_hash,
             expires_at=expires_at,
         )
-        
+
         # Send notification email
         try:
             from emails.mailers import TwoFactorMailer
@@ -152,7 +206,7 @@ class TrustedDeviceService:
                 user.pk,
                 device_id,
             )
-        
+
         # Log the action
         TwoFactorAuditLog.objects.create(
             user=user,
@@ -163,8 +217,8 @@ class TrustedDeviceService:
             device_id=device_id,
             success=True
         )
-        
-        return trusted_device, TrustedDeviceService._build_token(trusted_device)
+
+        return trusted_device, TrustedDeviceService._build_token(trusted_device), True
     
     @staticmethod
     def _build_token(device: TrustedDevice) -> TrustedDeviceToken:

@@ -199,11 +199,16 @@ export function useAddTrustedDevice() {
 		onSuccess: (response) => {
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.trustedDevices() });
 
+			const created = response?.data?.created ?? true;
 			if (response?.messages?.length) {
-				showAsToast(response.messages, 201);
+				showAsToast(response.messages, created ? 201 : 200);
 			} else {
 				showToast({
-					message: t("twofa.messages.trusted_device_added"),
+					message: t(
+						created
+							? "twofa.messages.trusted_device_added"
+							: "twofa.messages.trusted_device_already",
+					),
 					level: "success",
 				});
 			}

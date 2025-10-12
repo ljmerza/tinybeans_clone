@@ -460,7 +460,7 @@ class TestTrustedDeviceService:
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
         request.META['REMOTE_ADDR'] = '127.0.0.1'
         
-        device, token = TrustedDeviceService.add_trusted_device(user, request, days=30)
+        device, token, created = TrustedDeviceService.add_trusted_device(user, request, days=30)
         
         assert device.user == user
         assert device.device_id == token.device_id
@@ -468,6 +468,7 @@ class TestTrustedDeviceService:
         assert device.expires_at > timezone.now()
         assert device.ip_hash
         assert device.ua_hash
+        assert created is True
         
         # Check audit log
         log = TwoFactorAuditLog.objects.filter(
@@ -475,6 +476,33 @@ class TestTrustedDeviceService:
             action='trusted_device_added'
         ).first()
         assert log is not None
+
+    def test_add_trusted_device_is_idempotent(self):
+        """Adding the same device twice should refresh instead of duplicating"""
+        user = create_user(username='testuser', password='testpass')
+        factory = RequestFactory()
+        request = factory.get('/')
+        request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+
+        first_device, first_token, first_created = TrustedDeviceService.add_trusted_device(
+            user, request, days=30
+        )
+        second_device, second_token, second_created = TrustedDeviceService.add_trusted_device(
+            user, request, days=30
+        )
+
+        assert first_created is True
+        assert second_created is False
+        assert first_device.pk == second_device.pk
+        assert first_token.device_id == second_token.device_id
+        assert TrustedDevice.objects.filter(user=user).count() == 1
+
+        refresh_log = TwoFactorAuditLog.objects.filter(
+            user=user,
+            action='trusted_device_refreshed'
+        ).first()
+        assert refresh_log is not None
     
     def test_add_trusted_device_max_limit(self):
         """Test max trusted devices limit"""
@@ -504,7 +532,7 @@ class TestTrustedDeviceService:
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
         request.META['REMOTE_ADDR'] = '127.0.0.1'
         
-        device, token = TrustedDeviceService.add_trusted_device(user, request, days=30)
+        device, token, _ = TrustedDeviceService.add_trusted_device(user, request, days=30)
         
         result, rotated = TrustedDeviceService.is_trusted_device(user, token, request)
         
@@ -521,7 +549,7 @@ class TestTrustedDeviceService:
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
         request.META['REMOTE_ADDR'] = '127.0.0.1'
         
-        device, token = TrustedDeviceService.add_trusted_device(user, request, days=1)
+        device, token, _ = TrustedDeviceService.add_trusted_device(user, request, days=1)
         device.expires_at = timezone.now() - timedelta(days=1)
         device.save(update_fields=['expires_at'])
         

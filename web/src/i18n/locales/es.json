@@ -141,7 +141,9 @@
 		"messages": {
 			"method_removed": "Método eliminado correctamente.",
 			"default_method_updated": "Método predeterminado actualizado correctamente.",
-			"trusted_device_removed": "Dispositivo de confianza eliminado."
+			"trusted_device_removed": "Dispositivo de confianza eliminado.",
+			"trusted_device_added": "Dispositivo de confianza agregado.",
+			"trusted_device_already": "Este dispositivo ya es de confianza."
 		},
 		"errors": {
 			"verify_login": "No se pudo verificar el código 2FA.",
@@ -417,7 +419,9 @@
 			"method_removed_preferred_changed": "Método preferido actualizado a {{preferred_method}}",
 			"enter_authenticator_code": "Ingrese su código de autenticación para deshabilitar 2FA",
 			"recovery_codes_generated": "Nuevos códigos de recuperación generados. Los códigos antiguos han sido invalidados",
-			"device_removed": "Dispositivo eliminado exitosamente"
+			"device_removed": "Dispositivo eliminado exitosamente",
+			"device_added": "{{device_name}} ahora es un dispositivo de confianza",
+			"device_already_trusted": "{{device_name}} ya es un dispositivo de confianza"
 		}
 	},
 	"errors": {
