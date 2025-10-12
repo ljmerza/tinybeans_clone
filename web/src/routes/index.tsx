@@ -18,7 +18,7 @@ function IndexPage() {
 				</p>
 			</div>
 		</Layout>
-	);
+	)
 }
 
 export const Route = createFileRoute("/")({

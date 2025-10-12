@@ -5,7 +5,7 @@ import {
 	useGoogleOAuth,
 	validateOAuthState,
 } from "@/features/auth";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
@@ -40,10 +40,10 @@ function GoogleCallbackPage() {
 				errorMsg === "access_denied"
 					? "You cancelled the Google sign-in process."
 					: errorMsg,
-			);
+			)
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
-			return;
+			return
 		}
 
 		// Validate required parameters
@@ -51,7 +51,7 @@ function GoogleCallbackPage() {
 			setClientError("Missing required OAuth parameters. Please try again.");
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
-			return;
+			return
 		}
 
 		// Validate state token (CSRF protection)
@@ -59,10 +59,10 @@ function GoogleCallbackPage() {
 		if (!validateOAuthState(searchParams.state, storedState)) {
 			setClientError(
 				"Security validation failed. Please try signing in again.",
-			);
+			)
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
-			return;
+			return
 		}
 
 		// Process the callback
@@ -117,7 +117,7 @@ function GoogleCallbackPage() {
 					</div>
 				</div>
 			</div>
-		);
+		)
 	}
 
 	// Show loading state
@@ -165,5 +165,5 @@ function GoogleCallbackPage() {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

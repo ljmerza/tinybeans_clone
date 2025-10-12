@@ -14,7 +14,7 @@ function ProfileGeneralSettingsPage() {
 				twoFactor={null}
 			/>
 		</Layout>
-	);
+	)
 }
 
 export const Route = createFileRoute("/profile/general")({

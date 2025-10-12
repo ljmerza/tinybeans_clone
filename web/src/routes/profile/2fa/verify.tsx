@@ -14,9 +14,9 @@ import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
 import {
 	Navigate,
-	createFileRoute,
 	useLocation,
 	useNavigate,
+	createFileRoute,
 } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +38,7 @@ function TwoFactorVerifyPage() {
 	const [verifyData] = useState<TwoFactorVerifyState | null>(() => {
 		type TwoFactorHistoryState = {
 			twoFactor?: unknown;
-		};
+		}
 
 		const historyState = location.state as typeof location.state &
 			TwoFactorHistoryState;
@@ -63,7 +63,7 @@ function TwoFactorVerifyPage() {
 			message:
 				typeof candidate.message === "string" ? candidate.message : undefined,
 		} satisfies TwoFactorVerifyState;
-	});
+	})
 
 	const [code, setCode] = useState("");
 	const [rememberMe, setRememberMe] = useState(false);
@@ -93,7 +93,7 @@ function TwoFactorVerifyPage() {
 
 		return t("twofa.verify.enter_code", {
 			method: t(methodLabelKey[method]),
-		});
+		})
 	}, [method, message, t, useRecoveryCode]);
 
 	const handleVerify = () => {
@@ -101,15 +101,15 @@ function TwoFactorVerifyPage() {
 			? recoveryCodeSchema
 			: verificationCodeSchema;
 		if (!schema.safeParse(code).success) {
-			return;
+			return
 		}
 
 		verify.mutate({
 			partial_token: partialToken,
 			code,
 			remember_me: rememberMe,
-		});
-	};
+		})
+	}
 
 	return (
 		<AuthCard
@@ -201,7 +201,7 @@ function TwoFactorVerifyPage() {
 					type="button"
 					onClick={() => {
 						setUseRecoveryCode(!useRecoveryCode);
-						setCode("");
+						setCode("")
 					}}
 					disabled={verify.isPending}
 					className="text-sm text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
@@ -212,7 +212,7 @@ function TwoFactorVerifyPage() {
 				</button>
 			</div>
 		</AuthCard>
-	);
+	)
 }
 
 export const Route = createFileRoute("/profile/2fa/verify")({

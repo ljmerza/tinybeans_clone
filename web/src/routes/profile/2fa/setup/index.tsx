@@ -18,7 +18,7 @@ import {
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
 import type { QueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {
@@ -41,7 +41,7 @@ function TwoFactorSetupPage() {
 
 	const [methodToRemove, setMethodToRemove] = useState<RemovableMethod | null>(
 		null,
-	);
+	)
 	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
 	const [removalError, setRemovalError] = useState<string | null>(null);
 
@@ -57,18 +57,18 @@ function TwoFactorSetupPage() {
 		setRemovalError(null);
 		setRemovalMessage(null);
 		setMethodToRemove(method);
-	};
+	}
 
 	const handleRemovalCancel = () => {
 		if (!removalInProgress) {
 			setMethodToRemove(null);
 		}
 		setRemovalError(null);
-	};
+	}
 
 	const handleRemovalConfirm = async () => {
 		if (!methodToRemove) {
-			return;
+			return
 		}
 
 		setRemovalError(null);
@@ -77,12 +77,12 @@ function TwoFactorSetupPage() {
 			setRemovalMessage(
 				result?.message ??
 					`${METHOD_LABELS[methodToRemove]} removed successfully.`,
-			);
+			)
 			setMethodToRemove(null);
 		} catch (err) {
 			setRemovalError(extractApiError(err, "Failed to remove 2FA method."));
 		}
-	};
+	}
 
 	if (isLoading) {
 		return (
@@ -90,7 +90,7 @@ function TwoFactorSetupPage() {
 				message="Loading 2FA settings..."
 				description="We are fetching your current two-factor authentication configuration."
 			/>
-		);
+		)
 	}
 
 	if (error) {
@@ -102,7 +102,7 @@ function TwoFactorSetupPage() {
 				actionLabel="Go Home"
 				onAction={() => navigate({ to: "/" })}
 			/>
-		);
+		)
 	}
 
 	return (
@@ -204,7 +204,7 @@ function TwoFactorSetupPage() {
 				</div>
 			</div>
 		</Layout>
-	);
+	)
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/")({
@@ -214,7 +214,7 @@ export const Route = createFileRoute("/profile/2fa/setup/")({
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
 			queryFn: () => twoFactorApi.getStatus(),
-		});
+		})
 	},
 	component: TwoFactorSetupPage,
 });
