@@ -53,11 +53,9 @@ export interface SignupRequest {
 	password: string;
 }
 
-export interface SignupResponse {
-	user: AuthUser;
+export type SignupResponse = AuthUser & {
 	tokens: AuthTokens;
-	messages?: ApiMessage[];
-}
+};
 
 export interface MeResponse {
 	user: AuthUser;

@@ -10,6 +10,8 @@ os.environ.setdefault('DJANGO_SECURE_SSL_REDIRECT', '0')
 
 from .base import *  # noqa: F401,F403
 
+from mysite.logging import get_logging_config
+
 # Override email backend for tests
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
@@ -48,32 +50,12 @@ PASSWORD_HASHERS = [
 ]
 
 # Disable logging during tests to reduce noise
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'null': {
-            'class': 'logging.NullHandler',
-        },
-    },
-    'root': {
-        'handlers': ['null'],
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['null'],
-            'propagate': False,
-        },
-        'emailing': {
-            'handlers': ['null'],
-            'propagate': False,
-        },
-        'users': {
-            'handlers': ['null'],
-            'propagate': False,
-        },
-    }
-}
+LOGGING = get_logging_config(
+    environment='test',
+    log_level='WARNING',
+    enable_console=False,
+    enable_audit_console=False,
+)
 
 # Disable rate limiting and account lockouts during tests
 RATELIMIT_ENABLE = False

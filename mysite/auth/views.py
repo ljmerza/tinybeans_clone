@@ -1,6 +1,7 @@
 """Authentication and account lifecycle views."""
 from __future__ import annotations
 
+import logging
 import math
 from urllib.parse import urlencode
 
@@ -47,7 +48,12 @@ from .token_utils import (
     generate_partial_token,
     hash_magic_login_token,
 )
+from mysite import logging as project_logging
+from mysite.audit import AuditEvent, log_audit_event, log_security_event
 from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
+
+
+logger = logging.getLogger(__name__)
 
 
 def _rate_from_settings(setting_name: str, default: str):
@@ -106,7 +112,28 @@ class SignupView(APIView):
         tokens = get_tokens_for_user(user)
         user_data = UserSerializer(user).data
         user_data['tokens'] = {'access': tokens['access']}
-        
+
+        with project_logging.log_context(user_id=user.id):
+            logger.info(
+                'User signup completed',
+                extra={
+                    'event': 'auth.signup.success',
+                    'extra': {
+                        'user_id': user.id,
+                        'email_domain': user.email.split('@')[-1] if user.email and '@' in user.email else None,
+                    },
+                },
+            )
+            log_audit_event(
+                AuditEvent(
+                    action='user.signup',
+                    actor_id=str(user.id),
+                    target_id=str(user.id),
+                    severity='info',
+                    metadata={'has_verified_email': False},
+                )
+            )
+
         # Use new notification format per ADR-012
         response_data = success_response(
             user_data,
@@ -133,95 +160,185 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         
-        # Check if 2FA is enabled for this user
-        try:
-            from .models import TwoFactorSettings
-            from .services.twofa_service import TwoFactorService
-            from .services.trusted_device_service import TrustedDeviceService
-            
-            twofa_settings = user.twofa_settings
-            
-            if twofa_settings.is_enabled:
-                # Check if account is locked
-                if twofa_settings.is_locked():
-                    return error_response(
-                        'account_locked',
-                        [create_message('errors.account_locked_2fa', {
-                            'retry_after': 'later'
-                        })],
-                        status.HTTP_429_TOO_MANY_REQUESTS
-                    )
-                
-                # Check if device is trusted (Remember Me feature)
-                device_token = TrustedDeviceService.get_device_id_from_request(request)
-                
-                is_trusted, rotated_token = TrustedDeviceService.is_trusted_device(
-                    user,
-                    device_token,
-                    request,
-                ) if device_token else (False, None)
-                
-                if is_trusted:
-                    # Trusted device - skip 2FA and proceed with normal login
-                    tokens = get_tokens_for_user(user)
-                    user_data = UserSerializer(user).data
-                    user_data['tokens'] = {'access': tokens['access']}
-                    user_data['trusted_device'] = True
-                    
-                    response_data = success_response(
-                        user_data,
-                        messages=[create_message('notifications.auth.login_success')]
-                    )
-                    set_refresh_cookie(response_data, tokens['refresh'])
-                    if rotated_token:
-                        TrustedDeviceService.set_trusted_device_cookie(response_data, rotated_token)
-                    return response_data
-                
-                # 2FA required - check rate limiting
-                if TwoFactorService.is_rate_limited(user):
-                    return error_response(
-                        'rate_limit_exceeded',
-                        [create_message('errors.rate_limit_2fa')],
-                        status.HTTP_429_TOO_MANY_REQUESTS
-                    )
-                
-                # Send 2FA code based on preferred method
-                if twofa_settings.preferred_method in ['email', 'sms']:
-                    TwoFactorService.send_otp(
+        with project_logging.log_context(user_id=user.id):
+            logger.info(
+                'Credentials validated for login request',
+                extra={
+                    'event': 'auth.login.credentials_valid',
+                    'extra': {'user_id': user.id},
+                },
+            )
+
+            # Check if 2FA is enabled for this user
+            try:
+                from .models import TwoFactorSettings
+                from .services.twofa_service import TwoFactorService
+                from .services.trusted_device_service import TrustedDeviceService
+
+                twofa_settings = user.twofa_settings
+
+                if twofa_settings.is_enabled:
+                    # Check if account is locked
+                    if twofa_settings.is_locked():
+                        log_security_event(
+                            'user.login.locked',
+                            actor_id=str(user.id),
+                            status='denied',
+                            severity='warning',
+                            metadata={'reason': 'twofa_locked'},
+                        )
+                        return error_response(
+                            'account_locked',
+                            [create_message('errors.account_locked_2fa', {
+                                'retry_after': 'later'
+                            })],
+                            status.HTTP_429_TOO_MANY_REQUESTS
+                        )
+
+                    # Check if device is trusted (Remember Me feature)
+                    device_token = TrustedDeviceService.get_device_id_from_request(request)
+
+                    is_trusted, rotated_token = TrustedDeviceService.is_trusted_device(
                         user,
-                        method=twofa_settings.preferred_method,
-                        purpose='login'
+                        device_token,
+                        request,
+                    ) if device_token else (False, None)
+
+                    if is_trusted:
+                        tokens = get_tokens_for_user(user)
+                        user_data = UserSerializer(user).data
+                        user_data['tokens'] = {'access': tokens['access']}
+                        user_data['trusted_device'] = True
+
+                        log_audit_event(
+                            AuditEvent(
+                                action='user.login',
+                                actor_id=str(user.id),
+                                target_id=str(user.id),
+                                status='success',
+                                severity='info',
+                                metadata={'trusted_device': True},
+                            )
+                        )
+                        log_security_event(
+                            'user.login.success',
+                            actor_id=str(user.id),
+                            status='success',
+                            severity='info',
+                            metadata={'trusted_device': True},
+                        )
+                        with project_logging.log_context(trusted_device=True):
+                            logger.info(
+                                'Login succeeded via trusted device',
+                                extra={
+                                    'event': 'auth.login.trusted_device',
+                                    'extra': {'user_id': user.id},
+                                },
+                            )
+
+                        response_data = success_response(
+                            user_data,
+                            messages=[create_message('notifications.auth.login_success')]
+                        )
+                        set_refresh_cookie(response_data, tokens['refresh'])
+                        if rotated_token:
+                            TrustedDeviceService.set_trusted_device_cookie(response_data, rotated_token)
+                        return response_data
+
+                    # 2FA required - check rate limiting
+                    if TwoFactorService.is_rate_limited(user):
+                        log_security_event(
+                            'user.login.rate_limited',
+                            actor_id=str(user.id),
+                            status='denied',
+                            severity='warning',
+                            metadata={'reason': 'twofa_rate_limit'},
+                        )
+                        return error_response(
+                            'rate_limit_exceeded',
+                            [create_message('errors.rate_limit_2fa')],
+                            status.HTTP_429_TOO_MANY_REQUESTS
+                        )
+
+                    # Send 2FA code based on preferred method
+                    if twofa_settings.preferred_method in ['email', 'sms']:
+                        TwoFactorService.send_otp(
+                            user,
+                            method=twofa_settings.preferred_method,
+                            purpose='login'
+                        )
+                        with project_logging.log_context(twofa_method=twofa_settings.preferred_method):
+                            logger.info(
+                                '2FA OTP sent for login',
+                                extra={
+                                    'event': 'auth.login.2fa_sent',
+                                    'extra': {
+                                        'user_id': user.id,
+                                        'method': twofa_settings.preferred_method,
+                                    },
+                                },
+                            )
+
+                    partial_token = generate_partial_token(user, request)
+
+                    log_security_event(
+                        'user.login.challenge',
+                        actor_id=str(user.id),
+                        status='pending',
+                        severity='notice',
+                        metadata={'method': twofa_settings.preferred_method},
                     )
-                
-                # Generate partial token with IP binding for 2FA verification
-                partial_token = generate_partial_token(user, request)
-                
-                # Return 2FA required response with i18n message
-                message_key = 'notifications.twofa.code_sent' if twofa_settings.preferred_method != 'totp' else 'notifications.twofa.enter_authenticator_code'
-                return success_response(
-                    {
-                        'requires_2fa': True,
-                        'method': twofa_settings.preferred_method,
-                        'partial_token': partial_token,
-                    },
-                    messages=[create_message(message_key, {'method': twofa_settings.preferred_method})]
+                    return success_response(
+                        {
+                            'requires_2fa': True,
+                            'method': twofa_settings.preferred_method,
+                            'partial_token': partial_token,
+                        },
+                        messages=[create_message(
+                            'notifications.twofa.code_sent' if twofa_settings.preferred_method != 'totp' else 'notifications.twofa.enter_authenticator_code',
+                            {'method': twofa_settings.preferred_method}
+                        )]
+                    )
+
+            except TwoFactorSettings.DoesNotExist:
+                # No 2FA configured - proceed with normal login
+                pass
+
+            tokens = get_tokens_for_user(user)
+            user_data = UserSerializer(user).data
+            user_data['tokens'] = {'access': tokens['access']}
+
+            log_audit_event(
+                AuditEvent(
+                    action='user.login',
+                    actor_id=str(user.id),
+                    target_id=str(user.id),
+                    status='success',
+                    severity='info',
+                    metadata={'twofa_enforced': False},
                 )
-                
-        except TwoFactorSettings.DoesNotExist:
-            # No 2FA configured - proceed with normal login
-            pass
-        
-        # Normal login flow (no 2FA or 2FA not enabled)
-        tokens = get_tokens_for_user(user)
-        user_data = UserSerializer(user).data
-        user_data['tokens'] = {'access': tokens['access']}
-        
-        response_data = success_response(
-            user_data,
-            messages=[create_message('notifications.auth.login_success')]
-        )
-        set_refresh_cookie(response_data, tokens['refresh'])
-        return response_data
+            )
+            log_security_event(
+                'user.login.success',
+                actor_id=str(user.id),
+                status='success',
+                severity='info',
+                metadata={'twofa_enforced': False},
+            )
+            logger.info(
+                'Login succeeded',
+                extra={
+                    'event': 'auth.login.success',
+                    'extra': {'user_id': user.id, 'twofa_enforced': False},
+                },
+            )
+
+            response_data = success_response(
+                user_data,
+                messages=[create_message('notifications.auth.login_success')]
+            )
+            set_refresh_cookie(response_data, tokens['refresh'])
+            return response_data
 
 
 class EmailVerificationResendView(APIView):
@@ -271,6 +388,21 @@ class EmailVerificationResendView(APIView):
                 'verification_expires_in_minutes': expires_in_minutes,
             },
         )
+        with project_logging.log_context(user_id=user.id):
+            logger.info(
+                'Email verification message scheduled',
+                extra={
+                    'event': 'auth.email_verification.resent',
+                    'extra': {'user_id': user.id},
+                },
+            )
+            log_security_event(
+                'user.email_verification.resent',
+                actor_id=str(user.id),
+                status='pending',
+                severity='notice',
+                metadata={'delivery_method': 'email'},
+            )
         return success_response(
             {},
             messages=[create_message('notifications.auth.email_verification_sent')],
@@ -293,6 +425,10 @@ class TokenRefreshCookieView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
         if not refresh_token:
+            logger.warning(
+                'Refresh token cookie missing for refresh request',
+                extra={'event': 'auth.token_refresh.missing_cookie'},
+            )
             return error_response(
                 'refresh_token_missing',
                 [create_message('errors.token_invalid_expired', {})],
@@ -303,6 +439,10 @@ class TokenRefreshCookieView(APIView):
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError:
+            logger.warning(
+                'Refresh token invalid or expired',
+                extra={'event': 'auth.token_refresh.invalid_token'},
+            )
             response = error_response(
                 'invalid_refresh_token',
                 [create_message('errors.token_invalid_expired', {})],
@@ -317,6 +457,7 @@ class TokenRefreshCookieView(APIView):
 
         response = success_response({'access': access_token})
         set_refresh_cookie(response, new_refresh)
+        logger.info('Refresh token rotated', extra={'event': 'auth.token_refresh.success'})
         return response
 
 
@@ -348,6 +489,10 @@ class EmailVerificationConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         payload = pop_token('verify-email', serializer.validated_data['token'])
         if not payload:
+            logger.warning(
+                'Email verification token invalid or expired',
+                extra={'event': 'auth.email_verification.invalid_token'},
+            )
             return error_response(
                 'invalid_token',
                 [create_message('errors.token_invalid_expired')],
@@ -355,6 +500,13 @@ class EmailVerificationConfirmView(APIView):
             )
         user = User.objects.filter(id=payload['user_id']).first()
         if not user:
+            logger.warning(
+                'Email verification target user missing',
+                extra={
+                    'event': 'auth.email_verification.user_missing',
+                    'extra': {'user_id': payload.get('user_id')},
+                },
+            )
             return error_response(
                 'user_not_found',
                 [create_message('errors.user_not_found')],
@@ -363,6 +515,23 @@ class EmailVerificationConfirmView(APIView):
         if not user.email_verified:
             user.email_verified = True
             user.save(update_fields=['email_verified'])
+        with project_logging.log_context(user_id=user.id):
+            logger.info(
+                'Email verification confirmed',
+                extra={
+                    'event': 'auth.email_verification.confirmed',
+                    'extra': {'user_id': user.id},
+                },
+            )
+            log_audit_event(
+                AuditEvent(
+                    action='user.email_verified',
+                    actor_id=str(user.id),
+                    target_id=str(user.id),
+                    status='success',
+                    severity='info',
+                )
+            )
         return success_response(
             {},
             messages=[create_message('notifications.auth.email_verified')]
@@ -392,6 +561,10 @@ class PasswordResetRequestView(APIView):
     ))
     def post(self, request):
         if getattr(request, 'limited', False):
+            logger.warning(
+                'Password reset request rate limited',
+                extra={'event': 'auth.password_reset.rate_limited'},
+            )
             return rate_limit_response('errors.rate_limit')
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -415,6 +588,25 @@ class PasswordResetRequestView(APIView):
                     'reset_link': reset_link,
                     'expires_in_minutes': expires_in_minutes,
                 },
+            )
+            with project_logging.log_context(user_id=user.id):
+                logger.info(
+                    'Password reset email scheduled',
+                    extra={
+                        'event': 'auth.password_reset.requested',
+                        'extra': {'user_id': user.id},
+                    },
+                )
+                log_security_event(
+                    'user.password_reset.requested',
+                    actor_id=str(user.id),
+                    status='pending',
+                    severity='warning',
+                )
+        else:
+            logger.info(
+                'Password reset requested for unknown identifier',
+                extra={'event': 'auth.password_reset.unknown_user'},
             )
         # Always return success to prevent email enumeration
         return success_response(
@@ -447,11 +639,19 @@ class PasswordResetConfirmView(APIView):
     ))
     def post(self, request):
         if getattr(request, 'limited', False):
+            logger.warning(
+                'Password reset confirmation rate limited',
+                extra={'event': 'auth.password_reset_confirm.rate_limited'},
+            )
             return rate_limit_response('errors.rate_limit')
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = pop_token('password-reset', serializer.validated_data['token'])
         if not payload:
+            logger.warning(
+                'Password reset token invalid or expired',
+                extra={'event': 'auth.password_reset.invalid_token'},
+            )
             return error_response(
                 'invalid_token',
                 [create_message('errors.token_invalid_expired')],
@@ -459,6 +659,13 @@ class PasswordResetConfirmView(APIView):
             )
         user = User.objects.filter(id=payload['user_id']).first()
         if not user:
+            logger.warning(
+                'Password reset target user missing',
+                extra={
+                    'event': 'auth.password_reset.user_missing',
+                    'extra': {'user_id': payload.get('user_id')},
+                },
+            )
             return error_response(
                 'user_not_found',
                 [create_message('errors.user_not_found')],
@@ -466,6 +673,29 @@ class PasswordResetConfirmView(APIView):
             )
         user.set_password(serializer.validated_data['password'])
         user.save(update_fields=['password'])
+        with project_logging.log_context(user_id=user.id):
+            logger.info(
+                'Password reset completed',
+                extra={
+                    'event': 'auth.password_reset.success',
+                    'extra': {'user_id': user.id},
+                },
+            )
+            log_audit_event(
+                AuditEvent(
+                    action='user.password_reset',
+                    actor_id=str(user.id),
+                    target_id=str(user.id),
+                    status='success',
+                    severity='warning',
+                )
+            )
+            log_security_event(
+                'user.password_reset.success',
+                actor_id=str(user.id),
+                status='success',
+                severity='warning',
+            )
         return success_response(
             {},
             messages=[create_message('notifications.auth.password_updated')]
@@ -488,6 +718,30 @@ class PasswordChangeView(APIView):
         user.set_password(serializer.validated_data['password'])
         user.save(update_fields=['password'])
         tokens = get_tokens_for_user(user)
+
+        with project_logging.log_context(user_id=user.id):
+            logger.info(
+                'Password changed by authenticated user',
+                extra={
+                    'event': 'auth.password_change.success',
+                    'extra': {'user_id': user.id},
+                },
+            )
+            log_audit_event(
+                AuditEvent(
+                    action='user.password_change',
+                    actor_id=str(user.id),
+                    target_id=str(user.id),
+                    status='success',
+                    severity='info',
+                )
+            )
+            log_security_event(
+                'user.password_change.success',
+                actor_id=str(user.id),
+                status='success',
+                severity='info',
+            )
         
         data = {'tokens': {'access': tokens['access']}}
         response = success_response(
@@ -514,6 +768,25 @@ class LogoutView(APIView):
             status_code=status.HTTP_200_OK
         )
         clear_refresh_cookie(response)
+        user_id = getattr(getattr(request, 'user', None), 'id', None)
+        with project_logging.log_context(user_id=user_id):
+            logger.info(
+                'User logged out',
+                extra={
+                    'event': 'auth.logout.success',
+                    'extra': {'user_id': user_id},
+                },
+            )
+            if user_id is not None:
+                log_audit_event(
+                    AuditEvent(
+                        action='user.logout',
+                        actor_id=str(user_id),
+                        target_id=str(user_id),
+                        status='success',
+                        severity='info',
+                    )
+                )
         return response
 
 

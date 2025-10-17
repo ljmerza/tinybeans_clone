@@ -20,6 +20,8 @@ from pathlib import Path
 from kombu import Queue
 from django.core.exceptions import ImproperlyConfigured
 
+from mysite.logging import get_logging_config
+
 
 def _env_flag(name: str, default: bool = False) -> bool:
     value = os.environ.get(name)
@@ -119,6 +121,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'mysite.middleware.RequestContextMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -217,6 +220,11 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = get_logging_config(
+    environment=os.environ.get('DJANGO_ENVIRONMENT', 'local'),
+    service_name=os.environ.get('SERVICE_NAME', 'mysite-backend'),
+)
 
 
 AUTH_USER_MODEL = 'users.User'

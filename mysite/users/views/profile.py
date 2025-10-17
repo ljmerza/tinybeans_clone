@@ -1,6 +1,8 @@
 """Profile and preference management views."""
 from __future__ import annotations
 
+import logging
+
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, status
@@ -9,9 +11,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 
+from mysite import logging as project_logging
 from mysite.notification_utils import create_message, success_response
 from ..models import Circle, CircleMembership, UserNotificationPreferences
 from ..serializers import EmailPreferencesSerializer, UserProfileSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfileView(APIView):
@@ -35,6 +40,15 @@ class UserProfileView(APIView):
         serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        updated_fields = sorted(serializer.validated_data.keys())
+        with project_logging.log_context(user_id=request.user.id):
+            logger.info(
+                'User profile updated',
+                extra={
+                    'event': 'users.profile.updated',
+                    'extra': {'updated_fields': updated_fields},
+                },
+            )
         return success_response(
             {'user': serializer.data},
             messages=[create_message('notifications.profile.updated')],
@@ -92,6 +106,18 @@ class EmailPreferencesView(APIView):
         serializer = EmailPreferencesSerializer(prefs, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        circle_id = getattr(prefs.circle, 'id', None)
+        with project_logging.log_context(user_id=request.user.id, circle_id=circle_id):
+            logger.info(
+                'Notification preferences updated',
+                extra={
+                    'event': 'users.preferences.updated',
+                    'extra': {
+                        'circle_id': circle_id,
+                        'updated_fields': sorted(serializer.validated_data.keys()),
+                    },
+                },
+            )
         return success_response(
             serializer.data,
             messages=[create_message('notifications.preferences.updated')],

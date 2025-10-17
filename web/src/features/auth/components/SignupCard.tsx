@@ -7,7 +7,7 @@ import { zodValidator } from "@/lib/form/index";
 import { signupSchemaBase } from "@/lib/validations/schemas/signup";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +17,6 @@ import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 export function SignupCard() {
 	const { t } = useTranslation();
 	const signup = useSignup();
-	const navigate = useNavigate();
 	const { getGeneral, getFieldErrors } = useApiMessages();
 	const [generalError, setGeneralError] = useState("");
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -37,7 +36,6 @@ export function SignupCard() {
 
 			try {
 				await signup.mutateAsync(payload);
-				navigate({ to: "/" });
 			} catch (error) {
 				const apiError = error as ApiError;
 				console.error("Signup error:", apiError);

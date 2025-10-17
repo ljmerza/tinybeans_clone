@@ -76,19 +76,37 @@ export function useLogin() {
 
 export function useSignup() {
 	const qc = useQueryClient();
+	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<SignupResponse, ApiError, SignupRequest>({
-		mutationFn: (body) => apiClient.post<SignupResponse>("/auth/signup/", body),
-		onSuccess: (data) => {
-			if (data.tokens?.access) {
-				setAccessToken(data.tokens.access);
+	return useMutation<ApiResponseWithMessages<SignupResponse>, ApiError, SignupRequest>({
+		mutationFn: (body) =>
+			apiClient.post<ApiResponseWithMessages<SignupResponse>>(
+				"/auth/signup/",
+				body,
+			),
+		onSuccess: (response) => {
+			const payload = (response.data ??
+				(response as unknown as SignupResponse)) as SignupResponse | undefined;
+
+			const tokens = payload?.tokens ?? response.tokens;
+			if (tokens?.access) {
+				setAccessToken(tokens.access);
 			}
+
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			if (data.messages?.length) {
-				showAsToast(data.messages, 201);
+			if (response.messages?.length) {
+				showAsToast(response.messages, 201);
 			}
+
+			const needsOnboarding = Boolean(payload?.needs_circle_onboarding);
+			if (needsOnboarding) {
+				navigate({ to: "/circles/onboarding" });
+				return;
+			}
+
+			navigate({ to: "/" });
 		},
 		onError: (error) => {
 			console.error("Signup error:", error);

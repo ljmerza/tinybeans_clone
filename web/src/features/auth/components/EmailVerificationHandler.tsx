@@ -23,6 +23,11 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 	const [status, setStatus] = useState<VerificationStatus>("verifying");
 	const [message, setMessage] = useState<string>("");
 	const attemptedTokenRef = useRef<string | undefined>(undefined);
+	const getGeneralRef = useRef(getGeneral);
+	const verifyEmailRef = useRef(verifyEmail);
+
+	getGeneralRef.current = getGeneral;
+	verifyEmailRef.current = verifyEmail;
 
 	useEffect(() => {
 		if (!token) {
@@ -39,18 +44,18 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 
 		let isActive = true;
 
-		verifyEmail
+		verifyEmailRef.current
 			.mutateAsync({ token })
 			.then((response) => {
 				if (!isActive) return;
-				const generalMessages = getGeneral(response.messages);
+				const generalMessages = getGeneralRef.current(response.messages);
 				setMessage(generalMessages[0] ?? t("auth.email_verification.success"));
 				setStatus("success");
 			})
 			.catch((error) => {
 				if (!isActive) return;
 				const apiError = error as ApiError;
-				const generalMessages = getGeneral(apiError.messages);
+				const generalMessages = getGeneralRef.current(apiError.messages);
 				setMessage(
 					generalMessages[0] ?? t("auth.email_verification.error"),
 				);
@@ -59,7 +64,7 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 		return () => {
 			isActive = false;
 		};
-	}, [token, verifyEmail, getGeneral, t]);
+	}, [token, t]);
 
 	return (
 		<div className="mx-auto max-w-md p-6 space-y-4">
