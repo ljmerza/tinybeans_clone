@@ -1,5 +1,5 @@
 # Import all models to maintain backwards compatibility
-from .user import UserRole, UserManager, User
+from .user import CircleOnboardingStatus, UserRole, UserManager, User
 from .circle import Circle, CircleMembership, CircleInvitation, CircleInvitationStatus
 from .child_profile import (
     ChildProfile, 
@@ -14,7 +14,7 @@ from .notifications import UserNotificationPreferences, NotificationChannel, Dig
 from .utils import generate_unique_slug
 
 __all__ = [
-    'UserRole', 'UserManager', 'User',
+    'CircleOnboardingStatus', 'UserRole', 'UserManager', 'User',
     'Circle', 'CircleMembership', 'CircleInvitation', 'CircleInvitationStatus',
     'ChildProfile', 'ChildProfileUpgradeStatus', 'ChildGuardianConsent', 
     'GuardianConsentMethod', 'ChildUpgradeAuditLog', 'ChildUpgradeEventType',

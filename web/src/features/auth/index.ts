@@ -11,3 +11,5 @@ export {
 } from "./api/authClient";
 export { authKeys, userKeys } from "./api/queryKeys";
 export type { RequestOptions as AuthRequestOptions } from "./api/authClient";
+
+export * from "./hooks/emailVerificationHooks";

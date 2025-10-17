@@ -1,524 +1,570 @@
 {
-	"common": {
-		"loading": "Loading...",
-		"error": "Error",
-		"success": "Success",
-		"cancel": "Cancel",
-		"confirm": "Confirm",
-		"save": "Save",
-		"delete": "Delete",
-		"edit": "Edit",
-		"close": "Close",
-		"back": "Back",
-		"next": "Next",
-		"submit": "Submit",
-		"yes": "Yes",
-		"no": "No",
-		"or": "OR",
-		"required": "Required",
-		"retry": "Retry",
-		"remove": "Remove",
-		"back_home": "\u2190 Back to home",
-		"back_to_login": "\u2190 Back to login",
-		"done": "Done"
-	},
-	"nav": {
-		"home": "Home",
-		"login": "Login",
-		"signup": "Sign up",
-		"logout": "Logout",
-		"settings": "Settings"
-	},
-	"auth": {
-		"login": {
-			"title": "Login",
-			"username": "Username",
-			"password": "Password",
-			"forgot_password": "Forgot password?",
-			"sign_in": "Sign in",
-			"signing_in": "Signing in\u2026",
-			"no_account": "Don't have an account?",
-			"with_magic_link": "Login with Magic Link \u2192",
-			"login_failed": "Login failed"
-		},
-		"signup": {
-			"title": "Create your account",
-			"description": "Join the community by filling out the details below. All fields are required.",
-			"username": "Username",
-			"email": "Email",
-			"password": "Password",
-			"confirm_password": "Confirm password",
-			"create_account": "Create account",
-			"creating_account": "Creating account\u2026",
-			"already_have_account": "Already have an account?",
-			"signup_failed": "Signup failed"
-		},
-		"password_reset": {
-			"request_title": "Reset Password",
-			"request_description": "Enter your email or username and we'll send you a link to reset your password.",
-			"email_or_username": "Email or username",
-			"send_reset_link": "Send reset link",
-			"sending": "Sending\u2026",
-			"success_message": "If an account exists for that identifier, we'll send password reset instructions.",
-			"failed": "Failed to send reset email",
-			"back_to_login": "\u2190 Back to login",
-			"confirm_title": "Set New Password",
-			"confirm_description": "Enter your new password below.",
-			"new_password": "New password",
-			"confirm_new_password": "Confirm new password",
-			"reset_password": "Reset password",
-			"resetting": "Resetting\u2026",
-			"reset_failed": "Failed to reset password"
-		},
-		"magic_link": {
-			"request_title": "Login with Magic Link",
-			"request_description": "Enter your email and we'll send you a magic link to sign in.",
-			"email": "Email",
-			"send_magic_link": "Send magic link",
-			"sending": "Sending\u2026",
-			"check_email": "Check your email",
-			"success_message": "If an account with that email exists, a magic link has been sent.",
-			"failed": "Failed to send magic link",
-			"back_to_login": "\u2190 Back to login",
-			"processing": "Processing magic link...",
-			"verifying": "Verifying magic link...",
-			"success": "Successfully logged in!"
-		},
-		"oauth": {
-			"google_signin": "Sign in with Google",
-			"google_signup": "Sign up with Google",
-			"google_link": "Link Google Account",
-			"processing": "Processing Google sign-in..."
-		},
-		"logout": {
-			"logging_out": "Logging out...",
-			"message": "You have been logged out"
-		}
-	},
-	"twofa": {
-		"title": "Two-Factor Authentication",
-		"enabled": "2FA Enabled",
-		"disabled": "2FA Disabled",
-		"enable": "Enable 2FA",
-		"disable": "Disable 2FA",
-		"setup_title": "Set up Two-Factor Authentication",
-		"verify_title": "Two-Factor Authentication Required",
-		"verify_description": "Enter the verification code from your authenticator app or device",
-		"code": "Verification Code",
-		"verify": {
-			"use_recovery": "Enter one of your recovery codes",
-			"enter_code": "Enter the 6-digit code from your {{method}}",
-			"methods": {
-				"authenticator": "authenticator app",
-				"email": "email",
-				"sms": "phone"
-			},
-			"recovery_label": "Recovery Code",
-			"recovery_placeholder": "XXXX-XXXX-XXXX",
-			"recovery_hint": "Format: XXXX-XXXX-XXXX (with dashes)",
-			"remember_device": "Remember this device for 30 days",
-			"verifying": "Verifying\u2026",
-			"verify": "Verify",
-			"use_code": "\u2190 Use verification code instead",
-			"use_recovery_toggle": "Use recovery code instead \u2192",
-			"digit_label": "Digit {{index}}"
-		},
-		"verifying": "Verifying\u2026",
-		"use_recovery_code": "Use recovery code instead",
-		"trust_device": "Trust this device for 30 days",
-		"methods": {
-			"totp": "Authenticator App",
-			"sms": "SMS",
-			"email": "Email",
-			"recovery": "Recovery Code"
-		},
-		"status": {
-			"enabled": "\u2713 Enabled",
-			"disabled": "\u26a0\ufe0f Not enabled",
-			"method": "Method: {{method}}",
-			"no_default_method": "No default method selected"
-		},
-		"messages": {
-			"method_removed": "Method removed successfully.",
-			"default_method_updated": "Default method updated successfully.",
-			"trusted_device_removed": "Trusted device removed.",
-			"trusted_device_added": "Trusted device added.",
-			"trusted_device_already": "This device is already trusted."
-		},
-		"errors": {
-			"verify_login": "Failed to verify 2FA code.",
-			"disable": "Failed to disable 2FA.",
-			"generate_codes": "Failed to generate recovery codes.",
-			"add_trusted_device": "Failed to add trusted device.",
-			"remove_trusted_device": "Failed to remove trusted device.",
-			"update_default_method": "Failed to update default method.",
-			"remove_method": "Failed to remove 2FA method.",
-			"start_authenticator": "Failed to start authenticator setup.",
-			"verify_authenticator": "Verification failed. Try again.",
-			"request_disable": "Failed to request disable code.",
-			"qr_load": "We couldn\u2019t load your QR code. Please restart the setup process.",
-			"sms_send": "Failed to send verification code.",
-			"sms_verify": "Verification failed. Check the code and try again.",
-			"sms_resend": "Failed to resend verification code.",
-			"email_send": "Failed to send verification email.",
-			"email_verify": "Verification failed. Check your email code.",
-			"email_resend": "Failed to resend verification email.",
-			"copy": "Copy failed. Please copy manually.",
-			"copy_code": "Unable to copy code. Please copy manually.",
-			"copy_codes": "Unable to copy codes. Please copy manually.",
-			"invalid_code": "Invalid code. Please try again.",
-			"load_settings": "We couldn't load your 2FA settings. Please try again."
-		},
-		"setup": {
-			"choose_method": "Choose 2FA Method",
-			"actions": {
-				"start": "Send Verification Code",
-				"loading": "Sending\u2026",
-				"verify_enable": "Verify & Enable 2FA",
-				"verifying": "Verifying\u2026",
-				"back_to_scan": "Back to QR Code",
-				"resend": "Resend Code",
-				"scan_complete": "I've scanned the code"
-			},
-			"totp": {
-				"title": "Authenticator App Setup",
-				"intro": "Use an authenticator app like Google Authenticator or Authy",
-				"scan": "Scan QR Code",
-				"scan_instructions": "Scan this QR code with your authenticator app",
-				"manual_entry": "Or enter this code manually:",
-				"verify": "Verify Code",
-				"enter_code": "Enter the 6-digit code from your app",
-				"info_title": "What you'll need:",
-				"info_items": [
-					"A smartphone or tablet",
-					"An authenticator app (Google Authenticator, Authy, 1Password, etc.)",
-					"A few minutes to complete setup"
-				],
-				"verify_title": "Verify Authenticator Code",
-				"apps": [
-					"Google Authenticator",
-					"Authy",
-					"1Password",
-					"Microsoft Authenticator",
-					"Or any TOTP-compatible app"
-				],
-				"qr_alt": "QR code for authenticator app setup",
-				"scan_prompt": "Scan this QR code with your authenticator app:",
-				"manual_title": "Can't scan? Enter this code manually:",
-				"manual_help": "Use this secret key if your authenticator app doesn't support QR codes"
-			},
-			"sms": {
-				"title": "Verify by SMS",
-				"intro": "Receive a verification code via text message. Use E.164 format (e.g. +15551234567).",
-				"phone_number": "Phone Number",
-				"phone_label": "Phone number",
-				"phone_placeholder": "+15551234567",
-				"send_code": "Send Code",
-				"verify": "Verify Code",
-				"message": "Check your phone for the verification code.",
-				"info_title": "How it works",
-				"info_items": [
-					"We send a 6-digit code via SMS.",
-					"Enter the code to enable SMS-based 2FA.",
-					"The SMS method becomes your default 2FA option."
-				],
-				"verify_title": "Enter SMS Code",
-				"verify_button": "Verify & Enable SMS",
-				"recovery_title": "\u2705 SMS 2FA Enabled",
-				"recovery_description": "Save your recovery codes in a safe place in case you can't receive texts."
-			},
-			"email": {
-				"title": "Verify by Email",
-				"intro": "We will send a 6-digit verification code to your account email.",
-				"send_code": "Send Code",
-				"verify": "Verify Code",
-				"message": "Check your inbox for the verification code.",
-				"info_title": "How it works",
-				"info_items": [
-					"We send a verification code to your primary email.",
-					"Enter the code to enable email-based 2FA.",
-					"The email method becomes your default 2FA option."
-				],
-				"verify_title": "Enter Email Code",
-				"verify_button": "Verify & Enable Email",
-				"recovery_title": "\u2705 Email 2FA Enabled",
-				"recovery_description": "Save your recovery codes to keep access if you can't reach your email."
-			},
-			"recovery": {
-				"title": "Recovery Codes",
-				"description": "Save these recovery codes in a safe place. Each code can only be used once.",
-				"download": "Download Codes",
-				"print": "Print Codes",
-				"copied": "Copied to clipboard",
-				"warning": "These codes will only be shown once!",
-				"enabled_title": "\u2705 2FA Enabled!",
-				"enabled_message": "Two-factor authentication is now active",
-				"warning_title": "\u26a0\ufe0f Save These Codes",
-				"warning_body": "These recovery codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once.",
-				"copy_all": "Copy All Codes",
-				"copied_all": "\u2713 Copied All",
-				"download_txt": "Download as TXT",
-				"download_pdf": "Download as PDF",
-				"important_title": "Important:",
-				"important_items": [
-					"Store these codes in a secure location (password manager, safe, etc.)",
-					"Each code can only be used once",
-					"Don't share these codes with anyone",
-					"You can generate new codes at any time (this will invalidate old ones)"
-				]
-			}
-		},
-		"settings": {
-			"status": "Status",
-			"default_method": "Default Method",
-			"change_method": "Change Default Method",
-			"recovery_codes": "Recovery Codes",
-			"regenerate_codes": "Regenerate Recovery Codes",
-			"trusted_devices": {
-				"title": "Trusted Devices",
-				"description": "Manage devices that can skip 2FA verification for 30 days.",
-				"manage_action": "Manage Trusted Devices"
-			},
-			"remove_device": "Remove Device",
-			"disable_confirm": "Are you sure you want to disable 2FA?",
-			"loading_title": "Loading 2FA settings...",
-			"loading_description": "We are preparing your two-factor authentication options.",
-			"manage_title": "Setup and Manage Methods",
-			"manage_description": "Choose your default method by configuring the options below.",
-			"tabs": {
-				"general": "General",
-				"two_factor": "Two-Factor Authentication"
-			},
-			"general": {
-				"title": "General settings",
-				"description": "Update your account information and preferences.",
-				"theme": {
-					"title": "Appearance",
-					"description": "Choose how Tinybeans looks on your device.",
-					"select_label": "Theme preference",
-					"select_description": "Pick a theme or follow your browser’s color scheme.",
-					"select_placeholder": "Select a theme",
-					"current_value": "Currently using {{value}} theme.",
-					"current_value_system": "Following browser preference (currently {{value}}).",
-					"options": {
-						"light": {
-							"title": "Light",
-							"description": "Bright backgrounds with dark text."
-						},
-						"dark": {
-							"title": "Dark",
-							"description": "Dim backgrounds that are easier on the eyes at night."
-						},
-						"system": {
-							"title": "Match browser",
-							"description": "Keep Tinybeans in sync with your browser preference."
-						}
-					}
-				}
-			},
-			"not_enabled_title": "2FA is not enabled.",
-			"not_enabled_description": "Start by setting up a method below. This will also generate fresh recovery codes.",
-			"remove_title": "Remove {{method}}?",
-			"remove_description": {
-				"totp": "Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
-				"sms": "Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
-				"email": "Removing email verification will disable receiving verification codes via email. You can set it up again at any time."
-			},
-			"no_default_method": "No default method selected",
-			"recovery_codes_title": "Recovery Codes",
-			"recovery_codes_description": "Recovery codes can be used to access your account if you lose access to your authenticator device. Each code can only be used once.",
-			"recovery_codes_generate": "Generate New Recovery Codes",
-			"recovery_codes_generating": "Generating...",
-			"disable": {
-				"title": "Disable Two-Factor Authentication",
-				"description": "Disabling 2FA will make your account less secure. You'll only need your password to log in.",
-				"action": "Disable 2FA",
-				"dialog_title": "Disable Two-Factor Authentication",
-				"dialog_description": "Enter your 6-digit verification code to confirm disabling 2FA. This will make your account less secure.",
-				"confirm_label": "Confirm Disable",
-				"confirm_loading": "Disabling..."
-			}
-		}
-	},
-	"pages": {
-		"home": {
-			"welcome": "Welcome",
-			"authenticated_message": "You are signed in!",
-			"guest_message": "Get started by signing up or logging in to your account."
-		},
-		"error": {
-			"something_wrong": "Something went wrong",
-			"unexpected_error": "An unexpected error occurred",
-			"go_home": "Go to Home"
-		}
-	},
-	"validation": {
-		"username_required": "Username is required",
-		"username_min_length": "Username must be at least 3 characters",
-		"username_max_length": "Username must be at most 30 characters",
-		"username_invalid_chars": "Username can only contain letters, numbers, and underscores",
-		"email_required": "Email is required",
-		"email_valid": "Valid email required",
-		"password_required": "Password is required",
-		"password_min_length": "Password must be at least 8 characters",
-		"passwords_match": "Passwords do not match",
-		"confirm_password": "Confirm password",
-		"field_required": "This field is required"
-	},
-	"notifications": {
-		"profile": {
-			"photo_uploaded": "Profile photo updated successfully",
-			"updated": "Profile updated successfully"
-		},
-		"preferences": {
-			"updated": "Preferences updated successfully"
-		},
-		"circle": {
-			"created": "Circle created successfully",
-			"updated": "Circle updated successfully",
-			"member_added": "Member added to circle",
-			"member_removed": "Member removed from circle",
-			"invitation_sent": "Invitation sent successfully",
-			"invitation_accepted": "Invitation accepted successfully",
-			"invitation_declined": "Invitation declined"
-		},
-		"pet": {
-			"created": "Pet profile created successfully",
-			"updated": "Pet profile updated successfully"
-		},
-		"child": {
-			"upgrade_invitation_sent": "Upgrade invitation sent successfully",
-			"account_created": "Account created successfully"
-		},
-		"media": {
-			"upload_initiated": "Media upload initiated successfully"
-		},
-		"auth": {
-			"login_success": "Welcome back!",
-			"signup_success": "Account created successfully",
-			"logout_success": "Logged out successfully",
-			"email_verified": "Email verified successfully",
-			"email_verification_sent": "Verification email sent",
-			"password_reset": "Password reset email sent",
-			"password_updated": "Password updated successfully",
-			"magic_link_sent": "If an account with that email exists, a magic link has been sent",
-			"magic_login_success": "Successfully logged in via magic link"
-		},
-		"oauth": {
-			"account_linked": "Google account linked successfully",
-			"account_unlinked": "Google account unlinked successfully"
-		},
-		"twofa": {
-			"setup_initiated": "Scan QR code with your authenticator app",
-			"verification_code_sent": "Verification code sent to your {{method}}",
-			"code_sent": "2FA code sent to your {{method}}",
-			"setup_complete": "2FA enabled successfully. Save your recovery codes!",
-			"disabled": "2FA disabled successfully",
-			"preferred_method_updated": "Default 2FA method updated to {{method}}",
-			"method_removed": "{{method}} 2FA method removed",
-			"method_removed_disabled": "Two-factor authentication has been disabled because no other verified methods are available",
-			"method_removed_preferred_changed": "Preferred method updated to {{preferred_method}}",
-			"enter_authenticator_code": "Enter your authenticator code to disable 2FA",
-			"recovery_codes_generated": "New recovery codes generated. Old codes have been invalidated",
-			"device_removed": "Device removed successfully",
-			"device_added": "{{device_name}} is now trusted",
-			"device_already_trusted": "{{device_name}} is already trusted"
-		}
-	},
-	"errors": {
-		"file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
-		"invalid_file_type": "Invalid file type. Allowed types: {{allowedTypes}}",
-		"email_invalid": "Please enter a valid email address",
-		"password_too_short": "Password must be at least {{minLength}} characters",
-		"password_mismatch": "Passwords do not match",
-		"required_field": "This field is required",
-		"username_taken": "This username is already taken",
-		"email_taken": "This email is already registered",
-		"invalid_credentials": "Invalid email or password",
-		"rate_limit": "Too many requests. Please try again in {{retry_after}} seconds.",
-		"rate_limit_2fa": "Too many 2FA requests. Please try again later.",
-		"account_locked_2fa": "Account temporarily locked due to too many failed 2FA attempts. Please try again {{retry_after}}.",
-		"token_invalid_expired": "Invalid or expired token",
-		"user_not_found": "User not found",
-		"network_error": "Network error. Please check your connection.",
-		"server_error": "Something went wrong. Please try again later.",
-		"unauthorized": "You must be logged in to perform this action",
-		"forbidden": "You don't have permission to perform this action",
-		"not_found": "The requested resource was not found",
-		"validation_failed": "Please check the form for errors",
-		"magic_link_expired": "This magic link has expired",
-		"magic_link_invalid": "Invalid magic link",
-		"magic_link_rate_limit": "Too many magic link requests. Please try again later.",
-		"account_inactive": "Your account is not active",
-		"membership_not_found": "Membership not found",
-		"invitation_not_pending": "Invitation is no longer pending",
-		"invitation_not_found": "Invitation not found",
-		"invitation_mismatch": "Invitation mismatch",
-		"email_already_registered": "Email already registered. Please log in.",
-		"child_profile_not_found": "Child profile not found",
-		"child_already_linked": "Child profile already linked to an account",
-		"upgrade_invitation_revoked": "Upgrade invitation has been revoked",
-		"upgrade_invitation_mismatch": "Upgrade invitation mismatch",
-		"upgrade_invitation_expired": "Upgrade invitation has expired",
-		"circle_not_found": "Circle not found or you are not a member",
-		"invalid_keep_type": "Valid keep type required. Options: note, media, milestone",
-		"keep_not_found": "Keep not found",
-		"access_denied": "Access denied",
-		"required_fields_missing": "Required fields are missing",
-		"invalid_media_type": "Media type must be photo or video",
-		"upload_failed": "Upload failed. Please try again.",
-		"upload_not_found": "Upload not found",
-		"email_verification_required": "Email verification is required before creating circles. Please verify your email first.",
-		"circle_member_exists": "User already belongs to this circle",
-		"invitation_pending_for_email": "An invitation is already pending for this email",
-		"pet_name_required": "Pet name cannot be empty",
-		"circle_membership_required": "You must be a member of this circle to create keeps.",
-		"milestone_required": "Milestone data is required for milestone keeps.",
-		"milestone_not_allowed": "Milestone data should only be provided for milestone keeps.",
-		"media_files_required": "Media keeps should include media files.",
-		"keep_update_forbidden": "You can only update keeps you created or as a circle admin.",
-		"validation_error": "{{field}}: {{message}}",
-		"general_validation_error": "{{message}}",
-		"oauth": {
-			"invalid_redirect_uri": "Invalid redirect URI: {{uri}}",
-			"initiate_failed": "Failed to initiate OAuth flow. Please try again.",
-			"invalid_state": "Invalid or expired OAuth state token",
-			"unverified_account_exists": "An unverified account exists with email {{email}}. Please verify your email first. {{help_url}}",
-			"authentication_failed": "OAuth authentication failed. Please try again.",
-			"callback_failed": "OAuth callback failed. Please try again.",
-			"account_already_linked": "This Google account is already linked to another account",
-			"link_failed": "Failed to link Google account. Please try again.",
-			"cannot_unlink_without_password": "Cannot unlink Google account. You must set a password first. {{help_url}}",
-			"invalid_password": "Invalid password",
-			"google_cancelled": "You cancelled the Google sign-in process",
-			"invalid_callback": "Missing required OAuth parameters. Please try again.",
-			"state_mismatch": "Security validation failed. Please try signing in again."
-		},
-		"auth": {
-			"invalid_password": "Invalid password"
-		},
-		"twofa": {
-			"invalid_method": "Invalid 2FA method",
-			"phone_number_required": "Phone number required for SMS method",
-			"not_initialized": "2FA not initialized. Start setup first",
-			"invalid_verification_code": "Invalid verification code",
-			"not_enabled": "2FA not enabled",
-			"already_disabled": "2FA is already disabled",
-			"not_configured": "2FA not configured",
-			"enable_before_changing_method": "Enable 2FA before changing the default method",
-			"totp_not_configured": "Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first",
-			"totp_not_verified": "Verify your authenticator app via TOTP setup before choosing it as default",
-			"sms_no_phone": "Add a phone number via SMS setup before using SMS as default",
-			"sms_not_verified": "Verify your phone number via SMS setup before choosing it as default",
-			"email_not_verified": "Verify email via Email setup before choosing it as default",
-			"method_not_configured": "{{method}} 2FA is not configured",
-			"recovery_codes_required": "Recovery codes must be provided. Codes can only be downloaded immediately after generation",
-			"no_recovery_codes": "No recovery codes provided",
-			"device_id_required": "device_id is required",
-			"device_not_found": "Device not found",
-			"partial_token_invalid": "Invalid or expired partial token. Please login again",
-			"not_configured_for_account": "2FA not configured for this account",
-			"must_be_enabled_for_recovery": "2FA must be enabled to generate recovery codes"
-		}
-	}
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "close": "Close",
+        "back": "Back",
+        "next": "Next",
+        "submit": "Submit",
+        "yes": "Yes",
+        "no": "No",
+        "or": "OR",
+        "required": "Required",
+        "retry": "Retry",
+        "remove": "Remove",
+        "back_home": "← Back to home",
+        "back_to_login": "← Back to login",
+        "done": "Done"
+    },
+    "nav": {
+        "home": "Home",
+        "login": "Login",
+        "signup": "Sign up",
+        "logout": "Logout",
+        "settings": "Settings"
+    },
+    "auth": {
+        "login": {
+            "title": "Login",
+            "username": "Username",
+            "password": "Password",
+            "forgot_password": "Forgot password?",
+            "sign_in": "Sign in",
+            "signing_in": "Signing in…",
+            "no_account": "Don't have an account?",
+            "with_magic_link": "Login with Magic Link →",
+            "login_failed": "Login failed"
+        },
+        "signup": {
+            "title": "Create your account",
+            "description": "Join the community by filling out the details below. All fields are required.",
+            "username": "Username",
+            "email": "Email",
+            "password": "Password",
+            "confirm_password": "Confirm password",
+            "create_account": "Create account",
+            "creating_account": "Creating account…",
+            "already_have_account": "Already have an account?",
+            "signup_failed": "Signup failed"
+        },
+        "password_reset": {
+            "request_title": "Reset Password",
+            "request_description": "Enter your email or username and we'll send you a link to reset your password.",
+            "email_or_username": "Email or username",
+            "send_reset_link": "Send reset link",
+            "sending": "Sending…",
+            "success_message": "If an account exists for that identifier, we'll send password reset instructions.",
+            "failed": "Failed to send reset email",
+            "back_to_login": "← Back to login",
+            "confirm_title": "Set New Password",
+            "confirm_description": "Enter your new password below.",
+            "new_password": "New password",
+            "confirm_new_password": "Confirm new password",
+            "reset_password": "Reset password",
+            "resetting": "Resetting…",
+            "reset_failed": "Failed to reset password"
+        },
+        "magic_link": {
+            "request_title": "Login with Magic Link",
+            "request_description": "Enter your email and we'll send you a magic link to sign in.",
+            "email": "Email",
+            "send_magic_link": "Send magic link",
+            "sending": "Sending…",
+            "check_email": "Check your email",
+            "success_message": "If an account with that email exists, a magic link has been sent.",
+            "failed": "Failed to send magic link",
+            "back_to_login": "← Back to login",
+            "processing": "Processing magic link...",
+            "verifying": "Verifying magic link...",
+            "success": "Successfully logged in!"
+        },
+        "email_verification": {
+            "title": "Verify your email",
+            "verifying": "Verifying your email…",
+            "success": "Your email has been verified. You can continue to the app.",
+            "error": "We couldn't verify your email. The link may be invalid or expired.",
+            "invalid_link": "Invalid verification link."
+        },
+        "oauth": {
+            "google_signin": "Sign in with Google",
+            "google_signup": "Sign up with Google",
+            "google_link": "Link Google Account",
+            "processing": "Processing Google sign-in..."
+        },
+        "logout": {
+            "logging_out": "Logging out...",
+            "message": "You have been logged out"
+        }
+    },
+    "twofa": {
+        "title": "Two-Factor Authentication",
+        "enabled": "2FA Enabled",
+        "disabled": "2FA Disabled",
+        "enable": "Enable 2FA",
+        "disable": "Disable 2FA",
+        "setup_title": "Set up Two-Factor Authentication",
+        "verify_title": "Two-Factor Authentication Required",
+        "verify_description": "Enter the verification code from your authenticator app or device",
+        "code": "Verification Code",
+        "verify": {
+            "use_recovery": "Enter one of your recovery codes",
+            "enter_code": "Enter the 6-digit code from your {{method}}",
+            "methods": {
+                "authenticator": "authenticator app",
+                "email": "email",
+                "sms": "phone"
+            },
+            "recovery_label": "Recovery Code",
+            "recovery_placeholder": "XXXX-XXXX-XXXX",
+            "recovery_hint": "Format: XXXX-XXXX-XXXX (with dashes)",
+            "remember_device": "Remember this device for 30 days",
+            "verifying": "Verifying…",
+            "verify": "Verify",
+            "use_code": "← Use verification code instead",
+            "use_recovery_toggle": "Use recovery code instead →",
+            "digit_label": "Digit {{index}}"
+        },
+        "verifying": "Verifying…",
+        "use_recovery_code": "Use recovery code instead",
+        "trust_device": "Trust this device for 30 days",
+        "methods": {
+            "totp": "Authenticator App",
+            "sms": "SMS",
+            "email": "Email",
+            "recovery": "Recovery Code"
+        },
+        "status": {
+            "enabled": "✓ Enabled",
+            "disabled": "⚠️ Not enabled",
+            "method": "Method: {{method}}",
+            "no_default_method": "No default method selected"
+        },
+        "messages": {
+            "method_removed": "Method removed successfully.",
+            "default_method_updated": "Default method updated successfully.",
+            "trusted_device_removed": "Trusted device removed.",
+            "trusted_device_added": "Trusted device added.",
+            "trusted_device_already": "This device is already trusted."
+        },
+        "errors": {
+            "verify_login": "Failed to verify 2FA code.",
+            "disable": "Failed to disable 2FA.",
+            "generate_codes": "Failed to generate recovery codes.",
+            "add_trusted_device": "Failed to add trusted device.",
+            "remove_trusted_device": "Failed to remove trusted device.",
+            "update_default_method": "Failed to update default method.",
+            "remove_method": "Failed to remove 2FA method.",
+            "start_authenticator": "Failed to start authenticator setup.",
+            "verify_authenticator": "Verification failed. Try again.",
+            "request_disable": "Failed to request disable code.",
+            "qr_load": "We couldn’t load your QR code. Please restart the setup process.",
+            "sms_send": "Failed to send verification code.",
+            "sms_verify": "Verification failed. Check the code and try again.",
+            "sms_resend": "Failed to resend verification code.",
+            "email_send": "Failed to send verification email.",
+            "email_verify": "Verification failed. Check your email code.",
+            "email_resend": "Failed to resend verification email.",
+            "copy": "Copy failed. Please copy manually.",
+            "copy_code": "Unable to copy code. Please copy manually.",
+            "copy_codes": "Unable to copy codes. Please copy manually.",
+            "invalid_code": "Invalid code. Please try again.",
+            "load_settings": "We couldn't load your 2FA settings. Please try again."
+        },
+        "setup": {
+            "choose_method": "Choose 2FA Method",
+            "actions": {
+                "start": "Send Verification Code",
+                "loading": "Sending…",
+                "verify_enable": "Verify & Enable 2FA",
+                "verifying": "Verifying…",
+                "back_to_scan": "Back to QR Code",
+                "resend": "Resend Code",
+                "scan_complete": "I've scanned the code"
+            },
+            "totp": {
+                "title": "Authenticator App Setup",
+                "intro": "Use an authenticator app like Google Authenticator or Authy",
+                "scan": "Scan QR Code",
+                "scan_instructions": "Scan this QR code with your authenticator app",
+                "manual_entry": "Or enter this code manually:",
+                "verify": "Verify Code",
+                "enter_code": "Enter the 6-digit code from your app",
+                "info_title": "What you'll need:",
+                "info_items": [
+                    "A smartphone or tablet",
+                    "An authenticator app (Google Authenticator, Authy, 1Password, etc.)",
+                    "A few minutes to complete setup"
+                ],
+                "verify_title": "Verify Authenticator Code",
+                "apps": [
+                    "Google Authenticator",
+                    "Authy",
+                    "1Password",
+                    "Microsoft Authenticator",
+                    "Or any TOTP-compatible app"
+                ],
+                "qr_alt": "QR code for authenticator app setup",
+                "scan_prompt": "Scan this QR code with your authenticator app:",
+                "manual_title": "Can't scan? Enter this code manually:",
+                "manual_help": "Use this secret key if your authenticator app doesn't support QR codes"
+            },
+            "sms": {
+                "title": "Verify by SMS",
+                "intro": "Receive a verification code via text message. Use E.164 format (e.g. +15551234567).",
+                "phone_number": "Phone Number",
+                "phone_label": "Phone number",
+                "phone_placeholder": "+15551234567",
+                "send_code": "Send Code",
+                "verify": "Verify Code",
+                "message": "Check your phone for the verification code.",
+                "info_title": "How it works",
+                "info_items": [
+                    "We send a 6-digit code via SMS.",
+                    "Enter the code to enable SMS-based 2FA.",
+                    "The SMS method becomes your default 2FA option."
+                ],
+                "verify_title": "Enter SMS Code",
+                "verify_button": "Verify & Enable SMS",
+                "recovery_title": "✅ SMS 2FA Enabled",
+                "recovery_description": "Save your recovery codes in a safe place in case you can't receive texts."
+            },
+            "email": {
+                "title": "Verify by Email",
+                "intro": "We will send a 6-digit verification code to your account email.",
+                "send_code": "Send Code",
+                "verify": "Verify Code",
+                "message": "Check your inbox for the verification code.",
+                "info_title": "How it works",
+                "info_items": [
+                    "We send a verification code to your primary email.",
+                    "Enter the code to enable email-based 2FA.",
+                    "The email method becomes your default 2FA option."
+                ],
+                "verify_title": "Enter Email Code",
+                "verify_button": "Verify & Enable Email",
+                "recovery_title": "✅ Email 2FA Enabled",
+                "recovery_description": "Save your recovery codes to keep access if you can't reach your email."
+            },
+            "recovery": {
+                "title": "Recovery Codes",
+                "description": "Save these recovery codes in a safe place. Each code can only be used once.",
+                "download": "Download Codes",
+                "print": "Print Codes",
+                "copied": "Copied to clipboard",
+                "warning": "These codes will only be shown once!",
+                "enabled_title": "✅ 2FA Enabled!",
+                "enabled_message": "Two-factor authentication is now active",
+                "warning_title": "⚠️ Save These Codes",
+                "warning_body": "These recovery codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once.",
+                "copy_all": "Copy All Codes",
+                "copied_all": "✓ Copied All",
+                "download_txt": "Download as TXT",
+                "download_pdf": "Download as PDF",
+                "important_title": "Important:",
+                "important_items": [
+                    "Store these codes in a secure location (password manager, safe, etc.)",
+                    "Each code can only be used once",
+                    "Don't share these codes with anyone",
+                    "You can generate new codes at any time (this will invalidate old ones)"
+                ]
+            }
+        },
+        "settings": {
+            "status": "Status",
+            "default_method": "Default Method",
+            "change_method": "Change Default Method",
+            "recovery_codes": "Recovery Codes",
+            "regenerate_codes": "Regenerate Recovery Codes",
+            "trusted_devices": {
+                "title": "Trusted Devices",
+                "description": "Manage devices that can skip 2FA verification for 30 days.",
+                "manage_action": "Manage Trusted Devices"
+            },
+            "remove_device": "Remove Device",
+            "disable_confirm": "Are you sure you want to disable 2FA?",
+            "loading_title": "Loading 2FA settings...",
+            "loading_description": "We are preparing your two-factor authentication options.",
+            "manage_title": "Setup and Manage Methods",
+            "manage_description": "Choose your default method by configuring the options below.",
+            "tabs": {
+                "general": "General",
+                "two_factor": "Two-Factor Authentication"
+            },
+            "general": {
+                "title": "General settings",
+                "description": "Update your account information and preferences.",
+                "theme": {
+                    "title": "Appearance",
+                    "description": "Choose how Tinybeans looks on your device.",
+                    "select_label": "Theme preference",
+                    "select_description": "Pick a theme or follow your browser’s color scheme.",
+                    "select_placeholder": "Select a theme",
+                    "current_value": "Currently using {{value}} theme.",
+                    "current_value_system": "Following browser preference (currently {{value}}).",
+                    "options": {
+                        "light": {
+                            "title": "Light",
+                            "description": "Bright backgrounds with dark text."
+                        },
+                        "dark": {
+                            "title": "Dark",
+                            "description": "Dim backgrounds that are easier on the eyes at night."
+                        },
+                        "system": {
+                            "title": "Match browser",
+                            "description": "Keep Tinybeans in sync with your browser preference."
+                        }
+                    }
+                }
+            },
+            "not_enabled_title": "2FA is not enabled.",
+            "not_enabled_description": "Start by setting up a method below. This will also generate fresh recovery codes.",
+            "remove_title": "Remove {{method}}?",
+            "remove_description": {
+                "totp": "Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
+                "sms": "Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
+                "email": "Removing email verification will disable receiving verification codes via email. You can set it up again at any time."
+            },
+            "no_default_method": "No default method selected",
+            "recovery_codes_title": "Recovery Codes",
+            "recovery_codes_description": "Recovery codes can be used to access your account if you lose access to your authenticator device. Each code can only be used once.",
+            "recovery_codes_generate": "Generate New Recovery Codes",
+            "recovery_codes_generating": "Generating...",
+            "disable": {
+                "title": "Disable Two-Factor Authentication",
+                "description": "Disabling 2FA will make your account less secure. You'll only need your password to log in.",
+                "action": "Disable 2FA",
+                "dialog_title": "Disable Two-Factor Authentication",
+                "dialog_description": "Enter your 6-digit verification code to confirm disabling 2FA. This will make your account less secure.",
+                "confirm_label": "Confirm Disable",
+                "confirm_loading": "Disabling..."
+            }
+        }
+    },
+    "pages": {
+        "home": {
+            "welcome": "Welcome",
+            "authenticated_message": "You are signed in!",
+            "guest_message": "Get started by signing up or logging in to your account."
+        },
+        "error": {
+            "something_wrong": "Something went wrong",
+            "unexpected_error": "An unexpected error occurred",
+            "go_home": "Go to Home"
+        },
+        "circleOnboarding": {
+            "step": "Step {{current}} of {{total}}",
+            "title": "Create your first circle",
+            "description": "Start by naming the circle that keeps your family connected.",
+            "verifyTitle": "Verify your email to continue",
+            "verifyDescription": "We sent a verification link to {{email}}. Verify your address, then refresh this page.",
+            "resend": "Resend verification email",
+            "resending": "Sending\b5",
+            "refresh": "I've verified my email",
+            "refreshing": "Checking\b5",
+            "circleNameLabel": "Circle name",
+            "circleNamePlaceholder": "E.g. The Smith Family",
+            "creating": "Creating circle\b5",
+            "createButton": "Create circle",
+            "skipping": "Skipping\b5",
+            "skip": "Skip for now",
+            "loading": "Loading onboarding details\b5",
+            "errorTitle": "Can't load onboarding",
+            "errorMessage": "We couldn't load your onboarding status. Please try again."
+        }
+    },
+    "validation": {
+        "username_required": "Username is required",
+        "username_min_length": "Username must be at least 3 characters",
+        "username_max_length": "Username must be at most 30 characters",
+        "username_invalid_chars": "Username can only contain letters, numbers, and underscores",
+        "email_required": "Email is required",
+        "email_valid": "Valid email required",
+        "password_required": "Password is required",
+        "password_min_length": "Password must be at least 8 characters",
+        "passwords_match": "Passwords do not match",
+        "confirm_password": "Confirm password",
+        "field_required": "This field is required",
+        "circle_name_min": "Circle name must be at least 2 characters",
+        "circle_name_max": "Circle name must be at most 255 characters"
+    },
+    "notifications": {
+        "profile": {
+            "photo_uploaded": "Profile photo updated successfully",
+            "updated": "Profile updated successfully"
+        },
+        "preferences": {
+            "updated": "Preferences updated successfully"
+        },
+        "circle": {
+            "created": "Circle created successfully",
+            "updated": "Circle updated successfully",
+            "member_added": "Member added to circle",
+            "member_removed": "Member removed from circle",
+            "invitation_sent": "Invitation sent successfully",
+            "invitation_accepted": "Invitation accepted successfully",
+            "invitation_declined": "Invitation declined",
+            "onboarding_skipped": "Onboarding skipped. You can create a circle anytime from the circles page."
+        },
+        "pet": {
+            "created": "Pet profile created successfully",
+            "updated": "Pet profile updated successfully"
+        },
+        "child": {
+            "upgrade_invitation_sent": "Upgrade invitation sent successfully",
+            "account_created": "Account created successfully"
+        },
+        "media": {
+            "upload_initiated": "Media upload initiated successfully"
+        },
+        "auth": {
+            "login_success": "Welcome back!",
+            "signup_success": "Account created successfully",
+            "logout_success": "Logged out successfully",
+            "email_verified": "Email verified successfully",
+            "email_verification_sent": "Verification email sent",
+            "password_reset": "Password reset email sent",
+            "password_updated": "Password updated successfully",
+            "magic_link_sent": "If an account with that email exists, a magic link has been sent",
+            "magic_login_success": "Successfully logged in via magic link"
+        },
+        "oauth": {
+            "account_linked": "Google account linked successfully",
+            "account_unlinked": "Google account unlinked successfully"
+        },
+        "twofa": {
+            "setup_initiated": "Scan QR code with your authenticator app",
+            "verification_code_sent": "Verification code sent to your {{method}}",
+            "code_sent": "2FA code sent to your {{method}}",
+            "setup_complete": "2FA enabled successfully. Save your recovery codes!",
+            "disabled": "2FA disabled successfully",
+            "preferred_method_updated": "Default 2FA method updated to {{method}}",
+            "method_removed": "{{method}} 2FA method removed",
+            "method_removed_disabled": "Two-factor authentication has been disabled because no other verified methods are available",
+            "method_removed_preferred_changed": "Preferred method updated to {{preferred_method}}",
+            "enter_authenticator_code": "Enter your authenticator code to disable 2FA",
+            "recovery_codes_generated": "New recovery codes generated. Old codes have been invalidated",
+            "device_removed": "Device removed successfully",
+            "device_added": "{{device_name}} is now trusted",
+            "device_already_trusted": "{{device_name}} is already trusted"
+        }
+    },
+    "errors": {
+        "file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
+        "invalid_file_type": "Invalid file type. Allowed types: {{allowedTypes}}",
+        "email_invalid": "Please enter a valid email address",
+        "password_too_short": "Password must be at least {{minLength}} characters",
+        "password_mismatch": "Passwords do not match",
+        "required_field": "This field is required",
+        "username_taken": "This username is already taken",
+        "email_taken": "This email is already registered",
+        "invalid_credentials": "Invalid email or password",
+        "rate_limit": "Too many requests. Please try again in {{retry_after}} seconds.",
+        "rate_limit_2fa": "Too many 2FA requests. Please try again later.",
+        "account_locked_2fa": "Account temporarily locked due to too many failed 2FA attempts. Please try again {{retry_after}}.",
+        "token_invalid_expired": "Invalid or expired token",
+        "user_not_found": "User not found",
+        "network_error": "Network error. Please check your connection.",
+        "server_error": "Something went wrong. Please try again later.",
+        "unauthorized": "You must be logged in to perform this action",
+        "forbidden": "You don't have permission to perform this action",
+        "not_found": "The requested resource was not found",
+        "validation_failed": "Please check the form for errors",
+        "magic_link_expired": "This magic link has expired",
+        "magic_link_invalid": "Invalid magic link",
+        "magic_link_rate_limit": "Too many magic link requests. Please try again later.",
+        "account_inactive": "Your account is not active",
+        "membership_not_found": "Membership not found",
+        "invitation_not_pending": "Invitation is no longer pending",
+        "invitation_not_found": "Invitation not found",
+        "invitation_mismatch": "Invitation mismatch",
+        "email_already_registered": "Email already registered. Please log in.",
+        "child_profile_not_found": "Child profile not found",
+        "child_already_linked": "Child profile already linked to an account",
+        "upgrade_invitation_revoked": "Upgrade invitation has been revoked",
+        "upgrade_invitation_mismatch": "Upgrade invitation mismatch",
+        "upgrade_invitation_expired": "Upgrade invitation has expired",
+        "circle_not_found": "Circle not found or you are not a member",
+        "invalid_keep_type": "Valid keep type required. Options: note, media, milestone",
+        "keep_not_found": "Keep not found",
+        "access_denied": "Access denied",
+        "required_fields_missing": "Required fields are missing",
+        "invalid_media_type": "Media type must be photo or video",
+        "upload_failed": "Upload failed. Please try again.",
+        "upload_not_found": "Upload not found",
+        "email_verification_required": "Email verification is required before creating circles. Please verify your email first.",
+        "circle_member_exists": "User already belongs to this circle",
+        "invitation_pending_for_email": "An invitation is already pending for this email",
+        "pet_name_required": "Pet name cannot be empty",
+        "circle_membership_required": "You must be a member of this circle to create keeps.",
+        "milestone_required": "Milestone data is required for milestone keeps.",
+        "milestone_not_allowed": "Milestone data should only be provided for milestone keeps.",
+        "media_files_required": "Media keeps should include media files.",
+        "keep_update_forbidden": "You can only update keeps you created or as a circle admin.",
+        "validation_error": "{{field}}: {{message}}",
+        "general_validation_error": "{{message}}",
+        "oauth": {
+            "invalid_redirect_uri": "Invalid redirect URI: {{uri}}",
+            "initiate_failed": "Failed to initiate OAuth flow. Please try again.",
+            "invalid_state": "Invalid or expired OAuth state token",
+            "unverified_account_exists": "An unverified account exists with email {{email}}. Please verify your email first. {{help_url}}",
+            "authentication_failed": "OAuth authentication failed. Please try again.",
+            "callback_failed": "OAuth callback failed. Please try again.",
+            "account_already_linked": "This Google account is already linked to another account",
+            "link_failed": "Failed to link Google account. Please try again.",
+            "cannot_unlink_without_password": "Cannot unlink Google account. You must set a password first. {{help_url}}",
+            "invalid_password": "Invalid password",
+            "google_cancelled": "You cancelled the Google sign-in process",
+            "invalid_callback": "Missing required OAuth parameters. Please try again.",
+            "state_mismatch": "Security validation failed. Please try signing in again."
+        },
+        "auth": {
+            "invalid_password": "Invalid password"
+        },
+        "twofa": {
+            "invalid_method": "Invalid 2FA method",
+            "phone_number_required": "Phone number required for SMS method",
+            "not_initialized": "2FA not initialized. Start setup first",
+            "invalid_verification_code": "Invalid verification code",
+            "not_enabled": "2FA not enabled",
+            "already_disabled": "2FA is already disabled",
+            "not_configured": "2FA not configured",
+            "enable_before_changing_method": "Enable 2FA before changing the default method",
+            "totp_not_configured": "Authenticator app not configured yet. Set up the authenticator app from the 2FA setup page first",
+            "totp_not_verified": "Verify your authenticator app via TOTP setup before choosing it as default",
+            "sms_no_phone": "Add a phone number via SMS setup before using SMS as default",
+            "sms_not_verified": "Verify your phone number via SMS setup before choosing it as default",
+            "email_not_verified": "Verify email via Email setup before choosing it as default",
+            "method_not_configured": "{{method}} 2FA is not configured",
+            "recovery_codes_required": "Recovery codes must be provided. Codes can only be downloaded immediately after generation",
+            "no_recovery_codes": "No recovery codes provided",
+            "device_id_required": "device_id is required",
+            "device_not_found": "Device not found",
+            "partial_token_invalid": "Invalid or expired partial token. Please login again",
+            "not_configured_for_account": "2FA not configured for this account",
+            "must_be_enabled_for_recovery": "2FA must be enabled to generate recovery codes"
+        }
+    },
+    "profile": {
+        "general": {
+            "email": {
+                "title": "Email verification",
+                "description": "Your account email is {{email}}. Keep it verified to access all features.",
+                "verified_label": "Email verified",
+                "verified_message": "Great! Your email is verified and you can create new circles without interruption.",
+                "unverified_label": "Email not verified",
+                "unverified_message": "Please confirm your email to create circles and receive notifications.",
+                "resend": "Resend verification email",
+                "sending": "Sending…",
+                "refresh": "I’ve verified my email",
+                "refreshing": "Checking…"
+            }
+        }
+    }
 }

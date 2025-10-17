@@ -6,6 +6,7 @@ for the Tinybeans application, including user roles and custom user management.
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class UserRole(models.TextChoices):
@@ -118,6 +119,14 @@ class Language(models.TextChoices):
     SPANISH = 'es', 'Spanish'
 
 
+
+class CircleOnboardingStatus(models.TextChoices):
+    """Onboarding status choices for first-circle flow."""
+    PENDING = "pending", "Pending"
+    COMPLETED = "completed", "Completed"
+    DISMISSED = "dismissed", "Dismissed"
+
+
 class User(AbstractUser):
     """Custom user model for the Tinybeans application.
     
@@ -183,6 +192,51 @@ class User(AbstractUser):
         default=Language.ENGLISH,
         help_text="User's preferred language for the interface"
     )
+
+    circle_onboarding_status = models.CharField(
+        max_length=20,
+        choices=CircleOnboardingStatus.choices,
+        default=CircleOnboardingStatus.PENDING,
+        help_text="Progress of the user's first-circle onboarding"
+    )
+    circle_onboarding_updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last time the circle onboarding status changed"
+    )
+
+    @property
+    def needs_circle_onboarding(self) -> bool:
+        """Return True when the user should be guided through circle onboarding."""
+        if self.circle_onboarding_status != CircleOnboardingStatus.PENDING:
+            return False
+        return not self.circle_memberships.exists()
+
+    def set_circle_onboarding_status(self, status: str, *, save: bool = True) -> bool:
+        """Update the onboarding status and timestamp.
+
+        Args:
+            status: New status from ``CircleOnboardingStatus`` choices.
+            save: Whether to persist the change immediately.
+
+        Returns:
+            bool: True when the status changed, False otherwise.
+        """
+        if status not in CircleOnboardingStatus.values:
+            raise ValueError(f"Invalid circle onboarding status: {status}")
+
+        if self.circle_onboarding_status == status:
+            if save and status == CircleOnboardingStatus.PENDING and self.circle_onboarding_updated_at is None:
+                self.circle_onboarding_updated_at = timezone.now()
+                self.save(update_fields=["circle_onboarding_updated_at"])
+            return False
+
+        self.circle_onboarding_status = status
+        self.circle_onboarding_updated_at = timezone.now()
+        if save:
+            self.save(update_fields=["circle_onboarding_status", "circle_onboarding_updated_at"])
+        return True
+
 
     objects = UserManager()
 

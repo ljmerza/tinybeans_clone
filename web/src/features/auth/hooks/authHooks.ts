@@ -55,6 +55,17 @@ export function useLogin() {
 				showAsToast(messages, 200);
 			}
 
+			const needsOnboarding =
+				"needs_circle_onboarding" in payload &&
+				Boolean(
+					(payload as typeof payload & { needs_circle_onboarding?: boolean })
+						.needs_circle_onboarding,
+				);
+			if (needsOnboarding) {
+				navigate({ to: "/circles/onboarding" });
+				return;
+			}
+
 			navigate({ to: "/" });
 		},
 		onError: (error) => {

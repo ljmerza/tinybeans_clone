@@ -16,6 +16,7 @@ from .circles import (
 )
 from .pets import CirclePetListView, PetProfileDetailView
 from .profile import EmailPreferencesView, UserProfileView
+from .onboarding import CircleOnboardingSkipView, CircleOnboardingStatusView
 
 __all__ = [
     'ChildProfileUpgradeConfirmView',
@@ -33,5 +34,7 @@ __all__ = [
     'PetProfileDetailView',
     'EmailPreferencesView',
     'UserProfileView',
+    'CircleOnboardingStatusView',
+    'CircleOnboardingSkipView',
 ]
 

@@ -60,7 +60,11 @@ class CircleMembership(models.Model):
         invited_by: The user who invited this member (optional)
         created_at: When the membership was created
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='circle_memberships',
+    )
     circle = models.ForeignKey(Circle, on_delete=models.CASCADE, related_name='memberships')
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CIRCLE_MEMBER)
     invited_by = models.ForeignKey(

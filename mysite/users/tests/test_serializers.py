@@ -44,6 +44,9 @@ class UserSerializerTests(TestCase):
         self.assertEqual(data['email'], 'test@example.com')
         self.assertEqual(data['role'], UserRole.CIRCLE_ADMIN)
         self.assertFalse(data['email_verified'])
+        self.assertEqual(data['circle_onboarding_status'], 'pending')
+        self.assertTrue(data['needs_circle_onboarding'])
+        self.assertIsNone(data['circle_onboarding_updated_at'])
         self.assertIn('date_joined', data)
 
 
@@ -65,6 +68,7 @@ class SignupSerializerTests(TestCase):
         self.assertEqual(user.email, 'new@example.com')
         self.assertTrue(user.check_password('securepassword123'))
         self.assertFalse(user.email_verified)  # Email should not be verified initially
+        self.assertEqual(user.circle_onboarding_status, 'pending')
 
     def test_signup_without_circle(self):
         """Test signup creates user without circle (circles created separately)."""

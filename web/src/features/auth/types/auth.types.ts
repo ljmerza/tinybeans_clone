@@ -5,10 +5,19 @@ export interface AuthTokens {
 	access: string;
 }
 
+export type CircleOnboardingStatus = "pending" | "completed" | "dismissed";
+
 export interface AuthUser {
 	id: number;
 	username: string;
 	email: string;
+	email_verified?: boolean;
+	language?: string;
+	role?: string;
+	circle_onboarding_status?: CircleOnboardingStatus;
+	circle_onboarding_updated_at?: string | null;
+	needs_circle_onboarding?: boolean;
+	[key: string]: unknown;
 }
 
 export interface LoginRequest {
@@ -26,9 +35,9 @@ export interface LoginRequiresTwoFactor {
 	tokens?: undefined;
 }
 
-export interface LoginSuccess {
-	requires_2fa: false;
-	trusted_device: boolean;
+export interface LoginSuccess extends AuthUser {
+	requires_2fa?: false;
+	trusted_device?: boolean;
 	tokens: AuthTokens;
 	method?: TwoFactorMethod;
 	message?: string;

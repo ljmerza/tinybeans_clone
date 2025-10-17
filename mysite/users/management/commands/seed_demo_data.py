@@ -11,6 +11,7 @@ from users.models import (
     CircleInvitation,
     CircleInvitationStatus,
     CircleMembership,
+    CircleOnboardingStatus,
     DigestFrequency,
     User,
     UserNotificationPreferences,
@@ -22,6 +23,14 @@ DEFAULT_PASSWORD = 'password123'
 
 class Command(BaseCommand):
     help = "Seed a collection of demo circles, users, and child profiles for local development."
+
+    def _mark_verified(self, user: User, onboarding_status: str = CircleOnboardingStatus.COMPLETED) -> None:
+        if not user.email_verified:
+            user.email_verified = True
+            user.save(update_fields=['email_verified'])
+        if onboarding_status != user.circle_onboarding_status:
+            user.set_circle_onboarding_status(onboarding_status, save=True)
+
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -52,6 +61,7 @@ class Command(BaseCommand):
         if created or not user.check_password(DEFAULT_PASSWORD):
             user.set_password(DEFAULT_PASSWORD)
         user.save()
+        self._mark_verified(user)
         self.stdout.write('· Superuser available at superadmin@example.com (username: superadmin)')
         return user
 
@@ -67,6 +77,7 @@ class Command(BaseCommand):
         if not guardian.check_password(DEFAULT_PASSWORD):
             guardian.set_password(DEFAULT_PASSWORD)
         guardian.save()
+        self._mark_verified(guardian)
 
         circle, _ = Circle.objects.get_or_create(
             name='Guardian Family',
@@ -90,6 +101,7 @@ class Command(BaseCommand):
             member.set_password(DEFAULT_PASSWORD)
         member.role = UserRole.CIRCLE_MEMBER
         member.save()
+        self._mark_verified(member)
 
         CircleMembership.objects.get_or_create(
             user=member,
@@ -105,6 +117,7 @@ class Command(BaseCommand):
             teenager.set_password(DEFAULT_PASSWORD)
         teenager.role = UserRole.CIRCLE_MEMBER
         teenager.save()
+        self._mark_verified(teenager)
 
         CircleMembership.objects.get_or_create(
             user=teenager,
@@ -163,6 +176,7 @@ class Command(BaseCommand):
             admin_two.set_password(DEFAULT_PASSWORD)
         admin_two.role = UserRole.CIRCLE_ADMIN
         admin_two.save()
+        self._mark_verified(admin_two)
 
         circle_two, _ = Circle.objects.get_or_create(
             name='Adventure Club',

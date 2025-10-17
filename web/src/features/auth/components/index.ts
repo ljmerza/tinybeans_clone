@@ -1,4 +1,5 @@
 export { AuthDevtools } from "./AuthDevtools";
+export { EmailVerificationHandler } from "./EmailVerificationHandler";
 export { LoginCard } from "./LoginCard";
 export { SignupCard } from "./SignupCard";
 export { MagicLinkRequestCard } from "./MagicLinkRequestCard";

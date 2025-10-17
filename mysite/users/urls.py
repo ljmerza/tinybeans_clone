@@ -12,6 +12,8 @@ from .views import (
     CircleMemberListView,
     CircleMemberRemoveView,
     CirclePetListView,
+    CircleOnboardingStatusView,
+    CircleOnboardingSkipView,
     EmailPreferencesView,
     PetProfileDetailView,
     UserProfileView,
@@ -21,6 +23,9 @@ from .views import (
 urlpatterns = [
     path('me/', UserProfileView.as_view(), name='user-profile'),
     path('me/email-preferences/', EmailPreferencesView.as_view(), name='user-email-preferences'),
+
+    path('circle-onboarding/', CircleOnboardingStatusView.as_view(), name='circle-onboarding-status'),
+    path('circle-onboarding/skip/', CircleOnboardingSkipView.as_view(), name='circle-onboarding-skip'),
     
     path('circles/', UserCircleListView.as_view(), name='user-circle-list'),
     path('circles/<int:circle_id>/', CircleDetailView.as_view(), name='circle-detail'),

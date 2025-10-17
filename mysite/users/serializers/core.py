@@ -18,9 +18,15 @@ class CircleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    needs_circle_onboarding = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'email_verified', 'date_joined', 'language']
+        fields = ['id', 'username', 'email', 'role', 'email_verified', 'date_joined', 'language', 'circle_onboarding_status', 'circle_onboarding_updated_at', 'needs_circle_onboarding']
+        read_only_fields = ['circle_onboarding_status', 'circle_onboarding_updated_at', 'needs_circle_onboarding']
+
+    def get_needs_circle_onboarding(self, obj) -> bool:
+        return obj.needs_circle_onboarding
 
 
 __all__ = ['CircleSerializer', 'UserSerializer']

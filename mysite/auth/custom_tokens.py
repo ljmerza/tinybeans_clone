@@ -29,7 +29,7 @@ class CustomRefreshToken(RefreshToken):
         token = super().for_user(user)
         
         # Get all circle memberships for the user
-        memberships = user.circlemembership_set.select_related('circle').all()
+        memberships = user.circle_memberships.select_related('circle').all()
         
         # Extract circle IDs and admin circle IDs
         circle_ids = []

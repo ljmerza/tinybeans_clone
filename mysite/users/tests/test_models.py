@@ -97,6 +97,26 @@ class UserModelTests(TestCase):
         usernames = [u.username for u in users]
         self.assertEqual(usernames, ['alpha', 'beta', 'zebra'])
 
+    def test_needs_circle_onboarding_default_pending(self):
+        user = User.objects.create_user(username='pending', email='pending@example.com', password='password123')
+        self.assertEqual(user.circle_onboarding_status, 'pending')
+        self.assertTrue(user.needs_circle_onboarding)
+
+    def test_needs_circle_onboarding_completed_after_membership(self):
+        user = User.objects.create_user(username='member', email='member@example.com', password='password123')
+        circle = Circle.objects.create(name='Family', created_by=user)
+        CircleMembership.objects.create(circle=circle, user=user)
+        user.refresh_from_db()
+        self.assertEqual(user.circle_onboarding_status, 'completed')
+        self.assertFalse(user.needs_circle_onboarding)
+
+    def test_set_circle_onboarding_status_updates_timestamp(self):
+        user = User.objects.create_user(username='onboard', email='onboard@example.com', password='password123')
+        self.assertIsNone(user.circle_onboarding_updated_at)
+        changed = user.set_circle_onboarding_status('dismissed', save=True)
+        self.assertTrue(changed)
+        self.assertEqual(user.circle_onboarding_status, 'dismissed')
+        self.assertIsNotNone(user.circle_onboarding_updated_at)
 
 class CircleModelTests(TestCase):
     def setUp(self):
