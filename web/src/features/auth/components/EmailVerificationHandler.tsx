@@ -2,12 +2,13 @@ import { StatusMessage } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useApiMessages } from "@/i18n";
-import type { ApiError } from "@/types";
+import type { ApiResponseWithMessages } from "@/types";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useVerifyEmailConfirm } from "../hooks/emailVerificationHooks";
+import type { HttpError } from "@/lib/httpClient";
+import { apiClient } from "../api/authClient";
 
 type EmailVerificationHandlerProps = {
 	token?: string;
@@ -19,52 +20,74 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { getGeneral } = useApiMessages();
-	const verifyEmail = useVerifyEmailConfirm();
 	const [status, setStatus] = useState<VerificationStatus>("verifying");
 	const [message, setMessage] = useState<string>("");
-	const attemptedTokenRef = useRef<string | undefined>(undefined);
+	const latestTokenRef = useRef<string | undefined>(undefined);
+	const inflightTokenRef = useRef<string | null>(null);
 	const getGeneralRef = useRef(getGeneral);
-	const verifyEmailRef = useRef(verifyEmail);
+	const tRef = useRef(t);
+	const isMountedRef = useRef(false);
 
 	getGeneralRef.current = getGeneral;
-	verifyEmailRef.current = verifyEmail;
+	tRef.current = t;
+
+	useEffect(() => {
+		isMountedRef.current = true;
+		return () => {
+			isMountedRef.current = false;
+		};
+	}, []);
 
 	useEffect(() => {
 		if (!token) {
 			setStatus("error");
 			setMessage(t("auth.email_verification.invalid_link"));
-			attemptedTokenRef.current = undefined;
+			latestTokenRef.current = undefined;
+			inflightTokenRef.current = null;
 			return;
 		}
 
-		if (attemptedTokenRef.current === token) {
+		latestTokenRef.current = token;
+		if (inflightTokenRef.current === token) {
 			return;
 		}
-		attemptedTokenRef.current = token;
+		inflightTokenRef.current = token;
+		setStatus("verifying");
+		setMessage("");
 
-		let isActive = true;
-
-		verifyEmailRef.current
-			.mutateAsync({ token })
+		void apiClient
+			.post<ApiResponseWithMessages>("/auth/verify-email/confirm/", { token })
 			.then((response) => {
-				if (!isActive) return;
+				if (!isMountedRef.current || latestTokenRef.current !== token) {
+					return;
+				}
 				const generalMessages = getGeneralRef.current(response.messages);
-				setMessage(generalMessages[0] ?? t("auth.email_verification.success"));
+				setMessage(
+					generalMessages[0] ??
+					tRef.current("auth.email_verification.success"),
+				);
 				setStatus("success");
 			})
-			.catch((error) => {
-				if (!isActive) return;
-				const apiError = error as ApiError;
-				const generalMessages = getGeneralRef.current(apiError.messages);
+			.catch((error: unknown) => {
+				if (!isMountedRef.current || latestTokenRef.current !== token) {
+					return;
+				}
+				const httpError = error as HttpError;
+				const generalMessages = getGeneralRef.current(httpError.messages);
 				setMessage(
-					generalMessages[0] ?? t("auth.email_verification.error"),
+					generalMessages[0] ??
+					tRef.current("auth.email_verification.error"),
 				);
 				setStatus("error");
+			})
+			.finally(() => {
+				if (inflightTokenRef.current === token) {
+					inflightTokenRef.current = null;
+				}
 			});
-		return () => {
-			isActive = false;
-		};
-	}, [token, t]);
+		// `t` is read via ref to avoid retriggering the effect on language toggles mid-request.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [token]);
 
 	return (
 		<div className="mx-auto max-w-md p-6 space-y-4">
@@ -91,11 +114,17 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 					</StatusMessage>
 					<Button
 						className="w-full"
-						onClick={() => navigate({ to: status === "success" ? "/" : "/login" })}
+						onClick={() => {
+							// Attempt to close the current window/tab; fallback to navigation if blocked.
+							const closed = window.close();
+							if (!closed) {
+								navigate({ to: status === "success" ? "/" : "/login" });
+							}
+						}}
 					>
 						{status === "success"
-							? t("common.back_home")
-							: t("common.back_to_login")}
+							? t("auth.email_verification.close_tab")
+							: t("auth.email_verification.close_tab_error")}
 					</Button>
 				</>
 			)}

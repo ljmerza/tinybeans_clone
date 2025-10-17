@@ -89,7 +89,9 @@
             "verifying": "Verifying your email…",
             "success": "Your email has been verified. You can continue to the app.",
             "error": "We couldn't verify your email. The link may be invalid or expired.",
-            "invalid_link": "Invalid verification link."
+            "invalid_link": "Invalid verification link.",
+            "close_tab": "Close this tab",
+            "close_tab_error": "Close this tab"
         },
         "oauth": {
             "google_signin": "Sign in with Google",
@@ -367,6 +369,7 @@
             "resend": "Resend verification email",
             "resending": "Sending\b5",
             "refresh": "I've verified my email",
+            "refreshFailed": "We still can't verify your email. Please try again.",
             "refreshing": "Checking\b5",
             "circleNameLabel": "Circle name",
             "circleNamePlaceholder": "E.g. The Smith Family",

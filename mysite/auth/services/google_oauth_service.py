@@ -390,7 +390,7 @@ class GoogleOAuthService:
             last_name=google_user_info.get('family_name', ''),
             email_verified=True,  # Google verifies emails
             auth_provider='google',
-            has_usable_password=False,  # No password set
+            password_login_enabled=False,  # No password set
             google_linked_at=timezone.now(),
             last_google_sync=timezone.now()
         )
@@ -465,7 +465,7 @@ class GoogleOAuthService:
         # Link Google account
         user.google_id = google_id
         user.google_email = google_email
-        user.auth_provider = 'hybrid' if user.has_usable_password else 'google'
+        user.auth_provider = 'hybrid' if user.password_login_enabled else 'google'
         user.google_linked_at = timezone.now()
         user.last_google_sync = timezone.now()
         user.email_verified = True
@@ -491,7 +491,7 @@ class GoogleOAuthService:
         Raises:
             OAuthError: If user has no password and can't unlink
         """
-        if not user.has_usable_password:
+        if not user.password_login_enabled:
             raise OAuthError(
                 "Cannot unlink Google account without setting a password first"
             )

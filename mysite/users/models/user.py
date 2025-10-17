@@ -139,7 +139,7 @@ class User(AbstractUser):
         email_verified: Whether the user's email has been verified
         google_id: Google user ID from OAuth (unique, nullable)
         google_email: Email from Google for debugging/tracking (nullable)
-        has_usable_password: Whether user has set a password
+        password_login_enabled: Whether the user can authenticate via password
         auth_provider: How the user authenticates (manual, google, hybrid)
         google_linked_at: When Google account was linked (nullable)
         last_google_sync: Last time user info was synced from Google (nullable)
@@ -166,9 +166,9 @@ class User(AbstractUser):
         blank=True,
         help_text="Email from Google (for debugging/tracking)"
     )
-    has_usable_password = models.BooleanField(
+    password_login_enabled = models.BooleanField(
         default=True,
-        help_text="Whether user has set a password"
+        help_text="Whether the user can authenticate via password"
     )
     auth_provider = models.CharField(
         max_length=20,

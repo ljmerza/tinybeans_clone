@@ -366,6 +366,7 @@
             "resend": "Reenviar correo de verificación",
             "resending": "Enviando…",
             "refresh": "Ya verifiqué mi correo",
+            "refreshFailed": "Todavía no podemos verificar tu correo. Inténtalo de nuevo.",
             "refreshing": "Comprobando…",
             "circleNameLabel": "Nombre del círculo",
             "circleNamePlaceholder": "Ej. Familia González",

@@ -13,6 +13,7 @@ import {
 import type { CircleOnboardingPayload } from "@/features/circles";
 import { circleCreateSchema } from "@/lib/validations/schemas";
 import { zodValidator } from "@/lib/form";
+import { showToast } from "@/lib/toast";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -21,7 +22,7 @@ import { useTranslation } from "react-i18next";
 
 interface CircleOnboardingContentProps {
 	status: CircleOnboardingPayload;
-	onRefresh: () => void;
+	onRefresh: () => Promise<CircleOnboardingPayload | undefined>;
 	isRefreshing: boolean;
 }
 
@@ -36,6 +37,7 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 	const resendMutation = useResendVerificationMutation();
 
 	const canSubmit = status.email_verified;
+	console.log({ status })
 
 	const form = useForm({
 		defaultValues: { name: "" },
@@ -77,6 +79,34 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 		return t("pages.circleOnboarding.verifyDescription", { email: status.email });
 	}, [status.email, t]);
 
+	const refreshAndNotify = useCallback(async () => {
+		try {
+			const refreshed = await onRefresh();
+			if (refreshed && !refreshed.email_verified) {
+				showToast({
+					message: t("pages.circleOnboarding.refreshFailed"),
+					level: "warning",
+					id: "circle-onboarding-refresh",
+				});
+				return;
+			}
+
+			if (!refreshed && !status.email_verified) {
+				showToast({
+					message: t("pages.circleOnboarding.refreshFailed"),
+					level: "warning",
+					id: "circle-onboarding-refresh",
+				});
+			}
+		} catch (error) {
+			console.error("Circle onboarding refresh failed:", error);
+		}
+	}, [onRefresh, status, t]);
+
+	const handleRefreshClick = useCallback(() => {
+		void refreshAndNotify();
+	}, [refreshAndNotify]);
+
 	return (
 		<div className="mx-auto flex max-w-xl flex-col gap-6">
 			<header className="space-y-2">
@@ -104,11 +134,7 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 								? t("pages.circleOnboarding.resending")
 								: t("pages.circleOnboarding.resend")}
 						</Button>
-						<Button
-							variant="outline"
-							onClick={onRefresh}
-							disabled={isRefreshing}
-						>
+						<Button variant="outline" onClick={handleRefreshClick} disabled={isRefreshing}>
 							{isRefreshing
 								? t("pages.circleOnboarding.refreshing")
 								: t("pages.circleOnboarding.refresh")}
@@ -201,9 +227,14 @@ export default function CircleOnboardingRoute() {
 		}
 	}, [data, navigate]);
 
-	const handleRefresh = useCallback(() => {
-		void refetch();
+	const handleRefresh = useCallback(async () => {
+		const result = await refetch();
+		return result.data;
 	}, [refetch]);
+
+	const handleRetry = useCallback(() => {
+		void handleRefresh();
+	}, [handleRefresh]);
 
 	if (isLoading) {
 		return <Layout.Loading message={t("pages.circleOnboarding.loading")} />;
@@ -215,7 +246,7 @@ export default function CircleOnboardingRoute() {
 				title={t("pages.circleOnboarding.errorTitle")}
 				message={t("pages.circleOnboarding.errorMessage")}
 				actionLabel={t("common.retry")}
-				onAction={handleRefresh}
+				onAction={handleRetry}
 			/>
 		);
 	}
