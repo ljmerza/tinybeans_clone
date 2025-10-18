@@ -1,111 +1,356 @@
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { StandardError } from "@/components/StandardError";
+import { StatusMessage } from "@/components/StatusMessage";
+import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
+import type { CircleInvitationDetails } from "@/features/circles";
 import {
-	loadStoredInvitation,
+	clearInvitation,
+	loadInvitation,
+	subscribeInvitationStorage,
+	type StoredCircleInvitation,
+} from "@/features/circles/utils/invitationStorage";
+import {
+	useFinalizeCircleInvitation,
+	useRespondToCircleInvitation,
 	useStartCircleInvitationOnboarding,
 } from "@/features/circles/hooks/useCircleInvitationOnboarding";
-import type { CircleInvitationOnboardingStart } from "@/features/circles";
+import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import type { ApiError } from "@/types";
-import { useEffect } from "react";
+import { useLocation } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
 import { Route } from "@/routes/invitations.accept";
 
-function InvitationAcceptRouteView() {
+type InvitationViewState =
+	| "loading"
+	| "invalid"
+	| "pending"
+	| "finalizing"
+	| "accepted"
+	| "declined"
+	| "expired"
+	| "error";
+
+interface InvitationAcceptContentProps {
+	token?: string;
+}
+
+export function InvitationAcceptContent({ token }: InvitationAcceptContentProps) {
 	const { t } = useTranslation();
-	const { token } = Route.useSearch();
-	const navigate = Route.useNavigate();
 	const session = useAuthSession();
+	const location = useLocation();
+	const navigate = Route.useNavigate();
+
 	const startMutation = useStartCircleInvitationOnboarding();
+	const finalizeMutation = useFinalizeCircleInvitation();
+	const respondMutation = useRespondToCircleInvitation();
+
+	const [storedInvitation, setStoredInvitation] = useState<StoredCircleInvitation | null>(
+		() => loadInvitation(),
+	);
+	const [invitationDetails, setInvitationDetails] = useState<CircleInvitationDetails | null>(
+		() => storedInvitation?.invitation ?? null,
+	);
+	const onboardingTokenRef = useRef<string | null>(
+		storedInvitation?.onboardingToken ?? null,
+	);
+	const invitationIdRef = useRef<string | null>(
+		storedInvitation?.invitation?.id ?? null,
+	);
+	const [viewState, setViewState] = useState<InvitationViewState>(() => {
+		if (!token && !storedInvitation) return "invalid";
+		return storedInvitation ? "pending" : "loading";
+	});
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const autoFinalizeRef = useRef(false);
 
 	useEffect(() => {
-		if (!token) return;
-		startMutation.mutate(token);
-	}, [startMutation, token]);
+		const unsubscribe = subscribeInvitationStorage((payload) => {
+			setStoredInvitation(payload);
+		});
+		return unsubscribe;
+	}, []);
 
-	if (!token) {
-		return (
-			<StandardError
-				title={t("pages.inviteAccept.invalidTitle")}
-				message={t("pages.inviteAccept.invalidMessage")}
-			/>
-		);
+	useEffect(() => {
+	if (
+		storedInvitation &&
+		token &&
+		storedInvitation.sourceToken &&
+		storedInvitation.sourceToken !== token
+	) {
+		clearInvitation();
+		setStoredInvitation(null);
+		onboardingTokenRef.current = null;
+		invitationIdRef.current = null;
+		setInvitationDetails(null);
+		setViewState("loading");
+		return;
 	}
 
-	if (startMutation.isLoading) {
+	if (storedInvitation) {
+			setInvitationDetails(storedInvitation.invitation);
+			onboardingTokenRef.current = storedInvitation.onboardingToken;
+			invitationIdRef.current = storedInvitation.invitation.id;
+			if (viewState === "loading") {
+				setViewState("pending");
+			}
+			return;
+		}
+
+		if (!token) {
+			setViewState("invalid");
+			return;
+		}
+
+		setViewState("loading");
+		startMutation.mutate(token, {
+			onError: (error) => {
+				const apiError = error as ApiError;
+				const messageKey =
+					apiError.messages?.[0]?.i18n_key ?? apiError.message ?? "";
+				if (
+					messageKey.includes("errors.token_invalid_expired") ||
+					messageKey.includes("errors.invitation_not_found")
+				) {
+					setViewState("expired");
+				} else {
+					setViewState("error");
+					setErrorMessage(apiError.message ?? t("pages.inviteAccept.invalidMessage"));
+				}
+			},
+		});
+	}, [startMutation, storedInvitation, token, t, viewState]);
+
+	useEffect(() => {
+		if (viewState === "accepted" || viewState === "declined") return;
+		const onboardingToken =
+			storedInvitation?.onboardingToken ?? onboardingTokenRef.current;
+		if (!onboardingToken) return;
+		if (session.status !== "authenticated") return;
+		if (autoFinalizeRef.current) return;
+
+		autoFinalizeRef.current = true;
+		setViewState("finalizing");
+		finalizeMutation.mutate(onboardingToken, {
+			onSuccess: () => {
+				setViewState("accepted");
+			},
+			onError: (error) => {
+				const apiError = error as ApiError;
+				setViewState("error");
+				setErrorMessage(
+					apiError.message ?? t("pages.inviteAccept.finalizeFailed"),
+				);
+				autoFinalizeRef.current = false;
+			},
+		});
+	}, [finalizeMutation, session.status, storedInvitation, t, viewState]);
+
+	const currentPath = useMemo(
+		() => `${location.pathname}${location.search}`,
+		[location.pathname, location.search],
+	);
+
+	const handleNavigateAuth = (path: "/login" | "/signup" | "/magic-link-request") => {
+		rememberInviteRedirect(currentPath);
+		navigate({
+			to: path,
+			search: { redirect: currentPath },
+		});
+	};
+
+	const handleAccept = () => {
+		const tokenToUse = onboardingTokenRef.current;
+		if (!tokenToUse) return;
+		setViewState("finalizing");
+		autoFinalizeRef.current = true;
+		finalizeMutation.mutate(tokenToUse, {
+			onSuccess: () => {
+				setViewState("accepted");
+			},
+			onError: (error) => {
+				const apiError = error as ApiError;
+				setViewState("error");
+				setErrorMessage(
+					apiError.message ?? t("pages.inviteAccept.finalizeFailed"),
+				);
+				autoFinalizeRef.current = false;
+			},
+		});
+	};
+
+	const handleDecline = () => {
+		const invitationId = invitationIdRef.current;
+		if (!invitationId) return;
+
+		if (session.status !== "authenticated") {
+			handleNavigateAuth("/login");
+			return;
+		}
+
+		respondMutation.mutate(
+			{ invitationId, action: "decline" },
+			{
+				onSuccess: () => {
+					setViewState("declined");
+				},
+				onError: (error) => {
+					const apiError = error as ApiError;
+					setViewState("error");
+					setErrorMessage(
+						apiError.message ?? t("pages.inviteAccept.declineFailed"),
+					);
+				},
+			},
+		);
+	};
+
+	const isLoading =
+		viewState === "loading" ||
+		startMutation.isPending ||
+		(viewState === "finalizing" && finalizeMutation.isPending);
+
+	if (viewState === "invalid") {
 		return (
-			<div className="flex min-h-[50vh] items-center justify-center">
-				<LoadingSpinner label={t("pages.inviteAccept.loading") ?? ""} />
+			<div className="flex min-h-[60vh] items-center justify-center px-4">
+				<StatusMessage variant="error">
+					{t("pages.inviteAccept.invalidMessage")}
+				</StatusMessage>
 			</div>
 		);
 	}
 
-	if (startMutation.isError) {
-		const error = startMutation.error as ApiError;
-		return (
-			<StandardError
-				title={t("pages.inviteAccept.invalidTitle")}
-				message={error.message ?? t("pages.inviteAccept.invalidMessage")}
-			/>
-		);
-	}
-
-	const payload = (startMutation.data?.data ?? startMutation.data) as
-		| CircleInvitationOnboardingStart
-		| undefined;
-
-	if (!payload) {
-		return null;
-	}
-
-	const { invitation } = payload;
-	const circleName = invitation.circle?.name ?? "";
-	const existingUser = invitation.existing_user;
-	const stored = loadStoredInvitation();
-	const showFinalizing =
-		session.status === "authenticated" && Boolean(stored?.onboardingToken);
+	const circleName = invitationDetails?.circle?.name ?? "";
+	const invitedBy = invitationDetails?.invited_by?.username;
 
 	return (
 		<div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col gap-6 py-12">
 			<header className="space-y-2 text-center">
 				<h1 className="heading-2">
-					{t("pages.inviteAccept.title", { circle: circleName })}
+					{circleName
+						? t("pages.inviteAccept.title", { circle: circleName })
+						: t("pages.inviteAccept.genericTitle")}
 				</h1>
 				<p className="text-muted-foreground">
-					{t("pages.inviteAccept.subtitle", { circle: circleName })}
+					{circleName
+						? t("pages.inviteAccept.subtitle", { circle: circleName })
+						: t("pages.inviteAccept.genericSubtitle")}
 				</p>
 			</header>
 
-			<section className="rounded-lg border border-border bg-card p-6 shadow-sm">
-				<h2 className="text-lg font-semibold">
-					{existingUser
-						? t("pages.inviteAccept.existingUserHeading")
-						: t("pages.inviteAccept.newUserHeading")}
-				</h2>
-				<p className="text-sm text-muted-foreground">
-					{existingUser
-						? t("pages.inviteAccept.existingUserDescription")
-						: t("pages.inviteAccept.newUserDescription")}
-				</p>
-				<div className="mt-4 flex flex-wrap gap-3">
-					<Button onClick={() => navigate({ to: "/login" })} variant={existingUser ? "default" : "outline"}>
-						{t("pages.inviteAccept.login")}
-					</Button>
-					<Button onClick={() => navigate({ to: "/signup" })} variant={existingUser ? "outline" : "default"}>
-						{t("pages.inviteAccept.signup")}
-					</Button>
+			{isLoading ? (
+				<div className="flex min-h-[30vh] items-center justify-center">
+					<LoadingSpinner label={t("pages.inviteAccept.loading") ?? ""} />
 				</div>
-			</section>
+			) : null}
 
-			{showFinalizing ? (
-				<section className="flex items-center gap-3 rounded-lg border border-border bg-muted/60 p-4 text-sm text-muted-foreground">
-					<LoadingSpinner size="small" />
-					<span>{t("pages.inviteAccept.finalizing")}</span>
-				</section>
+			{viewState === "expired" ? (
+				<StatusMessage variant="warning">
+					{t("pages.inviteAccept.expired")}
+				</StatusMessage>
+			) : null}
+
+			{viewState === "error" && errorMessage ? (
+				<StatusMessage variant="error">{errorMessage}</StatusMessage>
+			) : null}
+
+			{["pending", "finalizing"].includes(viewState) && invitationDetails ? (
+				<Card>
+					<CardHeader>
+						<CardTitle>
+							{t("pages.inviteAccept.invitationHeading", {
+								circle: invitationDetails.circle?.name,
+							})}
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<p className="text-sm text-muted-foreground">
+							{invitedBy
+								? t("pages.inviteAccept.invitedBy", { inviter: invitedBy })
+								: t("pages.inviteAccept.invitedGeneric")}
+						</p>
+						<div className="flex flex-wrap gap-3">
+							<Button onClick={handleAccept} disabled={finalizeMutation.isPending}>
+								{finalizeMutation.isPending
+									? t("pages.inviteAccept.accepting")
+									: t("pages.inviteAccept.accept")}
+							</Button>
+							<Button
+								variant="outline"
+								onClick={handleDecline}
+								disabled={respondMutation.isPending}
+							>
+								{respondMutation.isPending
+									? t("pages.inviteAccept.declining")
+									: t("pages.inviteAccept.decline")}
+							</Button>
+						</div>
+						<div className="rounded-md border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
+							<p className="font-medium">
+								{t("pages.inviteAccept.signInPrompt")}
+							</p>
+							<div className="mt-3 flex flex-wrap gap-2">
+								<Button
+									variant="secondary"
+									onClick={() => handleNavigateAuth("/login")}
+								>
+									{t("pages.inviteAccept.login")}
+								</Button>
+								<Button
+									variant="ghost"
+									onClick={() => handleNavigateAuth("/signup")}
+								>
+									{t("pages.inviteAccept.signup")}
+								</Button>
+								<Button
+									variant="ghost"
+									onClick={() => handleNavigateAuth("/magic-link-request")}
+								>
+									{t("pages.inviteAccept.magicLink")}
+								</Button>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			) : null}
+
+			{viewState === "finalizing" ? (
+				<StatusMessage variant="info">
+					{t("pages.inviteAccept.finalizing")}
+				</StatusMessage>
+			) : null}
+
+			{viewState === "accepted" ? (
+				<Card className="border-success/40 bg-success/10">
+					<CardHeader>
+						<CardTitle>{t("pages.inviteAccept.acceptedTitle")}</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-3 text-sm text-success-foreground">
+						<p>{t("pages.inviteAccept.acceptedMessage", { circle: circleName })}</p>
+						<Button
+							variant="secondary"
+							onClick={() => navigate({ to: "/circles" })}
+						>
+							{t("pages.inviteAccept.viewCircles")}
+						</Button>
+					</CardContent>
+				</Card>
+			) : null}
+
+			{viewState === "declined" ? (
+				<StatusMessage variant="info">
+					{t("pages.inviteAccept.declinedMessage")}
+				</StatusMessage>
 			) : null}
 		</div>
 	);
+}
+
+function InvitationAcceptRouteView() {
+	const { token } = Route.useSearch();
+	return <InvitationAcceptContent token={token} />;
 }
 
 export default InvitationAcceptRouteView;

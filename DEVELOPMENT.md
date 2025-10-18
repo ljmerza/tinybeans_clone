@@ -93,4 +93,20 @@ The test settings (`mysite/test_settings.py`) override the production settings t
 - Format code: `ruff format .`
 - Open Django shell with project context: `python manage.py shell_plus`
 
+## Circle Invitation Configuration
+
+Circle invitation flows rely on a handful of environment variables to control rate limiting, onboarding TTLs, and reminder cadences. The defaults live in `.env.example`, but for local debugging you can adjust the following values inside `.env.development` before restarting Docker:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `CIRCLE_INVITE_RATELIMIT` | Per-admin rate limit enforced by `django-ratelimit` (format `<count>/<window>`). | `10/15m` |
+| `CIRCLE_INVITE_CIRCLE_LIMIT` | Maximum invitations a circle can send within the configured window. | `25` |
+| `CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES` | Window (in minutes) for the per-circle limit. | `60` |
+| `CIRCLE_INVITE_REMINDER_DELAY_MINUTES` | Minutes to wait before sending the first reminder email. | `1440` |
+| `CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES` | Minimum minutes between reminder emails for the same invite. | `1440` |
+| `CIRCLE_INVITE_REMINDER_BATCH_SIZE` | Batch size for the reminder Celery task. | `100` |
+| `CIRCLE_INVITE_ONBOARDING_TTL_MINUTES` | TTL for onboarding tokens issued to invitees. | `60` |
+
+After updating these values run `docker compose restart web` so the API and Celery tasks pick up the new settings.
+
 Feel free to extend the demo data to cover new features—just update the seeding command and this document accordingly.

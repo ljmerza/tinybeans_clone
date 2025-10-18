@@ -21,14 +21,14 @@ export function StandardLoading({
 			className={`flex flex-col items-center justify-center text-center gap-3 py-16 ${className}`}
 		>
 			{icon ?? <LoadingSpinner size={spinnerSize} className="mx-auto" />}
-			{message && (
-				<p className="text-lg font-medium text-foreground">{message}</p>
-			)}
-			{description && (
-				<p className="text-sm text-muted-foreground max-w-prose">
+			{message ? (
+				<div className="text-lg font-medium text-foreground">{message}</div>
+			) : null}
+			{description ? (
+				<div className="text-sm text-muted-foreground max-w-prose">
 					{description}
-				</p>
-			)}
+				</div>
+			) : null}
 		</div>
 	);
 }

@@ -1,3 +1,7 @@
+import {
+	consumeInviteRedirect,
+	parseInvitationRedirect,
+} from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +17,33 @@ import type {
 } from "../types";
 import { handleTwoFactorRedirect } from "../utils";
 
-export function useLogin() {
+function tryNavigateRedirect(
+	navigate: ReturnType<typeof useNavigate>,
+	target?: string | null,
+): boolean {
+	if (!target || typeof window === "undefined") {
+		return false;
+	}
+
+	try {
+		const invitationRedirect = parseInvitationRedirect(target);
+		if (invitationRedirect) {
+			navigate({
+				to: "/invitations/accept",
+				search: { token: invitationRedirect.token },
+			});
+			return true;
+		}
+
+		window.location.assign(target);
+		return true;
+	} catch (error) {
+		console.warn("Failed to navigate to redirect target", error);
+		return false;
+	}
+}
+
+export function useLogin(options?: { redirect?: string }) {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
@@ -63,6 +93,11 @@ export function useLogin() {
 				return;
 			}
 
+			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
+			if (tryNavigateRedirect(navigate, redirectTarget)) {
+				return;
+			}
+
 			navigate({ to: "/" });
 		},
 		onError: (error) => {
@@ -71,7 +106,7 @@ export function useLogin() {
 	});
 }
 
-export function useSignup() {
+export function useSignup(options?: { redirect?: string }) {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
@@ -100,6 +135,11 @@ export function useSignup() {
 			const needsOnboarding = Boolean(payload?.needs_circle_onboarding);
 			if (needsOnboarding) {
 				navigate({ to: "/circles/onboarding" });
+				return;
+			}
+
+			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
+			if (tryNavigateRedirect(navigate, redirectTarget)) {
 				return;
 			}
 
@@ -163,7 +203,7 @@ export function useMagicLinkRequest() {
 	});
 }
 
-export function useMagicLoginVerify() {
+export function useMagicLoginVerify(options?: { redirect?: string }) {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
 
@@ -175,6 +215,11 @@ export function useMagicLoginVerify() {
 			}
 
 			qc.invalidateQueries({ queryKey: authKeys.session() });
+
+			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
+			if (tryNavigateRedirect(navigate, redirectTarget)) {
+				return;
+			}
 
 			navigate({ to: "/" });
 		},

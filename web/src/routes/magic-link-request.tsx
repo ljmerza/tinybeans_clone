@@ -5,5 +5,13 @@ import { MagicLinkRequestCard } from "@/features/auth";
 
 export const Route = createFileRoute("/magic-link-request")({
 	beforeLoad: requireGuest,
-	component: MagicLinkRequestCard,
+	validateSearch: (search: Record<string, unknown>) => ({
+		redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+	}),
+	component: MagicLinkRequestRoute,
 });
+
+function MagicLinkRequestRoute() {
+	const { redirect } = Route.useSearch();
+	return <MagicLinkRequestCard redirect={redirect} />;
+}

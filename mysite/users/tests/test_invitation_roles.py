@@ -184,6 +184,77 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(invitation.status, CircleInvitationStatus.PENDING)
         self.assertFalse(CircleMembership.objects.filter(circle=self.circle, user=existing_user).exists())
 
+    def test_circle_admin_can_list_invitations(self):
+        """Admins should be able to list invitations for their circle."""
+        CircleInvitation.objects.create(
+            circle=self.circle,
+            email='pending@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.get(
+            reverse('circle-invitation-create', args=[self.circle.id]),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
+        invitations = response.json()['data']['invitations']
+        self.assertEqual(len(invitations), 1)
+        self.assertEqual(invitations[0]['email'], 'pending@example.com')
+
+    def test_non_admin_cannot_list_invitations(self):
+        """Members should not be able to view the full invitation roster."""
+        self.client.force_authenticate(user=self.member)
+        response = self.client.get(
+            reverse('circle-invitation-create', args=[self.circle.id]),
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_circle_admin_can_cancel_invitation(self):
+        """Admins can cancel (delete) pending invitations."""
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email='pending@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.post(
+            reverse('circle-invitation-cancel', args=[self.circle.id, invitation.id]),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
+        self.assertFalse(
+            CircleInvitation.objects.filter(id=invitation.id).exists(),
+            "Invitation should be deleted after cancellation",
+        )
+
+    def test_member_cannot_cancel_invitation(self):
+        """Non-admin members cannot cancel invitations."""
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email='pending@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+
+        self.client.force_authenticate(user=self.member)
+        response = self.client.post(
+            reverse('circle-invitation-cancel', args=[self.circle.id, invitation.id]),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(
+            CircleInvitation.objects.filter(id=invitation.id).exists(),
+            "Invitation should remain when cancellation is forbidden",
+        )
+
     @patch('mysite.users.views.circles.send_email_task.delay')
     @patch('mysite.users.views.circles.store_token')
     def test_api_requires_identifier(self, mock_store_token, mock_delay):
@@ -386,4 +457,3 @@ class InvitationRoleTests(TestCase):
         sent_again = send_circle_invitation_reminders()
         self.assertEqual(sent_again, 0)
         mock_delay.assert_not_called()
-

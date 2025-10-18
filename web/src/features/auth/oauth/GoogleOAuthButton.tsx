@@ -1,5 +1,6 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useTheme } from "@/features/theme";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -10,6 +11,7 @@ interface GoogleOAuthButtonProps {
 	onSuccess?: () => void;
 	className?: string;
 	disabled?: boolean;
+	redirect?: string;
 }
 
 /**
@@ -22,6 +24,7 @@ export function GoogleOAuthButton({
 	onSuccess,
 	className = "",
 	disabled = false,
+	redirect,
 }: GoogleOAuthButtonProps) {
 	const { t } = useTranslation();
 	const { initiateOAuth, isLoading } = useGoogleOAuth();
@@ -29,6 +32,7 @@ export function GoogleOAuthButton({
 	const isDark = resolvedTheme === "dark";
 
 	const handleClick = () => {
+		rememberInviteRedirect(redirect ?? null);
 		initiateOAuth();
 		onSuccess?.();
 	};

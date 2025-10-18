@@ -12,12 +12,14 @@ import { circleServices } from "../api/services";
 import type {
 	CircleInvitationFinalizeResponse,
 	CircleInvitationOnboardingStart,
+	CircleInvitationSummary,
 } from "../types";
 import {
 	clearInvitation,
 	loadInvitation,
 	saveInvitation,
 } from "../utils/invitationStorage";
+import { trackCircleInviteEvent } from "../utils/inviteAnalytics";
 
 export function useStartCircleInvitationOnboarding(): UseMutationResult<
 	ApiResponseWithMessages<CircleInvitationOnboardingStart>,
@@ -29,16 +31,26 @@ export function useStartCircleInvitationOnboarding(): UseMutationResult<
 	return useMutation({
 		mutationFn: (token: string) =>
 			circleServices.startInvitationOnboarding(token),
-		onSuccess: (response) => {
+		onSuccess: (response, token) => {
 			const payload = (response.data ?? response) as CircleInvitationOnboardingStart;
 			saveInvitation({
 				onboardingToken: payload.onboarding_token,
 				expiresInMinutes: payload.expires_in_minutes,
 				invitation: payload.invitation,
+				sourceToken: token,
+				redirectPath:
+					typeof window !== "undefined"
+						? `${window.location.pathname}${window.location.search}`
+						: null,
 			});
 			if (response.messages?.length) {
 				showAsToast(response.messages, 200);
 			}
+			trackCircleInviteEvent("invitation_onboarding_started", {
+				invitationId: payload.invitation.id,
+				circleId: payload.invitation.circle?.id,
+				existingUser: payload.invitation.existing_user,
+			});
 		},
 		onError: (error) => {
 			const status = error.status ?? 400;
@@ -70,11 +82,51 @@ export function useFinalizeCircleInvitation(): UseMutationResult<
 			}
 			queryClient.invalidateQueries({ queryKey: circleKeys.onboarding() });
 			queryClient.invalidateQueries({ queryKey: authKeys.session() });
+			trackCircleInviteEvent("invitation_onboarding_finalized", {
+				circleId: response.data?.circle?.id ?? response.circle?.id,
+				role: response.data?.membership?.role ?? response.membership?.role,
+			});
 		},
 		onError: (error) => {
 			clearInvitation();
 			const status = error.status ?? 400;
 			showAsToast(error.messages, status);
+			trackCircleInviteEvent("invitation_onboarding_failed", {
+				status,
+			});
+		},
+	});
+}
+
+export function useRespondToCircleInvitation(): UseMutationResult<
+	ApiResponseWithMessages<{ invitation: CircleInvitationSummary }>,
+	ApiError,
+	{ invitationId: string; action: "accept" | "decline" }
+> {
+	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+
+	return useMutation({
+		mutationFn: ({ invitationId, action }) =>
+			circleServices.respondToInvitation(invitationId, action),
+		onSuccess: (response, variables) => {
+			if (response.messages?.length) {
+				showAsToast(response.messages, 200);
+			}
+			queryClient.invalidateQueries({ queryKey: authKeys.session() });
+			queryClient.invalidateQueries({ queryKey: circleKeys.list() });
+			queryClient.invalidateQueries({ queryKey: circleKeys.onboarding() });
+			trackCircleInviteEvent("invitation_onboarding_responded", {
+				invitationId: variables.invitationId,
+				action: variables.action,
+			});
+		},
+		onError: (error) => {
+			const status = error.status ?? 400;
+			showAsToast(error.messages, status);
+			trackCircleInviteEvent("invitation_onboarding_respond_failed", {
+				status,
+			});
 		},
 	});
 }

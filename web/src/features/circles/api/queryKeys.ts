@@ -8,4 +8,10 @@ export const circleKeys = {
 	list: () => circleKeysFactory.tag("list"),
 	detail: (circleId: string | number) =>
 		circleKeysFactory.tag("detail", circleId),
+	members: (circleId: string | number) =>
+		circleKeysFactory.tag("members", circleId),
+	invitations: (circleId: string | number) =>
+		circleKeysFactory.tag("invitations", circleId),
+	invitation: (circleId: string | number, invitationId: string) =>
+		circleKeysFactory.tag("invitation", circleId, invitationId),
 };

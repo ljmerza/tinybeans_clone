@@ -2,23 +2,34 @@ import { FormActions, FormField } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form/index";
 import { magicLinkRequestSchema } from "@/lib/validations/schemas/magic-link";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useMagicLinkRequest } from "../hooks/authHooks";
 
-export function MagicLinkRequestCard() {
+interface MagicLinkRequestCardProps {
+	redirect?: string;
+}
+
+export function MagicLinkRequestCard({ redirect }: MagicLinkRequestCardProps) {
 	const { t } = useTranslation();
 	const magicLoginRequest = useMagicLinkRequest();
 	const { getGeneral, translate } = useApiMessages();
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (redirect) {
+			rememberInviteRedirect(redirect);
+		}
+	}, [redirect]);
 
 	const form = useForm({
 		defaultValues: { email: "" },
@@ -61,6 +72,7 @@ export function MagicLinkRequestCard() {
 					<div>
 						<Link
 							to="/login"
+							search={{ redirect }}
 							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
 						>
 							{t("auth.magic_link.back_to_login")}
@@ -70,6 +82,7 @@ export function MagicLinkRequestCard() {
 						{t("auth.login.no_account")}{" "}
 						<Link
 							to="/signup"
+							search={{ redirect }}
 							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
 						>
 							{t("nav.signup")}

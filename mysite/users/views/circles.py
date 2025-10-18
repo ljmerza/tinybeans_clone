@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from uuid import UUID
 
 from django.conf import settings
 from django.db import transaction
@@ -133,6 +134,28 @@ class CircleInvitationCreateView(APIView):
     serializer_class = CircleInvitationCreateSerializer
 
     @extend_schema(
+        description='List invitations for a circle. Only admins can access this endpoint.',
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitations for the specified circle.',
+            )
+        },
+    )
+    def get(self, request, circle_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not membership or membership.role != UserRole.CIRCLE_ADMIN:
+            raise PermissionDenied(_('Only circle admins can view invitations'))
+
+        invitations = (
+            circle.invitations.select_related('invited_user')
+            .order_by('-created_at')
+        )
+        data = CircleInvitationSerializer(invitations, many=True).data
+        return success_response({'invitations': data})
+
+    @extend_schema(
         description='Invite a new member to join a circle via username or email. Existing users receive a pending invitation and must accept before joining.',
         request=CircleInvitationCreateSerializer,
         responses={
@@ -219,6 +242,62 @@ class CircleInvitationCreateView(APIView):
                 block=True,
             )
         )(post)
+
+
+class CircleInvitationCancelView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleInvitationSerializer
+
+    @extend_schema(
+        description='Cancel a pending invitation for the specified circle.',
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitation cancelled successfully.',
+            )
+        },
+    )
+    def post(self, request, circle_id, invitation_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not membership or membership.role != UserRole.CIRCLE_ADMIN:
+            raise PermissionDenied(_('Only circle admins can manage invitations'))
+
+        try:
+            invitation_uuid = UUID(str(invitation_id))
+        except ValueError:
+            return error_response(
+                'invitation_invalid',
+                [create_message('errors.invitation_not_found')],
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        invitation = CircleInvitation.objects.filter(
+            id=invitation_uuid,
+            circle=circle,
+        ).first()
+        if not invitation:
+            return error_response(
+                'invitation_not_found',
+                [create_message('errors.invitation_not_found')],
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        if invitation.status != CircleInvitationStatus.PENDING:
+            return error_response(
+                'invitation_not_pending',
+                [create_message('errors.invitation_not_pending')],
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        invitation.delete()
+
+        return success_response(
+            {
+                'invitation_id': str(invitation.id),
+            },
+            status_code=status.HTTP_200_OK,
+        )
 
 
 class CircleInvitationListView(APIView):

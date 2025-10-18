@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { StatusMessage } from "@/components";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -12,17 +13,24 @@ import { useMagicLoginVerify } from "../hooks/authHooks";
 
 type MagicLoginHandlerProps = {
 	token?: string;
+	redirect?: string;
 };
 
-export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
+export function MagicLoginHandler({ token, redirect }: MagicLoginHandlerProps) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const magicLoginVerify = useMagicLoginVerify();
+	const magicLoginVerify = useMagicLoginVerify({ redirect });
 	const { getGeneral } = useApiMessages();
 	const [status, setStatus] = useState<"verifying" | "success" | "error">(
 		"verifying",
 	);
 	const [errorMessage, setErrorMessage] = useState<string>("");
+
+	useEffect(() => {
+		if (redirect) {
+			rememberInviteRedirect(redirect);
+		}
+	}, [redirect]);
 
 	useEffect(() => {
 		if (!token) {
@@ -77,7 +85,15 @@ export function MagicLoginHandler({ token }: MagicLoginHandlerProps) {
 	return (
 		<div className="mx-auto max-w-sm p-6 space-y-4">
 			<StatusMessage variant="error">{errorMessage}</StatusMessage>
-			<Button onClick={() => navigate({ to: "/login" })} className="w-full">
+			<Button
+				onClick={() =>
+					navigate({
+						to: "/login",
+						search: redirect ? { redirect } : undefined,
+					})
+				}
+				className="w-full"
+			>
 				{t("auth.password_reset.back_to_login")}
 			</Button>
 		</div>

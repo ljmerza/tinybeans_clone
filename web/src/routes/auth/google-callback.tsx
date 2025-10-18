@@ -5,6 +5,7 @@ import {
 	useGoogleOAuth,
 	validateOAuthState,
 } from "@/features/auth";
+import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -15,6 +16,7 @@ const searchParamsSchema = z.object({
 	state: z.string().optional(),
 	error: z.string().optional(),
 	error_description: z.string().optional(),
+	redirect: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth/google-callback")({
@@ -30,6 +32,10 @@ function GoogleCallbackPage() {
 	const [clientError, setClientError] = useState<string | null>(null);
 
 	useEffect(() => {
+		if (searchParams.redirect) {
+			rememberInviteRedirect(searchParams.redirect);
+		}
+
 		// Prevent double processing
 		if (hasProcessed) return;
 

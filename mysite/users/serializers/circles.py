@@ -222,5 +222,6 @@ __all__ = [
     'CircleInvitationSerializer',
     'CircleInvitationCreateSerializer',
     'CircleInvitationResponseSerializer',
-    'CircleInvitationAcceptSerializer',
+    'CircleInvitationOnboardingStartSerializer',
+    'CircleInvitationFinalizeSerializer',
 ]

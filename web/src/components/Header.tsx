@@ -20,6 +20,9 @@ function AuthenticatedHeaderActions() {
 	const { t } = useTranslation();
 	return (
 		<>
+			<Link to="/circles" className="btn-ghost">
+				{t("nav.circles")}
+			</Link>
 			<Link to="/profile/general" className="btn-ghost">
 				{t("nav.settings")}
 			</Link>

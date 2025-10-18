@@ -14,9 +14,13 @@ import { useTranslation } from "react-i18next";
 import { useSignup } from "../hooks/authHooks";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
-export function SignupCard() {
+interface SignupCardProps {
+	redirect?: string;
+}
+
+export function SignupCard({ redirect }: SignupCardProps) {
 	const { t } = useTranslation();
-	const signup = useSignup();
+	const signup = useSignup({ redirect });
 	const { getGeneral, getFieldErrors } = useApiMessages();
 	const [generalError, setGeneralError] = useState("");
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -71,6 +75,7 @@ export function SignupCard() {
 					{t("auth.signup.already_have_account")}{" "}
 					<Link
 						to="/login"
+						search={redirect ? { redirect } : undefined}
 						className="font-semibold text-primary hover:text-primary/80 transition-colors"
 					>
 						{t("nav.login")}
@@ -78,8 +83,8 @@ export function SignupCard() {
 				</div>
 			}
 		>
-			<div className="space-y-4">
-				<GoogleOAuthButton mode="signup" />
+		<div className="space-y-4">
+			<GoogleOAuthButton mode="signup" redirect={redirect} />
 
 				<div className="relative">
 					<div className="absolute inset-0 flex items-center">
