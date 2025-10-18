@@ -8,7 +8,7 @@ This document captures the current-state architecture of the Tinybeans Circles p
 - **Primary Domains**: Circles & membership (`mysite/users`), keeps/media (`mysite/keeps`), messaging/notifications (`mysite/messaging`, `mysite/emails`)
 - **Identity Surface**: Multi-mode auth featuring magic links, Google OAuth, 2FA, recovery codes, and trusted devices (`mysite/auth`)
 - **Async Workloads**: Celery workers sharing Redis for brokerage and caching; scheduled tasks executed via Celery beat
-- **Invitation Onboarding**: Dual-step flow using Redis-backed onboarding tokens (`circle-invite-onboarding`) with configurable TTL, plus Celery email notifications for reminders and acceptance
+- **Invitation Onboarding**: Dual-step flow using Redis-backed onboarding tokens (`circle-invite-onboarding`) with configurable TTL, plus Celery reminder/acceptance emails driven by `send_circle_invitation_reminders` and acceptance hooks
 - **Local Orchestration**: `docker-compose.yml` bootstraps Django, Postgres, Redis, Mailpit, MinIO, pgAdmin, Celery workers/beat, Flower, and the Vite dev server
 - **Documentation Reset**: Legacy `_docs/` artifacts are superseded; this file inaugurates the new `docs/` tree and becomes the baseline for subsequent ADRs
 

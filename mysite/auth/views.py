@@ -21,11 +21,8 @@ from django.utils.decorators import method_decorator
 
 from users.models import User
 from users.serializers import UserSerializer
-from users.tasks import (
-    EMAIL_VERIFICATION_TEMPLATE,
-    PASSWORD_RESET_TEMPLATE,
-    send_email_task,
-)
+from emails.tasks import send_email_task
+from emails.templates import EMAIL_VERIFICATION_TEMPLATE, PASSWORD_RESET_TEMPLATE
 from .serializers import (
     EmailVerificationConfirmSerializer,
     EmailVerificationSerializer,

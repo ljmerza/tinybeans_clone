@@ -36,7 +36,8 @@ from ..serializers import (
     CircleSerializer,
     UserSerializer,
 )
-from ..tasks import CHILD_UPGRADE_TEMPLATE, send_email_task
+from emails.tasks import send_email_task
+from emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 class ChildProfileUpgradeRequestView(APIView):

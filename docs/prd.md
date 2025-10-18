@@ -68,7 +68,6 @@ The invite modernization introduces username search, onboarding handoffs for new
 - FR4: Circle admins must retrieve real-time invite status (pending, accepted, declined, expired) via REST endpoints and use this data to resend or cancel invites.  
 - FR5: The system must send transactional notifications (email and in-app) for invitations, acceptance, decline, or expiration using existing Celery queues and templates.
 - FR6: Invitation onboarding success must notify circle admins so they can track membership changes.
-- FR6: Invitation onboarding success must notify circle admins so they can track membership changes.
 - FR7: Invitation workflows must enforce configurable rate limits per admin and per circle to mitigate abuse.
 
 **Non-Functional Requirements**  
@@ -126,7 +125,7 @@ Invites live inside the existing circles management flow (`web/src/features/circ
 **Build Process Integration**: Reuse Dockerfile/Compose; ensure `docker compose up --build` applies migrations and seeds data; front-end builds with `npm run build`.  
 **Deployment Strategy**: Roll out backend/worker containers through the existing pipeline (Docker/ECS); run migrations before deploying invite UI; ship frontend bundles to CDN/static hosting.  
 **Monitoring and Logging**: Extend structured logging to capture invite lifecycle events; monitor Celery queues via Flower; plan Sentry integration for production.  
-**Configuration Management**: Add env flags for invite rate limiting and onboarding token TTL in `.env.example`; document Google OAuth/Twilio secrets in `DEVELOPMENT.md`.
+**Configuration Management**: Add env flags for invite rate limiting, onboarding token TTL, and reminder cadence/batch sizing in `.env.example`; document Google OAuth/Twilio secrets in `DEVELOPMENT.md`.
 
 **Risk Assessment and Mitigation**  
 **Technical Risks**: Expanded flows could introduce auth bypasses or inconsistent invitation states; Redis token TTLs must align with onboarding windows.  

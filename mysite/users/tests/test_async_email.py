@@ -12,12 +12,12 @@ from users.models import (
     UserRole,
     ChildUpgradeEventType,
 )
-from users.tasks import (
+from emails.tasks import send_email_task
+from emails.templates import (
     CHILD_UPGRADE_TEMPLATE,
     CIRCLE_INVITATION_TEMPLATE,
     EMAIL_VERIFICATION_TEMPLATE,
     PASSWORD_RESET_TEMPLATE,
-    send_email_task,
 )
 
 

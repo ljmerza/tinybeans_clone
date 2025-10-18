@@ -135,12 +135,14 @@ class CircleInvitation(models.Model):
     )
     created_at = models.DateTimeField(default=timezone.now)
     responded_at = models.DateTimeField(blank=True, null=True)
+    reminder_sent_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['circle', 'email']),
             models.Index(fields=['circle', 'invited_user']),
+            models.Index(fields=['status', 'reminder_sent_at']),
         ]
 
     def __str__(self):

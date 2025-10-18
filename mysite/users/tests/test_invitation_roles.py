@@ -1,8 +1,10 @@
 """Test role-based invitation functionality."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -16,6 +18,7 @@ from users.models import (
 )
 from users.serializers.circles import CircleInvitationCreateSerializer
 from auth.token_utils import store_token
+from users.tasks import send_circle_invitation_reminders
 
 
 class InvitationRoleTests(TestCase):
@@ -270,6 +273,8 @@ class InvitationRoleTests(TestCase):
             invited_by=self.admin,
             role=UserRole.CIRCLE_MEMBER,
         )
+        CircleInvitation.objects.filter(id=invitation.id).update(created_at=timezone.now() - timedelta(minutes=120))
+        invitation.refresh_from_db()
 
         invite_token = store_token(
             'circle-invite',
@@ -318,6 +323,8 @@ class InvitationRoleTests(TestCase):
             invited_by=self.admin,
             role=UserRole.CIRCLE_MEMBER,
         )
+        CircleInvitation.objects.filter(id=invitation.id).update(created_at=timezone.now() - timedelta(minutes=120))
+        invitation.refresh_from_db()
 
         invite_token = store_token(
             'circle-invite',
@@ -352,3 +359,31 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(finalize.status_code, status.HTTP_403_FORBIDDEN)
         invitation.refresh_from_db()
         self.assertEqual(invitation.status, CircleInvitationStatus.PENDING)
+
+    @override_settings(
+        CIRCLE_INVITE_REMINDER_DELAY_MINUTES=60,
+        CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES=1440,
+        CIRCLE_INVITE_REMINDER_BATCH_SIZE=50,
+    )
+    @patch('users.tasks.send_email_task.delay')
+    def test_reminder_task_sends_email(self, mock_delay):
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email='reminder@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+        CircleInvitation.objects.filter(id=invitation.id).update(created_at=timezone.now() - timedelta(minutes=180))
+        invitation.refresh_from_db()
+
+        sent = send_circle_invitation_reminders()
+        invitation.refresh_from_db()
+        self.assertEqual(sent, 1)
+        mock_delay.assert_called_once()
+        self.assertIsNotNone(invitation.reminder_sent_at)
+
+        mock_delay.reset_mock()
+        sent_again = send_circle_invitation_reminders()
+        self.assertEqual(sent_again, 0)
+        mock_delay.assert_not_called()
+

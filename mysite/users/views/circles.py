@@ -44,13 +44,12 @@ from ..serializers import (
     CircleSerializer,
     UserSerializer,
 )
-from ..tasks import (
-    CIRCLE_INVITATION_TEMPLATE,
-    CIRCLE_INVITATION_REMINDER_TEMPLATE,
+from emails.tasks import send_email_task
+from emails.templates import (
     CIRCLE_INVITATION_ACCEPTED_TEMPLATE,
-    send_email_task,
+    CIRCLE_INVITATION_REMINDER_TEMPLATE,
+    CIRCLE_INVITATION_TEMPLATE,
 )
-from ..tasks import CIRCLE_INVITATION_REMINDER_TEMPLATE, CIRCLE_INVITATION_ACCEPTED_TEMPLATE
 
 
 class UserCircleListView(APIView):

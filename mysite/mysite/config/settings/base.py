@@ -359,6 +359,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'auth.tasks.cleanup_expired_magic_login_tokens',
         'schedule': crontab(hour=3, minute=0),  # Daily at 3 AM
     },
+    'send-circle-invitation-reminders': {
+        'task': 'users.tasks.send_circle_invitation_reminders',
+        'schedule': crontab(minute='*/30'),  # Every 30 minutes
+    },
 }
 
 # Media Storage Configuration - MinIO Only
@@ -496,6 +500,9 @@ EMAIL_VERIFICATION_CONFIRM_RATELIMIT = os.environ.get('EMAIL_VERIFICATION_CONFIR
 CIRCLE_INVITE_RATELIMIT = os.environ.get('CIRCLE_INVITE_RATELIMIT', '10/15m')
 CIRCLE_INVITE_CIRCLE_LIMIT = _env_int('CIRCLE_INVITE_CIRCLE_LIMIT', 25)
 CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES = _env_int('CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES', 60)
+CIRCLE_INVITE_REMINDER_DELAY_MINUTES = _env_int('CIRCLE_INVITE_REMINDER_DELAY_MINUTES', 1440)
+CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES = _env_int('CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES', 1440)
+CIRCLE_INVITE_REMINDER_BATCH_SIZE = _env_int('CIRCLE_INVITE_REMINDER_BATCH_SIZE', 100)
 CIRCLE_INVITE_ONBOARDING_TTL_MINUTES = _env_int('CIRCLE_INVITE_ONBOARDING_TTL_MINUTES', 60)
 
 # HTTPS & security headers

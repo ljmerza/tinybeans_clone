@@ -100,6 +100,7 @@ class CircleInvitationSerializer(serializers.ModelSerializer):
             'status',
             'created_at',
             'responded_at',
+            'reminder_sent_at',
         ]
         read_only_fields = [
             'id',
@@ -109,6 +110,7 @@ class CircleInvitationSerializer(serializers.ModelSerializer):
             'status',
             'created_at',
             'responded_at',
+            'reminder_sent_at',
         ]
 
     def get_existing_user(self, obj: CircleInvitation) -> bool:

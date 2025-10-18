@@ -18,7 +18,8 @@ from .models import (
     User,
     UserNotificationPreferences,
 )
-from .tasks import CHILD_UPGRADE_TEMPLATE, send_email_task
+from emails.tasks import send_email_task
+from emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 @admin.register(User)
