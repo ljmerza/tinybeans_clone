@@ -4,11 +4,12 @@
  */
 
 import { useStore } from "@tanstack/react-store";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useAuthSessionQuery } from "../hooks/useAuthSessionQuery";
 import { authStore } from "../store/authStore";
 import type { AuthUser } from "../types";
+import { loadStoredInvitation, useFinalizeCircleInvitation } from "@/features/circles/hooks/useCircleInvitationOnboarding";
 
 export type AuthStatus = "unknown" | "guest" | "authenticated";
 
@@ -47,6 +48,9 @@ export function AuthSessionProvider({
 		enabled: !isInitializing && Boolean(accessToken),
 	});
 
+	const finalizeInvitation = useFinalizeCircleInvitation();
+	const { mutate: finalizeInvite, isPending: isFinalizing } = finalizeInvitation;
+
 	const session = useMemo<AuthSession>(() => {
 		const status: AuthStatus = isInitializing
 			? "unknown"
@@ -77,6 +81,15 @@ export function AuthSessionProvider({
 		sessionQuery.refetch,
 	]);
 
+
+	useEffect(() => {
+		if (isInitializing) return;
+		if (session.status !== "authenticated") return;
+		const stored = loadStoredInvitation();
+		if (!stored) return;
+		if (isFinalizing) return;
+		finalizeInvite(stored.onboardingToken);
+	}, [finalizeInvite, isFinalizing, isInitializing, session.status]);
 	return (
 		<AuthSessionContext.Provider value={{ session }}>
 			{children}

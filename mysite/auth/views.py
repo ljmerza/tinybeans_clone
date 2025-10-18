@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 import math
+import sys
+from pathlib import Path
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -23,17 +25,6 @@ from users.models import User
 from users.serializers import UserSerializer
 from emails.tasks import send_email_task
 from emails.templates import EMAIL_VERIFICATION_TEMPLATE, PASSWORD_RESET_TEMPLATE
-from .serializers import (
-    EmailVerificationConfirmSerializer,
-    EmailVerificationSerializer,
-    LoginSerializer,
-    PasswordChangeSerializer,
-    PasswordResetConfirmSerializer,
-    PasswordResetRequestSerializer,
-    SignupSerializer,
-    MagicLoginRequestSerializer,
-    MagicLoginVerifySerializer,
-)
 from .token_utils import (
     REFRESH_COOKIE_NAME,
     TOKEN_TTL_SECONDS,
@@ -44,6 +35,23 @@ from .token_utils import (
     store_token,
     generate_partial_token,
     hash_magic_login_token,
+)
+
+# Ensure the repository root (`/app`) is on sys.path before importing the aggregated project package.
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from .serializers import (
+    EmailVerificationConfirmSerializer,
+    EmailVerificationSerializer,
+    LoginSerializer,
+    PasswordChangeSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    SignupSerializer,
+    MagicLoginRequestSerializer,
+    MagicLoginVerifySerializer,
 )
 from mysite import logging as project_logging
 from mysite.audit import AuditEvent, log_audit_event, log_security_event
