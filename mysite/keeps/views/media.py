@@ -2,7 +2,7 @@
 from rest_framework import generics, permissions
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
-from users.models import Circle
+from mysite.users.models import Circle
 from ..models import KeepMedia
 from ..serializers import KeepMediaSerializer
 from .permissions import IsCircleMember, IsCircleAdminOrOwner, is_circle_admin

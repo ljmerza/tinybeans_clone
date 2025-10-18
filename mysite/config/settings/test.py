@@ -10,12 +10,10 @@ os.environ.setdefault('DJANGO_SECURE_SSL_REDIRECT', '0')
 
 from .base import *  # noqa: F401,F403
 
-from mysite.logging import get_logging_config
+from mysite.project_logging import get_logging_config
 
 # Override email backend for tests
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
-
-TEST_RUNNER = 'mysite.test_runner.ProjectDiscoverRunner'
 
 # Disable Mailjet by default in tests
 MAILJET_ENABLED = False
@@ -81,4 +79,4 @@ OAUTH_ALLOWED_REDIRECT_URIS = [
 OAUTH_STATE_EXPIRATION = 600  # 10 minutes in seconds
 
 # Ensure template metadata is available during tests
-import emails.templates  # noqa: F401  (exposes EMAIL_TEMPLATE_FILES for loader)
+from mysite.emails import templates as _emails_templates  # noqa: F401  (exposes EMAIL_TEMPLATE_FILES for loader)

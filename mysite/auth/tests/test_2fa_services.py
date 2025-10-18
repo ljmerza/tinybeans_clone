@@ -6,16 +6,16 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
-from auth.models import (
+from mysite.auth.models import (
     TwoFactorSettings,
     TwoFactorCode,
     RecoveryCode,
     TrustedDevice,
     TwoFactorAuditLog
 )
-from auth.services.twofa_service import TwoFactorService
-from auth.services.trusted_device_service import TrustedDeviceService, TrustedDeviceToken
-from auth.services.recovery_code_service import RecoveryCodeService
+from mysite.auth.services.twofa_service import TwoFactorService
+from mysite.auth.services.trusted_device_service import TrustedDeviceService, TrustedDeviceToken
+from mysite.auth.services.recovery_code_service import RecoveryCodeService
 
 User = get_user_model()
 
@@ -175,8 +175,8 @@ class TestTwoFactorServiceTOTP:
         secrets = [TwoFactorService.generate_totp_secret() for _ in range(10)]
         assert len(set(secrets)) == 10
     
-    @patch('auth.services.twofa_service.pyotp.TOTP')
-    @patch('auth.services.twofa_service.qrcode.QRCode')
+    @patch('mysite.auth.services.twofa_service.pyotp.TOTP')
+    @patch('mysite.auth.services.twofa_service.qrcode.QRCode')
     def test_generate_totp_qr_code(self, mock_qrcode, mock_totp):
         """Test QR code generation"""
         user = create_user(
@@ -204,7 +204,7 @@ class TestTwoFactorServiceTOTP:
         assert 'secret' in result
         assert result['secret'] == secret
     
-    @patch('auth.services.twofa_service.pyotp.TOTP')
+    @patch('mysite.auth.services.twofa_service.pyotp.TOTP')
     def test_verify_totp_valid(self, mock_totp):
         """Test TOTP verification with valid code"""
         user = create_user(username='testuser', password='testpass')
@@ -223,7 +223,7 @@ class TestTwoFactorServiceTOTP:
         result = TwoFactorService.verify_totp(user, '123456')
         assert result is True
     
-    @patch('auth.services.twofa_service.pyotp.TOTP')
+    @patch('mysite.auth.services.twofa_service.pyotp.TOTP')
     def test_verify_totp_invalid(self, mock_totp):
         """Test TOTP verification with invalid code"""
         user = create_user(username='testuser', password='testpass')
@@ -381,7 +381,7 @@ class TestRecoveryCodeService:
         for code in codes:
             assert code in txt_content
     
-    @patch('auth.services.recovery_code_service.SimpleDocTemplate')
+    @patch('mysite.auth.services.recovery_code_service.SimpleDocTemplate')
     def test_export_recovery_codes_pdf(self, mock_doc):
         """Test PDF export of recovery codes"""
         user = create_user(

@@ -113,10 +113,10 @@ class TwoFactorService:
         
         # Send via appropriate method
         if method == 'email':
-            from emails.mailers import TwoFactorMailer
+            from mysite.emails.mailers import TwoFactorMailer
             TwoFactorMailer.send_2fa_code(user, code)
         elif method == 'sms':
-            from messaging.tasks import send_2fa_sms
+            from mysite.messaging.tasks import send_2fa_sms
             settings_obj = user.twofa_settings
             if settings_obj.phone_number:
                 send_2fa_sms.delay(settings_obj.phone_number, code)
@@ -183,7 +183,7 @@ class TwoFactorService:
             
             if success:
                 # Send alert email
-                from emails.mailers import TwoFactorMailer
+                from mysite.emails.mailers import TwoFactorMailer
                 TwoFactorMailer.send_recovery_code_used_alert(user)
             
             return success

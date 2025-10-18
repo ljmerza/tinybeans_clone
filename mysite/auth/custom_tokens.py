@@ -5,7 +5,7 @@ memberships and admin status for each circle in the token payload.
 """
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import UserRole
+from mysite.users.models import UserRole
 
 
 class CustomRefreshToken(RefreshToken):

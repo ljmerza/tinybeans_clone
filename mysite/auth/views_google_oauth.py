@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
-from auth.services.google_oauth_service import (
+from mysite.auth.services.google_oauth_service import (
     GoogleOAuthService,
     InvalidRedirectURIError,
     InvalidStateError,
@@ -24,7 +24,7 @@ from auth.services.google_oauth_service import (
     UnverifiedAccountError,
     GoogleAccountAlreadyLinkedError,
 )
-from auth.serializers import (
+from mysite.auth.serializers import (
     OAuthInitiateRequestSerializer,
     OAuthInitiateResponseSerializer,
     OAuthCallbackRequestSerializer,
@@ -35,8 +35,8 @@ from auth.serializers import (
     OAuthUnlinkResponseSerializer,
     OAuthErrorSerializer,
 )
-from auth.token_utils import get_tokens_for_user, set_refresh_cookie
-from users.serializers import UserSerializer
+from mysite.auth.token_utils import get_tokens_for_user, set_refresh_cookie
+from mysite.users.serializers import UserSerializer
 from mysite.notification_utils import error_response, success_response, validation_error_response, create_message, rate_limit_response
 
 logger = logging.getLogger(__name__)

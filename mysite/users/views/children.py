@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
-from auth.token_utils import (
+from mysite.auth.token_utils import (
     TOKEN_TTL_SECONDS,
     get_tokens_for_user,
     delete_token,
@@ -36,8 +36,8 @@ from ..serializers import (
     CircleSerializer,
     UserSerializer,
 )
-from emails.tasks import send_email_task
-from emails.templates import CHILD_UPGRADE_TEMPLATE
+from mysite.emails.tasks import send_email_task
+from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 class ChildProfileUpgradeRequestView(APIView):

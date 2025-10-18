@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase, override_settings
 
-from emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
+from mysite.emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
 
 
 class MailjetMailerTests(SimpleTestCase):
@@ -15,7 +15,7 @@ class MailjetMailerTests(SimpleTestCase):
         MAILJET_FROM_NAME='Sender',
         MAILJET_USE_SANDBOX=False,
     )
-    @patch('emails.mailers.requests.post')
+    @patch('mysite.emails.mailers.requests.post')
     def test_mailjet_send_success(self, mock_post):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {'Messages': [{'Status': 'success'}]}
@@ -69,7 +69,7 @@ class MailjetMailerTests(SimpleTestCase):
         MAILJET_USE_SANDBOX=True,
         MAILJET_API_URL='https://api.mailjet.com/v3.1/send',
     )
-    @patch('emails.mailers.requests.post')
+    @patch('mysite.emails.mailers.requests.post')
     def test_mailjet_request_exception(self, mock_post):
         import requests
 
@@ -95,7 +95,7 @@ class MailjetMailerTests(SimpleTestCase):
         MAILJET_USE_SANDBOX=False,
         MAILJET_API_URL='https://api.mailjet.com/v3.1/send',
     )
-    @patch('emails.mailers.requests.post')
+    @patch('mysite.emails.mailers.requests.post')
     def test_mailjet_http_error_response(self, mock_post):
         mock_response = Mock()
         mock_response.status_code = 400
@@ -122,8 +122,8 @@ class MailjetMailerTests(SimpleTestCase):
         MAILJET_USE_SANDBOX=False,
         MAILJET_API_URL='https://api.mailjet.com/v3.1/send',
     )
-    @patch('emails.mailers.requests.post')
-    @patch('emails.mailers.logger')
+    @patch('mysite.emails.mailers.requests.post')
+    @patch('mysite.emails.mailers.logger')
     def test_mailjet_success_response(self, mock_logger, mock_post):
         mock_response = Mock()
         mock_response.status_code = 200

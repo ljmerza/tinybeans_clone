@@ -46,14 +46,13 @@ x-common-env: &django-common-env
   OAUTH_STATE_EXPIRATION: ${OAUTH_STATE_EXPIRATION:-600}
   OAUTH_RATE_LIMIT_MAX_ATTEMPTS: ${OAUTH_RATE_LIMIT_MAX_ATTEMPTS:-5}
   OAUTH_RATE_LIMIT_WINDOW: ${OAUTH_RATE_LIMIT_WINDOW:-900}
-  PYTHONPATH: /app
 
 
 services:
   web:
     build: .
     command: bash -lc "python manage.py migrate && python manage.py seed_demo_data && python manage.py runserver 0.0.0.0:8000"
-    working_dir: /app/mysite
+    working_dir: /app
     volumes:
       - ./:/app
     env_file:
@@ -89,7 +88,7 @@ services:
   celery-worker-1:
     build: .
     command: celery -A mysite worker
-    working_dir: /app/mysite
+    working_dir: /app
     volumes:
       - ./:/app
     env_file:
@@ -103,7 +102,7 @@ services:
   celery-beat:
     build: .
     command: celery -A mysite beat -l INFO
-    working_dir: /app/mysite
+    working_dir: /app
     volumes:
       - ./:/app
     env_file:
@@ -117,7 +116,7 @@ services:
   flower:
     build: .
     command: celery -A mysite flower --url-prefix=flower --port=5555 --address=0.0.0.0 --persistent --db=/data/flower.db
-    working_dir: /app/mysite
+    working_dir: /app
     volumes:
       - ./:/app
       - flower_data:/data

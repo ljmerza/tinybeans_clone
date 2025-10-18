@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from users.models import (
+from mysite.users.models import (
     ChildProfile,
     ChildProfileUpgradeStatus,
     Circle,

@@ -37,7 +37,7 @@ tinybeans_copy/
 ### Project Configuration
 - **Settings**: Modular settings under `mysite/mysite/config/settings/` with `base.py` shared across environments (local, staging, production, test). Environment variables are consumed via helper functions for flags/lists/ints.
 - **Celery**: Configured in `mysite/mysite/celery.py` with queues for email, SMS, media, and maintenance. Beat schedules are defined in settings and seeded through Docker entrypoints.
-- **Logging**: Centralized configuration in `mysite/mysite/logging.py` with per-service loggers used across apps.
+- **Logging**: Centralized configuration in `mysite/project_logging.py` with per-service loggers used across apps.
 
 ### Core Apps
 | App | Responsibility | Key Modules |

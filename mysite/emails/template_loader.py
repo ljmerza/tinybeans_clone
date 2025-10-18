@@ -10,9 +10,9 @@ from django.template import Context, Engine
 from django.template.loader_tags import BlockNode
 from django.utils.html import strip_tags
 
-from emails.models import RenderedEmail
-from emails.services import register_email_template
-from emails.templates import EMAIL_TEMPLATE_FILES
+from mysite.emails.models import RenderedEmail
+from mysite.emails.services import register_email_template
+from mysite.emails.templates import EMAIL_TEMPLATE_FILES
 
 logger = logging.getLogger(__name__)
 

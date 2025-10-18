@@ -4,8 +4,8 @@ from typing import Any
 
 from celery import shared_task
 
-from emails.models import TemplateRenderer
-from emails.services import email_dispatch_service, register_email_template
+from mysite.emails.models import TemplateRenderer
+from mysite.emails.services import email_dispatch_service, register_email_template
 
 
 @shared_task(

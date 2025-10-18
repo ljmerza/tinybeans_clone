@@ -7,14 +7,14 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from auth.models import (
+from mysite.auth.models import (
     TwoFactorSettings,
     TwoFactorCode,
     RecoveryCode,
     TrustedDevice,
     TwoFactorAuditLog,
 )
-from auth.services.trusted_device_service import TrustedDeviceToken
+from mysite.auth.services.trusted_device_service import TrustedDeviceToken
 
 User = get_user_model()
 
@@ -41,8 +41,8 @@ class TestTwoFactorSetupAPI:
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.generate_totp_qr_code')
-    @patch('auth.services.twofa_service.TwoFactorService.generate_totp_secret')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_totp_qr_code')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_totp_secret')
     def test_setup_totp_success(self, mock_secret, mock_qr):
         """Test successful TOTP setup"""
         mock_secret.return_value = 'JBSWY3DPEHPK3PXP'
@@ -67,8 +67,8 @@ class TestTwoFactorSetupAPI:
         assert settings_obj.totp_secret is not None
         assert not settings_obj.is_enabled
     
-    @patch('auth.services.twofa_service.TwoFactorService.send_otp')
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.send_otp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_setup_email_success(self, mock_rate_limit, mock_send):
         """Test successful email 2FA setup"""
         mock_rate_limit.return_value = False
@@ -84,7 +84,7 @@ class TestTwoFactorSetupAPI:
         assert payload['method'] == 'email'
         assert 'expires_in' in payload
     
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_setup_rate_limited(self, mock_rate_limit):
         """Test rate limiting on setup"""
         mock_rate_limit.return_value = True
@@ -138,9 +138,9 @@ class TestTwoFactorVerifySetupAPI:
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
     def test_verify_setup_totp_success(self, mock_email, mock_codes, mock_verify):
         """Test successful TOTP setup verification"""
         # Create settings
@@ -173,9 +173,9 @@ class TestTwoFactorVerifySetupAPI:
         self.user.twofa_settings.refresh_from_db()
         assert self.user.twofa_settings.is_enabled
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_otp')
-    @patch('auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_otp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
     def test_verify_setup_email_success(self, mock_email, mock_codes, mock_verify):
         """Test successful email setup verification"""
         # Create settings
@@ -195,7 +195,7 @@ class TestTwoFactorVerifySetupAPI:
         payload = response_payload(response)
         assert payload['enabled'] is True
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_verify_setup_invalid_code(self, mock_verify):
         """Test setup verification with invalid code"""
         TwoFactorSettings.objects.create(
@@ -220,7 +220,7 @@ class TestTwoFactorVerifySetupAPI:
         })
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert 'not initialized' in response.data['error'].lower()
+        assert 'not_initialized' in response.data['error'].lower()
 
 
 @pytest.mark.django_db
@@ -232,6 +232,7 @@ class TestTwoFactorStatusAPI:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
@@ -285,12 +286,13 @@ class TestTwoFactorDisableAPI:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
     def test_disable_success(self, mock_email, mock_verify):
         """Test successful 2FA disable"""
         TwoFactorSettings.objects.create(
@@ -314,9 +316,9 @@ class TestTwoFactorDisableAPI:
         self.user.twofa_settings.refresh_from_db()
         assert not self.user.twofa_settings.is_enabled
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('auth.services.twofa_service.TwoFactorService.verify_recovery_code')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_recovery_code')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
     def test_disable_with_recovery_code(self, mock_email, mock_recovery, mock_verify):
         """Test disable with recovery code"""
         TwoFactorSettings.objects.create(
@@ -532,11 +534,12 @@ class TestRecoveryCodeAPI:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
     def test_generate_recovery_codes_success(self, mock_generate):
         """Test recovery code generation"""
         TwoFactorSettings.objects.create(
@@ -589,7 +592,7 @@ class TestRecoveryCodeAPI:
         assert response['Content-Type'] == 'text/plain'
         assert 'tinybeans-recovery-codes.txt' in response['Content-Disposition']
     
-    @patch('auth.services.recovery_code_service.RecoveryCodeService.export_as_pdf')
+    @patch('mysite.auth.services.recovery_code_service.RecoveryCodeService.export_as_pdf')
     def test_download_recovery_codes_pdf(self, mock_pdf):
         """Test downloading recovery codes as PDF"""
         TwoFactorSettings.objects.create(
@@ -637,6 +640,7 @@ class TestTrustedDevicesAPI:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
@@ -668,7 +672,7 @@ class TestTrustedDevicesAPI:
         payload = response_payload(response)
         assert len(payload['devices']) == 0
     
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
     def test_remove_trusted_device_success(self, mock_remove):
         """Test removing trusted device"""
         mock_remove.return_value = True
@@ -679,7 +683,7 @@ class TestTrustedDevicesAPI:
         
         assert response.status_code == status.HTTP_200_OK
     
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
     def test_remove_trusted_device_not_found(self, mock_remove):
         """Test removing non-existent device"""
         mock_remove.return_value = False
@@ -696,7 +700,7 @@ class TestTrustedDevicesAPI:
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
     
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.remove_trusted_device')
     def test_remove_by_path_success(self, mock_remove):
         """Test removing device by URL path"""
         mock_remove.return_value = True
@@ -705,8 +709,8 @@ class TestTrustedDevicesAPI:
         
         assert response.status_code == status.HTTP_200_OK
 
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.set_trusted_device_cookie')
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.set_trusted_device_cookie')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
     def test_add_trusted_device_success(self, mock_add, mock_set_cookie):
         """Test adding current device as trusted"""
         device = TrustedDevice.objects.create(
@@ -728,7 +732,7 @@ class TestTrustedDevicesAPI:
         mock_add.assert_called_once()
         mock_set_cookie.assert_called_once()
 
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
     def test_add_trusted_device_failure(self, mock_add):
         """Test handling errors when adding trusted device"""
         mock_add.side_effect = Exception("boom")
@@ -738,8 +742,8 @@ class TestTrustedDevicesAPI:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data['error'] == 'device_add_failed'
 
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.set_trusted_device_cookie')
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.set_trusted_device_cookie')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
     def test_add_trusted_device_already_trusted(self, mock_add, mock_set_cookie):
         """Adding an already-trusted device returns existing record"""
         device = TrustedDevice.objects.create(

@@ -9,14 +9,14 @@ from django.test import RequestFactory
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from auth.models import (
+from mysite.auth.models import (
     TwoFactorSettings,
     TwoFactorCode,
     RecoveryCode,
     TrustedDevice,
     TwoFactorAuditLog
 )
-from auth.services.trusted_device_service import TrustedDeviceService
+from mysite.auth.services.trusted_device_service import TrustedDeviceService
 
 User = get_user_model()
 
@@ -40,10 +40,10 @@ class TestCompleteTOTPFlow:
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.generate_totp_qr_code')
-    @patch('auth.services.twofa_service.TwoFactorService.generate_totp_secret')
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_totp_qr_code')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_totp_secret')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
     def test_complete_totp_setup_flow(self, mock_email, mock_verify, mock_secret, mock_qr):
         """Test complete TOTP setup flow from start to finish"""
         # Step 1: Initiate setup
@@ -100,10 +100,10 @@ class TestCompleteEmailFlow:
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.generate_otp', return_value='654321')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_code')
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_otp', return_value='654321')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_code')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_enabled_notification')
     def test_complete_email_setup_flow(self, mock_notif, mock_rate, mock_send, mock_generate):
         """Test complete email 2FA setup flow"""
         mock_rate.return_value = False
@@ -145,6 +145,7 @@ class TestRecoveryCodeFlow:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
@@ -183,7 +184,7 @@ class TestRecoveryCodeFlow:
         assert not code_obj.is_used
         
         # Step 4: Use recovery code
-        from auth.services.twofa_service import TwoFactorService
+        from mysite.auth.services.twofa_service import TwoFactorService
         result = TwoFactorService.verify_recovery_code(self.user, first_code)
         
         assert result is True
@@ -229,6 +230,7 @@ class TestTrustedDeviceFlow:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
@@ -278,12 +280,13 @@ class TestDisableFlow:
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass'
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
     def test_disable_with_totp(self, mock_email, mock_verify):
         """Test disabling 2FA with TOTP code"""
         # Enable 2FA
@@ -318,8 +321,8 @@ class TestDisableFlow:
         ).first()
         assert log is not None
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_disabled_notification')
     def test_disable_with_recovery_code(self, mock_email, mock_verify):
         """Test disabling 2FA with recovery code"""
         # Enable 2FA and create recovery codes
@@ -362,7 +365,7 @@ class TestRateLimitingFlow:
         )
         self.client.force_authenticate(user=self.user)
     
-    @patch('emails.mailers.TwoFactorMailer.send_2fa_code')
+    @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_code')
     def test_rate_limiting_enforced(self, mock_send):
         """Test rate limiting prevents excessive requests"""
         # Make requests up to limit

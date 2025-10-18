@@ -20,7 +20,7 @@ from pathlib import Path
 from kombu import Queue
 from django.core.exceptions import ImproperlyConfigured
 
-from mysite.logging import get_logging_config
+from mysite.project_logging import get_logging_config
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -98,8 +98,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'emails.apps.EmailingConfig',
-    'messaging.apps.MessagingConfig',
+    'mysite.emails.apps.EmailingConfig',
+    'mysite.messaging.apps.MessagingConfig',
     'drf_spectacular',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -109,9 +109,9 @@ INSTALLED_APPS = [
     'health_check.cache',
     'health_check.storage',
     'health_check.contrib.redis',
-    'auth.apps.AuthConfig',
-    'users.apps.UsersConfig',
-    'keeps.apps.KeepsConfig',
+    'mysite.auth.apps.AuthConfig',
+    'mysite.users.apps.UsersConfig',
+    'mysite.keeps.apps.KeepsConfig',
 ]
 
 MIDDLEWARE = [
@@ -325,16 +325,16 @@ CELERY_TASK_QUEUES = (
     Queue('maintenance'),
 )
 CELERY_TASK_ROUTES = {
-    'emails.tasks.send_email_task': {'queue': 'email'},
-    'messaging.tasks.send_sms_async': {'queue': 'sms'},
-    'messaging.tasks.send_2fa_sms': {'queue': 'sms'},
-    'keeps.tasks.process_media_upload': {'queue': 'media'},
-    'keeps.tasks.generate_image_sizes': {'queue': 'media'},
-    'keeps.tasks.cleanup_failed_uploads': {'queue': 'media'},
-    'keeps.tasks.validate_media_file': {'queue': 'media'},
-    'auth.tasks.cleanup_expired_trusted_devices': {'queue': 'maintenance'},
-    'auth.tasks.cleanup_expired_oauth_states': {'queue': 'maintenance'},
-    'auth.tasks.cleanup_expired_magic_login_tokens': {'queue': 'maintenance'},
+    'mysite.emails.tasks.send_email_task': {'queue': 'email'},
+    'mysite.messaging.tasks.send_sms_async': {'queue': 'sms'},
+    'mysite.messaging.tasks.send_2fa_sms': {'queue': 'sms'},
+    'mysite.keeps.tasks.process_media_upload': {'queue': 'media'},
+    'mysite.keeps.tasks.generate_image_sizes': {'queue': 'media'},
+    'mysite.keeps.tasks.cleanup_failed_uploads': {'queue': 'media'},
+    'mysite.keeps.tasks.validate_media_file': {'queue': 'media'},
+    'mysite.auth.tasks.cleanup_expired_trusted_devices': {'queue': 'maintenance'},
+    'mysite.auth.tasks.cleanup_expired_oauth_states': {'queue': 'maintenance'},
+    'mysite.auth.tasks.cleanup_expired_magic_login_tokens': {'queue': 'maintenance'},
     'mysite.celery.debug_task': {'queue': 'maintenance'},
 }
 CELERY_WORKER_SEND_TASK_EVENTS = True
@@ -348,19 +348,19 @@ CELERY_TASK_TIME_LIMIT = int(os.environ.get('CELERY_TASK_TIME_LIMIT', 40))
 from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
     'cleanup-expired-oauth-states': {
-        'task': 'auth.tasks.cleanup_expired_oauth_states',
+        'task': 'mysite.auth.tasks.cleanup_expired_oauth_states',
         'schedule': crontab(minute='*/15'),  # Every 15 minutes
     },
     'cleanup-expired-trusted-devices': {
-        'task': 'auth.tasks.cleanup_expired_trusted_devices',
+        'task': 'mysite.auth.tasks.cleanup_expired_trusted_devices',
         'schedule': crontab(hour=2, minute=0),  # Daily at 2 AM
     },
     'cleanup-expired-magic-login-tokens': {
-        'task': 'auth.tasks.cleanup_expired_magic_login_tokens',
+        'task': 'mysite.auth.tasks.cleanup_expired_magic_login_tokens',
         'schedule': crontab(hour=3, minute=0),  # Daily at 3 AM
     },
     'send-circle-invitation-reminders': {
-        'task': 'users.tasks.send_circle_invitation_reminders',
+        'task': 'mysite.users.tasks.send_circle_invitation_reminders',
         'schedule': crontab(minute='*/30'),  # Every 30 minutes
     },
 }

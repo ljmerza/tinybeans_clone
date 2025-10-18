@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import (
+from mysite.users.models import (
     Circle,
     CircleMembership,
     CircleInvitation,
@@ -16,9 +16,9 @@ from users.models import (
     User,
     UserRole,
 )
-from users.serializers.circles import CircleInvitationCreateSerializer
-from auth.token_utils import store_token
-from users.tasks import send_circle_invitation_reminders
+from mysite.users.serializers.circles import CircleInvitationCreateSerializer
+from mysite.auth.token_utils import store_token
+from mysite.users.tasks import send_circle_invitation_reminders
 
 
 class InvitationRoleTests(TestCase):
@@ -110,8 +110,8 @@ class InvitationRoleTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('identifier', serializer.errors)
 
-    @patch('users.views.circles.send_email_task.delay')
-    @patch('users.views.circles.store_token')
+    @patch('mysite.users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.store_token')
     def test_api_role_assignment(self, mock_store_token, mock_delay):
         """Test role assignment via API."""
         mock_store_token.return_value = 'fake-token'
@@ -156,8 +156,8 @@ class InvitationRoleTests(TestCase):
         invitation = CircleInvitation.objects.get(email='default@example.com')
         self.assertEqual(invitation.role, UserRole.CIRCLE_MEMBER)
 
-    @patch('users.views.circles.send_email_task.delay')
-    @patch('users.views.circles.store_token')
+    @patch('mysite.users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.store_token')
     def test_api_invite_existing_user_by_username(self, mock_store_token, mock_delay):
         """Admins can invite existing users by username without auto-joining."""
         mock_store_token.return_value = 'fake-token'
@@ -184,8 +184,8 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(invitation.status, CircleInvitationStatus.PENDING)
         self.assertFalse(CircleMembership.objects.filter(circle=self.circle, user=existing_user).exists())
 
-    @patch('users.views.circles.send_email_task.delay')
-    @patch('users.views.circles.store_token')
+    @patch('mysite.users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.store_token')
     def test_api_requires_identifier(self, mock_store_token, mock_delay):
         """API should enforce identifier validation."""
         mock_store_token.return_value = 'fake-token'
@@ -216,8 +216,8 @@ class InvitationRoleTests(TestCase):
         self.assertIn('errors.invitation_identifier_conflict', keys)
 
     @override_settings(RATELIMIT_ENABLE=True, CIRCLE_INVITE_CIRCLE_LIMIT=1, CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES=60)
-    @patch('users.views.circles.send_email_task.delay')
-    @patch('users.views.circles.store_token')
+    @patch('mysite.users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.store_token')
     def test_circle_rate_limit(self, mock_store_token, mock_delay):
         """Invites should respect per-circle rate limits."""
         mock_store_token.return_value = 'fake-token'
@@ -264,7 +264,7 @@ class InvitationRoleTests(TestCase):
         ]
         self.assertIn('role', fields)
 
-    @patch('users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.send_email_task.delay')
     def test_new_user_onboarding_flow(self, mock_delay):
         """End-to-end invite flow for a new user completing onboarding."""
         invitation = CircleInvitation.objects.create(
@@ -314,7 +314,7 @@ class InvitationRoleTests(TestCase):
         membership_exists = CircleMembership.objects.filter(circle=self.circle, user=invitee).exists()
         self.assertTrue(membership_exists)
 
-    @patch('users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.send_email_task.delay')
     def test_finalize_rejects_mismatched_user(self, mock_delay):
         """Finalize should fail when authenticated user email does not match invitation."""
         invitation = CircleInvitation.objects.create(
@@ -365,7 +365,7 @@ class InvitationRoleTests(TestCase):
         CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES=1440,
         CIRCLE_INVITE_REMINDER_BATCH_SIZE=50,
     )
-    @patch('users.tasks.send_email_task.delay')
+    @patch('mysite.users.tasks.send_email_task.delay')
     def test_reminder_task_sends_email(self, mock_delay):
         invitation = CircleInvitation.objects.create(
             circle=self.circle,

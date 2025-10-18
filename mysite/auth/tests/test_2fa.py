@@ -4,9 +4,9 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 
-from auth.models import TwoFactorSettings, TwoFactorCode, RecoveryCode, TrustedDevice
-from auth.services.twofa_service import TwoFactorService
-from auth.services.trusted_device_service import TrustedDeviceService
+from mysite.auth.models import TwoFactorSettings, TwoFactorCode, RecoveryCode, TrustedDevice
+from mysite.auth.services.twofa_service import TwoFactorService
+from mysite.auth.services.trusted_device_service import TrustedDeviceService
 
 User = get_user_model()
 

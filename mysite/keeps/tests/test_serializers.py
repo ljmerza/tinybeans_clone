@@ -2,9 +2,9 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIRequestFactory
-from users.models import Circle, CircleMembership
-from keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType
-from keeps.serializers import (
+from mysite.users.models import Circle, CircleMembership
+from mysite.keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType
+from mysite.keeps.serializers import (
     KeepSerializer,
     KeepDetailSerializer,
     KeepCreateSerializer,
@@ -109,7 +109,7 @@ class TestKeepSerializer:
     
     def test_reaction_count(self, keep):
         """Test reaction_count returns correct count."""
-        from keeps.models import KeepReaction
+        from mysite.keeps.models import KeepReaction
         
         serializer = KeepSerializer(instance=keep)
         assert serializer.data['reaction_count'] == 0
@@ -126,7 +126,7 @@ class TestKeepSerializer:
     
     def test_comment_count(self, keep):
         """Test comment_count returns correct count."""
-        from keeps.models import KeepComment
+        from mysite.keeps.models import KeepComment
         
         serializer = KeepSerializer(instance=keep)
         assert serializer.data['comment_count'] == 0

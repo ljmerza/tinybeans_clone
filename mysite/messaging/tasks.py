@@ -3,7 +3,7 @@ import logging
 
 from celery import shared_task
 
-from mysite import logging as project_logging
+from mysite import project_logging
 
 from .services import SMSService
 

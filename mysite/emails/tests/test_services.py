@@ -5,10 +5,10 @@ from pathlib import Path
 from django.core import mail
 from django.test import SimpleTestCase, override_settings
 
-from emails.mailers import MailerConfigurationError, MailerSendError
-from emails.services import clear_registered_templates, email_dispatch_service, register_email_template
-from emails.template_loader import _EMAIL_TEMPLATE_DIR, load_email_templates
-from emails.templates import EMAIL_TEMPLATE_FILES, EMAIL_VERIFICATION_TEMPLATE
+from mysite.emails.mailers import MailerConfigurationError, MailerSendError
+from mysite.emails.services import clear_registered_templates, email_dispatch_service, register_email_template
+from mysite.emails.template_loader import _EMAIL_TEMPLATE_DIR, load_email_templates
+from mysite.emails.templates import EMAIL_TEMPLATE_FILES, EMAIL_VERIFICATION_TEMPLATE
 
 
 class EmailServiceTests(SimpleTestCase):
@@ -54,7 +54,7 @@ class EmailServiceTests(SimpleTestCase):
         assert template is not None
         self.assertIs(template.renderer, renderer2)
 
-    @patch('emails.services.email_dispatch_service._logger')
+    @patch('mysite.emails.services.email_dispatch_service._logger')
     def test_send_email_unknown_template(self, mock_logger):
         dispatched = email_dispatch_service.send_email(
             to_email='test@example.com',
@@ -91,7 +91,7 @@ class EmailServiceTests(SimpleTestCase):
         MAILJET_API_KEY='test_key',
         MAILJET_API_SECRET='test_secret',
     )
-    @patch('emails.services.send_via_mailjet')
+    @patch('mysite.emails.services.send_via_mailjet')
     def test_send_email_with_mailjet(self, mock_mailjet):
         mock_mailjet.return_value = None
 
@@ -117,7 +117,7 @@ class EmailServiceTests(SimpleTestCase):
         MAILJET_API_SECRET='test_secret',
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
     )
-    @patch('emails.services.send_via_mailjet')
+    @patch('mysite.emails.services.send_via_mailjet')
     def test_send_email_mailjet_config_error_fallback(self, mock_mailjet):
         mock_mailjet.side_effect = MailerConfigurationError('Mailjet not configured')
 
@@ -138,8 +138,8 @@ class EmailServiceTests(SimpleTestCase):
         MAILJET_API_KEY='test_key',
         MAILJET_API_SECRET='test_secret',
     )
-    @patch('emails.services.send_via_mailjet')
-    @patch('emails.services.logger')
+    @patch('mysite.emails.services.send_via_mailjet')
+    @patch('mysite.emails.services.logger')
     def test_send_email_mailjet_send_error(self, mock_logger, mock_mailjet):
         mock_mailjet.side_effect = MailerSendError('HTTP 500')
 
@@ -157,7 +157,7 @@ class EmailServiceTests(SimpleTestCase):
         DEFAULT_FROM_EMAIL='test@example.com',
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
     )
-    @patch('emails.services.email_dispatch_service._logger')
+    @patch('mysite.emails.services.email_dispatch_service._logger')
     def test_send_email_success_logging(self, mock_logger):
         email_dispatch_service.send_email(
             to_email='user@example.com',
@@ -174,8 +174,8 @@ class EmailServiceTests(SimpleTestCase):
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
         DEFAULT_FROM_EMAIL='test@example.com',
     )
-    @patch('emails.services.send_mail')
-    @patch('emails.services.logger')
+    @patch('mysite.emails.services.send_mail')
+    @patch('mysite.emails.services.logger')
     def test_send_email_django_send_error(self, mock_logger, mock_send_mail):
         mock_send_mail.side_effect = Exception('SMTP Error')
 

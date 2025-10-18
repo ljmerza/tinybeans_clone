@@ -24,7 +24,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
 
-from auth.models import GoogleOAuthState
+from mysite.auth.models import GoogleOAuthState
 
 User = get_user_model()
 logger = logging.getLogger(__name__)

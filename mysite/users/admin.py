@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from auth.token_utils import DEFAULT_TOKEN_TTL_SECONDS, delete_token, store_token
+from mysite.auth.token_utils import DEFAULT_TOKEN_TTL_SECONDS, delete_token, store_token
 from .models import (
     ChildGuardianConsent,
     ChildProfile,
@@ -18,8 +18,8 @@ from .models import (
     User,
     UserNotificationPreferences,
 )
-from emails.tasks import send_email_task
-from emails.templates import CHILD_UPGRADE_TEMPLATE
+from mysite.emails.tasks import send_email_task
+from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 @admin.register(User)

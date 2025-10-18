@@ -15,9 +15,9 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 
-from auth.services.google_oauth_service import GoogleOAuthService, InvalidStateError
-from auth.models import GoogleOAuthState
-from auth.exceptions import (
+from mysite.auth.services.google_oauth_service import GoogleOAuthService, InvalidStateError
+from mysite.auth.models import GoogleOAuthState
+from mysite.auth.exceptions import (
     InvalidRedirectURIError,
     InvalidStateTokenError,
     UnverifiedAccountExistsError,
@@ -70,7 +70,7 @@ class TestGoogleOAuthService(TestCase):
     
     def test_generate_auth_url_invalid_redirect_uri(self):
         """Test that invalid redirect URI raises error."""
-        from auth.services.google_oauth_service import InvalidRedirectURIError
+        from mysite.auth.services.google_oauth_service import InvalidRedirectURIError
         with self.assertRaises(InvalidRedirectURIError):
             self.service.generate_auth_url(
                 redirect_uri='https://evil.com/callback',
@@ -117,7 +117,7 @@ class TestGoogleOAuthService(TestCase):
     
     def test_validate_state_token_already_used(self):
         """Test that used state token raises error."""
-        from auth.services.google_oauth_service import InvalidStateError
+        from mysite.auth.services.google_oauth_service import InvalidStateError
         # Create and mark as used
         oauth_state = GoogleOAuthState.objects.create(
             state_token='used_token',
@@ -137,14 +137,14 @@ class TestGoogleOAuthService(TestCase):
     
     def test_validate_state_token_not_found(self):
         """Test that non-existent state token raises error."""
-        from auth.services.google_oauth_service import InvalidStateError
+        from mysite.auth.services.google_oauth_service import InvalidStateError
         with self.assertRaises(InvalidStateError) as context:
             self.service.validate_state_token('non_existent_token')
         
         self.assertIn('not found', str(context.exception).lower())
     
     @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch('auth.services.google_oauth_service.requests.post')
+    @patch('mysite.auth.services.google_oauth_service.requests.post')
     def test_exchange_code_for_token_success(self, mock_post):
         """Test successful authorization code exchange."""
         # Mock Google's token response
@@ -180,8 +180,8 @@ class TestGoogleOAuthService(TestCase):
         self.assertIn('id_token', result)
     
     @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch('auth.services.google_oauth_service.id_token.verify_oauth2_token')
-    @patch('auth.services.google_oauth_service.requests.post')
+    @patch('mysite.auth.services.google_oauth_service.id_token.verify_oauth2_token')
+    @patch('mysite.auth.services.google_oauth_service.requests.post')
     def test_get_or_create_user_new_user(self, mock_post, mock_verify):
         """Test creating new user from Google OAuth."""
         # Mock token verification
@@ -217,8 +217,8 @@ class TestGoogleOAuthService(TestCase):
         self.assertEqual(user.auth_provider, 'google')
     
     @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch('auth.services.google_oauth_service.id_token.verify_oauth2_token')
-    @patch('auth.services.google_oauth_service.requests.post')
+    @patch('mysite.auth.services.google_oauth_service.id_token.verify_oauth2_token')
+    @patch('mysite.auth.services.google_oauth_service.requests.post')
     def test_get_or_create_user_unverified_account_blocks(self, mock_post, mock_verify):
         """Test that linking to unverified account is blocked (CRITICAL)."""
         # Create unverified user
@@ -255,8 +255,8 @@ class TestGoogleOAuthService(TestCase):
             )
     
     @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch('auth.services.google_oauth_service.id_token.verify_oauth2_token')
-    @patch('auth.services.google_oauth_service.requests.post')
+    @patch('mysite.auth.services.google_oauth_service.id_token.verify_oauth2_token')
+    @patch('mysite.auth.services.google_oauth_service.requests.post')
     def test_get_or_create_user_existing_verified_links(self, mock_post, mock_verify):
         """Test linking Google to existing verified account."""
         # Create verified user

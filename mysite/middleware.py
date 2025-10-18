@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Callable, Optional
 from django.http import HttpRequest, HttpResponse
 
-from mysite import logging as project_logging
+from mysite import project_logging
 
 
 class RequestContextMiddleware:

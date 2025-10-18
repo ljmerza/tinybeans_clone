@@ -8,9 +8,9 @@ from typing import Any, Optional
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
 
-from emails.models import EmailTemplate, RenderedEmail, TemplateRenderer
-from emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
-from emails.repository import EmailTemplateRepository, InMemoryEmailTemplateRepository
+from mysite.emails.models import EmailTemplate, RenderedEmail, TemplateRenderer
+from mysite.emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
+from mysite.emails.repository import EmailTemplateRepository, InMemoryEmailTemplateRepository
 
 logger = logging.getLogger(__name__)
 

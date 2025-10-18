@@ -6,7 +6,7 @@ from django.conf import settings
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from mysite import logging as project_logging
+from mysite import project_logging
 
 from .models import KeepMedia, MediaUpload, MediaUploadStatus
 from .storage import get_storage_backend

@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import Circle, CircleMembership, PetProfile, PetType, User, UserRole
+from mysite.users.models import Circle, CircleMembership, PetProfile, PetType, User, UserRole
 
 
 class PetProfileModelTests(TestCase):
@@ -265,7 +265,7 @@ class PetProfileSerializerTests(TestCase):
     
     def test_pet_name_validation(self):
         """Test pet name validation."""
-        from users.serializers.pets import PetProfileCreateSerializer
+        from mysite.users.serializers.pets import PetProfileCreateSerializer
         
         # Test completely empty name
         data = {'name': '', 'pet_type': PetType.DOG}
@@ -290,7 +290,7 @@ class PetProfileSerializerTests(TestCase):
 
     def test_pet_profile_serializer_includes_computed_fields(self):
         """Test that serializer includes computed fields."""
-        from users.serializers.pets import PetProfileSerializer
+        from mysite.users.serializers.pets import PetProfileSerializer
         from datetime import date, timedelta
         
         user = User.objects.create_user(username='test', email='test@example.com', password='pass')

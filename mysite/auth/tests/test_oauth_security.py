@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 from django.test import TestCase
 from django.conf import settings
 
-from auth.security.oauth_validators import (
+from mysite.auth.security.oauth_validators import (
     RedirectURIValidator,
     PKCEValidator,
     StateTokenValidator,
@@ -170,7 +170,7 @@ class TestStateTokenValidator(TestCase):
 class TestSecurityLogger(TestCase):
     """Test security logging functionality."""
     
-    @patch('auth.security.oauth_validators.logger')
+    @patch('mysite.auth.security.oauth_validators.logger')
     def test_log_oauth_initiate(self, mock_logger):
         """Test OAuth initiate logging."""
         SecurityLogger.log_oauth_initiate(
@@ -185,7 +185,7 @@ class TestSecurityLogger(TestCase):
         self.assertEqual(call_args[0][0], "OAuth flow initiated")
         self.assertIn('oauth.initiate', call_args[1]['extra']['event'])
     
-    @patch('auth.security.oauth_validators.logger')
+    @patch('mysite.auth.security.oauth_validators.logger')
     def test_log_oauth_callback_success(self, mock_logger):
         """Test OAuth callback success logging."""
         SecurityLogger.log_oauth_callback_success(
@@ -200,7 +200,7 @@ class TestSecurityLogger(TestCase):
         self.assertIn('OAuth callback successful', call_args[0][0])
         self.assertEqual(call_args[1]['extra']['user_id'], 42)
     
-    @patch('auth.security.oauth_validators.logger')
+    @patch('mysite.auth.security.oauth_validators.logger')
     def test_log_security_block(self, mock_logger):
         """Test security block logging."""
         SecurityLogger.log_security_block(

@@ -198,7 +198,7 @@ class TrustedDeviceService:
 
         # Send notification email
         try:
-            from emails.mailers import TwoFactorMailer
+            from mysite.emails.mailers import TwoFactorMailer
             TwoFactorMailer.send_trusted_device_added(user, trusted_device)
         except Exception:
             logger.exception(

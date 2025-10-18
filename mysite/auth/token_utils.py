@@ -26,7 +26,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .custom_tokens import CustomRefreshToken
-from users.models import User
+from mysite.users.models import User
 
 logger = logging.getLogger(__name__)
 

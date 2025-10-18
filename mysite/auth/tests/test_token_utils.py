@@ -5,8 +5,8 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import User
-from auth.token_utils import (
+from mysite.users.models import User
+from mysite.auth.token_utils import (
     REFRESH_COOKIE_NAME,
     TOKEN_TTL_SECONDS,
     clear_refresh_cookie,

@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from django.conf import settings
 from django.test import override_settings
-from messaging.services import SMSService
-from messaging.providers.console import ConsoleSMSProvider
-from messaging.providers.twilio import TwilioProvider
+from mysite.messaging.services import SMSService
+from mysite.messaging.providers.console import ConsoleSMSProvider
+from mysite.messaging.providers.twilio import TwilioProvider
 
 
 @pytest.mark.django_db
@@ -180,7 +180,7 @@ class TestSMSProviderBase:
     
     def test_base_provider_interface(self):
         """Test that base provider defines the interface."""
-        from messaging.providers.base import BaseSMSProvider
+        from mysite.messaging.providers.base import BaseSMSProvider
         
         # Create a concrete implementation
         class TestProvider(BaseSMSProvider):

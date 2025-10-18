@@ -4,7 +4,7 @@ from __future__ import annotations
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from users.models import User
+from mysite.users.models import User
 from mysite.notification_utils import create_message
 
 
@@ -154,7 +154,7 @@ class JWTTokenSerializer(serializers.Serializer):
 
 class OAuthCallbackResponseSerializer(serializers.Serializer):
     """Response serializer for OAuth callback."""
-    from users.serializers import UserSerializer
+    from mysite.users.serializers import UserSerializer
     
     user = UserSerializer(
         help_text="User information"
@@ -184,7 +184,7 @@ class OAuthLinkRequestSerializer(serializers.Serializer):
 
 class OAuthLinkResponseSerializer(serializers.Serializer):
     """Response serializer for linking Google account."""
-    from users.serializers import UserSerializer
+    from mysite.users.serializers import UserSerializer
     
     message = serializers.CharField(
         help_text="Success message"
@@ -206,7 +206,7 @@ class OAuthUnlinkRequestSerializer(serializers.Serializer):
 
 class OAuthUnlinkResponseSerializer(serializers.Serializer):
     """Response serializer for unlinking Google account."""
-    from users.serializers import UserSerializer
+    from mysite.users.serializers import UserSerializer
     
     message = serializers.CharField(
         help_text="Success message"

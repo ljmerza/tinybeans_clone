@@ -7,7 +7,7 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
 from ..models import Keep, KeepType, KeepMedia, Milestone
-from users.models import CircleMembership, UserRole
+from mysite.users.models import CircleMembership, UserRole
 from .core import KeepMediaSerializer, MilestoneSerializer
 from mysite.notification_utils import create_message
 

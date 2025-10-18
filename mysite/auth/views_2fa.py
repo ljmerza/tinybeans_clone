@@ -175,7 +175,7 @@ class TwoFactorVerifySetupView(APIView):
         )
         
         # Send notification email
-        from emails.mailers import TwoFactorMailer
+        from mysite.emails.mailers import TwoFactorMailer
         TwoFactorMailer.send_2fa_enabled_notification(user)
         
         return success_response({
@@ -537,7 +537,7 @@ class TwoFactorDisableView(APIView):
         )
         
         # Send notification email
-        from emails.mailers import TwoFactorMailer
+        from mysite.emails.mailers import TwoFactorMailer
         TwoFactorMailer.send_2fa_disabled_notification(user)
         
         return success_response({
@@ -748,7 +748,7 @@ class TwoFactorVerifyLoginView(APIView):
         """Complete login by verifying 2FA code"""
         from .serializers_2fa import TwoFactorVerifyLoginSerializer
         from .token_utils import verify_partial_token, get_tokens_for_user, set_refresh_cookie
-        from users.serializers import UserSerializer
+        from mysite.users.serializers import UserSerializer
         
         serializer = TwoFactorVerifyLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

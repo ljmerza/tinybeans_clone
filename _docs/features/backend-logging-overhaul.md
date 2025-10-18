@@ -22,7 +22,7 @@ The backend currently relies on Django’s default logging with limited structur
 
 ## Requirements
 1. **Configuration**
-   - Centralize logging configuration under `mysite/logging.py` and load from settings.
+   - Centralize logging configuration under `mysite/project_logging.py` and load from settings.
    - Enable JSON-formatted logs with level, timestamp, logger, message, and context payload.
    - Support environment-driven toggles (log level, handler destinations).
 2. **Context Propagation**
@@ -43,7 +43,7 @@ The backend currently relies on Django’s default logging with limited structur
    - Ensure compatibility with Docker stack and existing log shipping (stdout).
 
 ## Architecture & Design
-- **Logging Configuration Module**: Create `mysite/logging.py` encapsulating formatters, handlers, filters, and loggers. Import in `settings.py` via `LOGGING = get_logging_config(environment_variables)`.
+- **Logging Configuration Module**: Create `mysite/project_logging.py` encapsulating formatters, handlers, filters, and loggers. Import in `settings.py` via `LOGGING = get_logging_config(environment_variables)`.
 - **Structured Formatter**: Implement JSON formatter (standard library or `python-json-logger`) outputting ISO timestamps, log level, logger name, message, and context dict.
 - **Handlers**: Default to console handler (stdout). Permit optional file handler and external aggregator (e.g., ELK, Datadog) via environment settings.
 - **Filters & Context**: Implement `RequestContextFilter` to enrich records with trace IDs, user IDs, IP addresses. Use Django middleware to generate/attach `request_id` header if absent.
@@ -52,7 +52,7 @@ The backend currently relies on Django’s default logging with limited structur
 
 ## Implementation Plan
 1. **Configuration Foundation**
-   - Add `mysite/logging.py` with helper API and unit tests.
+   - Add `mysite/project_logging.py` with helper API and unit tests.
    - Update `mysite/settings.py` (all env variants) to consume the new logging config.
 2. **Context Middleware & Utilities**
    - Implement `RequestContextMiddleware` adding request IDs (via `uuid4`) and user info.

@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from users.models import Circle, CircleMembership, CircleOnboardingStatus, User
+from mysite.users.models import Circle, CircleMembership, CircleOnboardingStatus, User
 
 
 class CircleOnboardingStatusViewTests(APITestCase):

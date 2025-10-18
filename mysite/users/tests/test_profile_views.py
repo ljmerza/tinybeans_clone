@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import (
+from mysite.users.models import (
     Circle,
     CircleMembership,
     User,

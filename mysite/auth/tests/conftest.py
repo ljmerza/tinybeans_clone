@@ -6,21 +6,21 @@ from unittest.mock import patch
 @pytest.fixture
 def mock_email_send():
     """Mock email sending for all tests"""
-    with patch('emails.mailers.TwoFactorMailer.send_2fa_code') as mock:
+    with patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_code') as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_sms_send():
     """Mock SMS sending for all tests"""
-    with patch('messaging.tasks.send_2fa_sms') as mock:
+    with patch('mysite.messaging.tasks.send_2fa_sms') as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_totp_verify():
     """Mock TOTP verification"""
-    with patch('auth.services.twofa_service.TwoFactorService.verify_totp') as mock:
+    with patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp') as mock:
         mock.return_value = True
         yield mock
 
@@ -28,7 +28,7 @@ def mock_totp_verify():
 @pytest.fixture
 def mock_otp_verify():
     """Mock OTP verification"""
-    with patch('auth.services.twofa_service.TwoFactorService.verify_otp') as mock:
+    with patch('mysite.auth.services.twofa_service.TwoFactorService.verify_otp') as mock:
         mock.return_value = True
         yield mock
 
@@ -36,6 +36,6 @@ def mock_otp_verify():
 @pytest.fixture
 def disable_rate_limiting():
     """Disable rate limiting for tests"""
-    with patch('auth.services.twofa_service.TwoFactorService.is_rate_limited') as mock:
+    with patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited') as mock:
         mock.return_value = False
         yield mock

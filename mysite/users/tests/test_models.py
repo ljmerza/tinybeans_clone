@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from users.models import (
+from mysite.users.models import (
     ChildGuardianConsent,
     ChildProfile,
     ChildProfileUpgradeStatus,

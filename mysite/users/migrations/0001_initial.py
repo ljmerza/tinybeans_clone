@@ -4,7 +4,7 @@ import django.contrib.auth.validators
 import django.core.validators
 import django.db.models.deletion
 import django.utils.timezone
-import users.models
+from mysite.users import models as user_models
 import uuid
 from django.conf import settings
 from django.db import migrations, models
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                 'ordering': ['username'],
             },
             managers=[
-                ('objects', users.models.UserManager()),
+                ('objects', user_models.UserManager()),
             ],
         ),
         migrations.CreateModel(

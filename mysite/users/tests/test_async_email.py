@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from users.models import (
+from mysite.users.models import (
     ChildProfile,
     Circle,
     CircleMembership,
@@ -12,8 +12,8 @@ from users.models import (
     UserRole,
     ChildUpgradeEventType,
 )
-from emails.tasks import send_email_task
-from emails.templates import (
+from mysite.emails.tasks import send_email_task
+from mysite.emails.templates import (
     CHILD_UPGRADE_TEMPLATE,
     CIRCLE_INVITATION_TEMPLATE,
     EMAIL_VERIFICATION_TEMPLATE,
@@ -25,7 +25,7 @@ class AsyncEmailTaskTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_signup_enqueues_verification_email(self, mock_delay):
         payload = {
             'username': 'newuser',
@@ -49,7 +49,7 @@ class AsyncEmailTaskTests(TestCase):
         # Verify no circle was created
         self.assertIsNone(Circle.objects.filter(created_by__username='newuser').first())
 
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_signup_can_defer_circle_creation(self, mock_delay):
         payload = {
             'username': 'latercircle',
@@ -76,7 +76,7 @@ class AsyncEmailTaskTests(TestCase):
         self.assertFalse(Circle.objects.filter(created_by=user).exists())
         self.assertFalse(CircleMembership.objects.filter(user=user).exists())
 
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_password_reset_request_enqueues_email(self, mock_delay):
         user = User.objects.create_user(
             username='existing',
@@ -98,12 +98,12 @@ class AsyncEmailTaskTests(TestCase):
         self.assertIn('token', kwargs['context'])
 
     @override_settings(MAILJET_ENABLED=True, MAILJET_API_KEY='key', MAILJET_API_SECRET='secret')
-    @patch('emails.services.send_via_mailjet')
+    @patch('mysite.emails.services.send_via_mailjet')
     def test_send_email_task_uses_mailjet_when_enabled(self, mock_mailjet):
         mock_mailjet.return_value = None
         
         # Register a test template since the real ones might not be loaded
-        from emails.tasks import register_email_template
+        from mysite.emails.tasks import register_email_template
         def test_renderer(context):
             return f"Subject: {context.get('token', 'test')}", f"Body: {context.get('username', 'test')}"
         register_email_template(EMAIL_VERIFICATION_TEMPLATE, test_renderer)
@@ -116,7 +116,7 @@ class AsyncEmailTaskTests(TestCase):
 
         mock_mailjet.assert_called_once()
 
-    @patch('users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.send_email_task.delay')
     def test_circle_invitation_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
             username='circleadmin',
@@ -141,7 +141,7 @@ class AsyncEmailTaskTests(TestCase):
         self.assertEqual(kwargs['to_email'], 'invitee@example.com')
         self.assertIn('token', kwargs['context'])
 
-    @patch('users.views.children.send_email_task.delay')
+    @patch('mysite.users.views.children.send_email_task.delay')
     def test_child_upgrade_request_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
             username='guardian',

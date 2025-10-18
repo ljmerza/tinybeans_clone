@@ -7,5 +7,5 @@ class KeepsConfig(AppConfig):
     Handles family memories and moments within circles.
     """
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'keeps'
+    name = 'mysite.keeps'
     verbose_name = 'Keeps (Family Memories)'

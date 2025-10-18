@@ -171,7 +171,7 @@ def get_logging_config(
 
     filters = {
         'context': {
-            '()': 'mysite.logging.LoggingContextFilter',
+            '()': 'mysite.project_logging.LoggingContextFilter',
             'service_name': service,
             'environment': env,
         }
@@ -179,7 +179,7 @@ def get_logging_config(
 
     formatters = {
         'json': {
-            '()': 'mysite.logging.JsonLogFormatter',
+            '()': 'mysite.project_logging.JsonLogFormatter',
         }
     }
 

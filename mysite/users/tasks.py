@@ -7,10 +7,10 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from emails.tasks import send_email_task
-from emails.templates import CIRCLE_INVITATION_REMINDER_TEMPLATE
+from mysite.emails.tasks import send_email_task
+from mysite.emails.templates import CIRCLE_INVITATION_REMINDER_TEMPLATE
 
-from auth.token_utils import store_token, TOKEN_TTL_SECONDS
+from mysite.auth.token_utils import store_token, TOKEN_TTL_SECONDS
 from .models import CircleInvitation, CircleInvitationStatus
 
 __all__ = [

@@ -8,7 +8,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import User
+from mysite.users.models import User
 
 
 class AuthViewSecurityTests(TestCase):
@@ -16,7 +16,7 @@ class AuthViewSecurityTests(TestCase):
         cache.clear()
         self.client = APIClient()
 
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_signup_does_not_expose_verification_token(self, mock_delay):
         response = self.client.post(
             reverse('auth-signup'),
@@ -35,7 +35,7 @@ class AuthViewSecurityTests(TestCase):
         self.assertIn('tokens', body['data'])
         mock_delay.assert_called_once()
 
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_verification_resend_does_not_expose_token(self, mock_delay):
         User.objects.create_user(
             username='existinguser',
@@ -74,7 +74,7 @@ class AuthViewSecurityTests(TestCase):
         blocked_response = self.client.post(reverse('auth-login'), login_payload, format='json')
         self.assertIn(blocked_response.status_code, {status.HTTP_403_FORBIDDEN, status.HTTP_429_TOO_MANY_REQUESTS})
 
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_password_reset_request_does_not_expose_token(self, mock_delay):
         User.objects.create_user(
             username='resetuser',
@@ -103,7 +103,7 @@ class AuthViewSecurityTests(TestCase):
         self.assertGreaterEqual(context.get('expires_in_minutes', 0), 1)
 
     @override_settings(RATELIMIT_ENABLE=True, PASSWORD_RESET_RATELIMIT='2/m')
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_password_reset_request_rate_limit(self, mock_delay):
         user = User.objects.create_user(
             username='limited-reset',
@@ -132,7 +132,7 @@ class AuthViewSecurityTests(TestCase):
         self.assertEqual(mock_delay.call_count, 2)
 
     @override_settings(RATELIMIT_ENABLE=True, EMAIL_VERIFICATION_RESEND_RATELIMIT='2/m')
-    @patch('auth.views.send_email_task.delay')
+    @patch('mysite.auth.views.send_email_task.delay')
     def test_email_verification_resend_rate_limit(self, mock_delay):
         user = User.objects.create_user(
             username='limited-verify',

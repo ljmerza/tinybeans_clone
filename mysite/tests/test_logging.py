@@ -5,9 +5,9 @@ import logging
 
 import pytest
 
-from mysite import logging as project_logging
+from mysite import project_logging
 from mysite.audit import AuditEvent, log_audit_event
-from mysite.logging import JsonLogFormatter, LoggingContextFilter
+from mysite.project_logging import JsonLogFormatter, LoggingContextFilter
 
 
 def test_json_formatter_includes_context():

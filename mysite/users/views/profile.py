@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 
-from mysite import logging as project_logging
+from mysite import project_logging
 from mysite.notification_utils import create_message, success_response
 from ..models import Circle, CircleMembership, UserNotificationPreferences
 from ..serializers import EmailPreferencesSerializer, UserProfileSerializer

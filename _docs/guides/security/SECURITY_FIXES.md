@@ -190,7 +190,7 @@ class TwoFactorService:
             recovery_code.save()
             
             # Send alert
-            from emails.mailers import TwoFactorMailer
+            from mysite.emails.mailers import TwoFactorMailer
             TwoFactorMailer.send_recovery_code_used_alert(user, recovery_code)
             
             return True
@@ -293,7 +293,7 @@ def post(self, request):
 ### Test 1: TOTP Encryption
 ```python
 # Create test
-from auth.models import TwoFactorSettings
+from mysite.auth.models import TwoFactorSettings
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -316,7 +316,7 @@ print(settings.totp_secret)  # Should show 'JBSWY3DPEHPK3PXP'
 
 ### Test 2: Recovery Code Hashing
 ```python
-from auth.services.twofa_service import TwoFactorService
+from mysite.auth.services.twofa_service import TwoFactorService
 
 codes, plain_codes = TwoFactorService.generate_recovery_codes(user)
 
@@ -327,7 +327,7 @@ assert TwoFactorService.verify_recovery_code(user, plain_codes[0]) == True
 assert TwoFactorService.verify_recovery_code(user, plain_codes[0]) == False
 
 # Check database - should see hash
-from auth.models import RecoveryCode
+from mysite.auth.models import RecoveryCode
 code = RecoveryCode.objects.first()
 print(code.code_hash)  # Should show SHA-256 hash
 ```

@@ -1,8 +1,8 @@
 """Tests for the keeps app models and basic functionality."""
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from users.models import Circle, CircleMembership, UserRole
-from keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType, KeepReaction, KeepComment
+from mysite.users.models import Circle, CircleMembership, UserRole
+from mysite.keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType, KeepReaction, KeepComment
 
 User = get_user_model()
 
@@ -257,7 +257,7 @@ class KeepAdminPermissionsTest(TestCase):
     
     def test_admin_can_modify_any_keep(self):
         """Test that circle admin can modify any keep in their circle."""
-        from keeps.views.permissions import is_circle_admin
+        from mysite.keeps.views.permissions import is_circle_admin
         
         # Check admin status
         self.assertTrue(is_circle_admin(self.admin_user, self.circle))
@@ -269,14 +269,14 @@ class KeepAdminPermissionsTest(TestCase):
     
     def test_admin_can_modify_any_reaction(self):
         """Test that circle admin can modify any reaction in their circle."""
-        from keeps.views.permissions import is_circle_admin
+        from mysite.keeps.views.permissions import is_circle_admin
         
         # Admin should be able to modify reactions in their circle
         self.assertTrue(is_circle_admin(self.admin_user, self.reaction.keep.circle))
     
     def test_admin_can_modify_any_comment(self):
         """Test that circle admin can modify any comment in their circle."""
-        from keeps.views.permissions import is_circle_admin
+        from mysite.keeps.views.permissions import is_circle_admin
         
         # Admin should be able to modify comments in their circle
         self.assertTrue(is_circle_admin(self.admin_user, self.comment.keep.circle))
@@ -295,7 +295,7 @@ class KeepAdminPermissionsTest(TestCase):
             role=UserRole.CIRCLE_MEMBER
         )
         
-        from keeps.views.permissions import is_circle_admin
+        from mysite.keeps.views.permissions import is_circle_admin
         
         # Other regular user should not be admin
         self.assertFalse(is_circle_admin(other_user, self.circle))
@@ -307,7 +307,7 @@ class KeepAdminPermissionsTest(TestCase):
     
     def test_user_can_post_in_circle_they_belong_to(self):
         """Test that both admins and members can post in circles they belong to."""
-        from keeps.views.permissions import can_user_post_in_circle
+        from mysite.keeps.views.permissions import can_user_post_in_circle
         
         # Both admin and regular user should be able to post
         self.assertTrue(can_user_post_in_circle(self.admin_user, self.circle))

@@ -190,7 +190,7 @@ python manage.py shell
 
 ```bash
 python manage.py shell
->>> from auth.models import GoogleOAuthState
+>>> from mysite.auth.models import GoogleOAuthState
 >>> GoogleOAuthState.objects.all().delete()
 >>> print("All OAuth states invalidated")
 ```

@@ -3,7 +3,7 @@ from datetime import date
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
-from users.models import (
+from mysite.users.models import (
     ChildProfile,
     Circle,
     CircleMembership,
@@ -11,14 +11,14 @@ from users.models import (
     UserRole,
     GuardianConsentMethod,
 )
-from users.serializers import (
+from mysite.users.serializers import (
     CircleCreateSerializer,
     CircleSerializer,
     UserSerializer,
     ChildProfileSerializer,
     ChildProfileUpgradeRequestSerializer,
 )
-from auth.serializers import (
+from mysite.auth.serializers import (
     EmailVerificationSerializer,
     LoginSerializer,
     PasswordChangeSerializer,
@@ -86,7 +86,7 @@ class SignupSerializerTests(TestCase):
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
         
         # No circles should be created during signup
-        from users.models import CircleMembership
+        from mysite.users.models import CircleMembership
         self.assertEqual(CircleMembership.objects.filter(user=user).count(), 0)
 
     def test_signup_password_too_short(self):
@@ -146,7 +146,7 @@ class SignupSerializerTests(TestCase):
         user = serializer.save()
         
         # User should be created but no circles
-        from users.models import CircleMembership
+        from mysite.users.models import CircleMembership
         self.assertEqual(CircleMembership.objects.filter(user=user).count(), 0)
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
 
@@ -569,7 +569,7 @@ class ChildProfileUpgradeRequestSerializerTests(TestCase):
 
     def test_already_linked_child(self):
         """Test that serializer rejects already linked child."""
-        from users.models import ChildProfileUpgradeStatus  # Add missing import
+        from mysite.users.models import ChildProfileUpgradeStatus  # Add missing import
         
         # Create a linked child
         linked_user = User.objects.create_user(

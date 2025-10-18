@@ -17,12 +17,12 @@ class MailerConfigurationError(RuntimeError):
 # Lazy import to avoid circular import at module load time
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # only for type checkers
-    from emails.services import EmailDispatchService
+    from mysite.emails.services import EmailDispatchService
 
 
 def _dispatch_service():
     # Import here to break circular import chain
-    from emails.services import email_dispatch_service
+    from mysite.emails.services import email_dispatch_service
     return email_dispatch_service
 
 
@@ -95,7 +95,7 @@ def send_via_mailjet(
     logger.info('Mailjet dispatched template %s to %s', template_id, to_email)
 
 
-from emails.templates import (
+from mysite.emails.templates import (
     TWOFA_CODE_TEMPLATE,
     TWOFA_ENABLED_TEMPLATE,
     TWOFA_DISABLED_TEMPLATE,
@@ -112,7 +112,7 @@ class TwoFactorMailer:
         Try to enqueue an email via Celery. If Celery is unavailable fall back to the local dispatcher.
         """
         try:
-            from emails.tasks import send_email_task
+            from mysite.emails.tasks import send_email_task
 
             send_email_task.delay(
                 to_email=to_email,

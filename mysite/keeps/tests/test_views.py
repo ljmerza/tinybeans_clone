@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from users.models import Circle, CircleMembership, UserRole
-from keeps.models import Keep, KeepType, KeepReaction, KeepComment
+from mysite.users.models import Circle, CircleMembership, UserRole
+from mysite.keeps.models import Keep, KeepType, KeepReaction, KeepComment
 
 User = get_user_model()
 

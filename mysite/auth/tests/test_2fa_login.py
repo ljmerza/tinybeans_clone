@@ -7,15 +7,15 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from auth.models import (
+from mysite.auth.models import (
     TwoFactorSettings,
     TwoFactorCode,
     RecoveryCode,
     TrustedDevice,
     TwoFactorAuditLog
 )
-from auth.token_utils import generate_partial_token
-from auth.services.trusted_device_service import TrustedDeviceToken
+from mysite.auth.token_utils import generate_partial_token
+from mysite.auth.services.trusted_device_service import TrustedDeviceToken
 
 User = get_user_model()
 
@@ -83,7 +83,7 @@ class TestLoginWith2FA:
             totp_secret='JBSWY3DPEHPK3PXP'
         )
     
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_login_requires_2fa(self, mock_rate_limit):
         """Test login returns requires_2fa when 2FA is enabled"""
         mock_rate_limit.return_value = False
@@ -99,8 +99,8 @@ class TestLoginWith2FA:
         assert 'partial_token' in response.data
         assert 'tokens' not in response.data
     
-    @patch('auth.services.twofa_service.TwoFactorService.send_otp')
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.send_otp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_login_sends_otp_for_email_method(self, mock_rate_limit, mock_send):
         """Test OTP is sent for email 2FA method"""
         mock_rate_limit.return_value = False
@@ -116,7 +116,7 @@ class TestLoginWith2FA:
         assert response.data['requires_2fa'] is True
         mock_send.assert_called_once()
     
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_login_rate_limited(self, mock_rate_limit):
         """Test login fails when rate limited"""
         mock_rate_limit.return_value = True
@@ -147,8 +147,8 @@ class TestLoginWithTrustedDevice:
             preferred_method='totp'
         )
     
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.is_trusted_device')
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.get_device_id_from_request')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.is_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.get_device_id_from_request')
     def test_login_skips_2fa_for_trusted_device(self, mock_get_device, mock_is_trusted):
         """Test 2FA is skipped for trusted devices"""
         mock_get_device.return_value = TrustedDeviceToken(
@@ -167,9 +167,9 @@ class TestLoginWithTrustedDevice:
         assert response.data.get('trusted_device') is True
         assert 'requires_2fa' not in response.data
     
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.is_trusted_device')
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.get_device_id_from_request')
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.is_trusted_device')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.get_device_id_from_request')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_login_requires_2fa_for_untrusted_device(self, mock_rate, mock_get_device, mock_is_trusted):
         """Test 2FA is required for untrusted devices"""
         mock_get_device.return_value = TrustedDeviceToken(
@@ -207,7 +207,7 @@ class TestTwoFactorVerifyLogin:
             totp_secret='JBSWY3DPEHPK3PXP'
         )
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_verify_login_with_valid_totp(self, mock_verify):
         """Test successful login verification with TOTP"""
         mock_verify.return_value = True
@@ -232,7 +232,7 @@ class TestTwoFactorVerifyLogin:
         assert log is not None
         assert log.success is True
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_verify_login_with_invalid_code(self, mock_verify):
         """Test login verification fails with invalid code"""
         mock_verify.return_value = False
@@ -266,7 +266,7 @@ class TestTwoFactorVerifyLogin:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'partial token' in response.data['error'].lower()
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_verify_login_with_expired_partial_token(self, mock_verify):
         """Test verification fails with expired partial token"""
         mock_verify.return_value = True
@@ -280,7 +280,7 @@ class TestTwoFactorVerifyLogin:
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_otp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_otp')
     def test_verify_login_with_email_otp(self, mock_verify):
         """Test login verification with email OTP"""
         self.twofa_settings.preferred_method = 'email'
@@ -298,8 +298,8 @@ class TestTwoFactorVerifyLogin:
         assert response.status_code == status.HTTP_200_OK
         assert 'tokens' in response.data
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('auth.services.twofa_service.TwoFactorService.verify_recovery_code')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_recovery_code')
     def test_verify_login_with_recovery_code(self, mock_recovery, mock_totp):
         """Test login verification with recovery code"""
         mock_totp.return_value = False
@@ -343,8 +343,8 @@ class TestRememberMeFeature:
             preferred_method='totp'
         )
     
-    @patch('auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.trusted_device_service.TrustedDeviceService.add_trusted_device')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_remember_me_creates_trusted_device(self, mock_verify, mock_add_device):
         """Test remember_me creates a trusted device"""
         mock_verify.return_value = True
@@ -368,7 +368,7 @@ class TestRememberMeFeature:
         # Check device_id cookie is set
         assert 'device_id' in response.cookies
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
     def test_without_remember_me_no_device_created(self, mock_verify):
         """Test without remember_me, no trusted device is created"""
         mock_verify.return_value = True
@@ -400,8 +400,8 @@ class TestCompleteLoginFlow:
             password='testpass'
         )
     
-    @patch('auth.services.twofa_service.TwoFactorService.verify_totp')
-    @patch('auth.services.twofa_service.TwoFactorService.is_rate_limited')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
+    @patch('mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited')
     def test_complete_2fa_login_flow(self, mock_rate, mock_verify):
         """Test complete flow from login to 2FA verification"""
         # Enable 2FA

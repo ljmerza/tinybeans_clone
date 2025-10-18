@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import (
+from mysite.users.models import (
     ChildProfile,
     ChildProfileUpgradeStatus,
     Circle,
