@@ -1,36 +1,38 @@
 import { authKeys } from "@/features/auth";
 import { useApiMessages } from "@/i18n";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 import {
-	createCircle,
-	fetchCircleOnboarding,
-	skipCircleOnboarding,
-} from "../api/onboardingClient";
+	type UseMutationResult,
+	type UseQueryResult,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
+
+import { circleKeys } from "../api/queryKeys";
+import { circleServices } from "../api/services";
 import type { CircleOnboardingPayload, CircleSummary } from "../types";
 
-export const circleKeys = {
-	root: () => ["circles"] as const,
-	onboarding: () => ["circles", "onboarding"] as const,
-};
-
-export function useCircleOnboardingQuery() {
+export function useCircleOnboardingQuery(): UseQueryResult<CircleOnboardingPayload> {
 	return useQuery({
 		queryKey: circleKeys.onboarding(),
 		queryFn: async () => {
-			const response = await fetchCircleOnboarding();
+			const response = await circleServices.getOnboarding();
 			return (response.data ?? response) as CircleOnboardingPayload;
 		},
 	});
 }
 
-export function useSkipCircleOnboarding() {
+export function useSkipCircleOnboarding(): UseMutationResult<
+	ApiResponseWithMessages<CircleOnboardingPayload>,
+	ApiError,
+	void
+> {
 	const queryClient = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
 	return useMutation({
-		mutationFn: skipCircleOnboarding,
+		mutationFn: () => circleServices.skipOnboarding(),
 		onSuccess: (response: ApiResponseWithMessages<CircleOnboardingPayload>) => {
 			const payload = (response.data ?? response) as CircleOnboardingPayload;
 			queryClient.setQueryData(circleKeys.onboarding(), payload);
@@ -45,13 +47,19 @@ export function useSkipCircleOnboarding() {
 	});
 }
 
-export function useCreateCircleMutation() {
+export function useCreateCircleMutation(): UseMutationResult<
+	ApiResponseWithMessages<{ circle: CircleSummary }>,
+	ApiError,
+	{ name: string }
+> {
 	const queryClient = useQueryClient();
 	const { showAsToast } = useApiMessages();
 
 	return useMutation({
-		mutationFn: createCircle,
-		onSuccess: (response: ApiResponseWithMessages<{ circle: CircleSummary }>) => {
+		mutationFn: circleServices.createCircle,
+		onSuccess: (
+			response: ApiResponseWithMessages<{ circle: CircleSummary }>,
+		) => {
 			queryClient.invalidateQueries({ queryKey: circleKeys.onboarding() });
 			queryClient.invalidateQueries({ queryKey: authKeys.session() });
 			if (response.messages?.length) {

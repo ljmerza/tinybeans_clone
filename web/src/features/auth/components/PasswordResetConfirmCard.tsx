@@ -130,9 +130,7 @@ export function PasswordResetConfirmCard({
 					<form.Field
 						name="password"
 						validators={{
-							onBlur: zodValidator(
-								passwordResetConfirmFieldSchemas.password,
-							),
+							onBlur: zodValidator(passwordResetConfirmFieldSchemas.password),
 						}}
 					>
 						{(field) => (

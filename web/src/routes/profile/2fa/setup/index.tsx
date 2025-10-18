@@ -4,21 +4,21 @@
  */
 
 import { ButtonGroup, Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
 import { Button } from "@/components/ui/button";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import { extractApiError } from "@/features/auth/utils";
 import {
 	EmailMethodCard,
 	SmsMethodCard,
 	TotpMethodCard,
 	twoFaKeys,
-	twoFactorApi,
+	twoFactorServices,
 	use2FAStatus,
 	useRemoveTwoFactorMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
 import type { QueryClient } from "@tanstack/react-query";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 const METHOD_LABELS: Record<TwoFactorMethod, string> = {
@@ -41,7 +41,7 @@ function TwoFactorSetupPage() {
 
 	const [methodToRemove, setMethodToRemove] = useState<RemovableMethod | null>(
 		null,
-	)
+	);
 	const [removalMessage, setRemovalMessage] = useState<string | null>(null);
 	const [removalError, setRemovalError] = useState<string | null>(null);
 
@@ -57,18 +57,18 @@ function TwoFactorSetupPage() {
 		setRemovalError(null);
 		setRemovalMessage(null);
 		setMethodToRemove(method);
-	}
+	};
 
 	const handleRemovalCancel = () => {
 		if (!removalInProgress) {
 			setMethodToRemove(null);
 		}
 		setRemovalError(null);
-	}
+	};
 
 	const handleRemovalConfirm = async () => {
 		if (!methodToRemove) {
-			return
+			return;
 		}
 
 		setRemovalError(null);
@@ -77,12 +77,12 @@ function TwoFactorSetupPage() {
 			setRemovalMessage(
 				result?.message ??
 					`${METHOD_LABELS[methodToRemove]} removed successfully.`,
-			)
+			);
 			setMethodToRemove(null);
 		} catch (err) {
 			setRemovalError(extractApiError(err, "Failed to remove 2FA method."));
 		}
-	}
+	};
 
 	if (isLoading) {
 		return (
@@ -90,7 +90,7 @@ function TwoFactorSetupPage() {
 				message="Loading 2FA settings..."
 				description="We are fetching your current two-factor authentication configuration."
 			/>
-		)
+		);
 	}
 
 	if (error) {
@@ -102,7 +102,7 @@ function TwoFactorSetupPage() {
 				actionLabel="Go Home"
 				onAction={() => navigate({ to: "/" })}
 			/>
-		)
+		);
 	}
 
 	return (
@@ -204,17 +204,20 @@ function TwoFactorSetupPage() {
 				</div>
 			</div>
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/")({
-	beforeLoad: requireAuth,
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
 	loader: ({ context }) => {
 		const { queryClient } = context as { queryClient: QueryClient };
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
-			queryFn: () => twoFactorApi.getStatus(),
-		})
+			queryFn: () => twoFactorServices.getStatus(),
+		});
 	},
 	component: TwoFactorSetupPage,
 });

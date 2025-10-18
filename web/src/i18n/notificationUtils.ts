@@ -1,4 +1,4 @@
-/** 
+/**
  * Notification Utilities
  *
  * Utilities for handling standardized API messages with i18n support.
@@ -34,7 +34,9 @@ export function inferSeverity(status: number): "success" | "warning" | "error" {
 type MessageLike = ApiMessage | string;
 
 const isApiMessage = (message: MessageLike): message is ApiMessage => {
-	return typeof message === "object" && message !== null && "i18n_key" in message;
+	return (
+		typeof message === "object" && message !== null && "i18n_key" in message
+	);
 };
 
 const ERROR_DETAIL_REGEX = /ErrorDetail\(string=['"]([^'"]+)['"]/;

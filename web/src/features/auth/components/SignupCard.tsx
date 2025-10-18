@@ -117,7 +117,9 @@ export function SignupCard() {
 								<Input
 									id={id}
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="username"
 									disabled={signup.isPending}
@@ -145,7 +147,9 @@ export function SignupCard() {
 									id={id}
 									type="email"
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="email"
 									disabled={signup.isPending}
@@ -169,7 +173,9 @@ export function SignupCard() {
 									id={id}
 									type="password"
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="new-password"
 									disabled={signup.isPending}
@@ -187,16 +193,15 @@ export function SignupCard() {
 					}}
 				>
 					{(field) => (
-						<FormField
-							field={field}
-							label={t("auth.signup.confirm_password")}
-						>
+						<FormField field={field} label={t("auth.signup.confirm_password")}>
 							{({ id, field: fieldApi }) => (
 								<Input
 									id={id}
 									type="password"
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="new-password"
 									disabled={signup.isPending}
@@ -220,11 +225,7 @@ export function SignupCard() {
 							: undefined
 					}
 				>
-					<Button
-						type="submit"
-						className="w-full"
-						disabled={signup.isPending}
-					>
+					<Button type="submit" className="w-full" disabled={signup.isPending}>
 						{signup.isPending
 							? t("auth.signup.creating_account")
 							: t("auth.signup.create_account")}

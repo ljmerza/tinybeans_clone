@@ -1,15 +1,14 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { useResendVerificationMutation } from "@/features/auth";
+import { useAuthSession, useResendVerificationMutation } from "@/features/auth";
 import { ThemePreferenceSelect, useTheme } from "@/features/theme";
 import { useTranslation } from "react-i18next";
-
-import { useUserProfileQuery } from "../hooks/useUserProfile";
 
 export function ProfileGeneralSettingsCard() {
 	const { t } = useTranslation();
 	const { preference, resolvedTheme } = useTheme();
-	const { data: user, isLoading, isFetching, refetch } = useUserProfileQuery();
+	const session = useAuthSession();
+	const user = session.user;
 	const resendVerification = useResendVerificationMutation();
 
 	const selectedPreferenceLabel = t(
@@ -19,7 +18,7 @@ export function ProfileGeneralSettingsCard() {
 		`twofa.settings.general.theme.options.${resolvedTheme}.title`,
 	);
 
-	if (isLoading && !user) {
+	if (session.isFetchingUser && !user) {
 		return (
 			<div className="flex justify-center py-10">
 				<LoadingSpinner />
@@ -65,10 +64,12 @@ export function ProfileGeneralSettingsCard() {
 							</Button>
 							<Button
 								variant="outline"
-								onClick={() => refetch()}
-								disabled={isFetching}
+								onClick={() => {
+									void session.refetchUser();
+								}}
+								disabled={session.isFetchingUser}
 							>
-								{isFetching
+								{session.isFetchingUser
 									? t("profile.general.email.refreshing")
 									: t("profile.general.email.refresh")}
 							</Button>
@@ -111,10 +112,10 @@ export function ProfileGeneralSettingsCard() {
 							{preference === "system"
 								? t("twofa.settings.general.theme.current_value_system", {
 										value: resolvedLabel,
-								  })
+									})
 								: t("twofa.settings.general.theme.current_value", {
 										value: selectedPreferenceLabel,
-								  })}
+									})}
 						</p>
 					</div>
 				</div>

@@ -6,7 +6,8 @@ from .children import (
 )
 from .circles import (
     CircleCreateSerializer,
-    CircleInvitationAcceptSerializer,
+    CircleInvitationOnboardingStartSerializer,
+    CircleInvitationFinalizeSerializer,
     CircleInvitationCreateSerializer,
     CircleInvitationResponseSerializer,
     CircleInvitationSerializer,
@@ -23,7 +24,8 @@ __all__ = [
     'ChildProfileUpgradeConfirmSerializer',
     'ChildProfileUpgradeRequestSerializer',
     'CircleCreateSerializer',
-    'CircleInvitationAcceptSerializer',
+    'CircleInvitationOnboardingStartSerializer',
+    'CircleInvitationFinalizeSerializer',
     'CircleInvitationCreateSerializer',
     'CircleInvitationResponseSerializer',
     'CircleInvitationSerializer',
@@ -37,4 +39,3 @@ __all__ = [
     'EmailPreferencesSerializer',
     'UserProfileSerializer',
 ]
-

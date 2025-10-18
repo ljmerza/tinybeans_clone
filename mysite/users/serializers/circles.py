@@ -1,6 +1,7 @@
 """Serializers for circle management workflows."""
 from __future__ import annotations
 
+from django.db import models
 from rest_framework import serializers
 
 from mysite.notification_utils import create_message
@@ -84,30 +85,111 @@ class CircleMemberAddSerializer(serializers.Serializer):
 
 class CircleInvitationSerializer(serializers.ModelSerializer):
     circle = serializers.PrimaryKeyRelatedField(read_only=True)
+    invited_user = UserSerializer(read_only=True)
+    existing_user = serializers.SerializerMethodField()
 
     class Meta:
         model = CircleInvitation
-        fields = ['id', 'circle', 'email', 'role', 'status', 'created_at', 'responded_at']
-        read_only_fields = ['id', 'circle', 'status', 'created_at', 'responded_at']
+        fields = [
+            'id',
+            'circle',
+            'email',
+            'invited_user',
+            'existing_user',
+            'role',
+            'status',
+            'created_at',
+            'responded_at',
+        ]
+        read_only_fields = [
+            'id',
+            'circle',
+            'invited_user',
+            'existing_user',
+            'status',
+            'created_at',
+            'responded_at',
+        ]
+
+    def get_existing_user(self, obj: CircleInvitation) -> bool:
+        if obj.invited_user_id:
+            return True
+        return User.objects.filter(email__iexact=obj.email).exists()
 
 
 class CircleInvitationCreateSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(required=False)
+    username = serializers.CharField(required=False, allow_blank=False)
     role = serializers.ChoiceField(choices=UserRole.choices, required=False)
 
     def validate(self, attrs):
         circle = self.context['circle']
-        email = attrs['email'].lower()
-        if CircleMembership.objects.filter(circle=circle, user__email__iexact=email).exists():
-            raise serializers.ValidationError({'email': create_message('errors.circle_member_exists')})
+        email = attrs.get('email')
+        username = attrs.get('username')
+
+        if not email and not username:
+            raise serializers.ValidationError(
+                {'identifier': create_message('errors.invitation_identifier_required')}
+            )
+        if email and username:
+            raise serializers.ValidationError(
+                {'identifier': create_message('errors.invitation_identifier_conflict')}
+            )
+
+        invited_user = None
+        identifier_field = 'email'
+
+        if username:
+            try:
+                invited_user = User.objects.get(username__iexact=username)
+            except User.DoesNotExist:
+                raise serializers.ValidationError({'username': create_message('errors.user_not_found')})
+            if not invited_user.email:
+                raise serializers.ValidationError({'username': create_message('errors.user_missing_email')})
+            email = invited_user.email
+            identifier_field = 'username'
+
+        email = email.lower()
+        if invited_user is None:
+            invited_user = User.objects.filter(email__iexact=email).first()
+
+        membership_exists = False
+        if invited_user:
+            membership_exists = CircleMembership.objects.filter(circle=circle, user=invited_user).exists()
+        if not membership_exists:
+            membership_exists = CircleMembership.objects.filter(circle=circle, user__email__iexact=email).exists()
+        if membership_exists:
+            raise serializers.ValidationError(
+                {
+                    identifier_field: create_message('errors.circle_member_exists')
+                }
+            )
+
         if CircleInvitation.objects.filter(
             circle=circle,
-            email__iexact=email,
             status=CircleInvitationStatus.PENDING,
+            email__iexact=email,
         ).exists():
-            raise serializers.ValidationError({'email': create_message('errors.invitation_pending_for_email')})
+            raise serializers.ValidationError(
+                {
+                    identifier_field: create_message('errors.invitation_pending_for_email')
+                }
+            )
+        if invited_user and CircleInvitation.objects.filter(
+            circle=circle,
+            status=CircleInvitationStatus.PENDING,
+            invited_user=invited_user,
+        ).exists():
+            raise serializers.ValidationError(
+                {
+                    identifier_field: create_message('errors.invitation_pending_for_email')
+                }
+            )
+
         attrs['email'] = email
         attrs['role'] = attrs.get('role') or UserRole.CIRCLE_MEMBER
+        if invited_user:
+            attrs['invited_user'] = invited_user
         return attrs
 
 
@@ -122,18 +204,12 @@ class CircleInvitationResponseSerializer(serializers.Serializer):
         return attrs
 
 
-class CircleInvitationAcceptSerializer(serializers.Serializer):
+class CircleInvitationOnboardingStartSerializer(serializers.Serializer):
     token = serializers.CharField()
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, min_length=8)
 
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
-        if User.objects.filter(username=attrs['username']).exists():
-            raise serializers.ValidationError({'username': create_message('errors.username_taken')})
-        return attrs
+
+class CircleInvitationFinalizeSerializer(serializers.Serializer):
+    onboarding_token = serializers.CharField()
 
 
 __all__ = [

@@ -87,7 +87,7 @@ services:
 
   celery-worker-1:
     build: .
-    command: celery -A mysite worker -l INFO -n worker1@%h -Q email,sms,media,maintenance
+    command: celery -A mysite worker
     working_dir: /app/mysite
     volumes:
       - ./:/app

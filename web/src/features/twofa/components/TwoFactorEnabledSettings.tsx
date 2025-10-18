@@ -26,8 +26,9 @@ export function TwoFactorEnabledSettings() {
 	const disable2FA = useDisable2FA();
 	const requestDisableCode = useRequestDisableCode();
 	const generateCodes = useGenerateRecoveryCodes();
-	const generatedCodesPayload =
-		unwrapApiResponse<RecoveryCodesResponse>(generateCodes.data);
+	const generatedCodesPayload = unwrapApiResponse<RecoveryCodesResponse>(
+		generateCodes.data,
+	);
 
 	const [showDisableConfirm, setShowDisableConfirm] = useState(false);
 	const [disableCode, setDisableCode] = useState("");

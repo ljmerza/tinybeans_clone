@@ -1,7 +1,7 @@
 import { Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import { SmsSetup, use2FAStatus } from "@/features/twofa";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function SmsSetupRoute() {
 	const navigate = useNavigate();
@@ -17,10 +17,13 @@ function SmsSetupRoute() {
 				/>
 			</div>
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/sms")({
-	beforeLoad: requireAuth,
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
 	component: SmsSetupRoute,
 });

@@ -1,10 +1,15 @@
 """Circle management and invitation views."""
 from __future__ import annotations
 
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django_ratelimit.decorators import ratelimit
 from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -17,7 +22,7 @@ from auth.token_utils import (
     pop_token,
     store_token,
 )
-from mysite.notification_utils import create_message, success_response, error_response
+from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
 from ..models import (
     Circle,
     CircleInvitation,
@@ -28,7 +33,8 @@ from ..models import (
 )
 from ..serializers import (
     CircleCreateSerializer,
-    CircleInvitationAcceptSerializer,
+    CircleInvitationOnboardingStartSerializer,
+    CircleInvitationFinalizeSerializer,
     CircleInvitationCreateSerializer,
     CircleInvitationResponseSerializer,
     CircleInvitationSerializer,
@@ -38,7 +44,13 @@ from ..serializers import (
     CircleSerializer,
     UserSerializer,
 )
-from ..tasks import CIRCLE_INVITATION_TEMPLATE, send_email_task
+from ..tasks import (
+    CIRCLE_INVITATION_TEMPLATE,
+    CIRCLE_INVITATION_REMINDER_TEMPLATE,
+    CIRCLE_INVITATION_ACCEPTED_TEMPLATE,
+    send_email_task,
+)
+from ..tasks import CIRCLE_INVITATION_REMINDER_TEMPLATE, CIRCLE_INVITATION_ACCEPTED_TEMPLATE
 
 
 class UserCircleListView(APIView):
@@ -122,12 +134,12 @@ class CircleInvitationCreateView(APIView):
     serializer_class = CircleInvitationCreateSerializer
 
     @extend_schema(
-        description='Invite a new member to join a circle via email.',
+        description='Invite a new member to join a circle via username or email. Existing users receive a pending invitation and must accept before joining.',
         request=CircleInvitationCreateSerializer,
         responses={
             202: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
-                description='Invitation created and email queued.',
+                description='Invitation created and notification queued.',
             )
         },
     )
@@ -140,10 +152,23 @@ class CircleInvitationCreateView(APIView):
         serializer = CircleInvitationCreateSerializer(data=request.data, context={'circle': circle})
         serializer.is_valid(raise_exception=True)
 
+        # Per-circle rate limiting (windowed)
+        if getattr(settings, 'RATELIMIT_ENABLE', True):
+            circle_limit = getattr(settings, 'CIRCLE_INVITE_CIRCLE_LIMIT', 0)
+            if circle_limit:
+                minutes = getattr(settings, 'CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES', 60)
+                window_start = timezone.now() - timedelta(minutes=minutes)
+                invite_count = circle.invitations.filter(created_at__gte=window_start).count()
+                if invite_count >= circle_limit:
+                    return rate_limit_response(
+                        context={'scope': 'circle', 'limit': circle_limit, 'windowMinutes': minutes}
+                    )
+
         invitation = CircleInvitation.objects.create(
             circle=circle,
             email=serializer.validated_data['email'],
             invited_by=request.user,
+            invited_user=serializer.validated_data.get('invited_user'),
             role=serializer.validated_data['role'],
         )
 
@@ -155,6 +180,8 @@ class CircleInvitationCreateView(APIView):
                 'email': invitation.email,
                 'role': invitation.role,
                 'issued_at': timezone.now().isoformat(),
+                'existing_user': bool(invitation.invited_user_id),
+                'invited_user_id': invitation.invited_user_id,
             },
             ttl=TOKEN_TTL_SECONDS,
         )
@@ -167,6 +194,7 @@ class CircleInvitationCreateView(APIView):
                 'email': invitation.email,
                 'circle_name': circle.name,
                 'invited_by': request.user.username,
+                'invitation_link': self._build_invitation_link(token),
             },
         )
 
@@ -176,6 +204,22 @@ class CircleInvitationCreateView(APIView):
             messages=[create_message('notifications.circle.invitation_sent')],
             status_code=status.HTTP_202_ACCEPTED
         )
+
+    @staticmethod
+    def _build_invitation_link(token: str) -> str:
+        base_url = getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000'
+        base_url = base_url.rstrip('/')
+        return f"{base_url}/invitations/accept?token={token}"
+
+    if getattr(settings, 'RATELIMIT_ENABLE', True):
+        post = method_decorator(
+            ratelimit(
+                key='user',
+                rate=getattr(settings, 'CIRCLE_INVITE_RATELIMIT', '10/15m'),
+                method='POST',
+                block=True,
+            )
+        )(post)
 
 
 class CircleInvitationListView(APIView):
@@ -316,13 +360,15 @@ class CircleActivityView(APIView):
                 }
             )
 
-        invitations = circle.invitations.order_by('-created_at')
+        invitations = circle.invitations.select_related('invited_user').order_by('-created_at')
         for invitation in invitations:
             events.append(
                 {
                     'type': 'invitation',
                     'created_at': invitation.created_at,
                     'email': invitation.email,
+                    'existing_user': bool(invitation.invited_user_id),
+                    'invited_user': UserSerializer(invitation.invited_user).data if invitation.invited_user_id else None,
                     'role': invitation.role,
                     'status': invitation.status,
                     'responded_at': invitation.responded_at,
@@ -375,12 +421,17 @@ class CircleInvitationRespondView(APIView):
                     membership.role = invitation.role
                     membership.save(update_fields=['role'])
                 invitation.status = CircleInvitationStatus.ACCEPTED
+                if invitation.invited_user_id != request.user.id:
+                    invitation.invited_user = request.user
                 message_key = 'notifications.circle.invitation_accepted'
             else:
                 invitation.status = CircleInvitationStatus.DECLINED
                 message_key = 'notifications.circle.invitation_declined'
             invitation.responded_at = timezone.now()
-            invitation.save(update_fields=['status', 'responded_at'])
+            update_fields = ['status', 'responded_at']
+            if invitation.invited_user_id == request.user.id:
+                update_fields.append('invited_user')
+            invitation.save(update_fields=update_fields)
 
         return success_response(
             {'circle': CircleSerializer(invitation.circle).data},
@@ -391,20 +442,20 @@ class CircleInvitationRespondView(APIView):
 
 class CircleInvitationAcceptView(APIView):
     permission_classes = [permissions.AllowAny]
-    serializer_class = CircleInvitationAcceptSerializer
+    serializer_class = CircleInvitationOnboardingStartSerializer
 
     @extend_schema(
-        description='Complete an invitation-based signup flow using a one-time token.',
-        request=CircleInvitationAcceptSerializer,
+        description='Begin onboarding for a circle invitation using the one-time link token. Returns metadata and an onboarding token for account creation.',
+        request=CircleInvitationOnboardingStartSerializer,
         responses={
-            201: OpenApiResponse(
+            200: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
-                description='Invitation accepted and new member onboarded.',
+                description='Invitation onboarding initialized. Returns onboarding token and invitation context.',
             )
         },
     )
     def post(self, request):
-        serializer = CircleInvitationAcceptSerializer(data=request.data)
+        serializer = CircleInvitationOnboardingStartSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = pop_token('circle-invite', serializer.validated_data['token'])
         if not payload:
@@ -431,43 +482,129 @@ class CircleInvitationAcceptView(APIView):
                 status.HTTP_400_BAD_REQUEST
             )
 
-        existing_user = User.objects.filter(email__iexact=invitation.email).first()
-        if existing_user:
+        onboarding_payload = {
+            'invitation_id': str(invitation.id),
+            'circle_id': invitation.circle_id,
+            'email': invitation.email,
+            'role': invitation.role,
+            'existing_user': bool(invitation.invited_user_id or payload.get('existing_user')),
+            'invited_user_id': invitation.invited_user_id,
+            'issued_at': timezone.now().isoformat(),
+            'invited_by_id': invitation.invited_by_id,
+        }
+        ttl_minutes = getattr(settings, 'CIRCLE_INVITE_ONBOARDING_TTL_MINUTES', 60)
+        onboarding_token = store_token(
+            'circle-invite-onboarding',
+            onboarding_payload,
+            ttl=max(60, ttl_minutes * 60),
+        )
+
+        circle_data = CircleSerializer(invitation.circle).data
+        inviter = UserSerializer(invitation.invited_by).data if invitation.invited_by_id else None
+
+        response_payload = {
+            'onboarding_token': onboarding_token,
+            'expires_in_minutes': ttl_minutes,
+            'invitation': {
+                'id': str(invitation.id),
+                'email': invitation.email,
+                'existing_user': onboarding_payload['existing_user'],
+                'role': invitation.role,
+                'circle': circle_data,
+                'invited_user_id': invitation.invited_user_id,
+                'invited_by': inviter,
+                'reminder_scheduled_at': invitation.created_at,
+            },
+        }
+
+        return success_response(
+            response_payload,
+            messages=[create_message('notifications.circle.invitation_onboarding_ready')],
+            status_code=status.HTTP_200_OK,
+        )
+
+
+class CircleInvitationFinalizeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleInvitationFinalizeSerializer
+
+    @extend_schema(
+        description='Finalize circle invitation onboarding using an onboarding token once the invitee is authenticated.',
+        request=CircleInvitationFinalizeSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitation accepted and membership created.',
+            )
+        },
+    )
+    def post(self, request):
+        serializer = CircleInvitationFinalizeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = pop_token('circle-invite-onboarding', serializer.validated_data['onboarding_token'])
+        if not payload:
             return error_response(
-                'email_already_registered',
-                [create_message('errors.email_already_registered')],
-                status.HTTP_409_CONFLICT
+                'token_invalid_expired',
+                [create_message('errors.token_invalid_expired')],
+                status.HTTP_400_BAD_REQUEST
             )
 
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
+        invitation = CircleInvitation.objects.filter(
+            id=payload['invitation_id'],
+            status=CircleInvitationStatus.PENDING,
+        ).select_related('circle', 'invited_by').first()
+        if not invitation:
+            return error_response(
+                'invitation_not_found',
+                [create_message('errors.invitation_not_found')],
+                status.HTTP_404_NOT_FOUND
+            )
+
+        user = request.user
+        email_match = user.email and user.email.lower() == invitation.email.lower()
+        invited_match = invitation.invited_user_id == user.id
+        if not email_match and not invited_match:
+            return error_response(
+                'invitation_mismatch',
+                [create_message('errors.invitation_mismatch')],
+                status.HTTP_403_FORBIDDEN
+            )
 
         with transaction.atomic():
-            user = User.objects.create_user(
-                username=username,
-                email=invitation.email,
-                password=password,
-                role=UserRole.CIRCLE_MEMBER,
-            )
-            user.email_verified = True
-            user.save(update_fields=['email_verified'])
-
-            CircleMembership.objects.create(
+            membership, created = CircleMembership.objects.get_or_create(
                 user=user,
                 circle=invitation.circle,
-                role=invitation.role,
-                invited_by=invitation.invited_by,
+                defaults={'role': invitation.role, 'invited_by': invitation.invited_by},
             )
+            if not created and membership.role != invitation.role:
+                membership.role = invitation.role
+                membership.invited_by = membership.invited_by or invitation.invited_by
+                membership.save(update_fields=['role', 'invited_by'])
+
             invitation.status = CircleInvitationStatus.ACCEPTED
             invitation.responded_at = timezone.now()
-            invitation.save(update_fields=['status', 'responded_at'])
+            if invitation.invited_user_id != user.id:
+                invitation.invited_user = user
+            invitation.save(update_fields=['status', 'responded_at', 'invited_user'])
+
+        if invitation.invited_by_id:
+            base_url = getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000').rstrip('/')
+            send_email_task.delay(
+                to_email=invitation.invited_by.email,
+                template_id=CIRCLE_INVITATION_ACCEPTED_TEMPLATE,
+                context={
+                    'circle_name': invitation.circle.name,
+                    'invited_by': invitation.invited_by.username,
+                    'invitee_name': user.username,
+                    'circle_admin_link': f"{base_url}/circles/{invitation.circle.id}",
+                },
+            )
 
         return success_response(
             {
-                'user': UserSerializer(user).data,
                 'circle': CircleSerializer(invitation.circle).data,
-                'tokens': get_tokens_for_user(user),
+                'membership': CircleMembershipSerializer(membership).data,
             },
             messages=[create_message('notifications.circle.invitation_accepted')],
-            status_code=status.HTTP_201_CREATED
+            status_code=status.HTTP_201_CREATED,
         )

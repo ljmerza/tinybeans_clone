@@ -4,7 +4,7 @@
  */
 
 import { ConfirmDialog, Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import { extractApiError } from "@/features/auth/utils";
 import {
 	ProfileGeneralSettingsCard,
@@ -17,14 +17,14 @@ import {
 	TwoFactorEnabledSettings,
 	TwoFactorStatusHeader,
 	twoFaKeys,
-	twoFactorApi,
+	twoFactorServices,
 	use2FAStatus,
 	useRemoveTwoFactorMethod,
 	useSetPreferredMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
 import type { QueryClient } from "@tanstack/react-query";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -39,7 +39,7 @@ function TwoFactorSettingsPage() {
 
 	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(
 		null,
-	)
+	);
 	const [removalError, setRemovalError] = useState<string | null>(null);
 	const [switchError, setSwitchError] = useState<string | null>(null);
 
@@ -50,12 +50,12 @@ function TwoFactorSettingsPage() {
 		setRemovalError(null);
 		setSwitchError(null);
 		setMethodToRemove(method);
-	}
+	};
 
 	const handleRemovalCancel = () => {
 		setMethodToRemove(null);
 		setRemovalError(null);
-	}
+	};
 
 	const handleRemovalConfirm = async () => {
 		if (!methodToRemove) return;
@@ -66,7 +66,7 @@ function TwoFactorSettingsPage() {
 		} catch (err) {
 			setRemovalError(extractApiError(err, t("twofa.errors.remove_method")));
 		}
-	}
+	};
 
 	const handleSetAsDefault = async (method: TwoFactorMethod) => {
 		setSwitchError(null);
@@ -77,9 +77,9 @@ function TwoFactorSettingsPage() {
 		} catch (err) {
 			setSwitchError(
 				extractApiError(err, t("twofa.errors.update_default_method")),
-			)
+			);
 		}
-	}
+	};
 
 	const preferredMethod = status?.preferred_method ?? null;
 	const totpConfigured = Boolean(status?.has_totp);
@@ -95,7 +95,7 @@ function TwoFactorSettingsPage() {
 				message={t("twofa.settings.loading_title")}
 				description={t("twofa.settings.loading_description")}
 			/>
-		)
+		);
 	}
 
 	// Always show consolidated setup on settings page. If 2FA is not enabled, show an inline callout instead of routing to a separate /profile/2fa/setup page.
@@ -109,7 +109,7 @@ function TwoFactorSettingsPage() {
 				actionLabel={t("common.retry")}
 				onAction={() => navigate({ to: "/profile/2fa" })}
 			/>
-		)
+		);
 	}
 
 	return (
@@ -149,7 +149,7 @@ function TwoFactorSettingsPage() {
 								</p>
 							)}
 
-								{switchError && (
+							{switchError && (
 								<p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 dark:border-destructive/40 rounded px-4 py-3 transition-colors">
 									{switchError}
 								</p>
@@ -211,10 +211,10 @@ function TwoFactorSettingsPage() {
 			{(() => {
 				const methodLabel = methodToRemove
 					? t(`twofa.methods.${methodToRemove}`)
-					: ""
+					: "";
 				const removalDescription = methodToRemove
 					? t(`twofa.settings.remove_description.${methodToRemove}`)
-					: ""
+					: "";
 
 				return (
 					<ConfirmDialog
@@ -233,20 +233,23 @@ function TwoFactorSettingsPage() {
 						onConfirm={handleRemovalConfirm}
 						onCancel={handleRemovalCancel}
 					/>
-				)
+				);
 			})()}
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute(twoFactorSettingsPath)({
-	beforeLoad: requireAuth,
-	loader: ({ context }) => {
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
+	loader: async ({ context }) => {
 		const { queryClient } = context as { queryClient: QueryClient };
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
-			queryFn: () => twoFactorApi.getStatus(),
-		})
+			queryFn: () => twoFactorServices.getStatus(),
+		});
 	},
 	component: TwoFactorSettingsPage,
 });

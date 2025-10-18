@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { HttpError } from "@/lib/httpClient";
-import { apiClient } from "../api/authClient";
+import { authServices } from "../api/services";
 
 type EmailVerificationHandlerProps = {
 	token?: string;
@@ -16,7 +16,9 @@ type EmailVerificationHandlerProps = {
 
 type VerificationStatus = "verifying" | "success" | "error";
 
-export function EmailVerificationHandler({ token }: EmailVerificationHandlerProps) {
+export function EmailVerificationHandler({
+	token,
+}: EmailVerificationHandlerProps) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { getGeneral } = useApiMessages();
@@ -41,7 +43,7 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 	useEffect(() => {
 		if (!token) {
 			setStatus("error");
-			setMessage(t("auth.email_verification.invalid_link"));
+			setMessage(tRef.current("auth.email_verification.invalid_link"));
 			latestTokenRef.current = undefined;
 			inflightTokenRef.current = null;
 			return;
@@ -55,16 +57,15 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 		setStatus("verifying");
 		setMessage("");
 
-		void apiClient
-			.post<ApiResponseWithMessages>("/auth/verify-email/confirm/", { token })
+		void authServices
+			.confirmEmailVerification({ token })
 			.then((response) => {
 				if (!isMountedRef.current || latestTokenRef.current !== token) {
 					return;
 				}
 				const generalMessages = getGeneralRef.current(response.messages);
 				setMessage(
-					generalMessages[0] ??
-					tRef.current("auth.email_verification.success"),
+					generalMessages[0] ?? tRef.current("auth.email_verification.success"),
 				);
 				setStatus("success");
 			})
@@ -75,8 +76,7 @@ export function EmailVerificationHandler({ token }: EmailVerificationHandlerProp
 				const httpError = error as HttpError;
 				const generalMessages = getGeneralRef.current(httpError.messages);
 				setMessage(
-					generalMessages[0] ??
-					tRef.current("auth.email_verification.error"),
+					generalMessages[0] ?? tRef.current("auth.email_verification.error"),
 				);
 				setStatus("error");
 			})

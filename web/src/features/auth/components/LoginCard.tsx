@@ -124,7 +124,9 @@ export function LoginCard() {
 								<Input
 									id={id}
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="username"
 									disabled={login.isPending}
@@ -148,7 +150,9 @@ export function LoginCard() {
 									id={id}
 									type="password"
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="current-password"
 									disabled={login.isPending}

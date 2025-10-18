@@ -88,9 +88,7 @@ export function PasswordResetRequestCard() {
 					<form.Field
 						name="identifier"
 						validators={{
-							onBlur: zodValidator(
-								passwordResetRequestSchema.shape.identifier,
-							),
+							onBlur: zodValidator(passwordResetRequestSchema.shape.identifier),
 						}}
 					>
 						{(field) => (

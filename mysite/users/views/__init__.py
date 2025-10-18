@@ -10,6 +10,7 @@ from .circles import (
     CircleInvitationCreateView,
     CircleInvitationListView,
     CircleInvitationRespondView,
+    CircleInvitationFinalizeView,
     CircleMemberListView,
     CircleMemberRemoveView,
     UserCircleListView,
@@ -27,6 +28,7 @@ __all__ = [
     'CircleInvitationCreateView',
     'CircleInvitationListView',
     'CircleInvitationRespondView',
+    'CircleInvitationFinalizeView',
     'CircleMemberListView',
     'CircleMemberRemoveView',
     'UserCircleListView',
@@ -37,4 +39,3 @@ __all__ = [
     'CircleOnboardingStatusView',
     'CircleOnboardingSkipView',
 ]
-

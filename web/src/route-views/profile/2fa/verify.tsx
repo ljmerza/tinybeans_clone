@@ -4,20 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { extractApiError } from "@/features/auth/utils";
-import {
-	VerificationInput,
-	useVerify2FALogin,
-} from "@/features/twofa";
-import type {
-	TwoFactorMethod,
-	TwoFactorVerifyState,
-} from "@/features/twofa";
+import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
+import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
-import {
-	Navigate,
-	useLocation,
-	useNavigate,
-} from "@tanstack/react-router";
+import { Navigate, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";

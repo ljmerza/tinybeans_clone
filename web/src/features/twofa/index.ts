@@ -4,7 +4,7 @@
  */
 
 export * from "./types";
-export { twoFactorApi } from "./api/twoFactorApi";
+export { twoFactorServices } from "./api/services";
 export { twoFaKeys } from "./api/queryKeys";
 export * from "./hooks";
 export * from "./components";

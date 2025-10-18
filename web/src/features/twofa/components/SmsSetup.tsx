@@ -1,10 +1,10 @@
 import { Wizard, WizardStep } from "@/components";
 import { extractApiError } from "@/features/auth/utils";
+import { combineMessages, useApiMessages } from "@/i18n";
+import type { HttpError } from "@/lib/httpClient";
 import { showToast } from "@/lib/toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { combineMessages, useApiMessages } from "@/i18n";
-import type { HttpError } from "@/lib/httpClient";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
 import { SmsIntroStep } from "./setup/sms/SmsIntroStep";
 import { SmsRecoveryStep } from "./setup/sms/SmsRecoveryStep";

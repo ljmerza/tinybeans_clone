@@ -79,8 +79,7 @@ export function EmailSetup({ onComplete, onCancel }: EmailSetupProps) {
 							setCode("");
 							verifySetup.reset();
 							const successMessage =
-								response?.message ??
-								t("twofa.messages.code_resent_email");
+								response?.message ?? t("twofa.messages.code_resent_email");
 							showToast({ message: successMessage, level: "success" });
 						} catch (error) {
 							const message = extractApiError(

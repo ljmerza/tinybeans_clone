@@ -4,10 +4,7 @@ import { showToast } from "@/lib/toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useInitialize2FASetup, useVerify2FASetup } from "../hooks";
-import type {
-	RecoveryCodesResponse,
-	TwoFactorSetupResponse,
-} from "../types";
+import type { RecoveryCodesResponse, TwoFactorSetupResponse } from "../types";
 import { unwrapApiResponse } from "../utils/unwrapApiResponse";
 import { TotpIntroStep } from "./setup/totp/TotpIntroStep";
 import { TotpRecoveryStep } from "./setup/totp/TotpRecoveryStep";
@@ -30,8 +27,9 @@ export function TotpSetup({ onComplete, onCancel }: TotpSetupProps) {
 	const verifySetup = useVerify2FASetup();
 
 	const setupData = unwrapApiResponse<TwoFactorSetupResponse>(initSetup.data);
-	const recoveryPayload =
-		unwrapApiResponse<RecoveryCodesResponse>(verifySetup.data);
+	const recoveryPayload = unwrapApiResponse<RecoveryCodesResponse>(
+		verifySetup.data,
+	);
 	const recoveryCodes = recoveryPayload?.recovery_codes;
 
 	return (

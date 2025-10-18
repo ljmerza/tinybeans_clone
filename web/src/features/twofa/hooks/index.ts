@@ -11,7 +11,7 @@ import type { ApiResponseWithMessages } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { twoFaKeys } from "../api/queryKeys";
-import { twoFactorApi } from "../api/twoFactorApi";
+import { twoFactorServices } from "../api/services";
 import type {
 	AddTrustedDeviceResponse,
 	RecoveryCodesResponse,
@@ -50,7 +50,7 @@ export function useInitialize2FASetup() {
 		{ method: TwoFactorMethod; phone_number?: string }
 	>({
 		mutationFn: ({ method, phone_number }) =>
-			twoFactorApi.initializeSetup(method, phone_number),
+			twoFactorServices.initializeSetup(method, phone_number),
 	});
 }
 
@@ -61,7 +61,7 @@ export function useVerify2FASetup() {
 	const queryClient = useQueryClient();
 
 	return useMutation<RecoveryCodesResponse, Error, string>({
-		mutationFn: (code) => twoFactorApi.verifySetup(code),
+		mutationFn: (code) => twoFactorServices.verifySetup(code),
 		onSuccess: () => {
 			// Invalidate status to refresh
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
@@ -75,7 +75,7 @@ export function useVerify2FASetup() {
 export function use2FAStatus() {
 	return useQuery<TwoFactorStatusResponse>({
 		queryKey: twoFaKeys.status(),
-		queryFn: () => twoFactorApi.getStatus(),
+		queryFn: () => twoFactorServices.getStatus(),
 	});
 }
 
@@ -93,7 +93,7 @@ export function useVerify2FALogin() {
 		{ partial_token: string; code: string; remember_me?: boolean }
 	>({
 		mutationFn: ({ partial_token, code, remember_me }) =>
-			twoFactorApi.verifyLogin(partial_token, code, remember_me),
+			twoFactorServices.verifyLogin(partial_token, code, remember_me),
 		onSuccess: async (response) => {
 			const payload = (response.data ??
 				response) as TwoFactorVerifyLoginResponse;
@@ -126,7 +126,7 @@ export function useRequestDisableCode() {
 		{ method: string; message: string; expires_in?: number },
 		Error
 	>({
-		mutationFn: () => twoFactorApi.requestDisableCode(),
+		mutationFn: () => twoFactorServices.requestDisableCode(),
 	});
 }
 
@@ -139,7 +139,7 @@ export function useDisable2FA() {
 	const { t } = useTranslation();
 
 	return useMutation<{ enabled: boolean; message: string }, Error, string>({
-		mutationFn: (code) => twoFactorApi.disable(code),
+		mutationFn: (code) => twoFactorServices.disable(code),
 		onSuccess: (response) => {
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
 			if (response?.message) {
@@ -160,7 +160,7 @@ export function useGenerateRecoveryCodes() {
 	const { t } = useTranslation();
 
 	return useMutation<RecoveryCodesResponse, Error>({
-		mutationFn: () => twoFactorApi.generateRecoveryCodes(),
+		mutationFn: () => twoFactorServices.generateRecoveryCodes(),
 		onSuccess: (data) => {
 			if (data?.message) {
 				showToast({ message: data.message, level: "success" });
@@ -178,7 +178,7 @@ export function useGenerateRecoveryCodes() {
 export function useTrustedDevices() {
 	return useQuery<TrustedDevicesResponse>({
 		queryKey: twoFaKeys.trustedDevices(),
-		queryFn: () => twoFactorApi.getTrustedDevices(),
+		queryFn: () => twoFactorServices.getTrustedDevices(),
 	});
 }
 
@@ -195,7 +195,7 @@ export function useAddTrustedDevice() {
 		Error,
 		void
 	>({
-		mutationFn: () => twoFactorApi.addTrustedDevice(),
+		mutationFn: () => twoFactorServices.addTrustedDevice(),
 		onSuccess: (response) => {
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.trustedDevices() });
 
@@ -232,7 +232,7 @@ export function useRemoveTrustedDevice() {
 	const { t } = useTranslation();
 
 	return useMutation<{ message?: string }, Error, string>({
-		mutationFn: (device_id) => twoFactorApi.removeTrustedDevice(device_id),
+		mutationFn: (device_id) => twoFactorServices.removeTrustedDevice(device_id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.trustedDevices() });
 			showToast({
@@ -263,7 +263,7 @@ export function useSetPreferredMethod() {
 		Error,
 		TwoFactorMethod
 	>({
-		mutationFn: (method) => twoFactorApi.setPreferredMethod(method),
+		mutationFn: (method) => twoFactorServices.setPreferredMethod(method),
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
 			if (data?.message) {
@@ -294,7 +294,7 @@ export function useRemoveTwoFactorMethod() {
 	const { t } = useTranslation();
 
 	return useMutation<TwoFactorMethodRemovalResponse, Error, TwoFactorMethod>({
-		mutationFn: (method) => twoFactorApi.removeMethod(method),
+		mutationFn: (method) => twoFactorServices.removeMethod(method),
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: twoFaKeys.status() });
 			if (data?.message) {

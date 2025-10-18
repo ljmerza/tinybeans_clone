@@ -3,8 +3,10 @@
  * Handles async startup logic (CSRF + session hydration) with Suspense
  */
 
-import { refreshAccessToken } from "@/features/auth";
+import { authKeys, authServices, refreshAccessToken } from "@/features/auth";
+import type { MeResponse } from "@/features/auth";
 import { ensureCsrfToken } from "@/lib/csrf";
+import type { HttpError } from "@/lib/httpClient";
 import type { QueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AppProviders } from "./AppProviders";
@@ -33,7 +35,31 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 				await ensureCsrfToken();
 
 				// Step 2: Try to restore session from refresh token
-				await refreshAccessToken();
+				const restored = await refreshAccessToken();
+
+				if (restored) {
+					try {
+						await queryClient.prefetchQuery({
+							queryKey: authKeys.session(),
+							queryFn: async () => {
+								const response = await authServices.getSession({
+									suppressErrorToast: true,
+								});
+								const data = (response.data ?? response) as MeResponse;
+								return data.user;
+							},
+							staleTime: 1000 * 60,
+						});
+					} catch (sessionErr) {
+						const httpError = sessionErr as HttpError | undefined;
+						if (httpError?.status !== 401) {
+							console.warn(
+								"[AppBootstrap] Failed to prefetch auth session:",
+								sessionErr,
+							);
+						}
+					}
+				}
 
 				if (mounted) {
 					setStatus("ready");
@@ -51,12 +77,12 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 			}
 		}
 
-		bootstrap();
+		void bootstrap();
 
 		return () => {
 			mounted = false;
 		};
-	}, []);
+	}, [queryClient]);
 
 	if (status === "loading") {
 		return <LoadingPage message="Initializing..." />;

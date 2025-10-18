@@ -1,4 +1,5 @@
-import { QueryClient } from "@tanstack/react-query";
+import { createQueryClient } from "@/lib/query/queryClient";
+import type { QueryClient } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { AppBootstrap } from "./components/AppBootstrap";
@@ -9,14 +10,7 @@ import "./i18n/config"; // Initialize i18n
 import reportWebVitals from "./reportWebVitals.ts";
 
 // Create QueryClient instance
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 1000 * 60 * 5, // 5 minutes
-			retry: false,
-		},
-	},
-});
+const queryClient = createQueryClient();
 
 // Expose queryClient for TanStack Devtools
 if (typeof window !== "undefined") {

@@ -41,6 +41,12 @@ npm run format
 npm run check
 ```
 
+`npm run check` runs two steps:
+- `node scripts/check-no-raw-fetch.mjs` blocks direct `fetch(` usage outside the small set of approved modules (`src/lib/api/client.ts`, `src/lib/httpClient.ts`, `src/lib/csrf.ts`, `src/features/auth/utils/refreshToken.ts`, and `src/features/twofa/api/services.ts`). Add new network helpers to a service file instead of calling `fetch` in components.
+- `biome check` handles linting/formatting validation.
+
+If the fetch guard fails it will list the offending files; move those calls into a service module or extend the allowlist only after team review.
+
 ## Forms & Validation
 
 - Forms are built with [`@tanstack/react-form`](https://tanstack.com/form/latest) and Zod schemas that live under `src/lib/validations`. See `src/features/auth/components/LoginCard.tsx` for a typical setup using `useForm` and schema-safe `zodValidator` blur checks.

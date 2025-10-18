@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { showToast } from "@/lib/toast";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { twoFactorApi } from "../api/twoFactorApi";
+import { twoFactorServices } from "../api/services";
 
 interface RecoveryCodeListProps {
 	codes: string[];
@@ -125,7 +125,22 @@ export function RecoveryCodeList({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => twoFactorApi.downloadRecoveryCodes(codes, "txt")}
+							onClick={async () => {
+								try {
+									await twoFactorServices.downloadRecoveryCodes(codes, "txt");
+								} catch (error) {
+									console.error(
+										"Failed to download recovery codes (txt)",
+										error,
+									);
+									showToast({
+										message: t("twofa.setup.recovery.download_error", {
+											defaultValue: "Unable to download recovery codes",
+										}),
+										level: "error",
+									});
+								}
+							}}
 							className="flex-1"
 						>
 							{t("twofa.setup.recovery.download_txt")}
@@ -133,7 +148,22 @@ export function RecoveryCodeList({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => twoFactorApi.downloadRecoveryCodes(codes, "pdf")}
+							onClick={async () => {
+								try {
+									await twoFactorServices.downloadRecoveryCodes(codes, "pdf");
+								} catch (error) {
+									console.error(
+										"Failed to download recovery codes (pdf)",
+										error,
+									);
+									showToast({
+										message: t("twofa.setup.recovery.download_error", {
+											defaultValue: "Unable to download recovery codes",
+										}),
+										level: "error",
+									});
+								}
+							}}
 							className="flex-1"
 						>
 							{t("twofa.setup.recovery.download_pdf")}

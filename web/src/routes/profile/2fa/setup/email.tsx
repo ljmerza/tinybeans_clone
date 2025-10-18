@@ -1,7 +1,7 @@
 import { Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import { EmailSetup } from "@/features/twofa";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function EmailSetupRoute() {
 	const navigate = useNavigate();
@@ -15,10 +15,13 @@ function EmailSetupRoute() {
 				/>
 			</div>
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/email")({
-	beforeLoad: requireAuth,
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
 	component: EmailSetupRoute,
 });

@@ -3,16 +3,15 @@
  * Centralized factory for TanStack Query auth-related keys.
  */
 
-const authRoot = ["auth"] as const;
-const userRoot = ["user"] as const;
+import { userKeys as profileUserKeys } from "@/features/profile/api/queryKeys";
+import { createQueryKeyFactory } from "@/lib/query/queryKeys";
+
+const authKeysFactory = createQueryKeyFactory(["auth"] as const);
 
 export const authKeys = {
-	all: () => authRoot,
-	session: () => [...authRoot, "session"] as const,
-	status: () => [...authRoot, "status"] as const,
+	all: () => authKeysFactory.root(),
+	session: () => authKeysFactory.tag("session"),
+	status: () => authKeysFactory.tag("status"),
 };
 
-export const userKeys = {
-	all: () => userRoot,
-	profile: () => [...userRoot, "profile"] as const,
-};
+export const userKeys = profileUserKeys;

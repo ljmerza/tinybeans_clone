@@ -120,6 +120,13 @@ class CircleInvitation(models.Model):
         on_delete=models.CASCADE,
         related_name='circle_invitations_sent',
     )
+    invited_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='circle_invitations_received',
+    )
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CIRCLE_MEMBER)
     status = models.CharField(
         max_length=20,
@@ -133,7 +140,9 @@ class CircleInvitation(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['circle', 'email']),
+            models.Index(fields=['circle', 'invited_user']),
         ]
 
     def __str__(self):
-        return f"Invite {self.email} to {self.circle} ({self.status})"
+        identifier = self.invited_user.username if self.invited_user_id else self.email
+        return f"Invite {identifier} to {self.circle} ({self.status})"

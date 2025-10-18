@@ -1,25 +1,23 @@
-import { authApi, userKeys } from "@/features/auth";
-import type { AuthUser } from "@/features/auth";
-import type { ApiResponseWithMessages } from "@/types";
+import type { AuthUser } from "@/features/auth/types";
+import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-
-interface UserProfileResponse {
-	user: AuthUser;
-}
+import { profileKeys } from "../api/queryKeys";
+import { type UserProfileResponse, profileServices } from "../api/services";
 
 export function fetchUserProfile() {
-	return authApi.get<ApiResponseWithMessages<UserProfileResponse>>(
-		"/users/me/",
-	);
+	return profileServices.getProfile();
 }
 
-export function useUserProfileQuery() {
+export function useUserProfileQuery(
+	options?: Omit<UseQueryOptions<AuthUser>, "queryKey" | "queryFn">,
+): UseQueryResult<AuthUser> {
 	return useQuery({
-		queryKey: userKeys.profile(),
+		queryKey: profileKeys.profile(),
 		queryFn: async () => {
 			const response = await fetchUserProfile();
-			const data = response.data ?? response;
+			const data = (response.data ?? response) as UserProfileResponse;
 			return data.user;
 		},
+		...options,
 	});
 }

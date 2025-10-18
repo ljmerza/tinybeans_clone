@@ -100,7 +100,9 @@ export function MagicLinkRequestCard() {
 									type="email"
 									placeholder="your@email.com"
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="email"
 									required
@@ -126,7 +128,9 @@ export function MagicLinkRequestCard() {
 									content: errorMessage,
 								}
 							: null,
-					].filter((message): message is NonNullable<typeof message> => !!message)}
+					].filter(
+						(message): message is NonNullable<typeof message> => !!message,
+					)}
 				>
 					<Button
 						type="submit"

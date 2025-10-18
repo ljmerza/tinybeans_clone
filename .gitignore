@@ -1,6 +1,4 @@
 # BMAD (local only)
-.bmad-core/
-.bmad-*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

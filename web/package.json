@@ -10,7 +10,7 @@
     "test": "vitest run",
     "format": "npx biome format --write",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "node scripts/check-no-raw-fetch.mjs && biome check"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

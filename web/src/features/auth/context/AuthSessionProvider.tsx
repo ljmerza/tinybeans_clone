@@ -6,7 +6,9 @@
 import { useStore } from "@tanstack/react-store";
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
+import { useAuthSessionQuery } from "../hooks/useAuthSessionQuery";
 import { authStore } from "../store/authStore";
+import type { AuthUser } from "../types";
 
 export type AuthStatus = "unknown" | "guest" | "authenticated";
 
@@ -16,6 +18,10 @@ export interface AuthSession {
 	isAuthenticated: boolean;
 	isGuest: boolean;
 	isUnknown: boolean;
+	user: AuthUser | null;
+	isFetchingUser: boolean;
+	userError: unknown;
+	refetchUser: () => Promise<unknown>;
 }
 
 interface AuthSessionContextValue {
@@ -37,6 +43,9 @@ export function AuthSessionProvider({
 	isInitializing = false,
 }: AuthSessionProviderProps) {
 	const { accessToken } = useStore(authStore);
+	const sessionQuery = useAuthSessionQuery({
+		enabled: !isInitializing && Boolean(accessToken),
+	});
 
 	const session = useMemo<AuthSession>(() => {
 		const status: AuthStatus = isInitializing
@@ -45,14 +54,28 @@ export function AuthSessionProvider({
 				? "authenticated"
 				: "guest";
 
+		const user = sessionQuery.data ?? null;
+		const userError = sessionQuery.error ?? null;
+
 		return {
 			status,
 			accessToken,
 			isAuthenticated: status === "authenticated",
 			isGuest: status === "guest",
 			isUnknown: status === "unknown",
+			user,
+			isFetchingUser: sessionQuery.isFetching,
+			userError,
+			refetchUser: sessionQuery.refetch,
 		};
-	}, [accessToken, isInitializing]);
+	}, [
+		accessToken,
+		isInitializing,
+		sessionQuery.data,
+		sessionQuery.isFetching,
+		sessionQuery.error,
+		sessionQuery.refetch,
+	]);
 
 	return (
 		<AuthSessionContext.Provider value={{ session }}>

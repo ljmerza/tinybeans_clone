@@ -3,17 +3,17 @@ import { Layout } from "@/components/Layout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useApiMessages } from "@/i18n";
 import { useResendVerificationMutation } from "@/features/auth";
+import type { CircleOnboardingPayload } from "@/features/circles";
 import {
 	useCircleOnboardingQuery,
 	useCreateCircleMutation,
 	useSkipCircleOnboarding,
 } from "@/features/circles/hooks/useCircleOnboarding";
-import type { CircleOnboardingPayload } from "@/features/circles";
-import { circleCreateSchema } from "@/lib/validations/schemas";
+import { useApiMessages } from "@/i18n";
 import { zodValidator } from "@/lib/form";
 import { showToast } from "@/lib/toast";
+import { circleCreateSchema } from "@/lib/validations/schemas";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -26,7 +26,11 @@ interface CircleOnboardingContentProps {
 	isRefreshing: boolean;
 }
 
-function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnboardingContentProps) {
+function CircleOnboardingContent({
+	status,
+	onRefresh,
+	isRefreshing,
+}: CircleOnboardingContentProps) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { getGeneral } = useApiMessages();
@@ -37,7 +41,7 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 	const resendMutation = useResendVerificationMutation();
 
 	const canSubmit = status.email_verified;
-	console.log({ status })
+	console.log({ status });
 
 	const form = useForm({
 		defaultValues: { name: "" },
@@ -76,7 +80,9 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 	const resendDisabled = !status.email || resendMutation.isPending;
 
 	const calloutDescription = useMemo(() => {
-		return t("pages.circleOnboarding.verifyDescription", { email: status.email });
+		return t("pages.circleOnboarding.verifyDescription", {
+			email: status.email,
+		});
 	}, [status.email, t]);
 
 	const refreshAndNotify = useCallback(async () => {
@@ -134,7 +140,11 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 								? t("pages.circleOnboarding.resending")
 								: t("pages.circleOnboarding.resend")}
 						</Button>
-						<Button variant="outline" onClick={handleRefreshClick} disabled={isRefreshing}>
+						<Button
+							variant="outline"
+							onClick={handleRefreshClick}
+							disabled={isRefreshing}
+						>
 							{isRefreshing
 								? t("pages.circleOnboarding.refreshing")
 								: t("pages.circleOnboarding.refresh")}
@@ -164,11 +174,15 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 								<Input
 									id={id}
 									value={fieldApi.state.value}
-									onChange={(event) => fieldApi.handleChange(event.target.value)}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
 									onBlur={fieldApi.handleBlur}
 									autoComplete="organization"
 									required
-									placeholder={t("pages.circleOnboarding.circleNamePlaceholder")}
+									placeholder={t(
+										"pages.circleOnboarding.circleNamePlaceholder",
+									)}
 									disabled={!canSubmit || createCircleMutation.isPending}
 								/>
 							)}
@@ -180,16 +194,20 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 					messages={
 						generalError
 							? [
-								{
-									id: "circle-onboarding-error",
-									variant: "error" as const,
-									content: generalError,
-								},
-							]
+									{
+										id: "circle-onboarding-error",
+										variant: "error" as const,
+										content: generalError,
+									},
+								]
 							: undefined
 					}
 				>
-					<Button type="submit" className="w-full" disabled={!canSubmit || createCircleMutation.isPending}>
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={!canSubmit || createCircleMutation.isPending}
+					>
 						{createCircleMutation.isPending ? (
 							<span className="flex items-center justify-center gap-2">
 								<LoadingSpinner size="sm" />
@@ -219,7 +237,8 @@ function CircleOnboardingContent({ status, onRefresh, isRefreshing }: CircleOnbo
 export default function CircleOnboardingRoute() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const { data, isLoading, isError, refetch, isFetching } = useCircleOnboardingQuery();
+	const { data, isLoading, isError, refetch, isFetching } =
+		useCircleOnboardingQuery();
 
 	useEffect(() => {
 		if (data && !data.needs_circle_onboarding) {

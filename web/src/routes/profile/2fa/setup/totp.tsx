@@ -1,7 +1,7 @@
 import { Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import { TotpSetup } from "@/features/twofa";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 function TotpSetupRoute() {
 	const navigate = useNavigate();
@@ -15,10 +15,13 @@ function TotpSetupRoute() {
 				/>
 			</div>
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute("/profile/2fa/setup/totp")({
-	beforeLoad: requireAuth,
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
 	component: TotpSetupRoute,
 });

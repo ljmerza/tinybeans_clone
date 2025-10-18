@@ -2,8 +2,8 @@ import { useApiMessages } from "@/i18n";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { apiClient } from "../api/authClient";
 import { authKeys } from "../api/queryKeys";
+import { authServices } from "../api/services";
 import { setAccessToken } from "../store/authStore";
 import type {
 	LoginRequest,
@@ -25,10 +25,7 @@ export function useLogin() {
 	>({
 		mutationFn: async (body) => {
 			setAccessToken(null);
-			return apiClient.post<ApiResponseWithMessages<LoginResponse>>(
-				"/auth/login/",
-				body,
-			);
+			return authServices.login(body);
 		},
 		onSuccess: (response) => {
 			const payload = (response.data ?? response) as LoginResponse;
@@ -79,12 +76,12 @@ export function useSignup() {
 	const navigate = useNavigate();
 	const { showAsToast } = useApiMessages();
 
-	return useMutation<ApiResponseWithMessages<SignupResponse>, ApiError, SignupRequest>({
-		mutationFn: (body) =>
-			apiClient.post<ApiResponseWithMessages<SignupResponse>>(
-				"/auth/signup/",
-				body,
-			),
+	return useMutation<
+		ApiResponseWithMessages<SignupResponse>,
+		ApiError,
+		SignupRequest
+	>({
+		mutationFn: (body) => authServices.signup(body),
 		onSuccess: (response) => {
 			const payload = (response.data ??
 				(response as unknown as SignupResponse)) as SignupResponse | undefined;
@@ -119,7 +116,7 @@ export function useLogout() {
 
 	return useMutation({
 		mutationFn: async () => {
-			await apiClient.post("/auth/logout/", {});
+			await authServices.logout();
 			setAccessToken(null);
 			return true;
 		},
@@ -132,11 +129,7 @@ export function useLogout() {
 export function usePasswordResetRequest() {
 	return useMutation<ApiResponseWithMessages, ApiError, { identifier: string }>(
 		{
-			mutationFn: (body) =>
-				apiClient.post<ApiResponseWithMessages>(
-					"/auth/password/reset/request/",
-					body,
-				),
+			mutationFn: (body) => authServices.requestPasswordReset(body),
 			onError: (error) => {
 				console.error("Password reset error:", error);
 			},
@@ -154,11 +147,7 @@ export function usePasswordResetConfirm() {
 			password_confirm: string;
 		}
 	>({
-			mutationFn: (body) =>
-				apiClient.post<ApiResponseWithMessages>(
-					"/auth/password/reset/confirm/",
-					body,
-				),
+		mutationFn: (body) => authServices.confirmPasswordReset(body),
 		onError: (error) => {
 			console.error("Password reset confirm error:", error);
 		},
@@ -167,11 +156,7 @@ export function usePasswordResetConfirm() {
 
 export function useMagicLinkRequest() {
 	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>({
-		mutationFn: (body) =>
-			apiClient.post<ApiResponseWithMessages>(
-				"/auth/magic-login/request/",
-				body,
-			),
+		mutationFn: (body) => authServices.requestMagicLink(body),
 		onError: (error) => {
 			console.error("Magic link request error:", error);
 		},
@@ -183,11 +168,7 @@ export function useMagicLoginVerify() {
 	const navigate = useNavigate();
 
 	return useMutation<ApiResponseWithMessages, ApiError, { token: string }>({
-		mutationFn: (body) =>
-			apiClient.post<ApiResponseWithMessages>(
-				"/auth/magic-login/verify/",
-				body,
-			),
+		mutationFn: (body) => authServices.verifyMagicLogin(body),
 		onSuccess: (data) => {
 			if (data?.tokens?.access) {
 				setAccessToken(data.tokens.access);

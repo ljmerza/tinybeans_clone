@@ -1,5 +1,5 @@
 import { Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import {
 	ProfileGeneralSettingsCard,
 	ProfileSettingsTabs,
@@ -14,10 +14,13 @@ function ProfileGeneralSettingsPage() {
 				twoFactor={null}
 			/>
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute("/profile/general")({
-	beforeLoad: requireAuth,
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
 	component: ProfileGeneralSettingsPage,
 });

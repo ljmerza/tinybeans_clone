@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { apiClient } from "@/features/auth/api/authClient";
-import { useState } from "react";
+import { useUpdateUserProfileMutation } from "@/features/profile";
 /**
  * Language Switcher Component
  *
@@ -18,7 +17,9 @@ const languages: { code: Language; label: string; flag: string }[] = [
 
 export function LanguageSwitcher() {
 	const { i18n } = useTranslation();
-	const [saving, setSaving] = useState(false);
+	const updateProfile = useUpdateUserProfileMutation({
+		suppressSuccessToast: true,
+	});
 	const currentLanguage = i18n.language as Language;
 
 	const handleLanguageChange = async (lang: Language) => {
@@ -29,15 +30,7 @@ export function LanguageSwitcher() {
 			await i18n.changeLanguage(lang);
 
 			// Save preference to backend (if user is logged in)
-			setSaving(true);
-			try {
-				await apiClient.patch("/users/me/", { language: lang });
-			} catch (error) {
-				console.error("Failed to save language preference:", error);
-				// UI already updated, so not critical if backend save fails
-			} finally {
-				setSaving(false);
-			}
+			await updateProfile.mutateAsync({ language: lang });
 		} catch (error) {
 			console.error("Failed to change language:", error);
 		}
@@ -51,7 +44,7 @@ export function LanguageSwitcher() {
 					variant={currentLanguage === lang.code ? "default" : "outline"}
 					size="sm"
 					onClick={() => handleLanguageChange(lang.code)}
-					disabled={saving}
+					disabled={updateProfile.isPending}
 					className="flex items-center gap-2"
 				>
 					<span>{lang.flag}</span>
@@ -67,7 +60,9 @@ export function LanguageSwitcher() {
  */
 export function LanguageSwitcherCompact() {
 	const { i18n } = useTranslation();
-	const [saving, setSaving] = useState(false);
+	const updateProfile = useUpdateUserProfileMutation({
+		suppressSuccessToast: true,
+	});
 	const currentLanguage = i18n.language as Language;
 
 	const handleLanguageChange = async (lang: Language) => {
@@ -76,14 +71,7 @@ export function LanguageSwitcherCompact() {
 		try {
 			await i18n.changeLanguage(lang);
 
-			setSaving(true);
-			try {
-				await apiClient.patch("/users/me/", { language: lang });
-			} catch (error) {
-				console.error("Failed to save language preference:", error);
-			} finally {
-				setSaving(false);
-			}
+			await updateProfile.mutateAsync({ language: lang });
 		} catch (error) {
 			console.error("Failed to change language:", error);
 		}
@@ -93,7 +81,7 @@ export function LanguageSwitcherCompact() {
 		<select
 			value={currentLanguage}
 			onChange={(e) => handleLanguageChange(e.target.value as Language)}
-			disabled={saving}
+			disabled={updateProfile.isPending}
 			className="px-2 py-1 text-sm border rounded"
 		>
 			{languages.map((lang) => (

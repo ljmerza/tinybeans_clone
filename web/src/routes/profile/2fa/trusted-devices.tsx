@@ -3,18 +3,19 @@
  */
 
 import { Layout } from "@/components";
-import { requireAuth } from "@/features/auth";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import {
 	twoFaKeys,
-	twoFactorApi,
+	twoFactorServices,
 	useAddTrustedDevice,
 	useRemoveTrustedDevice,
 	useTrustedDevices,
 } from "@/features/twofa";
+import type { TrustedDevicesResponse } from "@/features/twofa";
 import type { QueryClient } from "@tanstack/react-query";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 function TrustedDevicesPage() {
@@ -29,14 +30,14 @@ function TrustedDevicesPage() {
 
 	const handleRemove = (deviceId: string, deviceName: string) => {
 		setDeviceToRemove({ id: deviceId, name: deviceName });
-	}
+	};
 
 	const confirmRemove = () => {
 		if (deviceToRemove) {
 			removeDevice.mutate(deviceToRemove.id);
 			setDeviceToRemove(null);
 		}
-	}
+	};
 
 	if (isLoading) {
 		return (
@@ -44,7 +45,7 @@ function TrustedDevicesPage() {
 				message="Loading trusted devices..."
 				description="Fetching the devices that have been marked as trusted."
 			/>
-		)
+		);
 	}
 
 	const devices = data?.devices || [];
@@ -173,17 +174,20 @@ function TrustedDevicesPage() {
 				onConfirm={confirmRemove}
 			/>
 		</Layout>
-	)
+	);
 }
 
 export const Route = createFileRoute("/profile/2fa/trusted-devices")({
-	beforeLoad: requireAuth,
+	beforeLoad: async (args) => {
+		await requireAuth(args);
+		await requireCircleOnboardingComplete(args);
+	},
 	loader: ({ context }) => {
 		const { queryClient } = context as { queryClient: QueryClient };
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.trustedDevices(),
-			queryFn: () => twoFactorApi.getTrustedDevices(),
-		})
+			queryFn: () => twoFactorServices.getTrustedDevices(),
+		});
 	},
 	component: TrustedDevicesPage,
 });

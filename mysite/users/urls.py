@@ -7,6 +7,7 @@ from .views import (
     CircleInvitationCreateView,
     CircleInvitationListView,
     CircleInvitationRespondView,
+    CircleInvitationFinalizeView,
     CircleActivityView,
     CircleDetailView,
     CircleMemberListView,
@@ -36,6 +37,7 @@ urlpatterns = [
     path('circles/<int:circle_id>/pets/', CirclePetListView.as_view(), name='circle-pet-list'),
     
     path('invitations/accept/', CircleInvitationAcceptView.as_view(), name='circle-invitation-accept'),
+    path('invitations/finalize/', CircleInvitationFinalizeView.as_view(), name='circle-invitation-finalize'),
     path('invitations/pending/', CircleInvitationListView.as_view(), name='circle-invitation-list'),
     path('invitations/<uuid:invitation_id>/respond/', CircleInvitationRespondView.as_view(), name='circle-invitation-respond'),
     
@@ -44,4 +46,3 @@ urlpatterns = [
     
     path('pets/<uuid:pet_id>/', PetProfileDetailView.as_view(), name='pet-detail'),
 ]
-

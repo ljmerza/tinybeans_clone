@@ -9,7 +9,9 @@ export {
 	apiClient as authApi,
 	refreshAccessToken,
 } from "./api/authClient";
+export { authServices } from "./api/services";
 export { authKeys, userKeys } from "./api/queryKeys";
 export type { RequestOptions as AuthRequestOptions } from "./api/authClient";
 
 export * from "./hooks/emailVerificationHooks";
+export { useAuthSessionQuery } from "./hooks/useAuthSessionQuery";
