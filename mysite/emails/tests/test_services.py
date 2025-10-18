@@ -276,7 +276,7 @@ class EmailTemplateEdgeCases(SimpleTestCase):
         with TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             (tmp_path / filename).write_text(template_source, encoding='utf-8')
-            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
+            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('mysite.emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
                 clear_registered_templates()
                 load_email_templates()
 
@@ -300,7 +300,7 @@ class EmailTemplateEdgeCases(SimpleTestCase):
         with TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             (tmp_path / filename).write_text(template_source, encoding='utf-8')
-            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
+            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('mysite.emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
                 clear_registered_templates()
                 load_email_templates()
 
@@ -323,7 +323,7 @@ class EmailTemplateEdgeCases(SimpleTestCase):
         with TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             (tmp_path / filename).write_text(template_source, encoding='utf-8')
-            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
+            with patch.dict(EMAIL_TEMPLATE_FILES, {template_id: filename}, clear=False),                  patch('mysite.emails.template_loader._EMAIL_TEMPLATE_DIR', tmp_path):
                 clear_registered_templates()
                 load_email_templates()
 
