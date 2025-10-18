@@ -1,0 +1,28 @@
+{% block subject %}Reminder: Accept your invitation to {{ circle_name|default:"the circle" }}{% endblock %}
+
+{% block text_body %}
+Hi there,
+
+This is a friendly reminder that {{ invited_by|default:"a circle admin" }} invited you to join the circle '{{ circle_name|default:"a circle" }}'.
+Use the link below to accept the invitation and finish setting up your account:
+{% if invitation_link %}
+Accept invitation: {{ invitation_link }}
+{% endif %}
+
+If you were not expecting this invitation, you can safely ignore this email.
+{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title="Reminder: finish joining "|add:circle_name intro_text="Complete your setup and join the circle using the button below." email_tag="Invitation Reminder" %}
+
+<p>Hi there,</p>
+<p>This is a friendly reminder that {{ invited_by|default:"a circle admin" }} invited you to join the circle '{{ circle_name|default:"a circle" }}'.</p>
+{% if invitation_link %}
+<p style="text-align: center;">
+  <a href="{{ invitation_link }}" style="display: inline-block; padding: 12px 24px; background-color: #0069d9; color: #ffffff; text-decoration: none; border-radius: 4px;">Finish joining the circle</a>
+</p>
+{% endif %}
+<p>If you were not expecting this invitation, you can safely ignore this email.</p>
+
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

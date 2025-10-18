@@ -1,0 +1,23 @@
+{% block subject %}{{ invitee_name|default:"A member" }} just joined {{ circle_name|default:"your circle" }}{% endblock %}
+
+{% block text_body %}
+Hi {{ invited_by|default:"Circle Admin" }},
+
+Good news! {{ invitee_name|default:"A member" }} accepted the invitation and joined the circle '{{ circle_name|default:"your circle" }}'.
+
+You can view the updated members list from the circle dashboard.
+
+Thanks for keeping the circle growing!
+{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title=invitee_name|default:"A member"|add:" joined "|add:circle_name intro_text="A new member has finished onboarding and joined your circle." email_tag="Invitation Accepted" %}
+
+<p>Hi {{ invited_by|default:"Circle Admin" }},</p>
+<p><strong>{{ invitee_name|default:"A member" }}</strong> just accepted the invitation and joined the circle <strong>{{ circle_name|default:"your circle" }}</strong>.</p>
+<p>You can review circle members from the admin dashboard at any time.</p>
+
+<p style="margin-top: 24px;">Thanks for growing the circle!</p>
+
+{% include 'emails/partials/footer.html' %}
+{% endblock %}
