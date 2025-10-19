@@ -1,6 +1,7 @@
 import type { CircleInvitationDetails } from "../types";
 
 const STORAGE_KEY = "circle.invitation.onboarding";
+const REQUEST_KEY_PREFIX = "circle.invitation.request.";
 const STORAGE_EVENT = "circle-invitation-storage";
 
 type InvitationStorageEvent = CustomEvent<StoredCircleInvitation | null>;
@@ -23,6 +24,38 @@ export interface StoredCircleInvitation {
 	invitation: CircleInvitationDetails;
 	sourceToken?: string | null;
 	redirectPath?: string | null;
+}
+
+function getRequestKey(token: string): string {
+	return `${REQUEST_KEY_PREFIX}${token}`;
+}
+
+export function markInvitationRequest(token: string): void {
+	if (typeof window === "undefined") return;
+	try {
+		window.sessionStorage.setItem(getRequestKey(token), Date.now().toString());
+	} catch (error) {
+		console.warn("[circleInvitationStorage] Failed to mark invitation request", error);
+	}
+}
+
+export function clearInvitationRequest(token: string | null | undefined): void {
+	if (typeof window === "undefined" || !token) return;
+	try {
+		window.sessionStorage.removeItem(getRequestKey(token));
+	} catch (error) {
+		console.warn("[circleInvitationStorage] Failed to clear invitation request", error);
+	}
+}
+
+export function hasActiveInvitationRequest(token: string | null | undefined): boolean {
+	if (typeof window === "undefined" || !token) return false;
+	try {
+		return window.sessionStorage.getItem(getRequestKey(token)) != null;
+	} catch (error) {
+		console.warn("[circleInvitationStorage] Failed to read invitation request flag", error);
+		return false;
+	}
 }
 
 export function saveInvitation(payload: StoredCircleInvitation): void {

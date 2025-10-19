@@ -79,7 +79,7 @@ export function consumeInviteRedirect(): string | null {
 
 export function parseInvitationRedirect(
 	target?: string | null,
-): { token?: string } | null {
+): { token?: string; onboardingToken?: string } | null {
 	if (!target || typeof window === "undefined") {
 		return null;
 	}
@@ -89,6 +89,7 @@ export function parseInvitationRedirect(
 		if (url.pathname === "/invitations/accept") {
 			return {
 				token: url.searchParams.get("token") ?? undefined,
+				onboardingToken: url.searchParams.get("onboarding") ?? undefined,
 			};
 		}
 		return null;

@@ -1,4 +1,4 @@
-import {Card, CardContent, CardDescription, CardHeader, CardTitle, StatusMessage, ConfirmDialog} from '@/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, StatusMessage, ConfirmDialog } from '@/components';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -195,15 +195,19 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 									</div>
 
 									<div className="text-xs text-muted-foreground space-y-1">
-										{createdAt ? t('pages.circles.invites.list.created_at', { createdAt }) : null}
-										{respondedAt
-											? t('pages.circles.invites.list.responded_at', { respondedAt })
-											: null}
-										{invitation.reminder_sent_at
-											? t('pages.circles.invites.list.reminder_sent_at', {
-												reminderAt: describeTimestamp(invitation.reminder_sent_at, i18n.language),
-											})
-											: null}
+										{createdAt ? (
+											<div>{t('pages.circles.invites.list.created_at', { createdAt })}</div>
+										) : null}
+										{respondedAt ? (
+											<div>{t('pages.circles.invites.list.responded_at', { respondedAt })}</div>
+										) : null}
+										{invitation.reminder_sent_at ? (
+											<div>
+												{t('pages.circles.invites.list.reminder_sent_at', {
+													reminderAt: describeTimestamp(invitation.reminder_sent_at, i18n.language),
+												})}
+											</div>
+										) : null}
 									</div>
 								</li>
 							);

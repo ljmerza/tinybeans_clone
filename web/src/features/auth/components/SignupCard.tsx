@@ -16,9 +16,10 @@ import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 interface SignupCardProps {
 	redirect?: string;
+	prefillEmail?: string;
 }
 
-export function SignupCard({ redirect }: SignupCardProps) {
+export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 	const { t } = useTranslation();
 	const signup = useSignup({ redirect });
 	const { getGeneral, getFieldErrors } = useApiMessages();
@@ -28,7 +29,7 @@ export function SignupCard({ redirect }: SignupCardProps) {
 	const form = useForm({
 		defaultValues: {
 			username: "",
-			email: "",
+			email: prefillEmail ?? "",
 			password: "",
 			password_confirm: "",
 		},
@@ -135,35 +136,58 @@ export function SignupCard({ redirect }: SignupCardProps) {
 					)}
 				</form.Field>
 
-				<form.Field
-					name="email"
-					validators={{
-						onBlur: zodValidator(signupSchemaBase.shape.email),
-					}}
-				>
-					{(field) => (
-						<FormField
-							field={field}
-							label={t("auth.signup.email")}
-							error={fieldErrors.email}
-						>
-							{({ id, field: fieldApi }) => (
-								<Input
-									id={id}
-									type="email"
-									value={fieldApi.state.value}
-									onChange={(event) =>
-										fieldApi.handleChange(event.target.value)
-									}
-									onBlur={fieldApi.handleBlur}
-									autoComplete="email"
-									disabled={signup.isPending}
-									required
-								/>
-							)}
-						</FormField>
-					)}
-				</form.Field>
+	{prefillEmail ? (
+		<form.Field name="email">
+			{(field) => (
+				<>
+					<input
+						type="hidden"
+						value={field.state.value}
+						readOnly
+						data-testid="prefilled-email"
+					/>
+					<div className="space-y-1">
+						<div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+							{t("auth.signup.email")}
+						</div>
+						<div className="text-sm font-medium text-foreground break-all">
+							{field.state.value}
+						</div>
+					</div>
+				</>
+			)}
+		</form.Field>
+	) : (
+			<form.Field
+				name="email"
+				validators={{
+					onBlur: zodValidator(signupSchemaBase.shape.email),
+				}}
+			>
+				{(field) => (
+					<FormField
+						field={field}
+						label={t("auth.signup.email")}
+						error={fieldErrors.email}
+					>
+						{({ id, field: fieldApi }) => (
+							<Input
+								id={id}
+								type="email"
+								value={fieldApi.state.value}
+								onChange={(event) =>
+									fieldApi.handleChange(event.target.value)
+								}
+								onBlur={fieldApi.handleBlur}
+								autoComplete="email"
+								disabled={signup.isPending}
+								required
+							/>
+						)}
+					</FormField>
+				)}
+			</form.Field>
+		)}
 
 				<form.Field
 					name="password"

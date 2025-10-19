@@ -6,7 +6,10 @@ import { useAuthSession } from "@/features/auth";
 import type { CircleInvitationDetails } from "@/features/circles";
 import {
 	clearInvitation,
+	clearInvitationRequest,
+	hasActiveInvitationRequest,
 	loadInvitation,
+	markInvitationRequest,
 	subscribeInvitationStorage,
 	type StoredCircleInvitation,
 } from "@/features/circles/utils/invitationStorage";
@@ -18,7 +21,7 @@ import {
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import type { ApiError } from "@/types";
 import { useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Route } from "@/routes/invitations.accept";
@@ -42,6 +45,7 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 	const session = useAuthSession();
 	const location = useLocation();
 	const navigate = Route.useNavigate();
+	const { token: inviteTokenParam } = Route.useSearch();
 
 	const startMutation = useStartCircleInvitationOnboarding();
 	const finalizeMutation = useFinalizeCircleInvitation();
@@ -59,12 +63,25 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 	const invitationIdRef = useRef<string | null>(
 		storedInvitation?.invitation?.id ?? null,
 	);
+	const previousTokenRef = useRef<string | undefined>(undefined);
+	const hasRequestedRef = useRef(false);
 	const [viewState, setViewState] = useState<InvitationViewState>(() => {
 		if (!token && !storedInvitation) return "invalid";
 		return storedInvitation ? "pending" : "loading";
 	});
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const autoFinalizeRef = useRef(false);
+	const redirectAfterAcceptRef = useRef(false);
+
+	useEffect(() => {
+		if (previousTokenRef.current && previousTokenRef.current !== token) {
+			clearInvitationRequest(previousTokenRef.current);
+		}
+		previousTokenRef.current = token;
+		hasRequestedRef.current = false;
+		autoFinalizeRef.current = false;
+		redirectAfterAcceptRef.current = false;
+	}, [token]);
 
 	useEffect(() => {
 		const unsubscribe = subscribeInvitationStorage((payload) => {
@@ -74,22 +91,24 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 	}, []);
 
 	useEffect(() => {
-	if (
-		storedInvitation &&
-		token &&
-		storedInvitation.sourceToken &&
-		storedInvitation.sourceToken !== token
-	) {
-		clearInvitation();
-		setStoredInvitation(null);
-		onboardingTokenRef.current = null;
-		invitationIdRef.current = null;
-		setInvitationDetails(null);
-		setViewState("loading");
-		return;
-	}
+		if (
+			storedInvitation &&
+			token &&
+			storedInvitation.sourceToken &&
+			storedInvitation.sourceToken !== token
+		) {
+			clearInvitation();
+			clearInvitationRequest(storedInvitation.sourceToken);
+			hasRequestedRef.current = false;
+			setStoredInvitation(null);
+			onboardingTokenRef.current = null;
+			invitationIdRef.current = null;
+			setInvitationDetails(null);
+			setViewState("loading");
+			return;
+		}
 
-	if (storedInvitation) {
+		if (storedInvitation) {
 			setInvitationDetails(storedInvitation.invitation);
 			onboardingTokenRef.current = storedInvitation.onboardingToken;
 			invitationIdRef.current = storedInvitation.invitation.id;
@@ -99,20 +118,44 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 			return;
 		}
 
+		if (viewState === "accepted" || viewState === "declined" || viewState === "finalizing") {
+			return;
+		}
+
 		if (!token) {
 			setViewState("invalid");
 			return;
 		}
 
+		if (viewState === "expired" || viewState === "error") {
+			return;
+		}
+
+		if (hasRequestedRef.current || startMutation.isPending) {
+			return;
+		}
+
+		if (hasActiveInvitationRequest(token)) {
+			return;
+		}
+
+		markInvitationRequest(token);
+		hasRequestedRef.current = true;
 		setViewState("loading");
 		startMutation.mutate(token, {
+			onSuccess: () => {
+				clearInvitationRequest(token);
+			},
 			onError: (error) => {
+				clearInvitationRequest(token);
+				hasRequestedRef.current = false;
 				const apiError = error as ApiError;
 				const messageKey =
 					apiError.messages?.[0]?.i18n_key ?? apiError.message ?? "";
+				const normalizedKey = typeof messageKey === "string" ? messageKey : "";
 				if (
-					messageKey.includes("errors.token_invalid_expired") ||
-					messageKey.includes("errors.invitation_not_found")
+					normalizedKey.includes("errors.token_invalid_expired") ||
+					normalizedKey.includes("errors.invitation_not_found")
 				) {
 					setViewState("expired");
 				} else {
@@ -148,20 +191,52 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 		});
 	}, [finalizeMutation, session.status, storedInvitation, t, viewState]);
 
-	const currentPath = useMemo(
-		() => `${location.pathname}${location.search}`,
-		[location.pathname, location.search],
+	const currentPath = useMemo(() => {
+		if (!inviteTokenParam) {
+			return location.pathname;
+		}
+		const query = new URLSearchParams({ token: inviteTokenParam }).toString();
+		return `${location.pathname}?${query}`;
+	}, [inviteTokenParam, location.pathname]);
+
+	const buildRedirectTarget = useCallback(() => {
+		let target = currentPath;
+		const onboardingToken = onboardingTokenRef.current;
+		if (onboardingToken && typeof window !== "undefined") {
+			try {
+				const url = new URL(target, window.location.origin);
+				url.searchParams.set("onboarding", onboardingToken);
+				target = `${url.pathname}${url.search}`;
+			} catch (error) {
+				console.warn("[inviteAccept] Failed to append onboarding token to redirect", error);
+			}
+		}
+		return target;
+	}, [currentPath]);
+
+	const handleNavigateAuth = useCallback(
+		(path: "/login" | "/signup" | "/magic-link-request") => {
+			const target = buildRedirectTarget();
+			rememberInviteRedirect(target);
+			const search: Record<string, string> = { redirect: target };
+			if (path === "/signup" && invitationDetails?.email) {
+				search.email = invitationDetails.email;
+			}
+			navigate({
+				to: path,
+				search,
+			});
+		},
+		[buildRedirectTarget, invitationDetails?.email, navigate],
 	);
 
-	const handleNavigateAuth = (path: "/login" | "/signup" | "/magic-link-request") => {
-		rememberInviteRedirect(currentPath);
-		navigate({
-			to: path,
-			search: { redirect: currentPath },
-		});
-	};
-
 	const handleAccept = () => {
+		if (session.status !== "authenticated") {
+			const target = invitationDetails?.existing_user ? "/login" : "/signup";
+			handleNavigateAuth(target);
+			return;
+		}
+
 		const tokenToUse = onboardingTokenRef.current;
 		if (!tokenToUse) return;
 		setViewState("finalizing");
@@ -207,9 +282,16 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 		);
 	};
 
+	useEffect(() => {
+		if (viewState !== "accepted") return;
+		if (redirectAfterAcceptRef.current) return;
+
+		redirectAfterAcceptRef.current = true;
+		navigate({ to: "/" });
+	}, [navigate, viewState]);
+
 	const isLoading =
 		viewState === "loading" ||
-		startMutation.isPending ||
 		(viewState === "finalizing" && finalizeMutation.isPending);
 
 	if (viewState === "invalid") {
@@ -286,31 +368,6 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 									? t("pages.inviteAccept.declining")
 									: t("pages.inviteAccept.decline")}
 							</Button>
-						</div>
-						<div className="rounded-md border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-							<p className="font-medium">
-								{t("pages.inviteAccept.signInPrompt")}
-							</p>
-							<div className="mt-3 flex flex-wrap gap-2">
-								<Button
-									variant="secondary"
-									onClick={() => handleNavigateAuth("/login")}
-								>
-									{t("pages.inviteAccept.login")}
-								</Button>
-								<Button
-									variant="ghost"
-									onClick={() => handleNavigateAuth("/signup")}
-								>
-									{t("pages.inviteAccept.signup")}
-								</Button>
-								<Button
-									variant="ghost"
-									onClick={() => handleNavigateAuth("/magic-link-request")}
-								>
-									{t("pages.inviteAccept.magicLink")}
-								</Button>
-							</div>
 						</div>
 					</CardContent>
 				</Card>

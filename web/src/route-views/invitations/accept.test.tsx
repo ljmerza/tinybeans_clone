@@ -1,7 +1,7 @@
 import "@/i18n/config";
 
 import { renderWithQueryClient } from "@/test-utils";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { InvitationAcceptContent } from "./accept";
@@ -12,6 +12,9 @@ const mockUseFinalizeInvitation = vi.fn();
 const mockUseRespondInvitation = vi.fn();
 const mockLoadInvitation = vi.fn();
 const mockSubscribeInvitationStorage = vi.fn();
+const mockMarkInvitationRequest = vi.fn();
+const mockClearInvitationRequest = vi.fn();
+const mockHasActiveInvitationRequest = vi.fn();
 
 vi.mock("@/features/auth", () => ({
 	useAuthSession: () => mockUseAuthSession(),
@@ -31,6 +34,9 @@ vi.mock("@/features/circles/utils/invitationStorage", () => ({
 	subscribeInvitationStorage: (callback: unknown) =>
 		mockSubscribeInvitationStorage(callback) ?? (() => undefined),
 	clearInvitation: vi.fn(),
+	markInvitationRequest: (...args: unknown[]) => mockMarkInvitationRequest(...args),
+	clearInvitationRequest: (...args: unknown[]) => mockClearInvitationRequest(...args),
+	hasActiveInvitationRequest: (...args: unknown[]) => mockHasActiveInvitationRequest(...args),
 }));
 
 vi.mock("@/features/circles/utils/inviteAnalytics", () => ({
@@ -52,6 +58,7 @@ const navigateMock = vi.fn();
 vi.mock("@/routes/invitations.accept", () => ({
 	Route: {
 		useNavigate: () => navigateMock,
+		useSearch: () => ({ token: "abc" }),
 	},
 }));
 
@@ -83,6 +90,9 @@ describe("InvitationAcceptContent", () => {
 		});
 		mockLoadInvitation.mockReturnValue(null);
 		mockSubscribeInvitationStorage.mockReturnValue(() => undefined);
+		mockMarkInvitationRequest.mockImplementation(() => undefined);
+		mockClearInvitationRequest.mockImplementation(() => undefined);
+		mockHasActiveInvitationRequest.mockReturnValue(false);
 	});
 
 	it("shows invalid state when no token or stored invitation", () => {
@@ -92,7 +102,18 @@ describe("InvitationAcceptContent", () => {
 		).toBeInTheDocument();
 	});
 
-	it("renders pending state with sign-in prompt", () => {
+	it("renders invitation details while onboarding loads", () => {
+		mockUseAuthSession.mockReturnValue({
+			status: "unknown",
+			accessToken: null,
+			isAuthenticated: false,
+			isGuest: false,
+			isUnknown: true,
+			user: null,
+			isFetchingUser: false,
+			userError: null,
+			refetchUser: vi.fn(),
+		});
 		mockLoadInvitation.mockReturnValue({
 			onboardingToken: "on-token",
 			expiresInMinutes: 60,
@@ -114,9 +135,7 @@ describe("InvitationAcceptContent", () => {
 			<InvitationAcceptContent token="abc" />,
 		);
 
-		expect(
-			screen.getByText("Sign in or create an account to finish joining."),
-		).toBeInTheDocument();
+		expect(screen.getByText("Join Family")).toBeInTheDocument();
 	});
 
 	it("finalizes invitation when authenticated", async () => {
@@ -172,5 +191,80 @@ describe("InvitationAcceptContent", () => {
 		expect(
 			screen.getByText("You're now a member of Family."),
 		).toBeInTheDocument();
+
+		await waitFor(() => {
+			expect(navigateMock).toHaveBeenCalledWith({ to: "/" });
+		});
+	});
+
+	it("redirects existing users to login when unauthenticated", async () => {
+		mockLoadInvitation.mockReturnValue({
+			onboardingToken: "stored-token",
+			expiresInMinutes: 60,
+			invitation: {
+				id: "inv-1",
+				email: "user@example.com",
+				existing_user: true,
+				role: "member",
+				circle: { id: 1, name: "Family", slug: "family", member_count: 2 },
+				invited_user_id: 99,
+				invited_by: { username: "alex" },
+				reminder_scheduled_at: null,
+			},
+			sourceToken: "abc",
+			redirectPath: "/invitations/accept?token=abc",
+		});
+
+		renderWithQueryClient(
+			<InvitationAcceptContent token="abc" />,
+		);
+
+		expect(navigateMock).not.toHaveBeenCalled();
+
+		fireEvent.click(screen.getByRole("button", { name: /accept/i }));
+
+		await waitFor(() => {
+			expect(navigateMock).toHaveBeenCalledWith({
+				to: "/login",
+				search: { redirect: "/invitations/accept?token=abc&onboarding=stored-token" },
+			});
+		});
+	});
+
+	it("redirects new invitees to signup when unauthenticated", async () => {
+		mockLoadInvitation.mockReturnValue({
+			onboardingToken: "stored-token",
+			expiresInMinutes: 60,
+			invitation: {
+				id: "inv-2",
+				email: "new@example.com",
+				existing_user: false,
+				role: "member",
+				circle: { id: 2, name: "Another", slug: "another", member_count: 1 },
+				invited_user_id: null,
+				invited_by: { username: "alex" },
+				reminder_scheduled_at: null,
+			},
+			sourceToken: "abc",
+			redirectPath: "/invitations/accept?token=abc",
+		});
+
+		renderWithQueryClient(
+			<InvitationAcceptContent token="abc" />,
+		);
+
+		expect(navigateMock).not.toHaveBeenCalled();
+
+		fireEvent.click(screen.getByRole("button", { name: /accept/i }));
+
+		await waitFor(() => {
+			expect(navigateMock).toHaveBeenCalledWith({
+				to: "/signup",
+				search: {
+					redirect: "/invitations/accept?token=abc&onboarding=stored-token",
+					email: "new@example.com",
+				},
+			});
+		});
 	});
 });

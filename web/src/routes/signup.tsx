@@ -7,11 +7,12 @@ export const Route = createFileRoute("/signup")({
 	beforeLoad: requireGuest,
 	validateSearch: (search: Record<string, unknown>) => ({
 		redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+		email: typeof search.email === "string" ? search.email : undefined,
 	}),
 	component: SignupRoute,
 });
 
 function SignupRoute() {
-	const { redirect } = Route.useSearch();
-	return <SignupCard redirect={redirect} />;
+	const { redirect, email } = Route.useSearch();
+	return <SignupCard redirect={redirect} prefillEmail={email} />;
 }

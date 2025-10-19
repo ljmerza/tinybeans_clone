@@ -48,7 +48,6 @@ from ..serializers import (
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import (
     CIRCLE_INVITATION_ACCEPTED_TEMPLATE,
-    CIRCLE_INVITATION_REMINDER_TEMPLATE,
     CIRCLE_INVITATION_TEMPLATE,
 )
 
@@ -298,6 +297,99 @@ class CircleInvitationCancelView(APIView):
             },
             status_code=status.HTTP_200_OK,
         )
+
+
+class CircleInvitationResendView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CircleInvitationSerializer
+
+    @extend_schema(
+        description='Resend a pending invitation email for the specified circle.',
+        responses={
+            202: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Invitation resend accepted and email re-queued.',
+            )
+        },
+    )
+    def post(self, request, circle_id, invitation_id):
+        circle = get_object_or_404(Circle, id=circle_id)
+        membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
+        if not membership or membership.role != UserRole.CIRCLE_ADMIN:
+            raise PermissionDenied(_('Only circle admins can manage invitations'))
+
+        try:
+            invitation_uuid = UUID(str(invitation_id))
+        except ValueError:
+            return error_response(
+                'invitation_invalid',
+                [create_message('errors.invitation_not_found')],
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        invitation = CircleInvitation.objects.filter(
+            id=invitation_uuid,
+            circle=circle,
+        ).select_related('invited_user').first()
+        if not invitation:
+            return error_response(
+                'invitation_not_found',
+                [create_message('errors.invitation_not_found')],
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        if invitation.status != CircleInvitationStatus.PENDING:
+            return error_response(
+                'invitation_not_pending',
+                [create_message('errors.invitation_not_pending')],
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        token = store_token(
+            'circle-invite',
+            {
+                'invitation_id': str(invitation.id),
+                'circle_id': circle.id,
+                'email': invitation.email,
+                'role': invitation.role,
+                'issued_at': timezone.now().isoformat(),
+                'existing_user': bool(invitation.invited_user_id),
+                'invited_user_id': invitation.invited_user_id,
+            },
+            ttl=TOKEN_TTL_SECONDS,
+        )
+
+        invitation_link = CircleInvitationCreateView._build_invitation_link(token)
+        base_context = {
+            'circle_name': circle.name,
+            'invited_by': invitation.invited_by.username if invitation.invited_by_id else request.user.username,
+            'invitation_link': invitation_link,
+        }
+        send_email_task.delay(
+            to_email=invitation.email,
+            template_id=CIRCLE_INVITATION_TEMPLATE,
+            context={**base_context, 'token': token, 'email': invitation.email},
+        )
+
+        invitation.reminder_sent_at = timezone.now()
+        invitation.save(update_fields=['reminder_sent_at'])
+
+        data = CircleInvitationSerializer(invitation).data
+        return success_response(
+            {'invitation': data},
+            messages=[create_message('notifications.circle.invitation_sent')],
+            status_code=status.HTTP_202_ACCEPTED,
+        )
+
+    if getattr(settings, 'RATELIMIT_ENABLE', True):
+        post = method_decorator(
+            ratelimit(
+                key='user',
+                rate=getattr(settings, 'CIRCLE_INVITE_RESEND_RATELIMIT', '5/15m'),
+                method='POST',
+                block=True,
+            )
+        )(post)
 
 
 class CircleInvitationListView(APIView):

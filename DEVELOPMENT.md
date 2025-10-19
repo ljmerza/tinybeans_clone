@@ -100,6 +100,7 @@ Circle invitation flows rely on a handful of environment variables to control ra
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `CIRCLE_INVITE_RATELIMIT` | Per-admin rate limit enforced by `django-ratelimit` (format `<count>/<window>`). | `10/15m` |
+| `CIRCLE_INVITE_RESEND_RATELIMIT` | Rate limit for manual resend requests (format `<count>/<window>`). | `5/15m` |
 | `CIRCLE_INVITE_CIRCLE_LIMIT` | Maximum invitations a circle can send within the configured window. | `25` |
 | `CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES` | Window (in minutes) for the per-circle limit. | `60` |
 | `CIRCLE_INVITE_REMINDER_DELAY_MINUTES` | Minutes to wait before sending the first reminder email. | `1440` |

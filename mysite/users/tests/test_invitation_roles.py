@@ -17,7 +17,8 @@ from mysite.users.models import (
     UserRole,
 )
 from mysite.users.serializers.circles import CircleInvitationCreateSerializer
-from mysite.auth.token_utils import store_token
+from mysite.auth.token_utils import store_token, TOKEN_TTL_SECONDS
+from mysite.emails.templates import CIRCLE_INVITATION_TEMPLATE
 from mysite.users.tasks import send_circle_invitation_reminders
 
 
@@ -254,6 +255,81 @@ class InvitationRoleTests(TestCase):
             CircleInvitation.objects.filter(id=invitation.id).exists(),
             "Invitation should remain when cancellation is forbidden",
         )
+
+    @patch('mysite.users.views.circles.send_email_task.delay')
+    @patch('mysite.users.views.circles.store_token')
+    def test_circle_admin_can_resend_invitation(self, mock_store_token, mock_delay):
+        """Admins can resend pending invitations."""
+        mock_store_token.return_value = 'fake-token'
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email='pending@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.post(
+            reverse('circle-invitation-resend', args=[self.circle.id, invitation.id]),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED, response.json())
+        invitation.refresh_from_db()
+        self.assertIsNotNone(invitation.reminder_sent_at)
+        mock_store_token.assert_called_once()
+        call = mock_store_token.call_args
+        self.assertEqual(call.args[0], 'circle-invite')
+        payload = call.args[1]
+        self.assertEqual(call.kwargs['ttl'], TOKEN_TTL_SECONDS)
+        self.assertEqual(payload['invitation_id'], str(invitation.id))
+        self.assertEqual(payload['circle_id'], self.circle.id)
+        self.assertEqual(payload['email'], invitation.email)
+        self.assertEqual(payload['role'], invitation.role)
+        self.assertFalse(payload['existing_user'])
+        self.assertIsNone(payload['invited_user_id'])
+        self.assertIn('issued_at', payload)
+        mock_delay.assert_called_once()
+        kwargs = mock_delay.call_args.kwargs
+        self.assertEqual(kwargs['to_email'], invitation.email)
+        self.assertEqual(kwargs['template_id'], CIRCLE_INVITATION_TEMPLATE)
+
+    def test_member_cannot_resend_invitation(self):
+        """Non-admin members cannot resend invitations."""
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email='pending@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+
+        self.client.force_authenticate(user=self.member)
+        response = self.client.post(
+            reverse('circle-invitation-resend', args=[self.circle.id, invitation.id]),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch('mysite.users.views.circles.send_email_task.delay')
+    def test_resend_requires_pending_invitation(self, mock_delay):
+        """Resend is only allowed for pending invitations."""
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email='processed@example.com',
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+            status=CircleInvitationStatus.ACCEPTED,
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.post(
+            reverse('circle-invitation-resend', args=[self.circle.id, invitation.id]),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.json())
+        mock_delay.assert_not_called()
 
     @patch('mysite.users.views.circles.send_email_task.delay')
     @patch('mysite.users.views.circles.store_token')
