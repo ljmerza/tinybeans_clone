@@ -17,7 +17,7 @@ export interface CircleOnboardingPayload {
 }
 
 export interface CircleInvitationMemberSummary {
-	id: number;
+	id: number | string;
 	username: string;
 	first_name?: string | null;
 	last_name?: string | null;
@@ -51,6 +51,7 @@ export interface CircleInvitationSummary {
 	responded_at: string | null;
 	reminder_sent_at: string | null;
 	invited_user: CircleInvitationMemberSummary | null;
+	invited_user_id?: number | string | null;
 }
 
 export interface CircleMembershipSummary {

@@ -1,4 +1,5 @@
 import { useApiMessages } from "@/i18n";
+import { showToast } from "@/lib/toast";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
 import {
 	type UseMutationResult,
@@ -7,6 +8,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { circleKeys } from "../api/queryKeys";
 import { circleServices } from "../api/services";
@@ -142,6 +144,34 @@ export function useCancelCircleInvitation(
 			});
 			if (response.messages?.length) {
 				showAsToast(response.messages, 200);
+			}
+		},
+		onError: (error) => {
+			showAsToast(error.messages, error.status ?? 400);
+		},
+	});
+}
+
+export function useRemoveCircleMember(
+	circleId: number | string,
+): UseMutationResult<ApiResponseWithMessages, ApiError, number | string> {
+	const queryClient = useQueryClient();
+	const { showAsToast } = useApiMessages();
+	const { t } = useTranslation();
+
+	return useMutation({
+		mutationFn: (userId: number | string) =>
+			circleServices.removeMember(circleId, userId),
+		onSuccess: (response) => {
+			queryClient.invalidateQueries({ queryKey: circleKeys.members(circleId) });
+			queryClient.invalidateQueries({ queryKey: circleKeys.invitations(circleId) });
+			if (response.messages?.length) {
+				showAsToast(response.messages, 200);
+			} else {
+				showToast({
+					message: t("notifications.circle.member_removed"),
+					level: "success",
+				});
 			}
 		},
 		onError: (error) => {

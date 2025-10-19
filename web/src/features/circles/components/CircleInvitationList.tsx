@@ -2,16 +2,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, StatusMessag
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { showToast } from '@/lib/toast';
 import type { ApiError } from '@/types';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
 	useCancelCircleInvitation,
 	useCircleInvitationsQuery,
 	useResendCircleInvitation,
+	useRemoveCircleMember,
 } from '../hooks/useCircleInvitationAdmin';
-import type { CircleInvitationStatus, CircleInvitationSummary } from '../types';
+import { useCircleMembers } from '../hooks/useCircleMemberships';
+import type {
+	CircleInvitationStatus,
+	CircleInvitationSummary,
+	CircleMemberSummary,
+} from '../types';
 
 interface CircleInvitationListProps {
 	circleId: number | string;
@@ -57,15 +64,72 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 	const invitationsQuery = useCircleInvitationsQuery(circleId);
 	const resendInvitation = useResendCircleInvitation(circleId);
 	const cancelInvitation = useCancelCircleInvitation(circleId);
+	const removeMember = useRemoveCircleMember(circleId);
+	const membersQuery = useCircleMembers(circleId);
 
 	const [resendTarget, setResendTarget] = useState<string | null>(null);
 	const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 	const [confirming, setConfirming] = useState<string | null>(null);
+	const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+	const [removeConfirm, setRemoveConfirm] = useState<{
+		invitation: CircleInvitationSummary;
+		memberId?: string;
+	} | null>(null);
+	const [resolvingMemberFor, setResolvingMemberFor] = useState<string | null>(
+		null,
+	);
+	const confirmingRemovalRef = useRef(false);
 
 	const invitations = useMemo(
 		() => sortInvitations(invitationsQuery.data),
 		[invitationsQuery.data],
 	);
+
+	const normalizeString = (value: string | null | undefined) =>
+		value?.trim().toLowerCase() ?? null;
+
+	const normalizeId = (value: number | string | null | undefined) => {
+		if (value === null || value === undefined) return null;
+		const stringValue = String(value).trim();
+		return stringValue.length ? stringValue : null;
+	};
+
+	const findMemberId = (
+		invitation: CircleInvitationSummary,
+		members: CircleMemberSummary[] | undefined,
+	): string | null => {
+		const invitedId =
+			normalizeId(invitation.invited_user?.id) ??
+			normalizeId(invitation.invited_user_id);
+
+		if (invitedId) {
+			return invitedId;
+		}
+
+		if (!members?.length) return null;
+		const targetEmail = normalizeString(invitation.email);
+		const targetUsername = normalizeString(invitation.invited_user?.username);
+
+		for (const member of members) {
+			const memberId = normalizeId(member.user.id);
+			if (memberId && invitedId && memberId === invitedId) {
+				return memberId;
+			}
+			const memberEmail = normalizeString(member.user.email);
+			if (targetEmail && memberEmail === targetEmail) {
+				return memberId ?? null;
+			}
+			const memberUsername = normalizeString(member.user.username);
+			if (targetUsername && memberUsername === targetUsername) {
+				return memberId ?? null;
+			}
+		}
+
+		return null;
+	};
+
+	const resolveMemberId = (invitation: CircleInvitationSummary) =>
+		findMemberId(invitation, membersQuery.data?.members);
 
 	const handleResend = async (invitationId: string) => {
 		setResendTarget(invitationId);
@@ -86,14 +150,51 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 		}
 	};
 
-	const isLoading =
-		invitationsQuery.isLoading ||
-		resendInvitation.isPending ||
-		cancelInvitation.isPending;
+	const ensureMemberId = async (
+		invitation: CircleInvitationSummary,
+	): Promise<string | null> => {
+		const existing = resolveMemberId(invitation);
+		if (existing) return existing;
+
+		const refreshed = await membersQuery.refetch();
+		return findMemberId(invitation, refreshed.data?.members);
+	};
+
+	const openRemoveDialog = (invitation: CircleInvitationSummary) => {
+		const initialMemberId =
+			resolveMemberId(invitation) ??
+			normalizeId(invitation.invited_user?.id) ??
+			normalizeId(invitation.invited_user_id) ??
+			undefined;
+		setRemoveConfirm({
+			invitation,
+			memberId: initialMemberId,
+		});
+
+		if (initialMemberId) return;
+
+		setResolvingMemberFor(invitation.id);
+		void ensureMemberId(invitation)
+			.then((resolvedId) => {
+				if (!resolvedId) {
+					return;
+				}
+				setRemoveConfirm((current) =>
+					current && current.invitation.id === invitation.id
+						? { ...current, memberId: resolvedId }
+						: current,
+				);
+			})
+			.finally(() => {
+				setResolvingMemberFor(null);
+			});
+	};
 
 	const error = invitationsQuery.error as ApiError | null;
 
 	const confirmId = confirming;
+	console.log({ invitations })
+
 
 	return (
 		<>
@@ -148,7 +249,13 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 							const isPending = invitation.status === 'pending';
 							const isResending = resendTarget === invitation.id;
 							const isCancelling = cancelTarget === invitation.id;
-							const isConfirming = confirmId === invitation.id;
+							const canRemove = invitation.status === 'accepted';
+							const isRemoving =
+								removeTarget === invitation.id && removeMember.isPending;
+							const isResolving = resolvingMemberFor === invitation.id;
+							const disableRemove =
+								isResolving ||
+								(removeMember.isPending && !isRemoving);
 
 							return (
 								<li
@@ -170,27 +277,44 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 											) : null}
 										</div>
 										<div className="flex items-center gap-2">
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => void handleResend(invitation.id)}
-												disabled={!isPending || isResending || isCancelling}
-											>
-												{isResending
-													? t('pages.circles.invites.list.resending')
-													: t('pages.circles.invites.list.resend')}
-											</Button>
-											<Button
-												variant="ghost"
-												size="sm"
-												className="text-destructive hover:text-destructive"
-												onClick={() => setConfirming(invitation.id)}
-												disabled={!isPending || isCancelling || isResending}
-											>
-												{isCancelling
-													? t('pages.circles.invites.list.cancelling')
-													: t('pages.circles.invites.list.cancel')}
-											</Button>
+											{isPending ? (
+												<>
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => void handleResend(invitation.id)}
+														disabled={isResending || isCancelling}
+													>
+														{isResending
+															? t('pages.circles.invites.list.resending')
+															: t('pages.circles.invites.list.resend')}
+													</Button>
+													<Button
+														variant="ghost"
+														size="sm"
+														className="text-destructive hover:text-destructive"
+														onClick={() => setConfirming(invitation.id)}
+														disabled={isCancelling || isResending}
+													>
+														{isCancelling
+															? t('pages.circles.invites.list.cancelling')
+															: t('pages.circles.invites.list.cancel')}
+													</Button>
+												</>
+											) : null}
+											{canRemove ? (
+												<Button
+													variant="ghost"
+													size="sm"
+													className="text-destructive hover:text-destructive"
+													onClick={() => void openRemoveDialog(invitation)}
+													disabled={disableRemove}
+												>
+													{isRemoving
+														? t('pages.circles.invites.list.removing')
+														: t('pages.circles.invites.list.remove')}
+												</Button>
+											) : null}
 										</div>
 									</div>
 
@@ -232,6 +356,68 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 				onConfirm={async () => {
 					if (!confirmId) return;
 					await handleCancel(confirmId);
+				}}
+			/>
+			<ConfirmDialog
+				open={Boolean(removeConfirm)}
+				onOpenChange={(open) => {
+					if (!open) {
+						if (confirmingRemovalRef.current) {
+							return;
+						}
+						setRemoveConfirm(null);
+						setRemoveTarget(null);
+					}
+				}}
+				title={t('pages.circles.invites.list.remove_title', {
+					email: removeConfirm?.invitation.email ?? '',
+				})}
+				description={t('pages.circles.invites.list.remove_description')}
+				confirmLabel={t('pages.circles.invites.list.remove_confirm')}
+				cancelLabel={t('common.cancel')}
+				variant='destructive'
+				isLoading={removeMember.isPending}
+				disabled={
+					Boolean(removeConfirm && resolvingMemberFor === removeConfirm.invitation.id) &&
+					!removeMember.isPending
+				}
+				onConfirm={async () => {
+					const current = removeConfirm;
+					if (!current) return;
+					const { invitation } = current;
+
+					confirmingRemovalRef.current = true;
+					try {
+						let memberId =
+							normalizeId(current.memberId) ??
+							normalizeId(invitation.invited_user?.id) ??
+							normalizeId(invitation.invited_user_id);
+
+						if (!memberId) {
+							setResolvingMemberFor(invitation.id);
+							try {
+								memberId = await ensureMemberId(invitation);
+							} finally {
+								setResolvingMemberFor(null);
+							}
+						}
+
+						if (!memberId) {
+							showToast({
+								message: t("pages.circles.invites.list.remove_error"),
+								level: "error",
+							});
+							return;
+						}
+
+						setRemoveConfirm({ invitation, memberId });
+						setRemoveTarget(invitation.id);
+						await removeMember.mutateAsync(memberId);
+						setRemoveConfirm(null);
+					} finally {
+						confirmingRemovalRef.current = false;
+						setRemoveTarget(null);
+					}
 				}}
 			/>
 		</>

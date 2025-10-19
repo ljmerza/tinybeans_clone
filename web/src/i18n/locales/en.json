@@ -471,8 +471,8 @@
           "admin": "Circle admin"
         },
         "list": {
-          "title": "Pending invitations",
-          "description": "See who still needs to respond and take action when needed.",
+          "title": "Circle members & invitations",
+          "description": "Manage everyone in the circle, including pending invitations and active members.",
           "loading": "Refreshing invitations…",
           "empty": "No invitations yet. Send one to get started.",
           "existing_user": "Existing account",
@@ -488,7 +488,13 @@
           "confirming": "Confirming…",
           "cancel_title": "Cancel this invitation?",
           "cancel_description": "This will remove the pending invite. The invitee will need a new invitation if they want to join.",
-          "cancel_confirm": "Yes, cancel it"
+          "cancel_confirm": "Yes, cancel it",
+          "remove": "Remove from circle",
+          "removing": "Removing…",
+          "remove_title": "Remove {{email}} from this circle?",
+          "remove_description": "This will revoke their access to shared posts. They will need a new invitation to rejoin.",
+          "remove_confirm": "Yes, remove member",
+          "remove_error": "We couldn’t locate this member. Refresh and try again."
         },
         "status": {
           "pending": "Pending",

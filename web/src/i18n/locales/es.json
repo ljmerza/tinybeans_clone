@@ -523,13 +523,19 @@
           "identifier_label_email": "Correo electrónico"
         },
         "list": {
-          "title": "Invitaciones pendientes",
-          "description": "Observa quién aún debe responder y toma acciones cuando sea necesario.",
+          "title": "Miembros e invitaciones del círculo",
+          "description": "Administra a todos en el círculo, incluidas invitaciones pendientes y miembros activos.",
           "loading": "Actualizando invitaciones…",
           "confirming": "Confirmando…",
           "cancel_title": "¿Cancelar esta invitación?",
           "cancel_description": "Se eliminará la invitación pendiente. Si la persona desea unirse, necesitará una nueva invitación.",
-          "cancel_confirm": "Sí, cancelarla"
+          "cancel_confirm": "Sí, cancelarla",
+          "remove": "Eliminar del círculo",
+          "removing": "Eliminando…",
+          "remove_title": "¿Eliminar a {{email}} del círculo?",
+          "remove_description": "Se revocará su acceso a las publicaciones compartidas. Necesitará una nueva invitación para regresar.",
+          "remove_confirm": "Sí, eliminar miembro",
+          "remove_error": "No pudimos encontrar a este miembro. Actualiza e inténtalo de nuevo."
         }
       }
     }
