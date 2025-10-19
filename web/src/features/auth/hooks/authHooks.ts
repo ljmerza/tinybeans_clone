@@ -276,6 +276,7 @@ export function useLogout() {
 			return true;
 		},
 		onSuccess: () => {
+			qc.removeQueries({ queryKey: authKeys.session(), exact: true });
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 		},
 	});
