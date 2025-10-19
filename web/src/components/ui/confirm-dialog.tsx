@@ -212,11 +212,12 @@ export function ConfirmDialog({
 					<AlertDialogAction asChild>
 						<Button
 							type="button"
-							variant={variant === "destructive" ? "destructive" : "default"}
+							variant={variant === "destructive" ? "destructive" : "primary"}
 							onClick={handleConfirmClick}
 							disabled={disabled || isLoading}
+							isLoading={isLoading}
 						>
-							{isLoading ? "Processing..." : confirmLabel}
+							{confirmLabel}
 						</Button>
 					</AlertDialogAction>
 				</AlertDialogFooter>

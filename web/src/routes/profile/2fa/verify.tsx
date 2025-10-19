@@ -118,14 +118,15 @@ function TwoFactorVerifyPage() {
 			className="max-w-md"
 			footerClassName="border-t pt-4 text-center space-y-0"
 			footer={
-				<button
+				<Button
 					type="button"
+					variant="link"
 					onClick={() => navigate({ to: "/login" })}
 					disabled={verify.isPending}
 					className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
 				>
 					{t("common.back_to_login")}
-				</button>
+				</Button>
 			}
 		>
 			{!useRecoveryCode ? (
@@ -197,8 +198,9 @@ function TwoFactorVerifyPage() {
 			)}
 
 			<div className="text-center">
-				<button
+				<Button
 					type="button"
+					variant="link"
 					onClick={() => {
 						setUseRecoveryCode(!useRecoveryCode);
 						setCode("");
@@ -209,7 +211,7 @@ function TwoFactorVerifyPage() {
 					{useRecoveryCode
 						? t("twofa.verify.use_code")
 						: t("twofa.verify.use_recovery_toggle")}
-				</button>
+				</Button>
 			</div>
 		</AuthCard>
 	);

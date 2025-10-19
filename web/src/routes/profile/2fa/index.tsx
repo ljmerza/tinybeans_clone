@@ -3,6 +3,7 @@
  * Manage 2FA configuration, recovery codes, and trusted devices
  */
 
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog, Layout } from "@/components";
 import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import { extractApiError } from "@/features/auth/utils";
@@ -196,13 +197,14 @@ function TwoFactorSettingsPage() {
 						{status.is_enabled && <TwoFactorEnabledSettings />}
 
 						<div className="text-center">
-							<button
+							<Button
 								type="button"
+								variant="link"
 								onClick={() => navigate({ to: "/" })}
 								className="text-sm text-muted-foreground hover:text-foreground transition-colors"
 							>
 								{t("common.back_home")}
-							</button>
+							</Button>
 						</div>
 					</div>
 				}

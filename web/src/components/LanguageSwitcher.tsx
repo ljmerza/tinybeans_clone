@@ -41,7 +41,7 @@ export function LanguageSwitcher() {
 			{languages.map((lang) => (
 				<Button
 					key={lang.code}
-					variant={currentLanguage === lang.code ? "default" : "outline"}
+					variant={currentLanguage === lang.code ? "primary" : "outline"}
 					size="sm"
 					onClick={() => handleLanguageChange(lang.code)}
 					disabled={updateProfile.isPending}

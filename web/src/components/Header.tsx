@@ -7,6 +7,7 @@
 
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
 	/** Whether the user is authenticated */
@@ -20,15 +21,15 @@ function AuthenticatedHeaderActions() {
 	const { t } = useTranslation();
 	return (
 		<>
-			<Link to="/circles" className="btn-ghost">
-				{t("nav.circles")}
-			</Link>
-			<Link to="/profile/general" className="btn-ghost">
-				{t("nav.settings")}
-			</Link>
-			<Link to="/logout" className="btn-ghost">
-				{t("nav.logout")}
-			</Link>
+			<Button asChild variant="ghost" size="sm">
+				<Link to="/circles">{t("nav.circles")}</Link>
+			</Button>
+			<Button asChild variant="ghost" size="sm">
+				<Link to="/profile/general">{t("nav.settings")}</Link>
+			</Button>
+			<Button asChild variant="ghost" size="sm">
+				<Link to="/logout">{t("nav.logout")}</Link>
+			</Button>
 		</>
 	);
 }
@@ -40,12 +41,12 @@ function GuestHeaderActions() {
 	const { t } = useTranslation();
 	return (
 		<>
-			<Link to="/login" className="btn-ghost">
-				{t("nav.login")}
-			</Link>
-			<Link to="/signup" className="btn-primary">
-				{t("nav.signup")}
-			</Link>
+			<Button asChild variant="ghost" size="sm">
+				<Link to="/login">{t("nav.login")}</Link>
+			</Button>
+			<Button asChild variant="primary" size="sm">
+				<Link to="/signup">{t("nav.signup")}</Link>
+			</Button>
 		</>
 	);
 }
@@ -76,7 +77,7 @@ export function Header({ isAuthenticated }: HeaderProps) {
 							{t("nav.home")}
 						</Link>
 					</div>
-					<nav className="flex items-center gap-4">
+					<nav className="flex items-center gap-2">
 						{isAuthenticated ? (
 							<AuthenticatedHeaderActions />
 						) : (

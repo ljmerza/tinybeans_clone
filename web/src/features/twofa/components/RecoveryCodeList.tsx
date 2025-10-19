@@ -90,11 +90,12 @@ export function RecoveryCodeList({
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 				{codes.map((code, index) => (
-					<button
+					<Button
 						key={code}
 						type="button"
+						variant="ghost"
 						onClick={() => handleCopy(code, index)}
-						className="bg-muted/60 hover:bg-muted p-3 rounded text-left font-mono text-sm transition-colors group relative dark:bg-muted/20 dark:hover:bg-muted/30"
+						className="relative w-full justify-start bg-muted/60 hover:bg-muted p-3 font-mono text-sm transition-colors text-left dark:bg-muted/20 dark:hover:bg-muted/30"
 					>
 						<span className="font-semibold text-muted-foreground mr-2">
 							{index + 1}.
@@ -105,7 +106,7 @@ export function RecoveryCodeList({
 								{t("twofa.setup.recovery.copied")}
 							</span>
 						)}
-					</button>
+					</Button>
 				))}
 			</div>
 

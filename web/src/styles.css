@@ -175,20 +175,6 @@ code {
 		@apply text-foreground hover:text-foreground/80 transition-colors;
 	}
 
-	/* Buttons (composable base styles) */
-	.btn-primary {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-primary-foreground bg-primary hover:bg-primary/90;
-	}
-	.btn-secondary {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-secondary-foreground bg-secondary hover:bg-secondary/80 border border-border;
-	}
-	.btn-ghost {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-foreground hover:bg-muted/40;
-	}
-	.btn-danger {
-		@apply px-4 py-2 text-sm font-medium rounded-md transition-colors text-destructive-foreground bg-destructive hover:bg-destructive/90;
-	}
-
 	/* Layout containers */
 	.container-page {
 		@apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;

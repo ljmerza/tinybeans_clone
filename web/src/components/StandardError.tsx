@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
+import type { buttonVariants } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 interface StandardErrorProps {
@@ -6,6 +9,7 @@ interface StandardErrorProps {
 	description?: ReactNode;
 	actionLabel?: string;
 	onAction?: () => void;
+	actionVariant?: VariantProps<typeof buttonVariants>["variant"];
 	extraContent?: ReactNode;
 	icon?: ReactNode;
 	className?: string;
@@ -17,6 +21,7 @@ export function StandardError({
 	description,
 	actionLabel,
 	onAction,
+	actionVariant = "primary",
 	extraContent,
 	icon,
 	className = "",
@@ -40,13 +45,14 @@ export function StandardError({
 				)}
 			</div>
 			{actionLabel && onAction && (
-				<button
+				<Button
 					type="button"
 					onClick={onAction}
-					className="btn-primary shadow-sm"
+					variant={actionVariant}
+					className="shadow-sm"
 				>
 					{actionLabel}
-				</button>
+				</Button>
 			)}
 			{extraContent}
 		</div>

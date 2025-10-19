@@ -147,13 +147,14 @@ function TrustedDevicesPage() {
 					)}
 
 					<div className="mt-6 pt-6 border-t border-border flex justify-between">
-						<button
+						<Button
 							type="button"
+							variant="link"
 							onClick={() => navigate({ to: "/profile/2fa" })}
 							className="text-sm text-muted-foreground hover:text-foreground transition-colors"
 						>
 							← Back to 2FA Settings
-						</button>
+						</Button>
 
 						<p className="text-xs text-muted-foreground">
 							{devices.length} trusted{" "}

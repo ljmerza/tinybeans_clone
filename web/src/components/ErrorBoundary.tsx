@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from "react";
 import { withTranslation } from "react-i18next";
 import type { WithTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 
 interface Props extends WithTranslation {
 	children: ReactNode;
@@ -47,13 +48,9 @@ class ErrorBoundaryComponent extends Component<Props, State> {
 						<p className="text-muted-foreground mb-4">
 							{this.state.error?.message || t("pages.error.unexpected_error")}
 						</p>
-						<button
-							type="button"
-							onClick={this.handleGoHome}
-							className="btn-primary"
-						>
+						<Button type="button" onClick={this.handleGoHome} variant="primary">
 							{t("pages.error.go_home")}
-						</button>
+						</Button>
 					</div>
 				</div>
 			);
