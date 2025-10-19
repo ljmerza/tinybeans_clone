@@ -98,4 +98,10 @@ export const circleServices = {
 			}>
 		>(`${USERS_BASE}/circles/${circleId}/members/`);
 	},
+
+	removeMember(circleId: number | string, userId: number | string) {
+		return authApi.delete<ApiResponseWithMessages>(
+			`${USERS_BASE}/circles/${circleId}/members/${userId}/`,
+		);
+	},
 };

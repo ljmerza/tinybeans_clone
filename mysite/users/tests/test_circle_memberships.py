@@ -219,6 +219,21 @@ class CircleMembershipViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(CircleMembership.objects.filter(circle=self.circle, user=member).exists())
 
+    def test_member_can_remove_self(self):
+        member = User.objects.create_user(
+            username='memberself',
+            email='memberself@example.com',
+            password='password123',
+        )
+        CircleMembership.objects.create(user=member, circle=self.circle, role=UserRole.CIRCLE_MEMBER)
+
+        self.client.force_authenticate(user=member)
+        url = reverse('circle-member-remove', args=[self.circle.id, member.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(CircleMembership.objects.filter(circle=self.circle, user=member).exists())
+
     def test_remove_member_returns_404_when_missing(self):
         self.client.force_authenticate(user=self.admin)
         url = reverse('circle-member-remove', args=[self.circle.id, 9999])

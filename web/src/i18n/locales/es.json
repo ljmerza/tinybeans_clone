@@ -334,7 +334,11 @@
                 "member_count_one": "{{count}} miembro",
                 "member_count_other": "{{count}} miembros",
                 "role_label": "Rol: {{role}}",
-                "manage": "Abrir panel"
+                "manage": "Abrir panel",
+                "leave": "Salir del círculo",
+                "leave_confirm_title": "¿Salir de este círculo?",
+                "leave_confirm_body": "Perderás el acceso a {{circle}} y a sus recuerdos compartidos.",
+                "leave_confirm_cta": "Sí, salir del círculo"
               },
               "dashboard": {
                 "loading": "Cargando detalles del círculo…",
