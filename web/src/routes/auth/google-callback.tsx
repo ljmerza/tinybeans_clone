@@ -1,4 +1,4 @@
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LoadingState } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import {
 	getOAuthState,
@@ -8,6 +8,7 @@ import {
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 // Search params schema for OAuth callback
@@ -30,6 +31,7 @@ function GoogleCallbackPage() {
 	const { handleCallback, error } = useGoogleOAuth();
 	const [hasProcessed, setHasProcessed] = useState(false);
 	const [clientError, setClientError] = useState<string | null>(null);
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		if (searchParams.redirect) {
@@ -42,11 +44,15 @@ function GoogleCallbackPage() {
 		// Check for Google OAuth error
 		if (searchParams.error) {
 			const errorMsg = searchParams.error_description || searchParams.error;
-			setClientError(
-				errorMsg === "access_denied"
-					? "You cancelled the Google sign-in process."
-					: errorMsg,
-			);
+			if (errorMsg === "access_denied") {
+				setClientError(
+					t("errors.oauth.google_cancelled", {
+						defaultValue: "You cancelled the Google sign-in process.",
+					}),
+				);
+			} else {
+				setClientError(errorMsg);
+			}
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -54,7 +60,11 @@ function GoogleCallbackPage() {
 
 		// Validate required parameters
 		if (!searchParams.code || !searchParams.state) {
-			setClientError("Missing required OAuth parameters. Please try again.");
+			setClientError(
+				t("errors.oauth.invalid_callback", {
+					defaultValue: "Missing required OAuth parameters. Please try again.",
+				}),
+			);
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
 			return;
@@ -64,7 +74,9 @@ function GoogleCallbackPage() {
 		const storedState = getOAuthState();
 		if (!validateOAuthState(searchParams.state, storedState)) {
 			setClientError(
-				"Security validation failed. Please try signing in again.",
+				t("errors.oauth.state_mismatch", {
+					defaultValue: "Security validation failed. Please try signing in again.",
+				}),
 			);
 			setHasProcessed(true);
 			setTimeout(() => navigate({ to: "/login" }), 2000);
@@ -74,7 +86,7 @@ function GoogleCallbackPage() {
 		// Process the callback
 		setHasProcessed(true);
 		handleCallback(searchParams.code, searchParams.state);
-	}, [searchParams, handleCallback, navigate, hasProcessed]);
+	}, [searchParams, handleCallback, navigate, hasProcessed, t]);
 
 	// Show error state
 	if (error || clientError) {
@@ -102,13 +114,17 @@ function GoogleCallbackPage() {
 
 						{/* Error Title */}
 						<h2 className="text-2xl font-bold text-foreground mb-2">
-							Sign-in Failed
+							{t("auth.oauth.callback_error_title", {
+								defaultValue: "Sign-in failed",
+							})}
 						</h2>
 
 						{/* Error Message */}
 						<p className="text-muted-foreground mb-6">
 							{clientError ||
-								"An error occurred during sign-in. Please try again."}
+								t("auth.oauth.callback_error_description", {
+									defaultValue: "An error occurred during sign-in. Please try again.",
+								})}
 						</p>
 
 						{/* Action Buttons */}
@@ -117,7 +133,9 @@ function GoogleCallbackPage() {
 								onClick={() => navigate({ to: "/login" })}
 								className="w-full"
 							>
-								Back to Login
+								{t("common.back_to_login", {
+									defaultValue: "← Back to login",
+								})}
 							</Button>
 						</div>
 					</div>
@@ -158,16 +176,16 @@ function GoogleCallbackPage() {
 						</svg>
 					</div>
 
-					{/* Loading Spinner */}
-					<LoadingSpinner />
-
-					{/* Loading Text */}
-					<h2 className="text-xl font-semibold text-foreground mt-4 mb-2">
-						Completing sign-in with Google...
-					</h2>
-					<p className="text-muted-foreground text-sm">
-						Please wait while we verify your account
-					</p>
+					<LoadingState
+						layout="section"
+						className="py-6"
+						message={t("auth.oauth.processing", {
+							defaultValue: "Processing Google sign-in...",
+						})}
+						description={t("auth.oauth.processing_description", {
+							defaultValue: "Please wait while we verify your account.",
+						})}
+					/>
 				</div>
 			</div>
 		</div>

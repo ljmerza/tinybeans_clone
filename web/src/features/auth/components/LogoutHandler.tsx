@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import { LoadingPage } from "@/components/LoadingPage";
+import { LoadingState } from "@/components/LoadingState";
 import { useNavigate } from "@tanstack/react-router";
 
 import { useLogout } from "../hooks/authHooks";
@@ -26,5 +26,10 @@ export function LogoutHandler() {
 			});
 	}, [logout, navigate]);
 
-	return <LoadingPage message={t("auth.logout.logging_out")} />;
+	return (
+		<LoadingState
+			layout="fullscreen"
+			message={t("auth.logout.logging_out")}
+		/>
+	);
 }

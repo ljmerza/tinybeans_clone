@@ -3,7 +3,7 @@ from rest_framework import generics, permissions, status
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from mysite.notification_utils import error_response, create_message
-from mysite.users.models import Circle
+from mysite.circles.models import Circle
 from ..models import KeepComment
 from ..serializers import KeepCommentSerializer
 from .permissions import IsCircleMember, IsCircleAdminOrOwner, is_circle_admin

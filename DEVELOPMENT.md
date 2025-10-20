@@ -23,7 +23,7 @@ Follow these steps to exercise Google sign-up and sign-in flows against the loca
    - Visit <https://console.cloud.google.com/> and create/select a project.
    - Under **APIs & Services → OAuth consent screen**, configure an Internal/External consent screen and add the `openid`, `email`, and `profile` scopes.
    - Under **APIs & Services → Credentials**, create an **OAuth client ID** of type *Web application*.
-   - Add `http://192.168.1.76:3053` to **Authorized JavaScript origins** and `http://192.168.1.76:3053/auth/google/callback` to **Authorized redirect URIs** (swap in your host IP if different).
+   - Add `http://localhost:3053` to **Authorized JavaScript origins** and `http://localhost:3053/auth/google/callback` to **Authorized redirect URIs** (swap in your host IP if different).
    - Download or copy the generated **Client ID** and **Client secret**.
 
 2. **Populate local environment variables**
@@ -32,7 +32,7 @@ Follow these steps to exercise Google sign-up and sign-in flows against the loca
      ```dotenv
      GOOGLE_OAUTH_CLIENT_ID=your-real-client-id.apps.googleusercontent.com
      GOOGLE_OAUTH_CLIENT_SECRET=your-real-secret
-     GOOGLE_OAUTH_REDIRECT_URI=http://192.168.1.76:3053/auth/google/callback
+     GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3053/auth/google/callback
      ```
 
    - If you use a standalone frontend (outside Docker), mirror the redirect URI (and host IP) in `web/.env.local`.

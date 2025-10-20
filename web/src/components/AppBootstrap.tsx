@@ -10,7 +10,7 @@ import type { HttpError } from "@/lib/httpClient";
 import type { QueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AppProviders } from "./AppProviders";
-import { LoadingPage } from "./LoadingPage";
+import { LoadingState } from "./LoadingState";
 import { StandardError } from "./StandardError";
 
 interface AppBootstrapProps {
@@ -85,7 +85,7 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 	}, [queryClient]);
 
 	if (status === "loading") {
-		return <LoadingPage message="Initializing..." />;
+		return <LoadingState layout="fullscreen" message="Initializing..." />;
 	}
 
 	if (status === "error") {

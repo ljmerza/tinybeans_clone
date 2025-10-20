@@ -17,8 +17,8 @@ python manage.py test --settings=mysite.test_settings
 ```
 
 ## Links
-- http://192.168.1.76:8000/api/docs
-- http://192.168.1.76:4100
+- http://localhost:8000/api/docs
+- http://localhost:4100
 
 ## Development Notes
 

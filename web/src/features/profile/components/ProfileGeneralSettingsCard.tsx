@@ -1,4 +1,4 @@
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LoadingState } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useAuthSession, useResendVerificationMutation } from "@/features/auth";
 import { ThemePreferenceSelect, useTheme } from "@/features/theme";
@@ -20,9 +20,7 @@ export function ProfileGeneralSettingsCard() {
 
 	if (session.isFetchingUser && !user) {
 		return (
-			<div className="flex justify-center py-10">
-				<LoadingSpinner />
-			</div>
+			<LoadingState layout="section" className="py-10" />
 		);
 	}
 

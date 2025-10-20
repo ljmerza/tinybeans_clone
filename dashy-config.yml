@@ -25,21 +25,21 @@ sections:
       - title: Django Web App
         description: Main Tinybeans application
         icon: hl-django
-        url: http://192.168.1.76:8100/admin
+        url: http://localhost:8100/admin
         statusCheck: true
         id: 0_webapp
 
       - title: React Frontend
         description: Vite dev server for React frontend
         icon: fab fa-react
-        url: http://192.168.1.76:3053
+        url: http://localhost:3053
         statusCheck: true
         id: 1_frontend
 
       - title: Flower (Celery Monitor)
         description: Celery task monitoring
         icon: hl-celery
-        url: http://192.168.1.76:5656/flower
+        url: http://localhost:5656/flower
         statusCheck: true
         id: 2_flower
 
@@ -49,7 +49,7 @@ sections:
       - title: pgAdmin
         description: PostgreSQL database administration
         icon: hl-postgresql
-        url: http://192.168.1.76:5150
+        url: http://localhost:5150
         statusCheck: true
         id: 3_pgadmin
         statusCheckAcceptCodes: '200,302'
@@ -57,7 +57,7 @@ sections:
       - title: RedisInsight
         description: Redis data browser & management (Official Redis GUI)
         icon: hl-redis
-        url: http://192.168.1.76:8182
+        url: http://localhost:8182
         statusCheck: true
         id: 4_redis
 
@@ -67,14 +67,14 @@ sections:
       - title: MinIO Console
         description: S3-compatible object storage
         icon: hl-minio
-        url: http://192.168.1.76:9221
+        url: http://localhost:9221
         statusCheck: true
         id: 5_minio
 
       - title: MinIO API
         description: S3 API endpoint
         icon: fas fa-server
-        url: http://192.168.1.76:9220
+        url: http://localhost:9220
         statusCheck: true
         id: 6_minio_api
 
@@ -84,7 +84,7 @@ sections:
       - title: Mailpit
         description: Email testing tool - Web UI
         icon: fas fa-mail-bulk
-        url: http://192.168.1.76:8025
+        url: http://localhost:8025
         statusCheck: true
         id: 7_mailpit
 

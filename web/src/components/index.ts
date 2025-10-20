@@ -1,9 +1,9 @@
 export { ErrorBoundary } from "./ErrorBoundary";
 export { LoadingSpinner } from "./LoadingSpinner";
-export { LoadingPage } from "./LoadingPage";
-export { StandardLoading } from "./StandardLoading";
+export { LoadingState } from "./LoadingState";
 export { StandardError } from "./StandardError";
 export { StatusMessage } from "./StatusMessage";
+export { EmptyState } from "./EmptyState";
 export { FieldError } from "./FieldError";
 export { FormField } from "./form/FormField";
 export { FormActions } from "./form/FormActions";

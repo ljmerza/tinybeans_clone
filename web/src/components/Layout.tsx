@@ -2,7 +2,7 @@ import { useAuthSession } from "@/features/auth/context/AuthSessionProvider";
 import type { ReactElement, ReactNode } from "react";
 import { Header } from "./Header";
 import { StandardError } from "./StandardError";
-import { StandardLoading } from "./StandardLoading";
+import { LoadingState } from "./LoadingState";
 
 interface LayoutProps {
 	children?: ReactNode;
@@ -42,7 +42,8 @@ function LayoutLoading({
 }: LayoutLoadingProps) {
 	return (
 		<LayoutBase showHeader={showHeader}>
-			<StandardLoading
+			<LoadingState
+				layout="section"
 				message={message}
 				description={description}
 				icon={icon}

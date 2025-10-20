@@ -1,8 +1,7 @@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { cn } from "@/lib/utils";
-import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import * as React from "react";
 
 const buttonVariants = cva(
@@ -49,9 +48,7 @@ type ButtonProps = ComponentPropsWithoutRef<"button"> &
 		iconPosition?: "left" | "right";
 	};
 
-type SlotElementRef = ComponentPropsWithRef<typeof Slot>["ref"];
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 	(
 		{
 			className,
@@ -69,13 +66,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 		ref,
 	) => {
 		const isDisabled = Boolean(disabled) || isLoading;
-		const spinner = isLoading ? (
-			<LoadingSpinner
-				size="sm"
-				className="text-current [&>div]:border-2 [&>div]:border-border/60 [&>div]:border-t-current"
-				aria-hidden
-			/>
-		) : null;
 		const baseClassName = cn(
 			buttonVariants({ variant, size }),
 			iconPosition === "right" && "flex-row-reverse",
@@ -83,94 +73,92 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 			className,
 		);
 
-		if (asChild) {
-				if (!React.isValidElement(children)) {
-					if (process.env.NODE_ENV !== "production") {
-						console.error(
-							"Button with `asChild` expects a single React element child.",
-						);
-				}
+		const spinner = isLoading ? (
+			<LoadingSpinner
+				size="sm"
+				className="text-current [&>div]:border-2 [&>div]:border-border/60 [&>div]:border-t-current"
+				aria-hidden
+			/>
+		) : null;
 
-				return (
-					<button
-						ref={ref}
-						type={type}
-						data-slot="button"
-						data-icon-position={iconPosition}
-						data-loading={isLoading ? "" : undefined}
-						className={baseClassName}
-						aria-busy={isLoading || undefined}
-						aria-live={isLoading ? "polite" : undefined}
-						disabled={isDisabled}
-						data-disabled={isDisabled ? "" : undefined}
-						tabIndex={isDisabled ? -1 : tabIndex}
-						{...rest}
-					>
-						{spinner}
-						{children}
-					</button>
-				);
+		if (asChild) {
+			if (!React.isValidElement(children)) {
+				if (process.env.NODE_ENV !== "production") {
+					console.error(
+						"Button with `asChild` expects a single React element child.",
+					);
+				}
+				return null;
 			}
 
-				const child = React.Children.only(children) as React.ReactElement;
-				const childChildren = child.props?.children;
-				const mergedChildren = isLoading ? (
+				const child = React.Children.only(children) as React.ReactElement & {
+					ref?: React.Ref<unknown>;
+				};
+			const originalChildren = child.props?.children;
+			const composedChildren =
+				iconPosition === "right" ? (
 					<>
+						{originalChildren}
 						{spinner}
-						{childChildren}
 					</>
 				) : (
-					childChildren
+					<>
+						{spinner}
+						{originalChildren}
+					</>
 				);
-				const childTabIndex =
-					(child.props as { tabIndex?: number }).tabIndex ?? undefined;
+			const childTabIndex = (child.props as { tabIndex?: number }).tabIndex;
 
-				return (
-					<Slot
-						ref={ref as SlotElementRef}
-						data-slot="button"
-						data-icon-position={iconPosition}
-						data-loading={isLoading ? "" : undefined}
-					className={baseClassName}
-					aria-busy={isLoading || undefined}
-					aria-live={isLoading ? "polite" : undefined}
-						data-disabled={isDisabled ? "" : undefined}
-						aria-disabled={isDisabled || undefined}
-						tabIndex={
-							isDisabled
-								? -1
-								: tabIndex ?? childTabIndex ?? undefined
-						}
-						{...rest}
-					>
-						{React.cloneElement(child, {
-							children: mergedChildren,
-						})}
-					</Slot>
-				);
-			}
+			return React.cloneElement(child, {
+				ref: ref as React.Ref<HTMLElement>,
+				className: cn(baseClassName, child.props.className),
+				"data-slot": "button",
+				"data-icon-position": iconPosition,
+				"data-loading": isLoading ? "" : undefined,
+				"data-disabled": isDisabled ? "" : undefined,
+				"aria-busy": isLoading || undefined,
+				"aria-live": isLoading ? "polite" : undefined,
+				"aria-disabled": isDisabled || undefined,
+				tabIndex: isDisabled ? -1 : tabIndex ?? childTabIndex,
+				...rest,
+				children: composedChildren,
+			});
+		}
+
+		const content =
+			iconPosition === "right" ? (
+				<>
+					{children}
+					{spinner}
+				</>
+			) : (
+				<>
+					{spinner}
+					{children}
+				</>
+			);
 
 		return (
 			<button
 				ref={ref}
 				type={type}
+				className={baseClassName}
 				data-slot="button"
 				data-icon-position={iconPosition}
 				data-loading={isLoading ? "" : undefined}
-				className={baseClassName}
+				data-disabled={isDisabled ? "" : undefined}
 				aria-busy={isLoading || undefined}
 				aria-live={isLoading ? "polite" : undefined}
 				disabled={isDisabled}
-				data-disabled={isDisabled ? "" : undefined}
-				tabIndex={tabIndex}
+				tabIndex={isDisabled ? -1 : tabIndex}
 				{...rest}
 			>
-				{spinner}
-				{children}
+				{content}
 			</button>
 		);
 	},
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export type { ButtonProps };
+export { buttonVariants };

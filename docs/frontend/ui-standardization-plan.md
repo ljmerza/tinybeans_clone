@@ -7,7 +7,7 @@
 
 ## Current UI Landscape
 - **Design tokens & utilities** — `web/src/styles.css` defines color tokens, typography helpers (`heading-*`, `text-*`), containers, and form utility classes that are partially adopted.
-- **Shared primitives** — `@/components/ui` contains shadcn-based elements (`button`, `input`, `label`, `select`, `slider`, `switch`, `tabs`, `textarea`, `alert-dialog`, `badge`, `confirm-dialog`) plus composable wrappers such as `ButtonGroup`, `Card`, `Chip`, `StatusMessage`, `InfoPanel`, `FormField`, `FormActions`, `LoadingSpinner`, `StandardError`, and `StandardLoading`.
+- **Shared primitives** — `@/components/ui` contains shadcn-based elements (`button`, `input`, `label`, `select`, `slider`, `switch`, `tabs`, `textarea`, `alert-dialog`, `badge`, `confirm-dialog`) plus composable wrappers such as `ButtonGroup`, `Card`, `Chip`, `StatusMessage`, `InfoPanel`, `FormField`, `FormActions`, `LoadingSpinner`, `StandardError`, and the consolidated `LoadingState`.
 - **Feature-specific wrappers** — Auth and Circles experiences rely on higher-order layouts (`AuthCard`, `Wizard`, `Layout`, `Header`) that mix shared primitives with bespoke spacing.
 - **Observed drift** — Legacy `.btn-*` utilities, duplicated empty/loader states, mixed usage of `Chip` versus `Badge`, and inline `div` structures for form helper text cause inconsistency across routes.
 
@@ -17,6 +17,7 @@
 - Reference `docs/frontend/button-standardization-plan.md` as the canonical action plan.
 - Expand the effort to cover `ButtonGroup`, link-as-button usage, icon-only triggers, pagination controls, and destructive confirmations so every interactive element consumes `@/components/ui/button`.
 - Track down residual `<button>` or `<Link>` instances that still rely on Tailwind utilities and migrate them during the final clean-up pass.
+- Encourage teams to leverage the shared `Button` component's `isLoading` prop instead of embedding bespoke spinner markup inside buttons.
 
 ### Form Inputs & Validation
 - Consolidate on `FormField`, `FieldError`, `FormActions`, and shadcn inputs (`input`, `select`, `textarea`, `switch`, `slider`).
@@ -37,7 +38,7 @@
 - Document layout patterns for marketing-style landing pages versus application workflows, clarifying when to hide the header or use `AuthCard`.
 
 ### Loading, Empty, and Error States
-- Merge `StandardLoading`, `LoadingPage`, and ad-hoc spinners into a single configurable component that supports inline and full-page modes.
+- Adopt the consolidated `LoadingState` component for inline, section, and full-screen scenarios, replacing residual ad-hoc spinners.
 - Align `StandardError`, `ErrorBoundary`, and route-level fallback UI so they share typography, icons, and button variants.
 - Create an `EmptyState` component (illustration, title, description, primary/secondary actions) and catalogue existing call sites that roll their own placeholders.
 - Capture Playwright or Storybook visual baselines for loading/error/empty states to guard against regressions during refactors.
@@ -84,8 +85,27 @@
 - Maintain a changelog in `docs/frontend` so design and engineering stay aligned on component evolutions.
 
 ## Next Actions
-1. Share this plan with design leadership and confirm priority order for component families.
-2. Finalize the button variance work, then kick off a form-field deep dive to scope missing primitives.
-3. Prototype unified loading/error/empty components in Storybook and validate with feature teams.
-4. Inventory highly duplicated UI across routes (`profile`, `twofa`, `circles`) and file migration tickets referencing the target primitives.
-5. Draft coding standards updates (review checklist, lint rules) that enforce the new UI system once components ship.
+1. **Design leadership alignment**
+   - Produce a one-page synopsis (objectives, phases, key dependencies) and circulate it with design leadership ahead of a 30-minute review.
+   - Host the review to confirm priority order for component families, capture feedback in meeting notes, and update this plan with any scope adjustments.
+   - Record an explicit sign-off (Slack thread or doc comment) so downstream teams know the plan is approved.
+2. **Button variance close-out**
+   - Audit remaining `ButtonGroup`, link-as-button, icon-only, pagination, and destructive confirmation use-cases that still bypass `@/components/ui/button`.
+   - Implement or extend button variants and supporting props, update Storybook stories, and ensure tests cover primary error/destructive paths.
+   - File cleanup tickets for stubborn call sites that require coordination with feature teams and track them on the migration board.
+3. **Form-field deep dive**
+   - Inventory forms in auth, 2FA, circles, and settings to catalogue missing primitives (checkbox/radio clusters, date/time pickers) and layout patterns.
+   - Draft a component spec for new `FormField` variants (stacked, inline, compact) including accessibility requirements and TanStack Form integration notes.
+   - Build the new primitives behind a feature flag, write Vitest + Testing Library coverage for validation states, and publish Storybook examples (happy/error/loading).
+4. **Unified loading/error/empty prototypes**
+   - Align with design on shared visuals and copy guidelines for loading, empty, and error states (icons, typography, spacing, CTA patterns).
+   - Create consolidated `LoadingState`, `ErrorState`, and `EmptyState` components with configurable density (inline vs. page) and wire them into Storybook + docs.
+   - Pilot the components in two high-traffic routes (e.g., dashboard and circles) to validate API ergonomics before broader rollout.
+5. **Duplicated UI inventory**
+   - Use repository searches (e.g., `rg` on `.btn-`, custom helper divs) to find duplicated patterns in `profile`, `twofa`, `circles`, and related routes.
+   - Capture findings in a migration log (source file, recommended primitive, blockers) and open tickets that bundle similar refactors for sprint planning.
+   - Partner with feature owners to sequence migrations around active roadmap work so refactors do not collide with new features.
+6. **Enforcement standards**
+   - Draft additions to the engineering review checklist covering buttons, form wrappers, feedback messaging, and layout utilities.
+   - Propose ESLint or custom lint rules that catch raw HTML buttons, ad-hoc headings, and unsanctioned class clusters; validate them against the current codebase.
+   - Update developer documentation (handbook, onboarding materials) and run a brown-bag session to walk through the new guardrails.

@@ -1,5 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, StatusMessage, ConfirmDialog } from '@/components';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+	StatusMessage,
+	ConfirmDialog,
+	LoadingState,
+	EmptyState,
+} from '@/components';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { showToast } from '@/lib/toast';
@@ -193,7 +202,6 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 	const error = invitationsQuery.error as ApiError | null;
 
 	const confirmId = confirming;
-	console.log({ invitations })
 
 
 	return (
@@ -207,10 +215,12 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{invitationsQuery.isFetching ? (
-						<div className="flex items-center gap-2 text-sm text-muted-foreground">
-							<LoadingSpinner size="sm" />
-							<span>{t('pages.circles.invites.list.loading')}</span>
-						</div>
+						<LoadingState
+							layout="inline"
+							spinnerSize="sm"
+							className="text-sm text-muted-foreground"
+							message={t('pages.circles.invites.list.loading')}
+						/>
 					) : null}
 
 					{error ? (
@@ -234,109 +244,128 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 						</div>
 					) : null}
 
-					<ul className="space-y-3">
-						{invitations.map((invitation) => {
-							const statusVariant = STATUS_VARIANTS[invitation.status];
-							const createdAt = describeTimestamp(
-								invitation.created_at,
-								i18n.language,
-							);
-							const respondedAt = describeTimestamp(
-								invitation.responded_at,
-								i18n.language,
-							);
-
-							const isPending = invitation.status === 'pending';
-							const isResending = resendTarget === invitation.id;
-							const isCancelling = cancelTarget === invitation.id;
-							const canRemove = invitation.status === 'accepted';
-							const isRemoving =
-								removeTarget === invitation.id && removeMember.isPending;
-							const isResolving = resolvingMemberFor === invitation.id;
-							const disableRemove =
-								isResolving ||
-								(removeMember.isPending && !isRemoving);
-
-							return (
-								<li
-									key={invitation.id}
-									className="border border-border rounded-md px-4 py-3 flex flex-col gap-3 transition-colors bg-card/60"
+					{invitations.length === 0 ? (
+						<EmptyState
+							title={t('pages.circles.invites.list.empty_title')}
+							description={t('pages.circles.invites.list.empty_description')}
+							actions={
+								<Button
+									variant="secondary"
+									onClick={() => {
+										if (typeof window !== 'undefined') {
+											window.scrollTo({ top: 0, behavior: 'smooth' });
+										}
+									}}
 								>
-									<div className="flex flex-wrap items-center justify-between gap-2">
-										<div className="flex items-center gap-3">
-											<div className="font-medium text-sm text-foreground">
-												{invitation.email}
-											</div>
-											<Badge variant={statusVariant}>
-												{t(`pages.circles.invites.status.${invitation.status as CircleInvitationStatus}`)}
-											</Badge>
-											{invitation.existing_user ? (
-												<Badge variant="accent">
-													{t('pages.circles.invites.list.existing_user')}
+									{t('pages.circles.invites.list.empty_action')}
+								</Button>
+							}
+						/>
+					) : (
+						<ul className="space-y-3">
+							{invitations.map((invitation) => {
+								const statusVariant = STATUS_VARIANTS[invitation.status];
+								const createdAt = describeTimestamp(
+									invitation.created_at,
+									i18n.language,
+								);
+								const respondedAt = describeTimestamp(
+									invitation.responded_at,
+									i18n.language,
+								);
+
+								const isPending = invitation.status === 'pending';
+								const isResending = resendTarget === invitation.id;
+								const isCancelling = cancelTarget === invitation.id;
+								const canRemove = invitation.status === 'accepted';
+								const isRemoving =
+									removeTarget === invitation.id && removeMember.isPending;
+								const isResolving = resolvingMemberFor === invitation.id;
+								const disableRemove =
+									isResolving ||
+									(removeMember.isPending && !isRemoving);
+
+								return (
+									<li
+										key={invitation.id}
+										className="border border-border rounded-md px-4 py-3 flex flex-col gap-3 transition-colors bg-card/60"
+									>
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<div className="flex items-center gap-3">
+												<div className="font-medium text-sm text-foreground">
+													{invitation.email}
+												</div>
+												<Badge variant={statusVariant}>
+													{t(`pages.circles.invites.status.${invitation.status as CircleInvitationStatus}`)}
 												</Badge>
-											) : null}
-										</div>
-										<div className="flex items-center gap-2">
-											{isPending ? (
-												<>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => void handleResend(invitation.id)}
-														disabled={isResending || isCancelling}
-													>
-														{isResending
-															? t('pages.circles.invites.list.resending')
-															: t('pages.circles.invites.list.resend')}
-													</Button>
+												{invitation.existing_user ? (
+													<Badge variant="accent">
+														{t('pages.circles.invites.list.existing_user')}
+													</Badge>
+												) : null}
+											</div>
+											<div className="flex items-center gap-2">
+												{isPending ? (
+													<>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => void handleResend(invitation.id)}
+															disabled={isResending || isCancelling}
+														>
+															{isResending
+																? t('pages.circles.invites.list.resending')
+																: t('pages.circles.invites.list.resend')}
+														</Button>
+														<Button
+															variant="ghost"
+															size="sm"
+															className="text-destructive hover:text-destructive"
+															onClick={() => setConfirming(invitation.id)}
+															disabled={isCancelling || isResending}
+														>
+															{isCancelling
+																? t('pages.circles.invites.list.cancelling')
+																: t('pages.circles.invites.list.cancel')}
+														</Button>
+													</>
+												) : null}
+												{canRemove ? (
 													<Button
 														variant="ghost"
 														size="sm"
 														className="text-destructive hover:text-destructive"
-														onClick={() => setConfirming(invitation.id)}
-														disabled={isCancelling || isResending}
+														onClick={() => void openRemoveDialog(invitation)}
+														disabled={disableRemove}
 													>
-														{isCancelling
-															? t('pages.circles.invites.list.cancelling')
-															: t('pages.circles.invites.list.cancel')}
+														{isRemoving
+															? t('pages.circles.invites.list.removing')
+															: t('pages.circles.invites.list.remove')}
 													</Button>
-												</>
+												) : null}
+											</div>
+										</div>
+
+										<div className="text-xs text-muted-foreground space-y-1">
+											{createdAt ? (
+												<div>{t('pages.circles.invites.list.created_at', { createdAt })}</div>
 											) : null}
-											{canRemove ? (
-												<Button
-													variant="ghost"
-													size="sm"
-													className="text-destructive hover:text-destructive"
-													onClick={() => void openRemoveDialog(invitation)}
-													disabled={disableRemove}
-												>
-													{isRemoving
-														? t('pages.circles.invites.list.removing')
-														: t('pages.circles.invites.list.remove')}
-												</Button>
+											{respondedAt ? (
+												<div>{t('pages.circles.invites.list.responded_at', { respondedAt })}</div>
+											) : null}
+											{invitation.reminder_sent_at ? (
+												<div>
+													{t('pages.circles.invites.list.reminder_sent_at', {
+														reminderAt: describeTimestamp(invitation.reminder_sent_at, i18n.language),
+													})}
+												</div>
 											) : null}
 										</div>
-									</div>
-
-									<div className="text-xs text-muted-foreground space-y-1">
-										{createdAt ? (
-											<div>{t('pages.circles.invites.list.created_at', { createdAt })}</div>
-										) : null}
-										{respondedAt ? (
-											<div>{t('pages.circles.invites.list.responded_at', { respondedAt })}</div>
-										) : null}
-										{invitation.reminder_sent_at ? (
-											<div>
-												{t('pages.circles.invites.list.reminder_sent_at', {
-													reminderAt: describeTimestamp(invitation.reminder_sent_at, i18n.language),
-												})}
-											</div>
-										) : null}
-									</div>
-								</li>
-							);
-						})}
-					</ul>
+									</li>
+								);
+							})}
+						</ul>
+					)}
 				</CardContent>
 			</Card>
 			<ConfirmDialog

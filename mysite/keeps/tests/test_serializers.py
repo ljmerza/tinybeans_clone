@@ -2,7 +2,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIRequestFactory
-from mysite.users.models import Circle, CircleMembership
+from mysite.circles.models import Circle, CircleMembership
 from mysite.keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType
 from mysite.keeps.serializers import (
     KeepSerializer,

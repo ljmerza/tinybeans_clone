@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LoadingState } from "@/components/LoadingState";
 import { StatusMessage } from "@/components/StatusMessage";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
@@ -323,9 +323,11 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 			</header>
 
 			{isLoading ? (
-				<div className="flex min-h-[30vh] items-center justify-center">
-					<LoadingSpinner label={t("pages.inviteAccept.loading") ?? ""} />
-				</div>
+				<LoadingState
+					layout="section"
+					className="min-h-[30vh]"
+					message={t("pages.inviteAccept.loading")}
+				/>
 			) : null}
 
 			{viewState === "expired" ? (

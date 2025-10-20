@@ -111,7 +111,7 @@ Invites live inside the existing circles management flow (`web/src/features/circ
 
 **Integration Approach**  
 **Database Integration Strategy**: Extend `CircleInvitation` via Django migrations (support username/email metadata, unique constraints), reuse Redis token store for onboarding links, ensure historic invites remain intact.  
-**API Integration Strategy**: Enhance `mysite/users/views/circles.py` and serializers to support username-aware invitations, explicit acceptance endpoints, and status management.  
+**API Integration Strategy**: Enhance `mysite/circles/views/` and serializers to support username-aware invitations, explicit acceptance endpoints, and status management.  
 **Frontend Integration Strategy**: Add invite mutations and list queries using TanStack Query in `web/src/features/circles`, new onboarding views under `web/src/routes`, and shared UI components for consistent feedback.  
 **Testing Integration Strategy**: Pytest coverage in `mysite/users/tests`, Celery task tests for notifications, DRF schema validation, and Vitest specs for new React flows—including invite acceptance edge cases.
 

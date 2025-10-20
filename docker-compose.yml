@@ -2,7 +2,7 @@ x-common-env: &django-common-env
   DJANGO_SETTINGS_MODULE: mysite.settings
   DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-local}
-  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],web,192.168.1.76}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],web,localhost}
   DJANGO_SECURE_SSL_REDIRECT: ${DJANGO_SECURE_SSL_REDIRECT:-0}
   DJANGO_SECURE_HSTS_SECONDS: ${DJANGO_SECURE_HSTS_SECONDS:-0}
   DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS: ${DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS:-0}
@@ -13,7 +13,7 @@ x-common-env: &django-common-env
   DJANGO_SESSION_COOKIE_SAMESITE: ${DJANGO_SESSION_COOKIE_SAMESITE:-Lax}
   DJANGO_CSRF_COOKIE_SECURE: ${DJANGO_CSRF_COOKIE_SECURE:-0}
   DJANGO_CSRF_COOKIE_SAMESITE: ${DJANGO_CSRF_COOKIE_SAMESITE:-Strict}
-  DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://192.168.1.76:3053,http://localhost:3053,http://127.0.0.1:3053}
+  DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:3053,http://localhost:3053,http://127.0.0.1:3053}
   POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
   POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
@@ -28,7 +28,7 @@ x-common-env: &django-common-env
   EMAIL_PORT: ${EMAIL_PORT:-1025}
   EMAIL_USE_TLS: ${EMAIL_USE_TLS:-0}
   EMAIL_USE_SSL: ${EMAIL_USE_SSL:-0}
-  ACCOUNT_FRONTEND_BASE_URL: ${ACCOUNT_FRONTEND_BASE_URL:-http://192.168.1.76:3053}
+  ACCOUNT_FRONTEND_BASE_URL: ${ACCOUNT_FRONTEND_BASE_URL:-http://localhost:3053}
   MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
@@ -61,7 +61,7 @@ services:
       <<: *django-common-env
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-your-client-secret}
-      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://192.168.1.76:3053/auth/google/callback}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://localhost:3053/auth/google/callback}
     depends_on:
       - redis
       - postgres
@@ -81,7 +81,7 @@ services:
       - "3053:3000"
     environment:
       NODE_ENV: development
-      VITE_API_BASE: ${VITE_API_BASE:-http://192.168.1.76:8100/api}
+      VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8100/api}
     stdin_open: true
     tty: true
 

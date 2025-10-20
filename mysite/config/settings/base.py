@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     'health_check.contrib.redis',
     'mysite.auth.apps.AuthConfig',
     'mysite.users.apps.UsersConfig',
+    'mysite.circles.apps.CirclesConfig',
     'mysite.keeps.apps.KeepsConfig',
 ]
 
@@ -360,7 +361,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(hour=3, minute=0),  # Daily at 3 AM
     },
     'send-circle-invitation-reminders': {
-        'task': 'mysite.users.tasks.send_circle_invitation_reminders',
+        'task': 'mysite.circles.tasks.send_circle_invitation_reminders',
         'schedule': crontab(minute='*/30'),  # Every 30 minutes
     },
 }
@@ -391,7 +392,7 @@ IMAGE_SIZES = {
 _DEV_FRONTEND_ORIGINS = [
     "http://localhost:3053",
     "http://127.0.0.1:3053",
-    "http://192.168.1.76:3053",
+    "http://localhost:3053",
 ]
 _default_cors_origins = _DEV_FRONTEND_ORIGINS if DEBUG else []
 CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS', default=_default_cors_origins)

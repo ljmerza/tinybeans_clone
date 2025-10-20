@@ -4,7 +4,7 @@
 
 ### Backend (Django)
 - Global language settings are still English-only. `LANGUAGE_CODE` is pinned to `"en-us"` and the middleware stack omits `django.middleware.locale.LocaleMiddleware`, so Django never activates per-request locales (mysite/mysite/config/settings/base.py:108,199).
-- Internationalized strings exist (for example, `gettext_lazy` usages in permission guards) but no `locale/` directories or compiled `.po` files are checked in, so those calls always resolve to English (e.g., mysite/users/views/circles.py:108,138,220).
+- Internationalized strings exist (for example, `gettext_lazy` usages in permission guards) but no `locale/` directories or compiled `.po` files are checked in, so those calls always resolve to English (e.g., `mysite/circles/views/invitations.py` permission checks).
 - The user model exposes a `language` field with validated choices (mysite/users/models/user.py:180-185), yet nothing in the request pipeline reads it to set `translation.activate(user.language)` or otherwise influence outbound content.
 - REST responses only standardize validation errors; other exception types (403/404/500) fall back to DRF defaults, which means English messages leak through and the frontend cannot translate them (mysite/mysite/exception_handlers.py:61-70).
 - There is no automated check that backend `i18n_key` literals have matching entries in the frontend locale bundles.
@@ -13,7 +13,7 @@
 - The i18next instance loads `en` and `es`, but defaults to `"en"` and never inspects persisted user preference or browser locale (web/src/i18n/config.ts:12-25).
 - The root provider tree omits an explicit `<I18nextProvider>` and does not hydrate the language based on the authenticated user profile, so every fresh load starts in English even when the backend has a stored preference (web/src/components/AppProviders.tsx:51-64).
 - A `LanguageSwitcher` component exists but is not mounted anywhere in the UI, leaving no way for users to change their language after sign-in (web/src/components/LanguageSwitcher.tsx:19-105).
-- Shared UI primitives still ship English fallbacks (`Loading...`, `Something went wrong`, bootstrapping errors, etc.), bypassing the translation catalog (web/src/components/StandardLoading.tsx:12-26, web/src/components/StandardError.tsx:14-49, web/src/components/AppBootstrap.tsx:61-73, web/src/components/LoadingPage.tsx:9-22).
+- Shared UI primitives now support i18n fallbacks, but some call sites still hard-code English strings (e.g., web/src/components/AppBootstrap.tsx:61-99); ensure consuming screens pass translation keys where possible.
 - The i18n utilities file re-exports `ApiMessage`/`ApiResponse` without importing them, which currently breaks strict TypeScript builds and blocks consumers from relying on those types (web/src/i18n/notificationUtils.ts:8-34).
 - Developer docs reference an `EXAMPLES.tsx` file that is not present, creating dead links for anyone onboarding to the i18n module (web/src/i18n/README.md:132-138).
 

@@ -2,7 +2,7 @@
 
 ## Issue
 ```
-POST http://192.168.1.76:3053/api/auth/login/ 403 (Forbidden)
+POST http://localhost:3053/api/auth/login/ 403 (Forbidden)
 Error: You do not have permission to perform this action.
 ```
 
@@ -74,10 +74,10 @@ export async function refreshAccessToken(): Promise<boolean> {
 ### Option 1: Visit Any Django Page First
 ```bash
 # Visit the API root to get CSRF token
-curl -c cookies.txt http://192.168.1.76:3053/api/
+curl -c cookies.txt http://localhost:3053/api/
 
 # Use the cookie in subsequent requests
-curl -b cookies.txt -X POST http://192.168.1.76:3053/api/auth/login/ \
+curl -b cookies.txt -X POST http://localhost:3053/api/auth/login/ \
   -H "Content-Type: application/json" \
   -H "X-CSRFToken: YOUR_TOKEN_FROM_COOKIE" \
   -d '{"username":"test","password":"test"}'
@@ -130,14 +130,14 @@ Request Headers:
 
 ```bash
 # Get CSRF token
-curl -c /tmp/cookies.txt http://192.168.1.76:3053/api/
+curl -c /tmp/cookies.txt http://localhost:3053/api/
 
 # Extract token
 CSRF_TOKEN=$(grep csrftoken /tmp/cookies.txt | cut -f7)
 
 # Test login
 curl -b /tmp/cookies.txt \
-  -X POST http://192.168.1.76:3053/api/auth/login/ \
+  -X POST http://localhost:3053/api/auth/login/ \
   -H "Content-Type: application/json" \
   -H "X-CSRFToken: $CSRF_TOKEN" \
   -d '{"username":"testuser","password":"testpass"}'
@@ -152,14 +152,14 @@ CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
-    'http://192.168.1.76:3053',
+    'http://localhost:3053',
     'http://127.0.0.1:3000',
 ]
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'http://192.168.1.76:3053',
+    'http://localhost:3053',
     'http://127.0.0.1:3000',
 ]
 CORS_ALLOW_CREDENTIALS = True

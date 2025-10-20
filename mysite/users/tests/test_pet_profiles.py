@@ -4,7 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from mysite.users.models import Circle, CircleMembership, PetProfile, PetType, User, UserRole
+from mysite.circles.models import Circle, CircleMembership
+from mysite.users.models import PetProfile, PetType, User, UserRole
 
 
 class PetProfileModelTests(TestCase):

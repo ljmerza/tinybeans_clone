@@ -1,5 +1,5 @@
 import { StatusMessage } from "@/components";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LoadingState } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useApiMessages } from "@/i18n";
 import type { ApiResponseWithMessages } from "@/types";
@@ -96,14 +96,11 @@ export function EmailVerificationHandler({
 			</h1>
 
 			{status === "verifying" ? (
-				<>
-					<StatusMessage variant="info" align="center">
-						{t("auth.email_verification.verifying")}
-					</StatusMessage>
-					<div className="flex justify-center">
-						<LoadingSpinner />
-					</div>
-				</>
+				<LoadingState
+					layout="section"
+					className="py-8"
+					message={t("auth.email_verification.verifying")}
+				/>
 			) : (
 				<>
 					<StatusMessage

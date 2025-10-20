@@ -2,7 +2,7 @@
  * Trusted Devices Management Page
  */
 
-import { Layout } from "@/components";
+import { EmptyState, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
@@ -17,12 +17,14 @@ import type { TrustedDevicesResponse } from "@/features/twofa";
 import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 function TrustedDevicesPage() {
 	const navigate = useNavigate();
 	const { data, isLoading } = useTrustedDevices();
 	const removeDevice = useRemoveTrustedDevice();
 	const addDevice = useAddTrustedDevice();
+	const { t } = useTranslation();
 	const [deviceToRemove, setDeviceToRemove] = useState<{
 		id: string;
 		name: string;
@@ -42,8 +44,8 @@ function TrustedDevicesPage() {
 	if (isLoading) {
 		return (
 			<Layout.Loading
-				message="Loading trusted devices..."
-				description="Fetching the devices that have been marked as trusted."
+				message={t("twofa.trusted_devices.loading_title")}
+				description={t("twofa.trusted_devices.loading_description")}
 			/>
 		);
 	}
@@ -57,32 +59,49 @@ function TrustedDevicesPage() {
 					<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 						<div>
 							<h1 className="text-2xl font-semibold text-foreground mb-2">
-								Trusted Devices
+								{t("twofa.trusted_devices.title")}
 							</h1>
 							<p className="text-muted-foreground text-sm">
-								These devices can skip 2FA verification for 30 days. Remove a
-								device to require 2FA on next login.
+								{t("twofa.trusted_devices.subtitle")}
 							</p>
 						</div>
 						<Button
 							variant="secondary"
 							onClick={() => addDevice.mutate()}
-							disabled={addDevice.isPending}
+							isLoading={addDevice.isPending}
 							className="w-full sm:w-auto"
 						>
-							{addDevice.isPending ? "Trusting device..." : "Trust this device"}
+							{addDevice.isPending
+								? t("twofa.trusted_devices.add_loading")
+								: t("twofa.trusted_devices.add_button")}
 						</Button>
 					</div>
 
 					{devices.length === 0 ? (
-						<div className="text-center py-12">
-							<div className="text-6xl mb-4">🔒</div>
-							<p className="text-muted-foreground mb-2">No trusted devices</p>
-							<p className="text-sm text-muted-foreground">
-								Trust this device from here or enable "Remember this device"
-								during 2FA verification to add trusted devices.
+						<EmptyState
+							icon={
+								<span role="img" aria-hidden className="text-5xl">
+									🔒
+								</span>
+							}
+							title={t("twofa.trusted_devices.empty_title")}
+							description={t("twofa.trusted_devices.empty_description")}
+							actions={
+								<Button
+									variant="secondary"
+									onClick={() => addDevice.mutate()}
+									isLoading={addDevice.isPending}
+								>
+									{addDevice.isPending
+										? t("twofa.trusted_devices.add_loading")
+										: t("twofa.trusted_devices.add_button")}
+								</Button>
+							}
+						>
+							<p className="text-sm text-muted-foreground max-w-prose">
+								{t("twofa.trusted_devices.empty_helper")}
 							</p>
-						</div>
+						</EmptyState>
 					) : (
 						<div className="space-y-4">
 							{devices.map((device) => (
@@ -98,13 +117,13 @@ function TrustedDevicesPage() {
 											<div className="space-y-1 text-sm text-muted-foreground">
 												<div className="flex items-center gap-2">
 													<span className="font-medium text-foreground">
-														IP Address:
+														{t("twofa.trusted_devices.metadata.ip")}
 													</span>
 													<span className="font-mono">{device.ip_address}</span>
 												</div>
 												<div className="flex items-center gap-2">
 													<span className="font-medium text-foreground">
-														Last used:
+														{t("twofa.trusted_devices.metadata.last_used")}
 													</span>
 													<span>
 														{new Date(device.last_used_at).toLocaleString()}
@@ -112,7 +131,7 @@ function TrustedDevicesPage() {
 												</div>
 												<div className="flex items-center gap-2">
 													<span className="font-medium text-foreground">
-														Expires:
+														{t("twofa.trusted_devices.metadata.expires")}
 													</span>
 													<span>
 														{new Date(device.expires_at).toLocaleDateString()}
@@ -120,7 +139,7 @@ function TrustedDevicesPage() {
 												</div>
 												<div className="flex items-center gap-2">
 													<span className="font-medium text-foreground">
-														Added:
+														{t("twofa.trusted_devices.metadata.added")}
 													</span>
 													<span>
 														{new Date(device.created_at).toLocaleDateString()}
@@ -136,9 +155,16 @@ function TrustedDevicesPage() {
 												handleRemove(device.device_id, device.device_name)
 											}
 											disabled={removeDevice.isPending}
+											isLoading={
+												removeDevice.isPending &&
+												deviceToRemove?.id === device.device_id
+											}
 											className="ml-4"
 										>
-											{removeDevice.isPending ? "Removing..." : "Remove"}
+											{removeDevice.isPending &&
+											deviceToRemove?.id === device.device_id
+												? t("twofa.trusted_devices.remove_loading")
+												: t("twofa.trusted_devices.remove_button")}
 										</Button>
 									</div>
 								</div>
@@ -153,12 +179,13 @@ function TrustedDevicesPage() {
 							onClick={() => navigate({ to: "/profile/2fa" })}
 							className="text-sm text-muted-foreground hover:text-foreground transition-colors"
 						>
-							← Back to 2FA Settings
+							{t("twofa.trusted_devices.back_to_settings")}
 						</Button>
 
 						<p className="text-xs text-muted-foreground">
-							{devices.length} trusted{" "}
-							{devices.length === 1 ? "device" : "devices"}
+							{t("twofa.trusted_devices.count_label", {
+								count: devices.length,
+							})}
 						</p>
 					</div>
 				</div>
@@ -167,9 +194,11 @@ function TrustedDevicesPage() {
 			<ConfirmDialog
 				open={deviceToRemove !== null}
 				onOpenChange={(open) => !open && setDeviceToRemove(null)}
-				title={`Remove "${deviceToRemove?.name}"?`}
-				description="You'll need to verify with 2FA next time you login from this device."
-				confirmLabel="Remove"
+				title={t("twofa.trusted_devices.remove_confirm_title", {
+					name: deviceToRemove?.name ?? "",
+				})}
+				description={t("twofa.trusted_devices.remove_confirm_description")}
+				confirmLabel={t("twofa.trusted_devices.remove_confirm_cta")}
 				variant="destructive"
 				isLoading={removeDevice.isPending}
 				onConfirm={confirmRemove}

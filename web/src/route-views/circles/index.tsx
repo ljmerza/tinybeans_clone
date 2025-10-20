@@ -6,8 +6,8 @@ import {
   CardTitle,
   ConfirmDialog,
   Layout,
-  LoadingSpinner,
-  StatusMessage,
+  LoadingState,
+  EmptyState,
 } from "@/components";
 import { Button } from "@/components/ui/button";
 import { useCircleMemberships, useCircleRemoveSelfMutation } from "@/features/circles";
@@ -26,12 +26,8 @@ export function CirclesIndexRouteView() {
   if (isLoading && !data) {
     return (
       <Layout.Loading
-        message={
-          <span className="flex items-center gap-2">
-            <LoadingSpinner size="sm" />
-            {t("pages.circles.index.loading")}
-          </span>
-        }
+        message={t("pages.circles.index.loading")}
+        spinnerSize="sm"
       />
     );
   }
@@ -56,17 +52,27 @@ export function CirclesIndexRouteView() {
           <h1 className="heading-2">{t("pages.circles.index.title")}</h1>
           <p className="text-subtitle">{t("pages.circles.index.subtitle")}</p>
           {isFetching ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <LoadingSpinner size="sm" />
-              <span>{t("pages.circles.index.refreshing")}</span>
-            </div>
+            <LoadingState
+              layout="inline"
+              spinnerSize="sm"
+              className="text-sm text-muted-foreground"
+              message={t("pages.circles.index.refreshing")}
+            />
           ) : null}
         </header>
 
         {memberships.length === 0 ? (
-          <StatusMessage variant="info">
-            {t("pages.circles.index.empty")}
-          </StatusMessage>
+          <EmptyState
+            title={t("pages.circles.index.empty_title")}
+            description={t("pages.circles.index.empty_description")}
+            actions={
+              <Button asChild variant="primary">
+                <Link to="/circles/onboarding">
+                  {t("pages.circles.index.empty_action")}
+                </Link>
+              </Button>
+            }
+          />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {memberships.map((membership) => {

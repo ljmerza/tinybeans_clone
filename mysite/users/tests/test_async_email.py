@@ -116,7 +116,7 @@ class AsyncEmailTaskTests(TestCase):
 
         mock_mailjet.assert_called_once()
 
-    @patch('mysite.users.views.circles.send_email_task.delay')
+    @patch('mysite.circles.views.invitations.send_email_task.delay')
     def test_circle_invitation_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
             username='circleadmin',

@@ -1,7 +1,8 @@
 """Tests for the keeps app models and basic functionality."""
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from mysite.users.models import Circle, CircleMembership, UserRole
+from mysite.circles.models import Circle, CircleMembership
+from mysite.users.models import UserRole
 from mysite.keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType, KeepReaction, KeepComment
 
 User = get_user_model()

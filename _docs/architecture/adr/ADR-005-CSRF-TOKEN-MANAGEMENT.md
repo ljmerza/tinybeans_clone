@@ -262,14 +262,14 @@ CSRF_COOKIE_SAMESITE = 'Lax'  # Allow cross-origin from localhost
 CSRF_COOKIE_SECURE = False    # Allow HTTP (development only)
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
-    'http://192.168.1.76:3053',
+    'http://localhost:3053',
     'http://127.0.0.1:3000',
 ]
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'http://192.168.1.76:3053',
+    'http://localhost:3053',
     'http://127.0.0.1:3000',
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -557,7 +557,7 @@ const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('c
 5. **Maintainable**: Simple, well-documented implementation
 6. **Testable**: Can reset CSRF state for testing
 7. **Automatic**: Once initialized, all POST requests include token automatically
-8. **Development-friendly**: Works across different ports (localhost:3000 → 192.168.1.76:3053)
+8. **Development-friendly**: Works across different ports (localhost:3000 → localhost:3053)
 
 ### Negative
 
@@ -1016,7 +1016,7 @@ The cookie value and header value must match exactly.
 
 **Symptoms:**
 ```
-Access to fetch at 'http://192.168.1.76:3053/api/auth/login/' 
+Access to fetch at 'http://localhost:3053/api/auth/login/' 
 from origin 'http://localhost:3000' has been blocked by CORS policy
 ```
 
@@ -1027,12 +1027,12 @@ Check Django settings:
 # Must have BOTH frontend origins
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'http://192.168.1.76:3053',
+    'http://localhost:3053',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
-    'http://192.168.1.76:3053',
+    'http://localhost:3053',
 ]
 
 # Critical!

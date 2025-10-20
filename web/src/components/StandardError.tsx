@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
 import type { buttonVariants } from "@/components/ui/button";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 interface StandardErrorProps {
 	title?: ReactNode;
@@ -16,7 +17,7 @@ interface StandardErrorProps {
 }
 
 export function StandardError({
-	title = "Something went wrong",
+	title,
 	message,
 	description,
 	actionLabel,
@@ -26,25 +27,40 @@ export function StandardError({
 	icon,
 	className = "",
 }: StandardErrorProps) {
+	const { t } = useTranslation();
+	const resolvedTitle =
+		title === undefined
+			? t("errors.generic.title", { defaultValue: "Something went wrong" })
+			: title;
+	const resolvedMessage =
+		message === undefined
+			? t("errors.generic.message", { defaultValue: "Please try again." })
+			: message;
+
 	return (
 		<div
 			className={`flex flex-col items-center justify-center text-center gap-4 py-16 ${className}`}
+			role="alert"
 		>
 			{icon}
 			<div className="space-y-2">
-				{title && (
-					<h2 className="text-2xl font-semibold text-destructive">{title}</h2>
-				)}
-				{message && (
-					<p className="text-base font-medium text-foreground">{message}</p>
-				)}
-				{description && (
+				{resolvedTitle ? (
+					<h2 className="text-2xl font-semibold text-destructive">
+						{resolvedTitle}
+					</h2>
+				) : null}
+				{resolvedMessage ? (
+					<p className="text-base font-medium text-foreground">
+						{resolvedMessage}
+					</p>
+				) : null}
+				{description ? (
 					<p className="text-sm text-muted-foreground max-w-prose">
 						{description}
 					</p>
-				)}
+				) : null}
 			</div>
-			{actionLabel && onAction && (
+			{actionLabel && onAction ? (
 				<Button
 					type="button"
 					onClick={onAction}
@@ -53,7 +69,7 @@ export function StandardError({
 				>
 					{actionLabel}
 				</Button>
-			)}
+			) : null}
 			{extraContent}
 		</div>
 	);

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { StatusMessage } from "@/components";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LoadingState } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
@@ -62,12 +62,11 @@ export function MagicLoginHandler({ token, redirect }: MagicLoginHandlerProps) {
 	if (status === "verifying") {
 		return (
 			<div className="mx-auto max-w-sm p-6 space-y-4">
-				<StatusMessage variant="info">
-					{t("auth.magic_link.verifying")}
-				</StatusMessage>
-				<div className="flex justify-center">
-					<LoadingSpinner />
-				</div>
+				<LoadingState
+					layout="section"
+					className="py-8"
+					message={t("auth.magic_link.verifying")}
+				/>
 			</div>
 		);
 	}

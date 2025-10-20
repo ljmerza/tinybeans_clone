@@ -96,7 +96,10 @@
       "google_signin": "Iniciar sesión con Google",
       "google_signup": "Registrarse con Google",
       "google_link": "Vincular cuenta de Google",
-      "processing": "Procesando inicio de sesión con Google..."
+      "processing": "Procesando inicio de sesión con Google...",
+      "processing_description": "Espera mientras verificamos tu cuenta.",
+      "callback_error_title": "Error al iniciar sesión",
+      "callback_error_description": "Ocurrió un error durante el inicio de sesión. Inténtalo de nuevo."
     },
     "logout": {
       "logging_out": "Cerrando sesión...",
@@ -109,6 +112,30 @@
     "disabled": "2FA deshabilitado",
     "enable": "Habilitar 2FA",
     "disable": "Deshabilitar 2FA",
+    "trusted_devices": {
+      "title": "Dispositivos de confianza",
+      "subtitle": "Los dispositivos marcados como confiables pueden omitir el segundo factor durante 30 días. Elimínalos si quieres pedir verificación la próxima vez.",
+      "loading_title": "Cargando dispositivos de confianza…",
+      "loading_description": "Obteniendo la lista de dispositivos que actualmente pueden saltarse el segundo factor.",
+      "add_button": "Confiar en este dispositivo",
+      "add_loading": "Confiando en el dispositivo…",
+      "empty_title": "Aún no hay dispositivos de confianza",
+      "empty_description": "Solo los dispositivos que designes como confiables podrán evitar la verificación en dos pasos temporalmente.",
+      "empty_helper": "Marca este dispositivo desde aquí o activa “Recordar este dispositivo” durante la verificación 2FA para añadirlo automáticamente.",
+      "metadata": {
+        "ip": "Dirección IP:",
+        "last_used": "Último uso:",
+        "expires": "Expira:",
+        "added": "Añadido:"
+      },
+      "remove_button": "Eliminar",
+      "remove_loading": "Eliminando…",
+      "remove_confirm_title": "¿Eliminar “{{name}}”?",
+      "remove_confirm_description": "Tendrás que completar 2FA la próxima vez que inicies sesión desde este dispositivo.",
+      "remove_confirm_cta": "Eliminar dispositivo",
+      "back_to_settings": "← Volver a ajustes de 2FA",
+      "count_label": "{{count}} dispositivo{{count, plural, one {} other {s}}} de confianza"
+    },
     "setup_title": "Configurar autenticación de dos factores",
     "verify_title": "Se requiere autenticación de dos factores",
     "verify_description": "Ingresa el código de verificación de tu aplicación o dispositivo de autenticación",
@@ -330,6 +357,9 @@
                 "retry": "Reintentar",
                 "refreshing": "Actualizando…",
                 "empty": "Aún no te has unido a ningún círculo.",
+                "empty_title": "Crea tu primer círculo",
+                "empty_description": "Invita a tus personas cercanas para compartir recuerdos juntos.",
+                "empty_action": "Comenzar configuración",
                 "member_count": "{{count}} miembros",
                 "member_count_one": "{{count}} miembro",
                 "member_count_other": "{{count}} miembros",
@@ -357,7 +387,10 @@
                 "member_count_one": "{{count}} miembro",
                 "member_count_other": "{{count}} miembros",
                 "refreshing": "Actualizando…",
-                "no_members": "Invita a tu primer miembro para comenzar."
+                "no_members": "Invita a tu primer miembro para comenzar.",
+                "no_members_title": "Aún no hay miembros",
+                "no_members_description": "Envía una invitación para que el círculo no quede vacío.",
+                "no_members_action": "Invitar a alguien"
               },
               "invites": {
                 "form": {
@@ -391,6 +424,9 @@
                   "description": "Consulta quién debe responder y toma acciones cuando sea necesario.",
                   "loading": "Actualizando invitaciones…",
                   "empty": "Aún no hay invitaciones. Envía una para comenzar.",
+                  "empty_title": "Aún no hay invitaciones",
+                  "empty_description": "Envía una invitación para sumar a alguien al círculo.",
+                  "empty_action": "Crear invitación",
                   "existing_user": "Cuenta existente",
                   "resend": "Reenviar",
                   "resending": "Reenviando…",

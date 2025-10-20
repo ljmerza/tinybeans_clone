@@ -1,5 +1,5 @@
 import { Layout } from "@/components/Layout";
-import { LoadingSpinner, StatusMessage } from "@/components";
+import { LoadingState, EmptyState } from "@/components";
 import { Button } from "@/components/ui/button";
 import {
 	CircleInvitationManager,
@@ -28,12 +28,8 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 	if (isLoading && !data) {
 		return (
 			<Layout.Loading
-				message={
-					<span className="flex items-center gap-2">
-						<LoadingSpinner size="sm" />
-						{t("pages.circles.dashboard.loading")}
-					</span>
-				}
+				message={t("pages.circles.dashboard.loading")}
+				spinnerSize="sm"
 			/>
 		);
 	}
@@ -81,10 +77,12 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 							{isFetching ? (
 								<>
 									<span>&middot;</span>
-									<span className="inline-flex items-center gap-1">
-										<LoadingSpinner size="sm" />
-										{t("pages.circles.dashboard.refreshing")}
-									</span>
+									<LoadingState
+										layout="inline"
+										spinnerSize="sm"
+										className="text-sm text-muted-foreground"
+										message={t("pages.circles.dashboard.refreshing")}
+									/>
 								</>
 							) : null}
 						</div>
@@ -94,9 +92,10 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 				<CircleInvitationManager circleId={circleId} />
 
 				{members.length === 0 ? (
-					<StatusMessage variant="info">
-						{t("pages.circles.dashboard.no_members")}
-					</StatusMessage>
+					<EmptyState
+						title={t("pages.circles.dashboard.no_members_title")}
+						description={t("pages.circles.dashboard.no_members_description")}
+					/>
 				) : null}
 			</div>
 		</Layout>

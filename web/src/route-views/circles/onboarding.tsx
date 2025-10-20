@@ -1,6 +1,5 @@
 import { FormActions, FormField } from "@/components";
 import { Layout } from "@/components/Layout";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useResendVerificationMutation } from "@/features/auth";
@@ -206,16 +205,12 @@ function CircleOnboardingContent({
 					<Button
 						type="submit"
 						className="w-full"
-						disabled={!canSubmit || createCircleMutation.isPending}
+						isLoading={createCircleMutation.isPending}
+						disabled={!canSubmit}
 					>
-						{createCircleMutation.isPending ? (
-							<span className="flex items-center justify-center gap-2">
-								<LoadingSpinner size="sm" />
-								{t("pages.circleOnboarding.creating")}
-							</span>
-						) : (
-							t("pages.circleOnboarding.createButton")
-						)}
+						{createCircleMutation.isPending
+							? t("pages.circleOnboarding.creating")
+							: t("pages.circleOnboarding.createButton")}
 					</Button>
 				</FormActions>
 			</form>
@@ -224,7 +219,7 @@ function CircleOnboardingContent({
 				variant="ghost"
 				className="self-start text-muted-foreground hover:text-foreground"
 				onClick={handleSkip}
-				disabled={skipMutation.isPending}
+				isLoading={skipMutation.isPending}
 			>
 				{skipMutation.isPending
 					? t("pages.circleOnboarding.skipping")

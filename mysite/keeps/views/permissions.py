@@ -1,7 +1,8 @@
 """Permission classes for keeps app."""
 from rest_framework import permissions
 
-from mysite.users.models import Circle, CircleMembership, UserRole
+from mysite.circles.models import Circle, CircleMembership
+from mysite.users.models import UserRole
 
 
 class IsCircleMember(permissions.BasePermission):

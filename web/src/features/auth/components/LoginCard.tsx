@@ -1,6 +1,5 @@
 import { FormActions, FormField } from "@/components";
 import { AuthCard } from "@/components/AuthCard";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
@@ -190,15 +189,14 @@ export function LoginCard({ redirect }: LoginCardProps) {
 							: undefined
 					}
 				>
-					<Button type="submit" className="w-full" disabled={login.isPending}>
-						{login.isPending ? (
-							<span className="flex items-center justify-center gap-2">
-								<LoadingSpinner size="sm" />
-								{t("auth.login.signing_in")}
-							</span>
-						) : (
-							t("auth.login.sign_in")
-						)}
+					<Button
+						type="submit"
+						className="w-full"
+						isLoading={login.isPending}
+					>
+						{login.isPending
+							? t("auth.login.signing_in")
+							: t("auth.login.sign_in")}
 					</Button>
 				</FormActions>
 			</form>

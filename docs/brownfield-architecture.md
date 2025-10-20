@@ -59,7 +59,7 @@ REST APIs are exposed through Django REST Framework with schema annotations in m
 
 ### Circles Domain
 - **Models**: `Circle`, `CircleMembership`, `CircleInvitation` in `mysite/users/models/circle.py`; ownership is tracked through `UserRole` choices (`mysite/users/models/user.py`).
-- **API Endpoints**: `mysite/users/views/circles.py` provides list/create, detail update, invitation create/list/accept endpoints. Invitations currently email-based with Celery email dispatch (`mysite/users/tasks.py`).
+- **API Endpoints**: `mysite/circles/views` provides list/create, detail update, invitation create/list/accept endpoints. Invitations currently email-based with Celery email dispatch (`mysite/circles/tasks.py`).
 - **Serializers**: `CircleInvitationCreateSerializer` and companion serializers under `mysite/users/serializers/`.
 - **Technical Debt**: Invitations only support email, no username path; onboarding for invitees without existing accounts is manual; limited rate limiting on invites; minimal audit logging.
 

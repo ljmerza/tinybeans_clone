@@ -2,7 +2,7 @@
 from rest_framework import generics, permissions
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
-from mysite.users.models import Circle
+from mysite.circles.models import Circle
 from ..models import KeepReaction
 from ..serializers import KeepReactionSerializer
 from .permissions import IsCircleMember, IsCircleAdminOrOwner, is_circle_admin
