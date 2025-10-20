@@ -12,9 +12,6 @@ from .models import (
     ChildProfileUpgradeStatus,
     ChildUpgradeAuditLog,
     ChildUpgradeEventType,
-    Circle,
-    CircleInvitation,
-    CircleMembership,
     User,
     UserNotificationPreferences,
 )
@@ -34,17 +31,6 @@ class UserAdmin(DjangoUserAdmin):
     list_filter = ('role', 'is_active', 'email_verified')
     search_fields = ('username', 'email')
 
-
-class CircleMembershipInline(admin.TabularInline):
-    model = CircleMembership
-    extra = 0
-
-
-@admin.register(Circle)
-class CircleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'created_by', 'created_at')
-    search_fields = ('name', 'slug')
-    inlines = [CircleMembershipInline]
 
 
 class ChildGuardianConsentInline(admin.TabularInline):
@@ -226,20 +212,6 @@ class UserNotificationPreferencesAdmin(admin.ModelAdmin):
         'channel',
     )
     list_filter = ('channel', 'notify_new_media', 'notify_weekly_digest', 'digest_frequency', 'push_enabled')
-
-
-@admin.register(CircleMembership)
-class CircleMembershipAdmin(admin.ModelAdmin):
-    list_display = ('circle', 'user', 'role', 'created_at')
-    list_filter = ('role',)
-    search_fields = ('circle__name', 'user__username')
-
-
-@admin.register(CircleInvitation)
-class CircleInvitationAdmin(admin.ModelAdmin):
-    list_display = ('circle', 'email', 'role', 'status', 'created_at', 'responded_at')
-    list_filter = ('status', 'role', 'circle')
-    search_fields = ('email',)
 
 
 @admin.register(ChildUpgradeAuditLog)
