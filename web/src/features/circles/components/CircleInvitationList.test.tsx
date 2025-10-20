@@ -6,148 +6,94 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CircleInvitationList } from "./CircleInvitationList";
 
-const mockUseCircleInvitationsQuery = vi.fn();
-const mockUseResendCircleInvitation = vi.fn();
-const mockUseCancelCircleInvitation = vi.fn();
-const mockUseRemoveCircleMember = vi.fn();
-const mockUseCircleMembers = vi.fn();
+const mockUseCircleInvitationListController = vi.fn();
 
-vi.mock("../hooks/useCircleInvitationAdmin", () => ({
-	useCircleInvitationsQuery: (...args: unknown[]) =>
-		mockUseCircleInvitationsQuery(...args),
-	useResendCircleInvitation: (...args: unknown[]) =>
-		mockUseResendCircleInvitation(...args),
-	useCancelCircleInvitation: (...args: unknown[]) =>
-		mockUseCancelCircleInvitation(...args),
-	useRemoveCircleMember: (...args: unknown[]) =>
-		mockUseRemoveCircleMember(...args),
-}));
-
-vi.mock("../hooks/useCircleMemberships", () => ({
-	useCircleMembers: (...args: unknown[]) => mockUseCircleMembers(...args),
+vi.mock("../hooks/useCircleInvitationListController", () => ({
+	useCircleInvitationListController: (...args: unknown[]) =>
+		mockUseCircleInvitationListController(...args),
 }));
 
 describe("CircleInvitationList", () => {
+	const invitations = [
+		{
+			id: "invite-1",
+			email: "alex@example.com",
+			existing_user: true,
+			role: "member",
+			status: "pending",
+			created_at: "2025-02-14T12:00:00Z",
+			responded_at: null,
+			reminder_sent_at: null,
+			invited_user: null,
+		},
+		{
+			id: "invite-2",
+			email: "sarah@example.com",
+			existing_user: false,
+			role: "member",
+			status: "accepted",
+			created_at: "2025-02-10T12:00:00Z",
+			responded_at: "2025-02-11T12:05:00Z",
+			reminder_sent_at: null,
+			invited_user: {
+				id: 24,
+				username: "sarah",
+				first_name: "Sarah",
+				last_name: "Doe",
+			},
+		},
+	] as const;
+
 	const resendSpy = vi.fn().mockResolvedValue({});
-	const cancelSpy = vi.fn().mockResolvedValue({});
 	const removeSpy = vi.fn().mockResolvedValue({});
+	const openRemoveSpy = vi.fn();
+	const cancelOpenSpy = vi.fn();
+	const cancelCloseSpy = vi.fn();
+	const cancelConfirmSpy = vi.fn();
+	const removalCloseSpy = vi.fn();
+	const removalCancelSpy = vi.fn();
 
 	beforeEach(() => {
 		resendSpy.mockClear();
-		cancelSpy.mockClear();
 		removeSpy.mockClear();
-		mockUseCircleMembers.mockClear();
-		mockUseCircleInvitationsQuery.mockReturnValue({
-			data: [
-				{
-					id: "invite-1",
-					email: "alex@example.com",
-					existing_user: true,
-					role: "member",
-					status: "pending",
-					created_at: "2025-02-14T12:00:00Z",
-					responded_at: null,
-					reminder_sent_at: null,
-					invited_user: null,
-				},
-				{
-					id: "invite-2",
-					email: "sarah@example.com",
-					existing_user: false,
-					role: "member",
-					status: "accepted",
-					created_at: "2025-02-10T12:00:00Z",
-					responded_at: "2025-02-11T12:05:00Z",
-					reminder_sent_at: null,
-					invited_user: {
-						id: 24,
-						username: "sarah",
-						first_name: "Sarah",
-						last_name: "Doe",
-					},
-				},
-			],
-			isFetching: false,
-			isLoading: false,
-			error: null,
-			refetch: vi.fn(),
-		});
+		openRemoveSpy.mockClear();
+		cancelOpenSpy.mockClear();
+		cancelCloseSpy.mockClear();
+		cancelConfirmSpy.mockClear();
+		removalCloseSpy.mockClear();
+		removalCancelSpy.mockClear();
 
-		mockUseResendCircleInvitation.mockReturnValue({
-			mutateAsync: resendSpy,
-			isPending: false,
-		});
-
-		mockUseCancelCircleInvitation.mockReturnValue({
-			mutateAsync: cancelSpy,
-			isPending: false,
-		});
-
-		mockUseRemoveCircleMember.mockReturnValue({
-			mutateAsync: removeSpy,
-			isPending: false,
-		});
-
-		mockUseCircleMembers.mockReturnValue({
-			data: {
-				circle: {
-					id: 42,
-					name: "The Circle",
-					slug: "circle",
-					member_count: 2,
-				},
-				members: [
-					{
-						membership_id: 101,
-						user: {
-							id: 24,
-							username: "sarah",
-							email: "sarah@example.com",
-							role: "member",
-							email_verified: true,
-							date_joined: "2025-02-10T12:05:00Z",
-							language: "en",
-							circle_onboarding_status: null,
-							circle_onboarding_updated_at: null,
-							needs_circle_onboarding: false,
-						},
-						role: "member",
-						created_at: "2025-02-10T12:05:00Z",
-					},
-				],
+		mockUseCircleInvitationListController.mockReturnValue({
+			invitations,
+			query: {
+				isFetching: false,
+				isLoading: false,
+				error: null,
+				refetch: vi.fn(),
 			},
-			isLoading: false,
-			isFetching: false,
-			error: null,
-			refetch: vi.fn().mockResolvedValue({
-				data: {
-					circle: {
-						id: 42,
-						name: "The Circle",
-						slug: "circle",
-						member_count: 2,
-					},
-					members: [
-						{
-							membership_id: 101,
-							user: {
-								id: 24,
-								username: "sarah",
-								email: "sarah@example.com",
-								role: "member",
-								email_verified: true,
-								date_joined: "2025-02-10T12:05:00Z",
-								language: "en",
-								circle_onboarding_status: null,
-								circle_onboarding_updated_at: null,
-								needs_circle_onboarding: false,
-							},
-							role: "member",
-							created_at: "2025-02-10T12:05:00Z",
-						},
-					],
-				},
-			}),
+			resend: {
+				trigger: resendSpy,
+				targetId: null,
+				isPending: false,
+			},
+			cancel: {
+				open: cancelOpenSpy,
+				close: cancelCloseSpy,
+				confirm: cancelConfirmSpy,
+				confirmId: null,
+				targetId: null,
+				isPending: false,
+			},
+			removal: {
+				dialog: null,
+				open: openRemoveSpy,
+				close: removalCloseSpy,
+				cancel: removalCancelSpy,
+				confirm: removeSpy,
+				targetId: null,
+				isPending: false,
+				resolvingId: null,
+			},
 		});
 	});
 
@@ -170,21 +116,58 @@ describe("CircleInvitationList", () => {
 	});
 
 	it("shows remove action and confirms removal for accepted invitations", async () => {
+		mockUseCircleInvitationListController.mockReturnValue({
+			invitations,
+			query: {
+				isFetching: false,
+				isLoading: false,
+				error: null,
+				refetch: vi.fn(),
+			},
+			resend: {
+				trigger: resendSpy,
+				targetId: null,
+				isPending: false,
+			},
+			cancel: {
+				open: cancelOpenSpy,
+				close: cancelCloseSpy,
+				confirm: cancelConfirmSpy,
+				confirmId: null,
+				targetId: null,
+				isPending: false,
+			},
+			removal: {
+				dialog: {
+					invitation: invitations[1],
+					memberId: "24",
+				},
+				open: openRemoveSpy,
+				close: removalCloseSpy,
+				cancel: removalCancelSpy,
+				confirm: removeSpy,
+				targetId: null,
+				isPending: false,
+				resolvingId: null,
+			},
+		});
+
 		renderWithQueryClient(<CircleInvitationList circleId="42" />);
 
 		const removeButton = screen.getByRole("button", { name: "Remove from circle" });
 		fireEvent.click(removeButton);
 
-		await waitFor(() =>
-			expect(
-				screen.getByText("Remove sarah@example.com from this circle?"),
-			).toBeInTheDocument(),
-		);
+		expect(openRemoveSpy).toHaveBeenCalledWith(invitations[1]);
+		expect(
+			screen.getByText("Remove sarah@example.com from this circle?"),
+		).toBeInTheDocument();
 
 		fireEvent.click(screen.getByRole("button", { name: "Yes, remove member" }));
 
 		await waitFor(() => {
-			expect(removeSpy).toHaveBeenCalledWith("24");
+			expect(removeSpy).toHaveBeenCalled();
 		});
 	});
 });
+		cancelConfirmSpy.mockClear();
+		cancelConfirmSpy.mockResolvedValue(undefined);
