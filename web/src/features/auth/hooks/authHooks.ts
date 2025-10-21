@@ -101,6 +101,7 @@ export function useLogin(options?: { redirect?: string }) {
 		ApiError,
 		LoginRequest
 	>({
+		mutationKey: authKeys.mutations.login(),
 		mutationFn: async (body) => {
 			setAccessToken(null);
 			return authServices.login(body);
@@ -189,6 +190,13 @@ export function useLogin(options?: { redirect?: string }) {
 		onError: (error) => {
 			console.error("Login error:", error);
 		},
+		meta: {
+			analyticsEvent: "auth:login",
+			toast: {
+				successKey: "auth.login.login_success",
+				errorKey: "auth.login.login_failed",
+			},
+		},
 	});
 }
 
@@ -202,6 +210,7 @@ export function useSignup(options?: { redirect?: string }) {
 		ApiError,
 		SignupRequest
 	>({
+		mutationKey: authKeys.mutations.signup(),
 		mutationFn: (body) => authServices.signup(body),
 		onSuccess: async (response) => {
 			const payload = (response.data ??
@@ -278,6 +287,13 @@ export function useSignup(options?: { redirect?: string }) {
 		},
 		onError: (error) => {
 			console.error("Signup error:", error);
+		},
+		meta: {
+			analyticsEvent: "auth:signup",
+			toast: {
+				successKey: "auth.signup.signup_success",
+				errorKey: "auth.signup.signup_failed",
+			},
 		},
 	});
 }

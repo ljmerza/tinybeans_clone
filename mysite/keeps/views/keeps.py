@@ -1,5 +1,6 @@
 """Views for Keep CRUD operations."""
 from rest_framework import generics, status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,7 +21,7 @@ class KeepListCreateView(generics.ListCreateAPIView):
     """List and create family memories (keeps)."""
     
     permission_classes = [IsCircleMember]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['keep_type', 'circle', 'created_by', 'is_public']
     search_fields = ['title', 'description', 'tags']
     ordering_fields = ['date_of_memory', 'created_at', 'updated_at']
@@ -336,6 +337,7 @@ class KeepByCircleView(APIView):
             )
         except Circle.DoesNotExist:
             return error_response(
+                'circle_not_found',
                 messages=[create_message('errors.circle_not_found')],
                 status_code=status.HTTP_404_NOT_FOUND
             )
@@ -383,6 +385,7 @@ class KeepByTypeView(APIView):
         keep_type = request.query_params.get('type')
         if not keep_type or keep_type not in [choice[0] for choice in KeepType.choices]:
             return error_response(
+                'invalid_keep_type',
                 messages=[create_message('errors.invalid_keep_type')],
                 status_code=status.HTTP_400_BAD_REQUEST
             )
