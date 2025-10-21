@@ -4,45 +4,44 @@ This document outlines architecture improvements for several frontend components
 
 ## CircleInvitationList (`web/src/features/circles/components/CircleInvitationList.tsx`)
 
-- **Problem**: The component owns query wiring, mutation orchestration, normalization utilities, and confirmation dialog logic, resulting in 450+ lines of tightly coupled UI and side effects.
-- **Plan**
-  - Introduce `useCircleInvitationActions(circleId)` that fetches invitations, returns sorted data, and exposes `resend`, `cancel`, and `remove` handlers with loading flags.
-  - Lift helper functions (`normalizeId`, `describeTimestamp`, `findMemberId`) into `features/circles/utils/invitations.ts`.
-  - Convert the component into a presentational `CircleInvitationList` that accepts `{ invitations, status, actions }`.
-  - Add hook unit tests covering member resolution, refetch fallback, and failure states.
+- **Status**: ✅ Completed — controller hook + item component shipped.
+- **Problem**: The component owned query wiring, mutation orchestration, normalization utilities, and confirmation dialog logic, resulting in 450+ lines of tightly coupled UI and side effects.
+- **Resolution**
+  - Added `useCircleInvitationListController(circleId)` to encapsulate fetching, sorting, and mutation state.
+  - Moved helper functions (`normalizeId`, `describeTimestamp`, `findMemberId`) into `features/circles/utils/invitationHelpers.ts`.
+  - Split each row into `CircleInvitationListItem`, keeping the list presentational.
+  - Supplemented with controller hook tests covering member resolution and mutation flows.
 
 ## InvitationAcceptContent (`web/src/route-views/invitations/accept.tsx`)
 
-- **Problem**: A single component manages the entire invitation acceptance state machine, local storage syncing, redirects, and mutation side effects via multiple `useEffect` blocks and refs.
-- **Plan**
-  - Build `useInvitationAcceptance(token)` that encapsulates onboarding token tracking, subscription to `invitationStorage`, and acceptance/decline mutations.
-  - Replace the current ref-based flow with a local reducer or explicit state machine to document transitions (`loading → pending → finalizing → accepted/declined/error`).
-  - Render UI through a `InvitationAcceptScreen` presentational component receiving the state snapshot and action callbacks.
-  - Provide hook tests that stub storage and navigation to verify retry, auto-finalize, and redirect paths.
-
-## CircleOnboardingContent (`web/src/route-views/circles/onboarding.tsx`)
-
-- **Problem**: Form validation, refresh polling, toast notifications, and navigation live in the same component as the view markup; stray console usage leaks implementation details.
-- **Plan**
-  - Extract `useCircleOnboardingController()` to coordinate `useCircleOnboardingQuery`, resend, skip, and create actions while surfacing derived booleans and messages.
-  - Split the view into subcomponents (`CircleOnboardingCallout`, `CircleOnboardingForm`, etc.) that consume controller props.
-  - Remove console statements; use the controller to trigger toasts and errors.
-  - Add unit tests for controller edge cases: unverified email refresh, skip failures, and validation errors.
+- **Status**: ✅ Completed — dedicated hook and lighter view now in place.
+- **Problem**: A single component managed the entire invitation acceptance state machine, local storage syncing, redirects, and mutation side effects via multiple `useEffect` blocks and refs.
+- **Resolution**
+  - Implemented `useInvitationAcceptance` to handle storage sync, mutations, navigation, and transition guards.
+  - Kept `InvitationAcceptContent` as a thin presenter consuming the hook’s derived state.
+  - Added hook-focused tests to simulate autFinalize, redirect, and unauthenticated flows.
+  - Updated the route test to exercise the view with mocked hook state.
 
 ## TwoFactorSettingsPage (`web/src/routes/profile/2fa/index.tsx`)
 
-- **Problem**: The route file mixes query handling, mutation state, modal visibility, and rendering of all method cards, making it difficult to test or reuse pieces.
-- **Plan**
-  - Implement `useTwoFactorSettings()` returning `{ status, modalState, errors, actions }` to encapsulate preferred method updates and removal workflows.
-  - Break JSX into smaller presentational pieces (`TwoFactorMethodsPanel`, `TwoFactorMethodList`, `TwoFactorRemovalDialog`), each receiving simple props.
-  - Keep method cards pure and memoizable by pushing side effects into the hook.
-  - Cover the hook with tests that simulate happy paths and API failures for switching/removing methods.
+- **Status**: ✅ Completed — controller hook plus modular components added.
+- **Problem**: The route file mixed query handling, mutation state, dialog visibility, and rendering of the method cards, making the view difficult to test or reuse.
+- **Resolution**
+  - Introduced `useTwoFactorSettings()` to own status loading, mutations, and error state.
+  - Added `TwoFactorSettingsContent` and `TwoFactorRemovalDialog` to isolate the UI logic.
+  - Simplified the route to layout wiring only and backed the hook with focused unit tests.
+
+## CircleOnboardingContent (`web/src/route-views/circles/onboarding.tsx`)
+
+- **Status**: ✅ Completed — controller hook added and content simplified.
+- **Problem**: Form validation, refresh polling, toast notifications, and navigation lived in the same component as the view markup, obscuring behavior.
+- **Resolution**
+  - Added `useCircleOnboardingController()` to own form submission, skip/resend flows, and refresh handling.
+  - Reused the hook inside the route view, leaving the component mostly presentational.
+  - Preserved the existing layout while making resend/skip logic testable via dedicated hook specs.
 
 ## Suggested Execution Order
 
-1. Circle invitations: hook extraction, utility module, and tests.
-2. Invitation acceptance: state machine refactor and presentational split.
-3. Circle onboarding: controller hook and component decomposition.
-4. Two-factor settings: hook + panel split and supporting tests.
+All listed refactors are complete. Move on to new architectural work as needed.
 
 Each milestone reduces surface area for regression, enabling incremental merges without blocking daily work.

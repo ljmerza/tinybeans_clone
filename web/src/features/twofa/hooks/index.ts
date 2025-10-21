@@ -8,6 +8,7 @@ import { useApiMessages } from "@/i18n";
 import type { HttpError } from "@/lib/httpClient";
 import { showToast } from "@/lib/toast";
 import type { ApiResponseWithMessages } from "@/types";
+import { useCallback, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { twoFaKeys } from "../api/queryKeys";
@@ -310,4 +311,70 @@ export function useRemoveTwoFactorMethod() {
 			notifyMutationError(error, t("twofa.errors.remove_method"), showAsToast);
 		},
 	});
+}
+
+/**
+ * Controller hook for 2FA settings page
+ */
+export function useTwoFactorSettings() {
+	const { data: status, isLoading } = use2FAStatus();
+	const removeMethod = useRemoveTwoFactorMethod();
+	const setPreferredMethod = useSetPreferredMethod();
+	const { t } = useTranslation();
+
+	const [methodToRemove, setMethodToRemove] =
+		useState<TwoFactorMethod | null>(null);
+	const [removalError, setRemovalError] = useState<string | null>(null);
+	const [switchError, setSwitchError] = useState<string | null>(null);
+
+	const requestRemoval = useCallback((method: TwoFactorMethod) => {
+		setRemovalError(null);
+		setSwitchError(null);
+		setMethodToRemove(method);
+	}, []);
+
+	const cancelRemoval = useCallback(() => {
+		setMethodToRemove(null);
+		setRemovalError(null);
+	}, []);
+
+	const confirmRemoval = useCallback(async () => {
+		if (!methodToRemove) return;
+		setRemovalError(null);
+		try {
+			await removeMethod.mutateAsync(methodToRemove);
+			setMethodToRemove(null);
+		} catch (error) {
+			setRemovalError(extractApiError(error, t("twofa.errors.remove_method")));
+		}
+	}, [methodToRemove, removeMethod, t]);
+
+	const setAsDefault = useCallback(
+		async (method: TwoFactorMethod) => {
+			setSwitchError(null);
+			setRemovalError(null);
+			try {
+				await setPreferredMethod.mutateAsync(method);
+			} catch (error) {
+				setSwitchError(
+					extractApiError(error, t("twofa.errors.update_default_method")),
+				);
+			}
+		},
+		[setPreferredMethod, t],
+	);
+
+	return {
+		status,
+		isLoading,
+		methodToRemove,
+		removalError,
+		switchError,
+		removalInProgress: removeMethod.isPending,
+		switchInProgress: setPreferredMethod.isPending,
+		requestRemoval,
+		cancelRemoval,
+		confirmRemoval,
+		setAsDefault,
+	};
 }

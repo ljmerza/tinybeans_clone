@@ -8,6 +8,8 @@ export { TotpSetup } from "./TotpSetup";
 export { TrustedDevicesSection } from "./TrustedDevicesSection";
 export { TwoFactorEnabledSettings } from "./TwoFactorEnabledSettings";
 export { TwoFactorStatusHeader } from "./TwoFactorStatusHeader";
+export { TwoFactorSettingsContent } from "./TwoFactorSettingsContent";
+export { TwoFactorRemovalDialog } from "./TwoFactorRemovalDialog";
 export { VerificationInput } from "./VerificationInput";
 export { EmailMethodCard } from "./methods/EmailMethodCard";
 export { SmsMethodCard } from "./methods/SmsMethodCard";

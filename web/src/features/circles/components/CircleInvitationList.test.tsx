@@ -62,6 +62,7 @@ describe("CircleInvitationList", () => {
 		cancelConfirmSpy.mockClear();
 		removalCloseSpy.mockClear();
 		removalCancelSpy.mockClear();
+		cancelConfirmSpy.mockResolvedValue(undefined);
 
 		mockUseCircleInvitationListController.mockReturnValue({
 			invitations,
@@ -169,5 +170,3 @@ describe("CircleInvitationList", () => {
 		});
 	});
 });
-		cancelConfirmSpy.mockClear();
-		cancelConfirmSpy.mockResolvedValue(undefined);

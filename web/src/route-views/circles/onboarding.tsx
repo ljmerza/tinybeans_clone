@@ -2,21 +2,13 @@ import { FormActions, FormField } from "@/components";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useResendVerificationMutation } from "@/features/auth";
 import type { CircleOnboardingPayload } from "@/features/circles";
-import {
-	useCircleOnboardingQuery,
-	useCreateCircleMutation,
-	useSkipCircleOnboarding,
-} from "@/features/circles/hooks/useCircleOnboarding";
-import { useApiMessages } from "@/i18n";
+import { useCircleOnboardingQuery } from "@/features/circles/hooks/useCircleOnboarding";
+import { useCircleOnboardingController } from "@/features/circles/hooks/useCircleOnboardingController";
 import { zodValidator } from "@/lib/form";
-import { showToast } from "@/lib/toast";
 import { circleCreateSchema } from "@/lib/validations/schemas";
-import type { ApiError } from "@/types";
-import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 interface CircleOnboardingContentProps {
@@ -32,85 +24,23 @@ function CircleOnboardingContent({
 }: CircleOnboardingContentProps) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const { getGeneral } = useApiMessages();
-	const [generalError, setGeneralError] = useState<string | null>(null);
-
-	const createCircleMutation = useCreateCircleMutation();
-	const skipMutation = useSkipCircleOnboarding();
-	const resendMutation = useResendVerificationMutation();
-
-	const canSubmit = status.email_verified;
-	console.log({ status });
-
-	const form = useForm({
-		defaultValues: { name: "" },
-		onSubmit: async ({ value }) => {
-			if (!canSubmit) return;
-
-			setGeneralError(null);
-
-			try {
-				await createCircleMutation.mutateAsync({ name: value.name.trim() });
-				navigate({ to: "/" });
-			} catch (error) {
-				const apiError = error as ApiError;
-				const messages = getGeneral(apiError.messages);
-				if (messages.length > 0) {
-					setGeneralError(messages.join("\n"));
-					return;
-				}
-
-				const fallback = apiError.message ?? t("errors.server_error");
-				setGeneralError(fallback);
-				console.error("Circle creation error:", error);
-			}
-		},
+	const {
+		form,
+		canSubmit,
+		generalError,
+		resendDisabled,
+		calloutDescription,
+		createCirclePending,
+		skipPending,
+		resendPending,
+		handleResend,
+		handleRefreshClick,
+		handleSkip,
+	} = useCircleOnboardingController({
+		status,
+		onRefresh,
+		onNavigateHome: () => navigate({ to: "/" }),
 	});
-
-	const handleSkip = useCallback(async () => {
-		try {
-			await skipMutation.mutateAsync();
-			navigate({ to: "/" });
-		} catch (error) {
-			console.error("Skip onboarding failed:", error);
-		}
-	}, [skipMutation, navigate]);
-
-	const resendDisabled = !status.email || resendMutation.isPending;
-
-	const calloutDescription = useMemo(() => {
-		return t("pages.circleOnboarding.verifyDescription", {
-			email: status.email,
-		});
-	}, [status.email, t]);
-
-	const refreshAndNotify = useCallback(async () => {
-		try {
-			const refreshed = await onRefresh();
-			if (refreshed && !refreshed.email_verified) {
-				showToast({
-					message: t("pages.circleOnboarding.refreshFailed"),
-					level: "warning",
-					id: "circle-onboarding-refresh",
-				});
-				return;
-			}
-
-			if (!refreshed && !status.email_verified) {
-				showToast({
-					message: t("pages.circleOnboarding.refreshFailed"),
-					level: "warning",
-					id: "circle-onboarding-refresh",
-				});
-			}
-		} catch (error) {
-			console.error("Circle onboarding refresh failed:", error);
-		}
-	}, [onRefresh, status, t]);
-
-	const handleRefreshClick = useCallback(() => {
-		void refreshAndNotify();
-	}, [refreshAndNotify]);
 
 	return (
 		<div className="mx-auto flex max-w-xl flex-col gap-6">
@@ -131,11 +61,8 @@ function CircleOnboardingContent({
 					</h2>
 					<p className="text-sm text-muted-foreground">{calloutDescription}</p>
 					<div className="flex flex-wrap gap-2">
-						<Button
-							onClick={() => resendMutation.mutate(status.email)}
-							disabled={resendDisabled}
-						>
-							{resendMutation.isPending
+						<Button onClick={handleResend} disabled={resendDisabled}>
+							{resendPending
 								? t("pages.circleOnboarding.resending")
 								: t("pages.circleOnboarding.resend")}
 						</Button>
@@ -205,10 +132,10 @@ function CircleOnboardingContent({
 					<Button
 						type="submit"
 						className="w-full"
-						isLoading={createCircleMutation.isPending}
+						isLoading={createCirclePending}
 						disabled={!canSubmit}
 					>
-						{createCircleMutation.isPending
+						{createCirclePending
 							? t("pages.circleOnboarding.creating")
 							: t("pages.circleOnboarding.createButton")}
 					</Button>
@@ -218,10 +145,10 @@ function CircleOnboardingContent({
 			<Button
 				variant="ghost"
 				className="self-start text-muted-foreground hover:text-foreground"
-				onClick={handleSkip}
-				isLoading={skipMutation.isPending}
+				onClick={() => void handleSkip()}
+				isLoading={skipPending}
 			>
-				{skipMutation.isPending
+				{skipPending
 					? t("pages.circleOnboarding.skipping")
 					: t("pages.circleOnboarding.skip")}
 			</Button>

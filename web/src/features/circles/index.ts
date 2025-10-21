@@ -1,5 +1,6 @@
 export * from "./types";
 export * from "./hooks/useCircleOnboarding";
+export * from "./hooks/useCircleOnboardingController";
 export { circleKeys } from "./api/queryKeys";
 export { circleServices } from "./api/services";
 
@@ -8,4 +9,5 @@ export * from "./hooks/useCircleInvitationAdmin";
 export * from "./hooks/useCircleMemberships";
 export * from "./hooks/useCircleRemoveSelfMutation";
 export * from "./hooks/useCircleInvitationListController";
+export * from "./hooks/useInvitationAcceptance";
 export * from "./components";
