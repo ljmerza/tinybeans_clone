@@ -32,7 +32,8 @@ export function useStartCircleInvitationOnboarding(): UseMutationResult<
 		mutationFn: (token: string) =>
 			circleServices.startInvitationOnboarding(token),
 		onSuccess: (response, token) => {
-			const payload = (response.data ?? response) as CircleInvitationOnboardingStart;
+			const payload = (response.data ??
+				response) as CircleInvitationOnboardingStart;
 			saveInvitation({
 				onboardingToken: payload.onboarding_token,
 				expiresInMinutes: payload.expires_in_minutes,

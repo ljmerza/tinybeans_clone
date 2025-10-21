@@ -27,9 +27,6 @@ export function LogoutHandler() {
 	}, [logout, navigate]);
 
 	return (
-		<LoadingState
-			layout="fullscreen"
-			message={t("auth.logout.logging_out")}
-		/>
+		<LoadingState layout="fullscreen" message={t("auth.logout.logging_out")} />
 	);
 }

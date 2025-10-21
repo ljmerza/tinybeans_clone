@@ -91,9 +91,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 				return null;
 			}
 
-				const child = React.Children.only(children) as React.ReactElement & {
-					ref?: React.Ref<unknown>;
-				};
+			const child = React.Children.only(children) as React.ReactElement & {
+				ref?: React.Ref<unknown>;
+			};
 			const originalChildren = child.props?.children;
 			const composedChildren =
 				iconPosition === "right" ? (
@@ -119,7 +119,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 				"aria-busy": isLoading || undefined,
 				"aria-live": isLoading ? "polite" : undefined,
 				"aria-disabled": isDisabled || undefined,
-				tabIndex: isDisabled ? -1 : tabIndex ?? childTabIndex,
+				tabIndex: isDisabled ? -1 : (tabIndex ?? childTabIndex),
 				...rest,
 				children: composedChildren,
 			});

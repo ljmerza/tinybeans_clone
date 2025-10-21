@@ -1,13 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useResendVerificationMutation } from "@/features/auth";
 import { useCircleOnboardingController } from "@/features/circles";
+import type { CircleOnboardingPayload } from "@/features/circles";
 import {
 	useCreateCircleMutation,
 	useSkipCircleOnboarding,
 } from "@/features/circles/hooks/useCircleOnboarding";
-import { useResendVerificationMutation } from "@/features/auth";
-import type { CircleOnboardingPayload } from "@/features/circles";
 import { showToast } from "@/lib/toast";
 
 vi.mock("@/features/auth", () => ({
@@ -30,9 +30,8 @@ vi.mock("@/lib/toast", () => ({
 }));
 
 vi.mock("react-i18next", async () => {
-	const actual = await vi.importActual<typeof import("react-i18next")>(
-		"react-i18next",
-	);
+	const actual =
+		await vi.importActual<typeof import("react-i18next")>("react-i18next");
 	return {
 		...actual,
 		useTranslation: () => ({
@@ -61,7 +60,9 @@ const navigateHomeMock = vi.fn();
 
 const useCreateCircleMutationMock = vi.mocked(useCreateCircleMutation);
 const useSkipCircleOnboardingMock = vi.mocked(useSkipCircleOnboarding);
-const useResendVerificationMutationMock = vi.mocked(useResendVerificationMutation);
+const useResendVerificationMutationMock = vi.mocked(
+	useResendVerificationMutation,
+);
 
 describe("useCircleOnboardingController", () => {
 	beforeEach(() => {

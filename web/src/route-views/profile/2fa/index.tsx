@@ -3,8 +3,8 @@
  * Manage 2FA configuration, recovery codes, and trusted devices
  */
 
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog, Layout } from "@/components";
+import { Button } from "@/components/ui/button";
 import { extractApiError } from "@/features/auth/utils";
 import {
 	ProfileGeneralSettingsCard,

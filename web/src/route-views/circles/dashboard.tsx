@@ -1,10 +1,7 @@
+import { EmptyState, LoadingState } from "@/components";
 import { Layout } from "@/components/Layout";
-import { LoadingState, EmptyState } from "@/components";
 import { Button } from "@/components/ui/button";
-import {
-	CircleInvitationManager,
-	useCircleMembers,
-} from "@/features/circles";
+import { CircleInvitationManager, useCircleMembers } from "@/features/circles";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,7 +63,9 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 						</p>
 						<div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 							<span>
-								{t("pages.circles.dashboard.admin_count", { count: adminCount })}
+								{t("pages.circles.dashboard.admin_count", {
+									count: adminCount,
+								})}
 							</span>
 							<span>&middot;</span>
 							<span>

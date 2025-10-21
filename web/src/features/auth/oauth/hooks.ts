@@ -47,28 +47,28 @@ export function useGoogleOAuth() {
 			// Clear stored state
 			clearOAuthState();
 
-		// Show success messages if present (optional - backend might not send them)
-		if (response.messages && response.messages.length > 0) {
-			showAsToast(response.messages, 200);
-		}
+			// Show success messages if present (optional - backend might not send them)
+			if (response.messages && response.messages.length > 0) {
+				showAsToast(response.messages, 200);
+			}
 
-		const redirectTarget = consumeInviteRedirect();
-		if (redirectTarget) {
-			const invitationRedirect = parseInvitationRedirect(redirectTarget);
-			if (invitationRedirect) {
-				navigate({
-					to: "/invitations/accept",
-					search: { token: invitationRedirect.token },
-				});
+			const redirectTarget = consumeInviteRedirect();
+			if (redirectTarget) {
+				const invitationRedirect = parseInvitationRedirect(redirectTarget);
+				if (invitationRedirect) {
+					navigate({
+						to: "/invitations/accept",
+						search: { token: invitationRedirect.token },
+					});
+					return;
+				}
+				window.location.assign(redirectTarget);
 				return;
 			}
-			window.location.assign(redirectTarget);
-			return;
-		}
 
-		// Navigate to home/dashboard (adjust route as needed)
-		navigate({ to: "/" });
-	},
+			// Navigate to home/dashboard (adjust route as needed)
+			navigate({ to: "/" });
+		},
 		onError: (error: ApiError) => {
 			console.error("Google OAuth callback error:", error);
 			// Clear state on error

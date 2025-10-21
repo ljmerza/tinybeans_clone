@@ -8,8 +8,8 @@ import { useApiMessages } from "@/i18n";
 import type { HttpError } from "@/lib/httpClient";
 import { showToast } from "@/lib/toast";
 import type { ApiResponseWithMessages } from "@/types";
-import { useCallback, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { twoFaKeys } from "../api/queryKeys";
 import { twoFactorServices } from "../api/services";
@@ -322,8 +322,9 @@ export function useTwoFactorSettings() {
 	const setPreferredMethod = useSetPreferredMethod();
 	const { t } = useTranslation();
 
-	const [methodToRemove, setMethodToRemove] =
-		useState<TwoFactorMethod | null>(null);
+	const [methodToRemove, setMethodToRemove] = useState<TwoFactorMethod | null>(
+		null,
+	);
 	const [removalError, setRemovalError] = useState<string | null>(null);
 	const [switchError, setSwitchError] = useState<string | null>(null);
 

@@ -51,7 +51,8 @@ export default function GoogleCallbackPage() {
 		if (!validateOAuthState(searchParams.state, storedState)) {
 			setClientError(
 				t("errors.oauth.state_mismatch", {
-					defaultValue: "Security validation failed. Please try signing in again.",
+					defaultValue:
+						"Security validation failed. Please try signing in again.",
 				}),
 			);
 			setHasProcessed(true);
@@ -94,7 +95,8 @@ export default function GoogleCallbackPage() {
 						<p className="text-muted-foreground mb-6">
 							{clientError ||
 								t("auth.oauth.callback_error_description", {
-									defaultValue: "An error occurred during sign-in. Please try again.",
+									defaultValue:
+										"An error occurred during sign-in. Please try again.",
 								})}
 						</p>
 

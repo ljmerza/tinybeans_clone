@@ -102,7 +102,9 @@ export function useResendCircleInvitation(
 		mutationFn: (invitationId: string) =>
 			circleServices.resendInvitation(circleId, invitationId),
 		onSuccess: (response) => {
-			queryClient.invalidateQueries({ queryKey: circleKeys.invitations(circleId) });
+			queryClient.invalidateQueries({
+				queryKey: circleKeys.invitations(circleId),
+			});
 			if (response.messages?.length) {
 				showAsToast(response.messages, 200);
 			}
@@ -164,7 +166,9 @@ export function useRemoveCircleMember(
 			circleServices.removeMember(circleId, userId),
 		onSuccess: (response) => {
 			queryClient.invalidateQueries({ queryKey: circleKeys.members(circleId) });
-			queryClient.invalidateQueries({ queryKey: circleKeys.invitations(circleId) });
+			queryClient.invalidateQueries({
+				queryKey: circleKeys.invitations(circleId),
+			});
 			if (response.messages?.length) {
 				showAsToast(response.messages, 200);
 			} else {

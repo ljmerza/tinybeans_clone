@@ -1,13 +1,13 @@
 import { useAuthSession } from "@/features/auth";
 import type { CircleInvitationDetails } from "@/features/circles";
 import {
+	type StoredCircleInvitation,
 	clearInvitation,
 	clearInvitationRequest,
 	hasActiveInvitationRequest,
 	loadInvitation,
 	markInvitationRequest,
 	subscribeInvitationStorage,
-	type StoredCircleInvitation,
 } from "@/features/circles/utils/invitationStorage";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import type { ApiError } from "@/types";
@@ -69,7 +69,9 @@ export function useInvitationAcceptance({
 	const [storedInvitation, setStoredInvitation] =
 		useState<StoredCircleInvitation | null>(() => loadInvitation());
 	const [invitationDetails, setInvitationDetails] =
-		useState<CircleInvitationDetails | null>(() => storedInvitation?.invitation ?? null);
+		useState<CircleInvitationDetails | null>(
+			() => storedInvitation?.invitation ?? null,
+		);
 	const onboardingTokenRef = useRef<string | null>(
 		storedInvitation?.onboardingToken ?? null,
 	);
@@ -132,7 +134,11 @@ export function useInvitationAcceptance({
 			return;
 		}
 
-		if (viewState === "accepted" || viewState === "declined" || viewState === "finalizing") {
+		if (
+			viewState === "accepted" ||
+			viewState === "declined" ||
+			viewState === "finalizing"
+		) {
 			return;
 		}
 
@@ -174,7 +180,9 @@ export function useInvitationAcceptance({
 					setViewState("expired");
 				} else {
 					setViewState("error");
-					setErrorMessage(apiError.message ?? t("pages.inviteAccept.invalidMessage"));
+					setErrorMessage(
+						apiError.message ?? t("pages.inviteAccept.invalidMessage"),
+					);
 				}
 			},
 		});
@@ -222,7 +230,10 @@ export function useInvitationAcceptance({
 				url.searchParams.set("onboarding", onboardingToken);
 				target = `${url.pathname}${url.search}`;
 			} catch (error) {
-				console.warn("[inviteAccept] Failed to append onboarding token to redirect", error);
+				console.warn(
+					"[inviteAccept] Failed to append onboarding token to redirect",
+					error,
+				);
 			}
 		}
 		return target;
@@ -268,7 +279,13 @@ export function useInvitationAcceptance({
 				autoFinalizeRef.current = false;
 			},
 		});
-	}, [finalizeMutation, handleNavigateAuth, invitationDetails?.existing_user, session.status, t]);
+	}, [
+		finalizeMutation,
+		handleNavigateAuth,
+		invitationDetails?.existing_user,
+		session.status,
+		t,
+	]);
 
 	const handleDecline = useCallback(() => {
 		const invitationId = invitationIdRef.current;

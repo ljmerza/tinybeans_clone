@@ -59,12 +59,12 @@ export function LoadingState({
 	}
 
 	const resolvedSpinnerSize = spinnerSize ?? "lg";
-		const content = (
-			<div
-				className={cn(sectionWrapperClass, className)}
-				aria-live="polite"
-				aria-busy={resolvedMessage ? true : undefined}
-			>
+	const content = (
+		<div
+			className={cn(sectionWrapperClass, className)}
+			aria-live="polite"
+			aria-busy={resolvedMessage ? true : undefined}
+		>
 			{icon ?? (
 				<LoadingSpinner
 					size={resolvedSpinnerSize}

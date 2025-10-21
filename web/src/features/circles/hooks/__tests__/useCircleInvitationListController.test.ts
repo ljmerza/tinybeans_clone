@@ -1,10 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type {
-	CircleInvitationSummary,
-	CircleMemberSummary,
-} from "../../types";
+import type { CircleInvitationSummary, CircleMemberSummary } from "../../types";
 import { useCircleInvitationListController } from "../useCircleInvitationListController";
 
 const mockUseCircleInvitationsQuery = vi.fn();
@@ -34,9 +31,8 @@ vi.mock("@/lib/toast", () => ({
 }));
 
 vi.mock("react-i18next", async () => {
-	const actual = await vi.importActual<typeof import("react-i18next")>(
-		"react-i18next",
-	);
+	const actual =
+		await vi.importActual<typeof import("react-i18next")>("react-i18next");
 	return {
 		...actual,
 		useTranslation: () => ({
@@ -128,7 +124,9 @@ describe("useCircleInvitationListController", () => {
 
 		mockUseCircleMembers.mockReturnValue({
 			data: { members: [memberFixture] },
-			refetch: vi.fn().mockResolvedValue({ data: { members: [memberFixture] } }),
+			refetch: vi
+				.fn()
+				.mockResolvedValue({ data: { members: [memberFixture] } }),
 			isLoading: false,
 			isFetching: false,
 			error: null,

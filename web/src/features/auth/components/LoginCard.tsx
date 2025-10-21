@@ -73,21 +73,21 @@ export function LoginCard({ redirect }: LoginCardProps) {
 			footer={
 				<>
 					<div className="pt-4 border-t border-border transition-colors">
-					<Link
-						to="/magic-link-request"
-						search={redirect ? { redirect } : undefined}
-						className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
-					>
+						<Link
+							to="/magic-link-request"
+							search={redirect ? { redirect } : undefined}
+							className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
+						>
 							{t("auth.login.with_magic_link")}
 						</Link>
 					</div>
 					<div className="text-sm text-muted-foreground">
 						{t("auth.login.no_account")}{" "}
-					<Link
-						to="/signup"
-						search={redirect ? { redirect } : undefined}
-						className="font-semibold text-primary hover:text-primary/80 transition-colors"
-					>
+						<Link
+							to="/signup"
+							search={redirect ? { redirect } : undefined}
+							className="font-semibold text-primary hover:text-primary/80 transition-colors"
+						>
 							{t("nav.signup")}
 						</Link>
 					</div>
@@ -189,11 +189,7 @@ export function LoginCard({ redirect }: LoginCardProps) {
 							: undefined
 					}
 				>
-					<Button
-						type="submit"
-						className="w-full"
-						isLoading={login.isPending}
-					>
+					<Button type="submit" className="w-full" isLoading={login.isPending}>
 						{login.isPending
 							? t("auth.login.signing_in")
 							: t("auth.login.sign_in")}

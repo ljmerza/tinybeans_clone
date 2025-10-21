@@ -1,9 +1,8 @@
-import type {
-	CircleInvitationSummary,
-	CircleMemberSummary,
-} from "../types";
+import type { CircleInvitationSummary, CircleMemberSummary } from "../types";
 
-export function normalizeString(value: string | null | undefined): string | null {
+export function normalizeString(
+	value: string | null | undefined,
+): string | null {
 	return value?.trim().toLowerCase() ?? null;
 }
 

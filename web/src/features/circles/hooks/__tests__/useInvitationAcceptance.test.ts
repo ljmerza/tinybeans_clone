@@ -32,8 +32,10 @@ vi.mock("@/features/circles/utils/invitationStorage", () => ({
 	subscribeInvitationStorage: (callback: unknown) =>
 		mockSubscribeInvitationStorage(callback) ?? (() => undefined),
 	clearInvitation: vi.fn(),
-	markInvitationRequest: (...args: unknown[]) => mockMarkInvitationRequest(...args),
-	clearInvitationRequest: (...args: unknown[]) => mockClearInvitationRequest(...args),
+	markInvitationRequest: (...args: unknown[]) =>
+		mockMarkInvitationRequest(...args),
+	clearInvitationRequest: (...args: unknown[]) =>
+		mockClearInvitationRequest(...args),
 	hasActiveInvitationRequest: (...args: unknown[]) =>
 		mockHasActiveInvitationRequest(...args),
 }));
@@ -43,9 +45,8 @@ vi.mock("@/features/circles/utils/inviteAnalytics", () => ({
 }));
 
 vi.mock("react-i18next", async () => {
-	const actual = await vi.importActual<typeof import("react-i18next")>(
-		"react-i18next",
-	);
+	const actual =
+		await vi.importActual<typeof import("react-i18next")>("react-i18next");
 	return {
 		...actual,
 		useTranslation: () => ({
@@ -60,7 +61,9 @@ vi.mock("react-i18next", async () => {
 });
 
 describe("useInvitationAcceptance", () => {
-	const navigateMock = vi.fn((options: NavigateOptions) => Promise.resolve(options));
+	const navigateMock = vi.fn((options: NavigateOptions) =>
+		Promise.resolve(options),
+	);
 	const baseParams = {
 		token: "abc",
 		currentPath: "/invitations/accept?token=abc",
@@ -133,7 +136,13 @@ describe("useInvitationAcceptance", () => {
 		});
 
 		const finalizeSpy = vi.fn(
-			(_: string, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => {
+			(
+				_: string,
+				options?: {
+					onSuccess?: () => void;
+					onError?: (error: unknown) => void;
+				},
+			) => {
 				options?.onSuccess?.();
 			},
 		);
@@ -166,9 +175,7 @@ describe("useInvitationAcceptance", () => {
 		);
 
 		expect(result.current.viewState).toBe("accepted");
-		await waitFor(() =>
-			expect(navigateMock).toHaveBeenCalledWith({ to: "/" }),
-		);
+		await waitFor(() => expect(navigateMock).toHaveBeenCalledWith({ to: "/" }));
 	});
 
 	it("redirects authenticated flow when accept clicked", async () => {

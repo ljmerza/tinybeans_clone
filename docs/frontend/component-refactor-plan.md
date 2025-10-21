@@ -31,7 +31,7 @@ This document outlines architecture improvements for several frontend components
   - Added `TwoFactorSettingsContent` and `TwoFactorRemovalDialog` to isolate the UI logic.
   - Simplified the route to layout wiring only and backed the hook with focused unit tests.
 
-## CircleOnboardingContent (`web/src/route-views/circles/onboarding.tsx`)
+## CircleOnboardingContent (`web/src/route-views/circles/components/CircleOnboardingContent.tsx`)
 
 - **Status**: ✅ Completed — controller hook added and content simplified.
 - **Problem**: Form validation, refresh polling, toast notifications, and navigation lived in the same component as the view markup, obscuring behavior.

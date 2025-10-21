@@ -14,7 +14,10 @@ function emitInvitationStorage(payload: StoredCircleInvitation | null): void {
 		});
 		window.dispatchEvent(event);
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to dispatch storage event", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to dispatch storage event",
+			error,
+		);
 	}
 }
 
@@ -35,7 +38,10 @@ export function markInvitationRequest(token: string): void {
 	try {
 		window.sessionStorage.setItem(getRequestKey(token), Date.now().toString());
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to mark invitation request", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to mark invitation request",
+			error,
+		);
 	}
 }
 
@@ -44,16 +50,24 @@ export function clearInvitationRequest(token: string | null | undefined): void {
 	try {
 		window.sessionStorage.removeItem(getRequestKey(token));
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to clear invitation request", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to clear invitation request",
+			error,
+		);
 	}
 }
 
-export function hasActiveInvitationRequest(token: string | null | undefined): boolean {
+export function hasActiveInvitationRequest(
+	token: string | null | undefined,
+): boolean {
 	if (typeof window === "undefined" || !token) return false;
 	try {
 		return window.sessionStorage.getItem(getRequestKey(token)) != null;
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to read invitation request flag", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to read invitation request flag",
+			error,
+		);
 		return false;
 	}
 }
@@ -75,7 +89,10 @@ export function saveInvitation(payload: StoredCircleInvitation): void {
 			redirectPath: payload.redirectPath ?? null,
 		});
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to persist invitation token", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to persist invitation token",
+			error,
+		);
 	}
 }
 
@@ -103,7 +120,10 @@ export function loadInvitation(): StoredCircleInvitation | null {
 				typeof parsed.redirectPath === "string" ? parsed.redirectPath : null,
 		};
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to read invitation token", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to read invitation token",
+			error,
+		);
 		return null;
 	}
 }
@@ -114,7 +134,10 @@ export function clearInvitation(): void {
 		window.sessionStorage.removeItem(STORAGE_KEY);
 		emitInvitationStorage(null);
 	} catch (error) {
-		console.warn("[circleInvitationStorage] Failed to clear invitation token", error);
+		console.warn(
+			"[circleInvitationStorage] Failed to clear invitation token",
+			error,
+		);
 	}
 }
 

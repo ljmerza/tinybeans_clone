@@ -32,9 +32,7 @@ export function TwoFactorRemovalDialog({
 				}
 			}}
 			title={
-				method
-					? t("twofa.settings.remove_title", { method: methodLabel })
-					: ""
+				method ? t("twofa.settings.remove_title", { method: methodLabel }) : ""
 			}
 			description={removalDescription}
 			confirmLabel={t("common.remove")}

@@ -4,11 +4,11 @@ import type { ApiResponseWithMessages } from "@/types";
 import type {
 	CircleInvitationFinalizeResponse,
 	CircleInvitationOnboardingStart,
-	CircleOnboardingPayload,
-	CircleSummary,
 	CircleInvitationSummary,
 	CircleMemberSummary,
 	CircleMembershipSummary,
+	CircleOnboardingPayload,
+	CircleSummary,
 } from "../types";
 
 const USERS_BASE = "/users";
@@ -67,13 +67,19 @@ export const circleServices = {
 	resendInvitation(circleId: number | string, invitationId: string) {
 		return authApi.post<
 			ApiResponseWithMessages<{ invitation: CircleInvitationSummary }>
-		>(`${USERS_BASE}/circles/${circleId}/invitations/${invitationId}/resend/`, {});
+		>(
+			`${USERS_BASE}/circles/${circleId}/invitations/${invitationId}/resend/`,
+			{},
+		);
 	},
 
 	cancelInvitation(circleId: number | string, invitationId: string) {
 		return authApi.post<
 			ApiResponseWithMessages<{ invitation: CircleInvitationSummary }>
-		>(`${USERS_BASE}/circles/${circleId}/invitations/${invitationId}/cancel/`, {});
+		>(
+			`${USERS_BASE}/circles/${circleId}/invitations/${invitationId}/cancel/`,
+			{},
+		);
 	},
 
 	respondToInvitation(invitationId: string, action: "accept" | "decline") {

@@ -13,7 +13,9 @@ interface InvitationAcceptContentProps {
 	token?: string;
 }
 
-export function InvitationAcceptContent({ token }: InvitationAcceptContentProps) {
+export function InvitationAcceptContent({
+	token,
+}: InvitationAcceptContentProps) {
 	const { t } = useTranslation();
 	const location = useLocation();
 	const navigate = Route.useNavigate();
@@ -102,8 +104,11 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 								? t("pages.inviteAccept.invitedBy", { inviter: invitedBy })
 								: t("pages.inviteAccept.invitedGeneric")}
 						</p>
-							<div className="flex flex-wrap gap-3">
-								<Button onClick={handleAccept} disabled={mutations.finalizePending}>
+						<div className="flex flex-wrap gap-3">
+							<Button
+								onClick={handleAccept}
+								disabled={mutations.finalizePending}
+							>
 								{mutations.finalizePending
 									? t("pages.inviteAccept.accepting")
 									: t("pages.inviteAccept.accept")}
@@ -134,7 +139,9 @@ export function InvitationAcceptContent({ token }: InvitationAcceptContentProps)
 						<CardTitle>{t("pages.inviteAccept.acceptedTitle")}</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3 text-sm text-success-foreground">
-						<p>{t("pages.inviteAccept.acceptedMessage", { circle: circleName })}</p>
+						<p>
+							{t("pages.inviteAccept.acceptedMessage", { circle: circleName })}
+						</p>
 						<Button
 							variant="secondary"
 							onClick={() => navigate({ to: "/circles" })}

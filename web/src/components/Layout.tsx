@@ -1,8 +1,8 @@
 import { useAuthSession } from "@/features/auth/context/AuthSessionProvider";
 import type { ReactElement, ReactNode } from "react";
 import { Header } from "./Header";
-import { StandardError } from "./StandardError";
 import { LoadingState } from "./LoadingState";
+import { StandardError } from "./StandardError";
 
 interface LayoutProps {
 	children?: ReactNode;

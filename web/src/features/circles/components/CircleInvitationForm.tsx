@@ -1,11 +1,11 @@
 import {
-	FormActions,
-	FormField,
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
+	FormActions,
+	FormField,
 } from "@/components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,12 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useApiMessages } from "@/i18n";
-import type { ApiError } from "@/types";
-import { z } from "zod";
 import { zodValidator } from "@/lib/form";
+import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
 import { useCreateCircleInvitation } from "../hooks/useCircleInvitationAdmin";
 
@@ -118,7 +118,9 @@ export function CircleInvitationForm({ circleId }: CircleInvitationFormProps) {
 								field={field}
 								label={t("pages.circles.invites.form.identifier_label_email")}
 								error={emailError}
-								helperText={t("pages.circles.invites.form.identifier_help_email")}
+								helperText={t(
+									"pages.circles.invites.form.identifier_help_email",
+								)}
 							>
 								{({ id, field: fieldApi }) => (
 									<Input
@@ -151,7 +153,9 @@ export function CircleInvitationForm({ circleId }: CircleInvitationFormProps) {
 									<Select
 										value={fieldApi.state.value}
 										onValueChange={(value) =>
-											fieldApi.handleChange(value as InvitationFormValues["role"])
+											fieldApi.handleChange(
+												value as InvitationFormValues["role"],
+											)
 										}
 										disabled={isSubmitting}
 									>

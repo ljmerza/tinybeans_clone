@@ -6,8 +6,11 @@ import { useForm } from "@tanstack/react-form";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCreateCircleMutation, useSkipCircleOnboarding } from "./useCircleOnboarding";
 import type { CircleOnboardingPayload } from "../types";
+import {
+	useCreateCircleMutation,
+	useSkipCircleOnboarding,
+} from "./useCircleOnboarding";
 
 interface CircleOnboardingControllerOptions {
 	status: CircleOnboardingPayload;

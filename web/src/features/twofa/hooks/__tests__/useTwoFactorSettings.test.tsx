@@ -1,9 +1,13 @@
-import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { twoFaKeys, twoFactorServices, useTwoFactorSettings } from "@/features/twofa";
+import {
+	twoFaKeys,
+	twoFactorServices,
+	useTwoFactorSettings,
+} from "@/features/twofa";
 
 vi.mock("@/features/twofa/api/services", () => ({
 	twoFactorServices: {
@@ -14,9 +18,8 @@ vi.mock("@/features/twofa/api/services", () => ({
 }));
 
 vi.mock("react-i18next", async () => {
-	const actual = await vi.importActual<typeof import("react-i18next")>(
-		"react-i18next",
-	);
+	const actual =
+		await vi.importActual<typeof import("react-i18next")>("react-i18next");
 	return {
 		...actual,
 		useTranslation: () => ({

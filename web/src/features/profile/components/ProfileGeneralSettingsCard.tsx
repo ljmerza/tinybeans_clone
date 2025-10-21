@@ -19,9 +19,7 @@ export function ProfileGeneralSettingsCard() {
 	);
 
 	if (session.isFetchingUser && !user) {
-		return (
-			<LoadingState layout="section" className="py-10" />
-		);
+		return <LoadingState layout="section" className="py-10" />;
 	}
 
 	const emailVerified = user?.email_verified ?? false;

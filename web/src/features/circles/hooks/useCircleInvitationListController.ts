@@ -2,6 +2,12 @@ import { showToast } from "@/lib/toast";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { CircleInvitationSummary } from "../types";
+import {
+	findMemberId,
+	normalizeId,
+	sortInvitations,
+} from "../utils/invitationHelpers";
 import {
 	useCancelCircleInvitation,
 	useCircleInvitationsQuery,
@@ -9,21 +15,13 @@ import {
 	useResendCircleInvitation,
 } from "./useCircleInvitationAdmin";
 import { useCircleMembers } from "./useCircleMemberships";
-import type { CircleInvitationSummary } from "../types";
-import {
-	findMemberId,
-	normalizeId,
-	sortInvitations,
-} from "../utils/invitationHelpers";
 
 interface RemovalDialogState {
 	invitation: CircleInvitationSummary;
 	memberId?: string;
 }
 
-export function useCircleInvitationListController(
-	circleId: number | string,
-) {
+export function useCircleInvitationListController(circleId: number | string) {
 	const { t } = useTranslation();
 
 	const invitationsQuery = useCircleInvitationsQuery(circleId);
@@ -135,17 +133,14 @@ export function useCircleInvitationListController(
 		[ensureMemberId, resolveMemberId],
 	);
 
-	const handleRemovalDialogOpenChange = useCallback(
-		(open: boolean) => {
-			if (open) return;
-			if (confirmingRemovalRef.current) {
-				return;
-			}
-			setRemovalDialog(null);
-			setRemoveTarget(null);
-		},
-		[],
-	);
+	const handleRemovalDialogOpenChange = useCallback((open: boolean) => {
+		if (open) return;
+		if (confirmingRemovalRef.current) {
+			return;
+		}
+		setRemovalDialog(null);
+		setRemoveTarget(null);
+	}, []);
 
 	const confirmRemoval = useCallback(async () => {
 		if (!removalDialog) {

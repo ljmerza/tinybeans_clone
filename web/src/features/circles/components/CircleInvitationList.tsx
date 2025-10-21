@@ -4,16 +4,17 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
-	StatusMessage,
 	ConfirmDialog,
-	LoadingState,
 	EmptyState,
-} from '@/components';
-import type { ApiError } from '@/types';
-import { useTranslation } from 'react-i18next';
+	LoadingState,
+	StatusMessage,
+} from "@/components";
+import { Button } from "@/components/ui/button";
+import type { ApiError } from "@/types";
+import { useTranslation } from "react-i18next";
 
-import { CircleInvitationListItem } from './CircleInvitationListItem';
-import { useCircleInvitationListController } from '../hooks/useCircleInvitationListController';
+import { useCircleInvitationListController } from "../hooks/useCircleInvitationListController";
+import { CircleInvitationListItem } from "./CircleInvitationListItem";
 
 interface CircleInvitationListProps {
 	circleId: number | string;
@@ -21,13 +22,8 @@ interface CircleInvitationListProps {
 
 export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 	const { t, i18n } = useTranslation();
-	const {
-		invitations,
-		query,
-		resend,
-		cancel,
-		removal,
-	} = useCircleInvitationListController(circleId);
+	const { invitations, query, resend, cancel, removal } =
+		useCircleInvitationListController(circleId);
 
 	const error = query.error as ApiError | null;
 	const confirmId = cancel.confirmId;
@@ -36,9 +32,9 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 		<>
 			<Card>
 				<CardHeader className="space-y-2">
-					<CardTitle>{t('pages.circles.invites.list.title')}</CardTitle>
+					<CardTitle>{t("pages.circles.invites.list.title")}</CardTitle>
 					<CardDescription>
-						{t('pages.circles.invites.list.description')}
+						{t("pages.circles.invites.list.description")}
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
@@ -47,7 +43,7 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 							layout="inline"
 							spinnerSize="sm"
 							className="text-sm text-muted-foreground"
-							message={t('pages.circles.invites.list.loading')}
+							message={t("pages.circles.invites.list.loading")}
 						/>
 					) : null}
 
@@ -55,7 +51,7 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 						<div className="space-y-3 rounded-md border border-destructive/30 bg-destructive/5 p-4">
 							<StatusMessage variant="error">
 								{error.message ??
-									t('pages.circles.invites.list.error', {
+									t("pages.circles.invites.list.error", {
 										status: error.status ?? 500,
 									})}
 							</StatusMessage>
@@ -66,7 +62,7 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 									onClick={() => query.refetch()}
 									disabled={query.isFetching}
 								>
-									{t('pages.circles.invites.list.retry')}
+									{t("pages.circles.invites.list.retry")}
 								</Button>
 							</div>
 						</div>
@@ -74,18 +70,18 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 
 					{invitations.length === 0 ? (
 						<EmptyState
-							title={t('pages.circles.invites.list.empty_title')}
-							description={t('pages.circles.invites.list.empty_description')}
+							title={t("pages.circles.invites.list.empty_title")}
+							description={t("pages.circles.invites.list.empty_description")}
 							actions={
 								<Button
 									variant="secondary"
 									onClick={() => {
-										if (typeof window !== 'undefined') {
-											window.scrollTo({ top: 0, behavior: 'smooth' });
+										if (typeof window !== "undefined") {
+											window.scrollTo({ top: 0, behavior: "smooth" });
 										}
 									}}
 								>
-									{t('pages.circles.invites.list.empty_action')}
+									{t("pages.circles.invites.list.empty_action")}
 								</Button>
 							}
 						/>
@@ -111,11 +107,11 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 			<ConfirmDialog
 				open={Boolean(confirmId)}
 				onOpenChange={cancel.close}
-				title={t('pages.circles.invites.list.cancel_title')}
-				description={t('pages.circles.invites.list.cancel_description')}
-				confirmLabel={t('pages.circles.invites.list.cancel_confirm')}
-				cancelLabel={t('common.cancel')}
-				variant='destructive'
+				title={t("pages.circles.invites.list.cancel_title")}
+				description={t("pages.circles.invites.list.cancel_description")}
+				confirmLabel={t("pages.circles.invites.list.cancel_confirm")}
+				cancelLabel={t("common.cancel")}
+				variant="destructive"
 				isLoading={cancel.isPending}
 				onConfirm={cancel.confirm}
 			/>
@@ -123,13 +119,13 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 				open={Boolean(removal.dialog)}
 				onOpenChange={removal.close}
 				onCancel={removal.cancel}
-				title={t('pages.circles.invites.list.remove_title', {
-					email: removal.dialog?.invitation.email ?? '',
+				title={t("pages.circles.invites.list.remove_title", {
+					email: removal.dialog?.invitation.email ?? "",
 				})}
-				description={t('pages.circles.invites.list.remove_description')}
-				confirmLabel={t('pages.circles.invites.list.remove_confirm')}
-				cancelLabel={t('common.cancel')}
-				variant='destructive'
+				description={t("pages.circles.invites.list.remove_description")}
+				confirmLabel={t("pages.circles.invites.list.remove_confirm")}
+				cancelLabel={t("common.cancel")}
+				variant="destructive"
 				isLoading={removal.isPending}
 				disabled={
 					Boolean(

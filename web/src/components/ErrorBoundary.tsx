@@ -1,7 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { Component, type ReactNode } from "react";
 import { withTranslation } from "react-i18next";
 import type { WithTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 
 interface Props extends WithTranslation {
 	children: ReactNode;

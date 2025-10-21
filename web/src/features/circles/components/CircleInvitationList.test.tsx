@@ -155,7 +155,9 @@ describe("CircleInvitationList", () => {
 
 		renderWithQueryClient(<CircleInvitationList circleId="42" />);
 
-		const removeButton = screen.getByRole("button", { name: "Remove from circle" });
+		const removeButton = screen.getByRole("button", {
+			name: "Remove from circle",
+		});
 		fireEvent.click(removeButton);
 
 		expect(openRemoveSpy).toHaveBeenCalledWith(invitations[1]);

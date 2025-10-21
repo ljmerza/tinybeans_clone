@@ -58,11 +58,9 @@ export function CircleInvitationListItem({
 	const isResending = resend.targetId === invitation.id;
 	const isCancelling = cancel.targetId === invitation.id;
 	const canRemove = invitation.status === "accepted";
-	const isRemoving =
-		removal.targetId === invitation.id && removal.isPending;
+	const isRemoving = removal.targetId === invitation.id && removal.isPending;
 	const isResolving = removal.resolvingId === invitation.id;
-	const disableRemove =
-		isResolving || (removal.isPending && !isRemoving);
+	const disableRemove = isResolving || (removal.isPending && !isRemoving);
 
 	return (
 		<li className="border border-border rounded-md px-4 py-3 flex flex-col gap-3 transition-colors bg-card/60">
@@ -126,9 +124,7 @@ export function CircleInvitationListItem({
 
 			<div className="text-xs text-muted-foreground space-y-1">
 				{createdAt ? (
-					<div>
-						{t("pages.circles.invites.list.created_at", { createdAt })}
-					</div>
+					<div>{t("pages.circles.invites.list.created_at", { createdAt })}</div>
 				) : null}
 				{respondedAt ? (
 					<div>

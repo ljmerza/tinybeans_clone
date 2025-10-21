@@ -10,7 +10,10 @@ import {
 } from ".";
 import type { TwoFactorMethod, TwoFactorStatusResponse } from "../types";
 
-const setupRoutes: Record<TwoFactorMethod, `/profile/2fa/setup/${TwoFactorMethod}`> = {
+const setupRoutes: Record<
+	TwoFactorMethod,
+	`/profile/2fa/setup/${TwoFactorMethod}`
+> = {
 	totp: "/profile/2fa/setup/totp",
 	email: "/profile/2fa/setup/email",
 	sms: "/profile/2fa/setup/sms",
@@ -48,8 +51,7 @@ export function TwoFactorSettingsContent({
 	const smsConfigured = Boolean(status.has_sms);
 	const emailConfigured = Boolean(status.has_email);
 	const phoneNumber = status.phone_number;
-	const emailAddress =
-		status.email_address ?? status.backup_email ?? undefined;
+	const emailAddress = status.email_address ?? status.backup_email ?? undefined;
 
 	return (
 		<div className="space-y-6">

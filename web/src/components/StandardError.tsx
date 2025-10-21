@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import type { VariantProps } from "class-variance-authority";
 import type { buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 

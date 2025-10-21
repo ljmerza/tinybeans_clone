@@ -1,4 +1,5 @@
 import { circleServices } from "@/features/circles/api/services";
+import type { CircleInvitationFinalizeResponse } from "@/features/circles/types";
 import {
 	clearInvitation,
 	loadInvitation,
@@ -7,7 +8,6 @@ import {
 	consumeInviteRedirect,
 	parseInvitationRedirect,
 } from "@/features/circles/utils/inviteAnalytics";
-import type { CircleInvitationFinalizeResponse } from "@/features/circles/types";
 import { useApiMessages } from "@/i18n";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,7 +25,10 @@ import { handleTwoFactorRedirect } from "../utils";
 
 type FinalizeResult =
 	| { status: "none" }
-	| { status: "success"; response: ApiResponseWithMessages<CircleInvitationFinalizeResponse> }
+	| {
+			status: "success";
+			response: ApiResponseWithMessages<CircleInvitationFinalizeResponse>;
+	  }
 	| { status: "error"; error: ApiError };
 
 async function finalizeCircleInvitation(
@@ -39,8 +42,12 @@ async function finalizeCircleInvitation(
 	}
 
 	try {
-		const finalizeResponse = await circleServices.finalizeInvitation(onboardingToken);
-		if (!fallbackToken || storedInvitation?.onboardingToken === onboardingToken) {
+		const finalizeResponse =
+			await circleServices.finalizeInvitation(onboardingToken);
+		if (
+			!fallbackToken ||
+			storedInvitation?.onboardingToken === onboardingToken
+		) {
 			clearInvitation();
 		}
 		if (finalizeResponse.messages?.length) {
@@ -147,7 +154,10 @@ export function useLogin(options?: { redirect?: string }) {
 						(finalizeResult.response as unknown as CircleInvitationFinalizeResponse);
 					const circleId = finalizeData?.circle?.id;
 					if (circleId != null) {
-						navigate({ to: "/circles/$circleId", params: { circleId: String(circleId) } });
+						navigate({
+							to: "/circles/$circleId",
+							params: { circleId: String(circleId) },
+						});
 					} else {
 						navigate({ to: "/circles" });
 					}
@@ -163,7 +173,10 @@ export function useLogin(options?: { redirect?: string }) {
 					(finalizeResult.response as unknown as CircleInvitationFinalizeResponse);
 				const circleId = finalizeData?.circle?.id;
 				if (circleId != null) {
-					navigate({ to: "/circles/$circleId", params: { circleId: String(circleId) } });
+					navigate({
+						to: "/circles/$circleId",
+						params: { circleId: String(circleId) },
+					});
 					return;
 				}
 			}
@@ -250,7 +263,10 @@ export function useSignup(options?: { redirect?: string }) {
 					(finalizeResult.response as unknown as CircleInvitationFinalizeResponse);
 				const circleId = finalizeData?.circle?.id;
 				if (circleId != null) {
-					navigate({ to: "/circles/$circleId", params: { circleId: String(circleId) } });
+					navigate({
+						to: "/circles/$circleId",
+						params: { circleId: String(circleId) },
+					});
 					return;
 				}
 			}
