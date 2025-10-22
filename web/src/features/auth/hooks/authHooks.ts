@@ -124,19 +124,14 @@ export function useLogin(options?: { redirect?: string }) {
 			if (tokens?.access) {
 				setAccessToken(tokens.access);
 			}
-			qc.invalidateQueries({ queryKey: authKeys.session() });
+		qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			const messages = response.messages ?? payload.messages;
-			if (messages?.length) {
-				showAsToast(messages, 200);
-			}
-
-			const needsOnboarding =
-				"needs_circle_onboarding" in payload &&
-				Boolean(
-					(payload as typeof payload & { needs_circle_onboarding?: boolean })
-						.needs_circle_onboarding,
-				);
+		const needsOnboarding =
+			"needs_circle_onboarding" in payload &&
+			Boolean(
+				(payload as typeof payload & { needs_circle_onboarding?: boolean })
+					.needs_circle_onboarding,
+			);
 			if (needsOnboarding) {
 				navigate({ to: "/circles/onboarding" });
 				return;
@@ -193,8 +188,15 @@ export function useLogin(options?: { redirect?: string }) {
 		meta: {
 			analyticsEvent: "auth:login",
 			toast: {
-				successKey: "auth.login.login_success",
-				errorKey: "auth.login.login_failed",
+				useResponseMessages: true,
+				success: {
+					key: "auth.login.login_success",
+					status: 200,
+				},
+				error: {
+					key: "auth.login.login_failed",
+					status: 400,
+				},
 			},
 		},
 	});
@@ -221,12 +223,9 @@ export function useSignup(options?: { redirect?: string }) {
 				setAccessToken(tokens.access);
 			}
 
-			qc.invalidateQueries({ queryKey: authKeys.session() });
+		qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			if (response.messages?.length) {
-				showAsToast(response.messages, 201);
-			}
-			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
+		const redirectTarget = options?.redirect ?? consumeInviteRedirect();
 			const invitationRedirect = parseInvitationRedirect(redirectTarget);
 			const finalizeResult = await finalizeCircleInvitation(
 				showAsToast,
@@ -291,8 +290,15 @@ export function useSignup(options?: { redirect?: string }) {
 		meta: {
 			analyticsEvent: "auth:signup",
 			toast: {
-				successKey: "auth.signup.signup_success",
-				errorKey: "auth.signup.signup_failed",
+				useResponseMessages: true,
+				success: {
+					key: "auth.signup.signup_success",
+					status: 201,
+				},
+				error: {
+					key: "auth.signup.signup_failed",
+					status: 400,
+				},
 			},
 		},
 	});

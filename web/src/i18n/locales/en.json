@@ -726,6 +726,10 @@
 	},
 	"profile": {
 		"general": {
+			"loading_title": "Loading profile settings…",
+			"loading_description": "Fetching your account preferences.",
+			"error_title": "Profile settings unavailable",
+			"error_description": "We couldn't load your account details. Please try again.",
 			"email": {
 				"title": "Email verification",
 				"description": "Your account email is {{email}}. Keep it verified to access all features.",

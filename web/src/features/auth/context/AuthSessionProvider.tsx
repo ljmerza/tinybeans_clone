@@ -4,8 +4,9 @@
  */
 
 import { useStore } from "@tanstack/react-store";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuthSessionQuery } from "../hooks/useAuthSessionQuery";
 import { authStore } from "../store/authStore";
 import type { AuthUser } from "../types";
@@ -46,6 +47,18 @@ export function AuthSessionProvider({
 	const sessionQuery = useAuthSessionQuery({
 		enabled: !isInitializing && Boolean(accessToken),
 	});
+	const { i18n } = useTranslation();
+
+	useEffect(() => {
+		if (isInitializing) return;
+		const preferredLanguage = sessionQuery.data?.language;
+		if (!preferredLanguage) return;
+		if (preferredLanguage === i18n.language) return;
+
+		void i18n.changeLanguage(preferredLanguage).catch((error) => {
+			console.error("[AuthSession] Failed to sync language", error);
+		});
+	}, [i18n, isInitializing, sessionQuery.data?.language]);
 
 	const session = useMemo<AuthSession>(() => {
 		const status: AuthStatus = isInitializing

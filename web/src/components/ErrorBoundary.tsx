@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/Layout";
 import { Component, type ReactNode } from "react";
 import { withTranslation } from "react-i18next";
 import type { WithTranslation } from "react-i18next";
@@ -21,7 +22,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
 
 	private handleGoHome = () => {
 		window.location.assign("/");
-	};
+	}; // Uses standardized Layout.Error action
 
 	static getDerivedStateFromError(error: Error): State {
 		return { hasError: true, error };
@@ -40,19 +41,13 @@ class ErrorBoundaryComponent extends Component<Props, State> {
 			const { t } = this.props;
 
 			return (
-				<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
-					<div className="max-w-md w-full bg-card text-card-foreground rounded-lg shadow-md border border-border p-6 text-center transition-colors">
-						<h2 className="text-2xl font-semibold text-destructive mb-4">
-							{t("pages.error.something_wrong")}
-						</h2>
-						<p className="text-muted-foreground mb-4">
-							{this.state.error?.message || t("pages.error.unexpected_error")}
-						</p>
-						<Button type="button" onClick={this.handleGoHome} variant="primary">
-							{t("pages.error.go_home")}
-						</Button>
-					</div>
-				</div>
+				<Layout.Error
+					showHeader={false}
+					title={t("pages.error.something_wrong")}
+					message={this.state.error?.message || t("pages.error.unexpected_error")}
+					actionLabel={t("pages.error.go_home")}
+					onAction={this.handleGoHome}
+				/>
 			);
 		}
 

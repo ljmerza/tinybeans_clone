@@ -754,6 +754,10 @@
 	},
 	"profile": {
 		"general": {
+			"loading_title": "Cargando configuración del perfil…",
+			"loading_description": "Obteniendo tus preferencias de cuenta.",
+			"error_title": "La configuración del perfil no está disponible",
+			"error_description": "No pudimos cargar tus datos de cuenta. Intenta nuevamente.",
 			"email": {
 				"title": "Verificación de correo",
 				"description": "Tu correo de cuenta es {{email}}. Mantenlo verificado para usar todas las funciones.",

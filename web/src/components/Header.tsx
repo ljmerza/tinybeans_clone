@@ -42,10 +42,14 @@ function GuestHeaderActions() {
 	return (
 		<>
 			<Button asChild variant="ghost" size="sm">
-				<Link to="/login">{t("nav.login")}</Link>
+				<Link to="/login" preload="none">
+					{t("nav.login")}
+				</Link>
 			</Button>
 			<Button asChild variant="primary" size="sm">
-				<Link to="/signup">{t("nav.signup")}</Link>
+				<Link to="/signup" preload="none">
+					{t("nav.signup")}
+				</Link>
 			</Button>
 		</>
 	);

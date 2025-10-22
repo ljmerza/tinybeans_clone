@@ -1,6 +1,5 @@
 import { authKeys } from "@/features/auth/api/queryKeys";
 import type { AuthRequestOptions } from "@/features/auth/api/authClient";
-import { useApiMessages } from "@/i18n";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
 import {
 	type UseMutationResult,
@@ -26,25 +25,29 @@ export function useUpdateUserProfileMutation(
 > {
 	const mutationKey = profileKeys.mutations.updateProfile();
 	const queryClient = useQueryClient();
-	const { showAsToast } = useApiMessages();
 	const shouldShowToast = !defaultRequestOptions?.suppressSuccessToast;
 
 	return useMutation({
 		mutationKey,
 		mutationFn: (body: UpdateUserProfileVariables) =>
 			profileServices.updateProfile(body, defaultRequestOptions),
-		onSuccess: (response) => {
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: profileKeys.profile() });
 			queryClient.invalidateQueries({ queryKey: authKeys.session() });
-			if (shouldShowToast && response.messages?.length) {
-				showAsToast(response.messages, 200);
-			}
 		},
 		meta: {
 			analyticsEvent: "profile:update",
 			toast: {
-				successKey: "common.success",
-				errorKey: "common.error",
+				useResponseMessages: true,
+				success: {
+					key: "common.success",
+					status: 200,
+					suppress: !shouldShowToast,
+				},
+				error: {
+					key: "common.error",
+					status: 400,
+				},
 			},
 		},
 	});

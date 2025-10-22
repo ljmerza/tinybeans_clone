@@ -8,6 +8,7 @@ import {
 	QueryClient,
 	type QueryClientConfig,
 } from "@tanstack/react-query";
+import { createMutationCache } from "./mutationCache";
 
 /**
  * Base query client options tuned for the Tinybeans frontend.
@@ -30,6 +31,7 @@ export const defaultQueryClientOptions: DefaultOptions = {
  */
 export function createQueryClient(config: QueryClientConfig = {}) {
 	return new QueryClient({
+		mutationCache: config.mutationCache ?? createMutationCache(),
 		...config,
 		defaultOptions: {
 			queries: {

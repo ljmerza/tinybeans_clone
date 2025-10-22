@@ -24,6 +24,7 @@ export function LanguageSwitcher() {
 
 	const handleLanguageChange = async (lang: Language) => {
 		if (lang === currentLanguage) return;
+		const previousLanguage = currentLanguage;
 
 		try {
 			// Change language immediately for instant UI update
@@ -33,6 +34,7 @@ export function LanguageSwitcher() {
 			await updateProfile.mutateAsync({ language: lang });
 		} catch (error) {
 			console.error("Failed to change language:", error);
+			await i18n.changeLanguage(previousLanguage);
 		}
 	};
 
@@ -67,6 +69,7 @@ export function LanguageSwitcherCompact() {
 
 	const handleLanguageChange = async (lang: Language) => {
 		if (lang === currentLanguage) return;
+		const previousLanguage = currentLanguage;
 
 		try {
 			await i18n.changeLanguage(lang);
@@ -74,6 +77,7 @@ export function LanguageSwitcherCompact() {
 			await updateProfile.mutateAsync({ language: lang });
 		} catch (error) {
 			console.error("Failed to change language:", error);
+			await i18n.changeLanguage(previousLanguage);
 		}
 	};
 
