@@ -124,14 +124,14 @@ export function useLogin(options?: { redirect?: string }) {
 			if (tokens?.access) {
 				setAccessToken(tokens.access);
 			}
-		qc.invalidateQueries({ queryKey: authKeys.session() });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-		const needsOnboarding =
-			"needs_circle_onboarding" in payload &&
-			Boolean(
-				(payload as typeof payload & { needs_circle_onboarding?: boolean })
-					.needs_circle_onboarding,
-			);
+			const needsOnboarding =
+				"needs_circle_onboarding" in payload &&
+				Boolean(
+					(payload as typeof payload & { needs_circle_onboarding?: boolean })
+						.needs_circle_onboarding,
+				);
 			if (needsOnboarding) {
 				navigate({ to: "/circles/onboarding" });
 				return;
@@ -223,9 +223,9 @@ export function useSignup(options?: { redirect?: string }) {
 				setAccessToken(tokens.access);
 			}
 
-		qc.invalidateQueries({ queryKey: authKeys.session() });
+			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-		const redirectTarget = options?.redirect ?? consumeInviteRedirect();
+			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
 			const invitationRedirect = parseInvitationRedirect(redirectTarget);
 			const finalizeResult = await finalizeCircleInvitation(
 				showAsToast,

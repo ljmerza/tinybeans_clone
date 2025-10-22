@@ -7,7 +7,9 @@ declare module "msw/node" {
 	import type { RequestHandler } from "msw";
 
 	export interface SetupServerApi {
-		listen: (options?: { onUnhandledRequest?: "error" | "warn" | "bypass" }) => void;
+		listen: (options?: {
+			onUnhandledRequest?: "error" | "warn" | "bypass";
+		}) => void;
 		close: () => void;
 		resetHandlers: (...handlers: RequestHandler[]) => void;
 		use: (...handlers: RequestHandler[]) => void;

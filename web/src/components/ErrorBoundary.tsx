@@ -44,7 +44,9 @@ class ErrorBoundaryComponent extends Component<Props, State> {
 				<Layout.Error
 					showHeader={false}
 					title={t("pages.error.something_wrong")}
-					message={this.state.error?.message || t("pages.error.unexpected_error")}
+					message={
+						this.state.error?.message || t("pages.error.unexpected_error")
+					}
 					actionLabel={t("pages.error.go_home")}
 					onAction={this.handleGoHome}
 				/>

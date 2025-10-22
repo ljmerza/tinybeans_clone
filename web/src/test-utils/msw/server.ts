@@ -1,7 +1,9 @@
 import { handlers } from "./handlers";
 
 interface MockServer {
-	listen: (options?: { onUnhandledRequest?: "error" | "warn" | "bypass" }) => void;
+	listen: (options?: {
+		onUnhandledRequest?: "error" | "warn" | "bypass";
+	}) => void;
 	close: () => void;
 	resetHandlers: (...nextHandlers: unknown[]) => void;
 	use: (...nextHandlers: unknown[]) => void;

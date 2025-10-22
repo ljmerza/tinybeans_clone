@@ -24,9 +24,7 @@ export const Route = createFileRoute("/circles/")({
 
 function CirclesIndexPending() {
 	const { t } = useTranslation();
-	return (
-		<Layout.Loading message={t("pages.circles.index.loading")} />
-	);
+	return <Layout.Loading message={t("pages.circles.index.loading")} />;
 }
 
 function CirclesIndexError({

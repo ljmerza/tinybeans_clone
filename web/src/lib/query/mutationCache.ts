@@ -133,7 +133,7 @@ const handleErrorToast = (
 		toastMeta.useResponseMessages &&
 		showMessages(
 			httpError?.messages ?? extractMessages(httpError?.data),
-			descriptor?.status ?? (httpError?.status ?? 400),
+			descriptor?.status ?? httpError?.status ?? 400,
 		);
 
 	if (usedResponseMessages) return;
