@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { LoadingState } from "@/components/LoadingState";
+import { Layout } from "@/components/Layout";
 import { StatusMessage } from "@/components/StatusMessage";
 import { Button } from "@/components/ui/button";
 import { useInvitationAcceptance } from "@/features/circles/hooks/useInvitationAcceptance";
@@ -72,10 +72,12 @@ export function InvitationAcceptContent({
 			</header>
 
 			{isLoading ? (
-				<LoadingState
+				<Layout.Loading
+					showHeader={false}
 					layout="section"
 					className="min-h-[30vh]"
 					message={t("pages.inviteAccept.loading")}
+					spinnerSize="md"
 				/>
 			) : null}
 

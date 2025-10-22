@@ -7,7 +7,6 @@ import {
 	ConfirmDialog,
 	EmptyState,
 	Layout,
-	LoadingState,
 } from "@/components";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
@@ -33,6 +32,7 @@ export function CirclesIndexRouteView() {
 	if (isLoading && !data) {
 		return (
 			<Layout.Loading
+				showHeader={false}
 				message={t("pages.circles.index.loading")}
 				spinnerSize="sm"
 			/>
@@ -59,7 +59,8 @@ export function CirclesIndexRouteView() {
 					<h1 className="heading-2">{t("pages.circles.index.title")}</h1>
 					<p className="text-subtitle">{t("pages.circles.index.subtitle")}</p>
 					{isFetching ? (
-						<LoadingState
+						<Layout.Loading
+							showHeader={false}
 							layout="inline"
 							spinnerSize="sm"
 							className="text-sm text-muted-foreground"
