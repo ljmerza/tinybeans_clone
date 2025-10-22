@@ -1,5 +1,4 @@
-import { StatusMessage } from "@/components";
-import { LoadingState } from "@/components/LoadingState";
+import { StatusMessage, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { useApiMessages } from "@/i18n";
 import type { ApiResponseWithMessages } from "@/types";
@@ -96,34 +95,25 @@ export function EmailVerificationHandler({
 			</h1>
 
 			{status === "verifying" ? (
-				<LoadingState
-					layout="section"
-					className="py-8"
+				<Layout.Loading
+					showHeader={false}
 					message={t("auth.email_verification.verifying")}
+					spinnerSize="md"
 				/>
+			) : status === "success" ? (
+				<StatusMessage variant="success" align="center">{message}</StatusMessage>
 			) : (
-				<>
-					<StatusMessage
-						variant={status === "success" ? "success" : "error"}
-						align="center"
-					>
-						{message}
-					</StatusMessage>
-					<Button
-						className="w-full"
-						onClick={() => {
-							// Attempt to close the current window/tab; fallback to navigation if blocked.
-							const closed = window.close();
-							if (!closed) {
-								navigate({ to: status === "success" ? "/" : "/login" });
-							}
-						}}
-					>
-						{status === "success"
-							? t("auth.email_verification.close_tab")
-							: t("auth.email_verification.close_tab_error")}
-					</Button>
-				</>
+				<Layout.Error
+					showHeader={false}
+					message={message}
+					actionLabel={t("auth.email_verification.close_tab_error")}
+					onAction={() => {
+						const closed = window.close();
+						if (!closed) {
+							navigate({ to: "/login" });
+						}
+					}}
+				/>
 			)}
 		</div>
 	);

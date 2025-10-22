@@ -2,8 +2,7 @@ import type { ApiError } from "@/types";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { StatusMessage } from "@/components";
-import { LoadingState } from "@/components/LoadingState";
+import { StatusMessage, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
@@ -61,40 +60,35 @@ export function MagicLoginHandler({ token, redirect }: MagicLoginHandlerProps) {
 
 	if (status === "verifying") {
 		return (
-			<div className="mx-auto max-w-sm p-6 space-y-4">
-				<LoadingState
-					layout="section"
-					className="py-8"
-					message={t("auth.magic_link.verifying")}
-				/>
-			</div>
+			<Layout.Loading
+				showHeader={false}
+				message={t("auth.magic_link.verifying")}
+				spinnerSize="md"
+			/>
 		);
 	}
 
 	if (status === "success") {
 		return (
-			<div className="mx-auto max-w-sm p-6 space-y-4">
-				<StatusMessage variant="success">
+			<Layout>
+				<StatusMessage variant="success" align="center">
 					{t("auth.magic_link.success")}
 				</StatusMessage>
-			</div>
+			</Layout>
 		);
 	}
 
 	return (
-		<div className="mx-auto max-w-sm p-6 space-y-4">
-			<StatusMessage variant="error">{errorMessage}</StatusMessage>
-			<Button
-				onClick={() =>
-					navigate({
-						to: "/login",
-						search: redirect ? { redirect } : undefined,
-					})
-				}
-				className="w-full"
-			>
-				{t("auth.password_reset.back_to_login")}
-			</Button>
-		</div>
+		<Layout.Error
+			showHeader={false}
+			message={errorMessage}
+			actionLabel={t("auth.password_reset.back_to_login")}
+			onAction={() =>
+				navigate({
+					to: "/login",
+					search: redirect ? { redirect } : undefined,
+				})
+			}
+		/>
 	);
 }
