@@ -1,6 +1,6 @@
 # ADR-0007: Circle Membership Invitation Auto-Prune
 
-Date: 2025-10-22T18:34:54.071Z
+Date: 2025-10-22T18:36:57.649Z
 Status: Accepted
 Decision: Adopt "Auto-Prune Accepted Invitations" backend strategy.
 
