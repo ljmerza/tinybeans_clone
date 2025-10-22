@@ -6,8 +6,8 @@ import {
 	CardTitle,
 	ConfirmDialog,
 	EmptyState,
-	LoadingState,
 	StatusMessage,
+	Layout,
 } from "@/components";
 import { Button } from "@/components/ui/button";
 import type { ApiError } from "@/types";
@@ -39,7 +39,8 @@ export function CircleInvitationList({ circleId }: CircleInvitationListProps) {
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{query.isFetching ? (
-						<LoadingState
+						<Layout.Loading
+							showHeader={false}
 							layout="inline"
 							spinnerSize="sm"
 							className="text-sm text-muted-foreground"
