@@ -68,6 +68,7 @@ class CircleInvitationCreateView(APIView):
         if not include_archived:
             base_qs = base_qs.filter(archived_at__isnull=True)
         invitations = base_qs
+        data = CircleInvitationSerializer(invitations, many=True).data
         return success_response({'invitations': data})
     @extend_schema(
         description='Invite a new member to join a circle via username or email. Existing users receive a pending invitation and must accept before joining.',

@@ -84,18 +84,24 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 	}, [queryClient]);
 
 	if (status === "loading") {
-		return <Layout.Loading showHeader={false} layout="fullscreen" message="Initializing..." />;
+		return (
+			<AppProviders queryClient={queryClient} isInitializing={true}>
+				<Layout.Loading showHeader={false} message="Initializing..." />
+			</AppProviders>
+		);
 	}
 
 	if (status === "error") {
 		return (
-			<Layout.Error
-				showHeader={false}
-				title="Initialization Error"
-				message={error?.message ?? "Failed to start application"}
-				actionLabel="Refresh"
-				onAction={() => window.location.reload()}
-			/>
+			<AppProviders queryClient={queryClient} isInitializing={false}>
+				<Layout.Error
+					showHeader={false}
+					title="Initialization Error"
+					message={error?.message ?? "Failed to start application"}
+					actionLabel="Refresh"
+					onAction={() => window.location.reload()}
+				/>
+			</AppProviders>
 		);
 	}
 

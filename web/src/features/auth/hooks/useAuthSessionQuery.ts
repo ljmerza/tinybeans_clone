@@ -28,6 +28,7 @@ export function useAuthSessionQuery(
 			const data = (response.data ?? response) as MeResponse;
 			return data.user;
 		},
+		// Only run if we explicitly have an access token and not in a passive guest hover scenario.
 		enabled: options.enabled ?? Boolean(accessToken),
 		retry: options.retry ?? false,
 		staleTime: options.staleTime ?? 1000 * 60,

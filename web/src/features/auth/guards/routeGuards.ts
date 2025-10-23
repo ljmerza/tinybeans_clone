@@ -20,6 +20,12 @@ async function resolveSessionUser(queryClient?: QueryClient) {
 		return null;
 	}
 
+	// Avoid triggering session fetch (and token refresh attempts) when user is a guest.
+	const { accessToken } = authStore.state;
+	if (!accessToken) {
+		return null;
+	}
+
 	const cached = queryClient.getQueryData<AuthUser>(authKeys.session());
 	if (cached) {
 		return cached;
