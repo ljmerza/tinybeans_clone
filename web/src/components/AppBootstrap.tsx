@@ -10,8 +10,7 @@ import type { HttpError } from "@/lib/httpClient";
 import type { QueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AppProviders } from "./AppProviders";
-import { LoadingState } from "./LoadingState";
-import { StandardError } from "./StandardError";
+import { Layout } from "./Layout";
 
 interface AppBootstrapProps {
 	queryClient: QueryClient;
@@ -85,15 +84,15 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 	}, [queryClient]);
 
 	if (status === "loading") {
-		return <LoadingState layout="fullscreen" message="Initializing..." />;
+		return <Layout.Loading showHeader={false} layout="fullscreen" message="Initializing..." />;
 	}
 
 	if (status === "error") {
 		return (
-			<StandardError
+			<Layout.Error
+				showHeader={false}
 				title="Initialization Error"
 				message={error?.message ?? "Failed to start application"}
-				description="Please refresh the page to try again"
 				actionLabel="Refresh"
 				onAction={() => window.location.reload()}
 			/>

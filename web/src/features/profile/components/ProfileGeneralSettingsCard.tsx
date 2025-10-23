@@ -1,4 +1,4 @@
-import { LoadingState } from "@/components/LoadingState";
+import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { useAuthSession, useResendVerificationMutation } from "@/features/auth";
 import { ThemePreferenceSelect, useTheme } from "@/features/theme";
@@ -19,7 +19,7 @@ export function ProfileGeneralSettingsCard() {
 	);
 
 	if (session.isFetchingUser && !user) {
-		return <LoadingState layout="section" className="py-10" />;
+		return <Layout.Loading showHeader={false} layout="section" className="py-10" spinnerSize="md" message={t("common.loading", { defaultValue: "Loading..." })} />;
 	}
 
 	const emailVerified = user?.email_verified ?? false;

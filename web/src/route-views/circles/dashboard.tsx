@@ -1,5 +1,4 @@
-import { EmptyState, LoadingState } from "@/components";
-import { Layout } from "@/components/Layout";
+import { EmptyState, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { CircleInvitationManager, useCircleMembers } from "@/features/circles";
 import { Link } from "@tanstack/react-router";
@@ -76,7 +75,7 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 							{isFetching ? (
 								<>
 									<span>&middot;</span>
-									<LoadingState
+									<Layout.Loading showHeader={false}
 										layout="inline"
 										spinnerSize="sm"
 										className="text-sm text-muted-foreground"
