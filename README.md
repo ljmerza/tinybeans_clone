@@ -22,6 +22,14 @@ python manage.py test --settings=mysite.test_settings
 
 ## Development Notes
 
+### UI Standardization Notes
+Loading & Error states are now unified:
+- Use `Layout.Loading` for all pending states (supports inline, section, fullscreen via layout prop; set `showHeader={false}` for bare states)
+- Use `Layout.Error` for recoverable route/feature errors with action button
+- Deprecated components for new usage: `LoadingState`, `StandardError` (still exported for backward compatibility but avoid in new code)
+- Inline refresh indicators replaced by `Layout.Loading layout="inline" spinnerSize="sm"`
+- Fullscreen app bootstrap uses `Layout.Loading` / `Layout.Error`
+
 ### TODO:
 - add pagination to list returning apis (ie return all members for circle)
 - add max limits to adding members to circle and whatever else
