@@ -56,6 +56,9 @@ class CircleInvitation(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     responded_at = models.DateTimeField(blank=True, null=True)
     reminder_sent_at = models.DateTimeField(blank=True, null=True)
+    # ADR-0007: Auto-prune accepted invitations; archival metadata
+    archived_at = models.DateTimeField(blank=True, null=True)
+    archived_reason = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         app_label = 'users'
@@ -64,6 +67,7 @@ class CircleInvitation(models.Model):
             models.Index(fields=['circle', 'email']),
             models.Index(fields=['circle', 'invited_user']),
             models.Index(fields=['status', 'reminder_sent_at']),
+            models.Index(fields=["circle", "archived_at"]),
         ]
 
     def __str__(self) -> str:
