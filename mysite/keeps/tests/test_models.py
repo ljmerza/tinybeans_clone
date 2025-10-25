@@ -14,7 +14,6 @@ class KeepModelTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpass123'
         )
@@ -205,12 +204,10 @@ class KeepAdminPermissionsTest(TestCase):
         """Set up test data with admin and regular user."""
         # Create users
         self.admin_user = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='adminpass123'
         )
         self.regular_user = User.objects.create_user(
-            username='regular',
             email='regular@example.com',
             password='regularpass123'
         )
@@ -286,7 +283,6 @@ class KeepAdminPermissionsTest(TestCase):
         """Test that regular users can only modify their own content."""
         # Create another regular user
         other_user = User.objects.create_user(
-            username='other',
             email='other@example.com',
             password='otherpass123'
         )
@@ -315,9 +311,5 @@ class KeepAdminPermissionsTest(TestCase):
         self.assertTrue(can_user_post_in_circle(self.regular_user, self.circle))
         
         # User not in circle should not be able to post
-        outsider = User.objects.create_user(
-            username='outsider',
-            email='outsider@example.com',
-            password='outsiderpass123'
-        )
+        outsider = User.objects.create_user(email='outsider@example.com', password='outsiderpass123')
         self.assertFalse(can_user_post_in_circle(outsider, self.circle))

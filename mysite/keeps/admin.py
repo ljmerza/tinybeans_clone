@@ -70,7 +70,9 @@ class KeepAdmin(admin.ModelAdmin):
         'title',
         'description',
         'tags',
-        'created_by__username',
+        'created_by__email',
+        'created_by__first_name',
+        'created_by__last_name',
         'circle__name',
     ]
     
@@ -225,7 +227,9 @@ class KeepReactionAdmin(admin.ModelAdmin):
     ]
     
     search_fields = [
-        'user__username',
+        'user__email',
+        'user__first_name',
+        'user__last_name',
         'keep__title',
         'keep__description',
     ]
@@ -258,7 +262,9 @@ class KeepCommentAdmin(admin.ModelAdmin):
     ]
     
     search_fields = [
-        'user__username',
+        'user__email',
+        'user__first_name',
+        'user__last_name',
         'comment',
         'keep__title',
         'keep__description',

@@ -48,32 +48,37 @@ class Command(BaseCommand):
 
     def _create_superuser(self) -> User:
         user, created = User.objects.get_or_create(
-            username='superadmin',
+            email='superadmin@example.com',
             defaults={
-                'email': 'superadmin@example.com',
                 'is_staff': True,
                 'is_superuser': True,
+                'first_name': 'Super',
+                'last_name': 'Admin',
             },
         )
-        user.email = 'superadmin@example.com'
         user.is_staff = True
         user.is_superuser = True
+        user.first_name = user.first_name or 'Super'
+        user.last_name = user.last_name or 'Admin'
         if created or not user.check_password(DEFAULT_PASSWORD):
             user.set_password(DEFAULT_PASSWORD)
         user.save()
         self._mark_verified(user)
-        self.stdout.write('· Superuser available at superadmin@example.com (username: superadmin)')
+        self.stdout.write('· Superuser available at superadmin@example.com')
         return user
 
     def _create_primary_circle(self) -> Circle:
         guardian, _ = User.objects.get_or_create(
-            username='guardian_admin',
+            email='guardian@example.com',
             defaults={
-                'email': 'guardian@example.com',
                 'role': UserRole.CIRCLE_ADMIN,
+                'first_name': 'Guardian',
+                'last_name': 'Admin',
             },
         )
         guardian.role = UserRole.CIRCLE_ADMIN
+        guardian.first_name = guardian.first_name or 'Guardian'
+        guardian.last_name = guardian.last_name or 'Admin'
         if not guardian.check_password(DEFAULT_PASSWORD):
             guardian.set_password(DEFAULT_PASSWORD)
         guardian.save()
@@ -94,11 +99,17 @@ class Command(BaseCommand):
         )
 
         member, _ = User.objects.get_or_create(
-            username='family_member',
-            defaults={'email': 'member@example.com', 'role': UserRole.CIRCLE_MEMBER},
+            email='member@example.com',
+            defaults={
+                'role': UserRole.CIRCLE_MEMBER,
+                'first_name': 'Family',
+                'last_name': 'Member',
+            },
         )
         if not member.check_password(DEFAULT_PASSWORD):
             member.set_password(DEFAULT_PASSWORD)
+        member.first_name = member.first_name or 'Family'
+        member.last_name = member.last_name or 'Member'
         member.role = UserRole.CIRCLE_MEMBER
         member.save()
         self._mark_verified(member)
@@ -110,11 +121,17 @@ class Command(BaseCommand):
         )
 
         teenager, _ = User.objects.get_or_create(
-            username='teen_member',
-            defaults={'email': 'teen@example.com', 'role': UserRole.CIRCLE_MEMBER},
+            email='teen@example.com',
+            defaults={
+                'role': UserRole.CIRCLE_MEMBER,
+                'first_name': 'Teen',
+                'last_name': 'Member',
+            },
         )
         if not teenager.check_password(DEFAULT_PASSWORD):
             teenager.set_password(DEFAULT_PASSWORD)
+        teenager.first_name = teenager.first_name or 'Teen'
+        teenager.last_name = teenager.last_name or 'Member'
         teenager.role = UserRole.CIRCLE_MEMBER
         teenager.save()
         self._mark_verified(teenager)
@@ -169,11 +186,17 @@ class Command(BaseCommand):
 
     def _create_secondary_circle(self) -> Circle:
         admin_two, _ = User.objects.get_or_create(
-            username='second_admin',
-            defaults={'email': 'second@example.com', 'role': UserRole.CIRCLE_ADMIN},
+            email='second@example.com',
+            defaults={
+                'role': UserRole.CIRCLE_ADMIN,
+                'first_name': 'Second',
+                'last_name': 'Admin',
+            },
         )
         if not admin_two.check_password(DEFAULT_PASSWORD):
             admin_two.set_password(DEFAULT_PASSWORD)
+        admin_two.first_name = admin_two.first_name or 'Second'
+        admin_two.last_name = admin_two.last_name or 'Admin'
         admin_two.role = UserRole.CIRCLE_ADMIN
         admin_two.save()
         self._mark_verified(admin_two)
@@ -198,11 +221,17 @@ class Command(BaseCommand):
 
     def _create_user_without_circle(self) -> User:
         user, _ = User.objects.get_or_create(
-            username='solo_user',
-            defaults={'email': 'solo@example.com', 'role': UserRole.CIRCLE_MEMBER},
+            email='solo@example.com',
+            defaults={
+                'role': UserRole.CIRCLE_MEMBER,
+                'first_name': 'Solo',
+                'last_name': 'User',
+            },
         )
         if not user.check_password(DEFAULT_PASSWORD):
             user.set_password(DEFAULT_PASSWORD)
+        user.first_name = user.first_name or 'Solo'
+        user.last_name = user.last_name or 'User'
         user.role = UserRole.CIRCLE_MEMBER
         user.save()
 

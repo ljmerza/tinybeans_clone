@@ -15,7 +15,12 @@ def create_user(username='testuser', email=None, password='testpass'):
     """Utility helper to satisfy required email field on custom user model."""
     if email is None:
         email = f"{username}@example.com"
-    return User.objects.create_user(username=username, email=email, password=password)
+    return User.objects.create_user(
+        email=email,
+        password=password,
+        first_name=username.title(),
+        last_name='User',
+    )
 
 
 def response_payload(response):

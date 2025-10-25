@@ -21,15 +21,46 @@ from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
-    fieldsets = DjangoUserAdmin.fieldsets + (
+    ordering = ('email',)
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name')}),
         (
-            'Circle Metadata',
-            {'fields': ('role', 'email_verified')},
+            _('Permissions'),
+            {
+                'fields': (
+                    'role',
+                    'email_verified',
+                    'is_active',
+                    'is_staff',
+                    'is_superuser',
+                    'groups',
+                    'user_permissions',
+                )
+            },
+        ),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': (
+                    'email',
+                    'first_name',
+                    'last_name',
+                    'password1',
+                    'password2',
+                    'role',
+                    'email_verified',
+                ),
+            },
         ),
     )
-    list_display = ('username', 'email', 'role', 'is_active', 'email_verified')
-    list_filter = ('role', 'is_active', 'email_verified')
-    search_fields = ('username', 'email')
+    list_display = ('email', 'first_name', 'last_name', 'role', 'is_active', 'email_verified')
+    list_filter = ('role', 'is_active', 'email_verified', 'is_staff', 'is_superuser')
+    search_fields = ('email', 'first_name', 'last_name')
 
 
 
@@ -218,6 +249,6 @@ class UserNotificationPreferencesAdmin(admin.ModelAdmin):
 class ChildUpgradeAuditLogAdmin(admin.ModelAdmin):
     list_display = ('child', 'event_type', 'performed_by', 'created_at')
     list_filter = ('event_type', 'created_at')
-    search_fields = ('child__display_name', 'performed_by__username')
+    search_fields = ('child__display_name', 'performed_by__email', 'performed_by__first_name', 'performed_by__last_name')
     readonly_fields = ('child', 'event_type', 'performed_by', 'metadata', 'created_at')
     ordering = ('-created_at',)

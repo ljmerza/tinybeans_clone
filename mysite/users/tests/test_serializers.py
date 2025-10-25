@@ -31,17 +31,20 @@ class UserSerializerTests(TestCase):
     def test_user_serialization(self):
         """Test serializing a user."""
         user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='password123',
-            role=UserRole.CIRCLE_ADMIN
+            role=UserRole.CIRCLE_ADMIN,
+            first_name='Test',
+            last_name='User',
         )
         
         serializer = UserSerializer(user)
         data = serializer.data
         
-        self.assertEqual(data['username'], 'testuser')
         self.assertEqual(data['email'], 'test@example.com')
+        self.assertEqual(data['display_name'], 'Test User')
+        self.assertEqual(data['first_name'], 'Test')
+        self.assertEqual(data['last_name'], 'User')
         self.assertEqual(data['role'], UserRole.CIRCLE_ADMIN)
         self.assertFalse(data['email_verified'])
         self.assertEqual(data['circle_onboarding_status'], 'pending')
@@ -54,9 +57,10 @@ class SignupSerializerTests(TestCase):
     def test_valid_signup_data(self):
         """Test signup serializer with valid data."""
         data = {
-            'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'securepassword123'
+            'password': 'securepassword123',
+            'first_name': 'New',
+            'last_name': 'User',
         }
         
         serializer = SignupSerializer(data=data)
@@ -64,8 +68,9 @@ class SignupSerializerTests(TestCase):
         
         # SignupSerializer.save() now returns only the user
         user = serializer.save()
-        self.assertEqual(user.username, 'newuser')
         self.assertEqual(user.email, 'new@example.com')
+        self.assertEqual(user.first_name, 'New')
+        self.assertEqual(user.last_name, 'User')
         self.assertTrue(user.check_password('securepassword123'))
         self.assertFalse(user.email_verified)  # Email should not be verified initially
         self.assertEqual(user.circle_onboarding_status, 'pending')
@@ -73,16 +78,16 @@ class SignupSerializerTests(TestCase):
     def test_signup_without_circle(self):
         """Test signup creates user without circle (circles created separately)."""
         data = {
-            'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'securepassword123'
+            'password': 'securepassword123',
+            'first_name': 'Circle',
+            'last_name': 'Deferred',
         }
         
         serializer = SignupSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         
         user = serializer.save()
-        self.assertEqual(user.username, 'newuser')
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
         
         # No circles should be created during signup
@@ -92,22 +97,44 @@ class SignupSerializerTests(TestCase):
     def test_signup_password_too_short(self):
         """Test signup with password that's too short."""
         data = {
-            'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'short'
+            'password': 'short',
+            'first_name': 'Short',
+            'last_name': 'Pass',
         }
         
         serializer = SignupSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('password', serializer.errors)
 
+    def test_signup_requires_first_name(self):
+        data = {
+            'email': 'new@example.com',
+            'password': 'securepassword123',
+            'last_name': 'Missing',
+        }
+        serializer = SignupSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('first_name', serializer.errors)
+
+    def test_signup_requires_last_name(self):
+        data = {
+            'email': 'new@example.com',
+            'password': 'securepassword123',
+            'first_name': 'Missing',
+        }
+        serializer = SignupSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('last_name', serializer.errors)
+
     def test_role_validation(self):
         """Test that role field is no longer accepted in signup."""
         data = {
-            'username': 'newuser',
             'email': 'new@example.com',
             'password': 'securepassword123',
-            'role': UserRole.CIRCLE_ADMIN
+            'role': UserRole.CIRCLE_ADMIN,
+            'first_name': 'Admin',
+            'last_name': 'Role',
         }
         
         serializer = SignupSerializer(data=data)
@@ -119,9 +146,10 @@ class SignupSerializerTests(TestCase):
     def test_empty_role_defaults_to_member(self):
         """Test that users are created with default CIRCLE_MEMBER role."""
         data = {
-            'username': 'newuser',
             'email': 'new@example.com',
             'password': 'securepassword123',
+            'first_name': 'Default',
+            'last_name': 'Role',
             # Don't provide role field at all to test default
         }
         
@@ -134,9 +162,10 @@ class SignupSerializerTests(TestCase):
         """Test that circle creation fields are no longer supported in signup."""
         # Circle-related fields should be ignored since they're not in the serializer
         data = {
-            'username': 'newuser_unique',
             'email': 'new_unique@example.com',
             'password': 'securepassword123',
+            'first_name': 'Circle',
+            'last_name': 'Ignored',
             'create_circle': True,
             'circle_name': 'My Family Circle'
         }
@@ -154,28 +183,14 @@ class SignupSerializerTests(TestCase):
 class LoginSerializerTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='password123'
         )
 
-    def test_valid_login_with_username(self):
-        """Test valid login with username."""
-        data = {
-            'username': 'testuser',
-            'password': 'password123'
-        }
-        
-        serializer = LoginSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['user'], self.user)
-
     def test_valid_login_with_email(self):
-        """Test valid login with email using authentication."""
-        # Note: LoginSerializer might not support email login based on the implementation
-        # Let's test with username instead
+        """Test valid login with email."""
         data = {
-            'username': self.user.username,  # Use username instead of email
+            'email': 'test@example.com',
             'password': 'password123'
         }
         
@@ -186,7 +201,7 @@ class LoginSerializerTests(TestCase):
     def test_invalid_credentials(self):
         """Test login with invalid credentials."""
         data = {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'wrongpassword'
         }
         
@@ -200,7 +215,7 @@ class LoginSerializerTests(TestCase):
 
     def test_missing_fields(self):
         """Test login with missing fields."""
-        data = {'username': 'testuser'}
+        data = {'email': 'test@example.com'}
         
         serializer = LoginSerializer(data=data)
         self.assertFalse(serializer.is_valid())
@@ -208,35 +223,18 @@ class LoginSerializerTests(TestCase):
 
 
 class EmailVerificationSerializerTests(TestCase):
-    def test_valid_identifier_username(self):
-        """Test email verification serializer with valid username."""
-        # Create a user first
-        User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password123'
-        )
-        data = {'identifier': 'testuser'}
-        
-        serializer = EmailVerificationSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
-
     def test_valid_identifier_email(self):
         """Test email verification serializer with valid email."""
-        # Create a user first
-        User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password123'
-        )
-        data = {'identifier': 'test@example.com'}
+        User.objects.create_user(email='test@example.com', password='password123')
+        data = {'email': 'test@example.com'}
         
         serializer = EmailVerificationSerializer(data=data)
         self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data['user'].email, 'test@example.com')
 
     def test_invalid_identifier(self):
         """Test email verification serializer with non-existent user."""
-        data = {'identifier': 'nonexistent@example.com'}
+        data = {'email': 'nonexistent@example.com'}
         
         serializer = EmailVerificationSerializer(data=data)
         self.assertFalse(serializer.is_valid())
@@ -249,11 +247,7 @@ class EmailVerificationSerializerTests(TestCase):
 
 class PasswordChangeSerializerTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='oldpassword'
-        )
+        self.user = User.objects.create_user(email='test@example.com', password='oldpassword')
 
     def test_valid_password_change(self):
         """Test password change with valid data."""
@@ -323,14 +317,14 @@ class PasswordChangeSerializerTests(TestCase):
 class PasswordResetRequestSerializerTests(TestCase):
     def test_valid_identifier_email(self):
         """Test password reset request with email identifier."""
-        data = {'identifier': 'test@example.com'}
+        data = {'email': 'test@example.com'}
         
         serializer = PasswordResetRequestSerializer(data=data)
         self.assertTrue(serializer.is_valid())
 
-    def test_valid_identifier_username(self):
-        """Test password reset request with username identifier."""
-        data = {'identifier': 'testuser'}
+    def test_invalid_identifier(self):
+        """Test password reset request with missing user."""
+        data = {'email': 'missing@example.com'}
         
         serializer = PasswordResetRequestSerializer(data=data)
         self.assertTrue(serializer.is_valid())
@@ -338,11 +332,7 @@ class PasswordResetRequestSerializerTests(TestCase):
 
 class CircleSerializerTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='creator',
-            email='creator@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='creator@example.com', password='password123')
         self.circle = Circle.objects.create(name='Test Family', created_by=self.user)
 
     def test_circle_serialization(self):
@@ -359,13 +349,11 @@ class CircleSerializerTests(TestCase):
 class CircleCreateSerializerTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='password123',
             email_verified=True
         )
         self.unverified_user = User.objects.create_user(
-            username='unverified',
             email='unverified@example.com',
             password='password123',
             email_verified=False
@@ -409,11 +397,7 @@ class CircleCreateSerializerTests(TestCase):
 
 class ChildProfileSerializerTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='parent',
-            email='parent@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='parent@example.com', password='password123')
         self.circle = Circle.objects.create(name='Family', created_by=self.user)
         self.child = ChildProfile.objects.create(
             circle=self.circle,
@@ -470,12 +454,7 @@ class ChildProfileSerializerTests(TestCase):
 
 class ChildProfileUpgradeRequestSerializerTests(TestCase):
     def setUp(self):
-        # Use unique usernames and emails for this test class
-        self.user = User.objects.create_user(
-            username=f'parent_{id(self)}',  # Make unique based on object id
-            email=f'parent_{id(self)}@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email=f'parent_{id(self)}@example.com', password='password123')
         self.circle = Circle.objects.create(name=f'Family_{id(self)}', created_by=self.user)
         self.child = ChildProfile.objects.create(
             circle=self.circle,
@@ -549,7 +528,6 @@ class ChildProfileUpgradeRequestSerializerTests(TestCase):
         """Test that optional fields work correctly."""
         data = {
             'email': 'parent2@example.com',
-            'username': 'parentuser',
             'guardian_name': 'John Doe',
             'guardian_relationship': 'Father',
             'agreement_reference': 'REF-456',
@@ -563,7 +541,6 @@ class ChildProfileUpgradeRequestSerializerTests(TestCase):
         self.assertTrue(serializer.is_valid())
         
         validated_data = serializer.validated_data
-        self.assertEqual(validated_data['username'], 'parentuser')
         self.assertEqual(validated_data['agreement_reference'], 'REF-456')
         self.assertEqual(validated_data['consent_metadata'], {'location': 'home'})
 
@@ -572,11 +549,7 @@ class ChildProfileUpgradeRequestSerializerTests(TestCase):
         from mysite.users.models import ChildProfileUpgradeStatus  # Add missing import
         
         # Create a linked child
-        linked_user = User.objects.create_user(
-            username='childuser',
-            email='child@example.com',
-            password='password123'
-        )
+        linked_user = User.objects.create_user(email='child@example.com', password='password123')
         linked_child = ChildProfile.objects.create(
             circle=self.circle,
             display_name='Linked Child',

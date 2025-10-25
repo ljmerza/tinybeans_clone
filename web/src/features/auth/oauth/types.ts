@@ -27,7 +27,9 @@ export interface OAuthCallbackRequest {
 export interface OAuthUser {
 	id: number;
 	email: string;
-	username: string;
+	first_name?: string;
+	last_name?: string;
+	display_name?: string;
 	auth_provider: "manual" | "google" | "hybrid";
 	google_id: string | null;
 	email_verified: boolean;

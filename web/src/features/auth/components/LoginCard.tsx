@@ -36,7 +36,7 @@ export function LoginCard({ redirect }: LoginCardProps) {
 
 	const form = useForm({
 		defaultValues: {
-			username: "",
+			email: "",
 			password: "",
 		},
 		onSubmit: async ({ value }) => {
@@ -118,13 +118,13 @@ export function LoginCard({ redirect }: LoginCardProps) {
 				className="space-y-4"
 			>
 				<form.Field
-					name="username"
+					name="email"
 					validators={{
-						onBlur: zodValidator(loginSchema.shape.username),
+						onBlur: zodValidator(loginSchema.shape.email),
 					}}
 				>
 					{(field) => (
-						<FormField field={field} label={t("auth.login.username")}>
+						<FormField field={field} label={t("auth.login.email")}>
 							{({ id, field: fieldApi }) => (
 								<Input
 									id={id}
@@ -133,7 +133,7 @@ export function LoginCard({ redirect }: LoginCardProps) {
 										fieldApi.handleChange(event.target.value)
 									}
 									onBlur={fieldApi.handleBlur}
-									autoComplete="username"
+									autoComplete="email"
 									disabled={login.isPending}
 									required
 								/>

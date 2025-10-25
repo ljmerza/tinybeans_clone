@@ -1,7 +1,7 @@
 {% block subject %}Recovery code used to access your account{% endblock %}
 
 {% block text_body %}
-Hello {{ username|default:email }},
+Hello {{ full_name|default:email }},
 
 A recovery code was used to access your account.
 Date: {{ used_at }}
@@ -14,7 +14,7 @@ If this wasn't you, please secure your account immediately:
 
 {% block html_body %}
 {% include 'emails/partials/header.html' with title="Recovery code used" intro_text="Security alert" email_tag="Security" %}
-<p>Hello {{ username|default:email }},</p>
+<p>Hello {{ full_name|default:email }},</p>
 <p>A recovery code was used to access your account.</p>
 <p><strong>Date:</strong> {{ used_at }}</p>
 <p>If this wasn't you, please secure your account immediately:</p>

@@ -6,15 +6,15 @@ from ..models import KeepReaction
 
 class KeepReactionSerializer(serializers.ModelSerializer):
     """Serializer for keep reactions."""
-    
-    user_username = serializers.CharField(source='user.username', read_only=True)
-    
+
+    user_display_name = serializers.CharField(source='user.display_name', read_only=True)
+
     class Meta:
         model = KeepReaction
         fields = [
             'id',
             'user',
-            'user_username',
+            'user_display_name',
             'reaction_type',
             'created_at',
         ]

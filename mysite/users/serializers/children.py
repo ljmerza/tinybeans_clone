@@ -30,7 +30,6 @@ class ChildProfileSerializer(serializers.ModelSerializer):
 
 class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    username = serializers.CharField(required=False)
     guardian_name = serializers.CharField()
     guardian_relationship = serializers.CharField()
     consent_method = serializers.ChoiceField(
@@ -48,9 +47,6 @@ class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
         attrs['email'] = attrs['email'].lower()
         if User.objects.filter(email__iexact=attrs['email']).exists():
             raise serializers.ValidationError({'email': create_message('errors.email_already_registered')})
-        username = attrs.get('username')
-        if username and User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({'username': create_message('errors.username_taken')})
         if 'consent_metadata' not in attrs or attrs['consent_metadata'] is None:
             attrs['consent_metadata'] = {}
         return attrs
@@ -58,15 +54,14 @@ class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
 
 class ChildProfileUpgradeConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
-    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
-        if User.objects.filter(username=attrs['username']).exists():
-            raise serializers.ValidationError({'username': create_message('errors.username_taken')})
         return attrs
 
 

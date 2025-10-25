@@ -50,7 +50,7 @@ class TwoFactorService:
         totp = pyotp.TOTP(secret)
         issuer_name = getattr(settings, 'TWOFA_ISSUER_NAME', 'Tinybeans')
         uri = totp.provisioning_uri(
-            name=user.email or user.username,
+            name=user.email,
             issuer_name=issuer_name
         )
         

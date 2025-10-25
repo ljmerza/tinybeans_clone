@@ -72,7 +72,7 @@ class CircleInvitationCreateView(APIView):
         data = CircleInvitationSerializer(invitations, many=True).data
         return success_response({'invitations': data})
     @extend_schema(
-        description='Invite a new member to join a circle via username or email. Existing users receive a pending invitation and must accept before joining.',
+        description='Invite a new member to join a circle via email. Existing users receive a pending invitation and must accept before joining.',
         request=CircleInvitationCreateSerializer,
         responses={
             202: OpenApiResponse(
@@ -125,7 +125,7 @@ class CircleInvitationCreateView(APIView):
                 'token': token,
                 'email': invitation.email,
                 'circle_name': circle.name,
-                'invited_by': request.user.username,
+                'invited_by': request.user.display_name,
                 'invitation_link': self._build_invitation_link(token),
             },
         )
@@ -254,7 +254,7 @@ class CircleInvitationResendView(APIView):
         invitation_link = CircleInvitationCreateView._build_invitation_link(token)
         base_context = {
             'circle_name': circle.name,
-            'invited_by': invitation.invited_by.username if invitation.invited_by_id else request.user.username,
+            'invited_by': invitation.invited_by.display_name if invitation.invited_by_id else request.user.display_name,
             'invitation_link': invitation_link,
         }
         send_email_task.delay(
@@ -496,8 +496,8 @@ class CircleInvitationFinalizeView(APIView):
                 template_id=CIRCLE_INVITATION_ACCEPTED_TEMPLATE,
                 context={
                     'circle_name': invitation.circle.name,
-                    'invited_by': invitation.invited_by.username,
-                    'invitee_name': user.username,
+                    'invited_by': invitation.invited_by.display_name,
+                    'invitee_name': user.display_name,
                     'circle_admin_link': f"{base_url}/circles/{invitation.circle.id}",
                 },
             )

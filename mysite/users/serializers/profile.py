@@ -9,14 +9,31 @@ from ..models import User, UserNotificationPreferences
 
 class UserProfileSerializer(serializers.ModelSerializer):
     needs_circle_onboarding = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'email_verified', 'date_joined', 'language', 'circle_onboarding_status', 'circle_onboarding_updated_at', 'needs_circle_onboarding']
-        read_only_fields = ['id', 'role', 'email_verified', 'date_joined', 'circle_onboarding_status', 'circle_onboarding_updated_at', 'needs_circle_onboarding']
+        fields = [
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'display_name',
+            'role',
+            'email_verified',
+            'date_joined',
+            'language',
+            'circle_onboarding_status',
+            'circle_onboarding_updated_at',
+            'needs_circle_onboarding',
+        ]
+        read_only_fields = ['id', 'role', 'email_verified', 'date_joined', 'circle_onboarding_status', 'circle_onboarding_updated_at', 'needs_circle_onboarding', 'display_name']
 
     def get_needs_circle_onboarding(self, obj) -> bool:
         return obj.needs_circle_onboarding
+
+    def get_display_name(self, obj) -> str:
+        return obj.display_name
 
 
 class EmailPreferencesSerializer(serializers.ModelSerializer):

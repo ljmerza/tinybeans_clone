@@ -15,7 +15,7 @@ import type { RequestOptions as AuthRequestOptions } from "./authClient";
 import { apiClient } from "./authClient";
 
 export interface PasswordResetRequest {
-	identifier: string;
+	email: string;
 }
 
 export interface PasswordResetConfirmRequest {

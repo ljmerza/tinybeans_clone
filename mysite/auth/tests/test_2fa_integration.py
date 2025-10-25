@@ -26,6 +26,12 @@ def recovery_hash(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
 
 
+def create_user(email='test@example.com', password='testpass', **extra):
+    extra.setdefault('first_name', 'Test')
+    extra.setdefault('last_name', 'User')
+    return User.objects.create_user(email=email, password=password, **extra)
+
+
 @pytest.mark.django_db
 class TestCompleteTOTPFlow:
     """Test complete TOTP setup and usage flow"""
@@ -33,11 +39,7 @@ class TestCompleteTOTPFlow:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass'
-        )
+        self.user = create_user(email='test@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_totp_qr_code')
@@ -93,11 +95,7 @@ class TestCompleteEmailFlow:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass'
-        )
+        self.user = create_user(email='test@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_otp', return_value='654321')
@@ -143,11 +141,7 @@ class TestRecoveryCodeFlow:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
         
         # Enable 2FA
@@ -228,11 +222,7 @@ class TestTrustedDeviceFlow:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     def test_trusted_device_lifecycle(self):
@@ -278,11 +268,7 @@ class TestDisableFlow:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
@@ -358,11 +344,7 @@ class TestRateLimitingFlow:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass'
-        )
+        self.user = create_user(email='test@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     @patch('mysite.emails.mailers.TwoFactorMailer.send_2fa_code')

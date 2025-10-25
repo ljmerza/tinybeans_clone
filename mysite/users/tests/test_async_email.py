@@ -28,9 +28,10 @@ class AsyncEmailTaskTests(TestCase):
     @patch('mysite.auth.views.send_email_task.delay')
     def test_signup_enqueues_verification_email(self, mock_delay):
         payload = {
-            'username': 'newuser',
             'email': 'newuser@example.com',
             'password': 'supersecret',
+            'first_name': 'New',
+            'last_name': 'User',
         }
 
         response = self.client.post(reverse('auth-signup'), payload, format='json')
@@ -47,14 +48,15 @@ class AsyncEmailTaskTests(TestCase):
         self.assertNotIn('circle', body['data'])
         self.assertNotIn('pending_circle_setup', body['data'])
         # Verify no circle was created
-        self.assertIsNone(Circle.objects.filter(created_by__username='newuser').first())
+        self.assertIsNone(Circle.objects.filter(created_by__email='newuser@example.com').first())
 
     @patch('mysite.auth.views.send_email_task.delay')
     def test_signup_can_defer_circle_creation(self, mock_delay):
         payload = {
-            'username': 'latercircle',
             'email': 'later@example.com',
             'password': 'supersecret',
+            'first_name': 'Later',
+            'last_name': 'Circle',
             'create_circle': False,
         }
 
@@ -71,22 +73,18 @@ class AsyncEmailTaskTests(TestCase):
         self.assertNotIn('circle', body['data'])
         self.assertNotIn('pending_circle_setup', body['data'])
 
-        user = User.objects.get(username='latercircle')
+        user = User.objects.get(email='later@example.com')
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)
         self.assertFalse(Circle.objects.filter(created_by=user).exists())
         self.assertFalse(CircleMembership.objects.filter(user=user).exists())
 
     @patch('mysite.auth.views.send_email_task.delay')
     def test_password_reset_request_enqueues_email(self, mock_delay):
-        user = User.objects.create_user(
-            username='existing',
-            email='existing@example.com',
-            password='password123',
-        )
+        user = User.objects.create_user(email='existing@example.com', password='password123')
 
         response = self.client.post(
             reverse('auth-password-reset-request'),
-            {'identifier': user.email},
+            {'email': user.email},
             format='json',
         )
 
@@ -105,13 +103,13 @@ class AsyncEmailTaskTests(TestCase):
         # Register a test template since the real ones might not be loaded
         from mysite.emails.tasks import register_email_template
         def test_renderer(context):
-            return f"Subject: {context.get('token', 'test')}", f"Body: {context.get('username', 'test')}"
+            return f"Subject: {context.get('token', 'test')}", f"Body: {context.get('full_name', 'test')}"
         register_email_template(EMAIL_VERIFICATION_TEMPLATE, test_renderer)
 
         send_email_task.run(
             to_email='mailjet@example.com',
             template_id=EMAIL_VERIFICATION_TEMPLATE,
-            context={'token': '12345', 'username': 'mj'},
+            context={'token': '12345', 'full_name': 'Mj'},
         )
 
         mock_mailjet.assert_called_once()
@@ -119,10 +117,11 @@ class AsyncEmailTaskTests(TestCase):
     @patch('mysite.circles.views.invitations.send_email_task.delay')
     def test_circle_invitation_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
-            username='circleadmin',
             email='circleadmin@example.com',
             password='password123',
             role=UserRole.CIRCLE_ADMIN,
+            first_name='Circle',
+            last_name='Admin',
         )
         circle = Circle.objects.create(name='Family', created_by=admin)
         CircleMembership.objects.create(user=admin, circle=circle, role=UserRole.CIRCLE_ADMIN)
@@ -144,10 +143,11 @@ class AsyncEmailTaskTests(TestCase):
     @patch('mysite.users.views.children.send_email_task.delay')
     def test_child_upgrade_request_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
-            username='guardian',
             email='guardian@example.com',
             password='password123',
             role=UserRole.CIRCLE_ADMIN,
+            first_name='Guardian',
+            last_name='Admin',
         )
         circle = Circle.objects.create(name='Family 2', created_by=admin)
         CircleMembership.objects.create(user=admin, circle=circle, role=UserRole.CIRCLE_ADMIN)

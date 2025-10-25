@@ -23,9 +23,10 @@ class AuthViewSecurityTests(TestCase):
         response = self.client.post(
             reverse('auth-signup'),
             {
-                'username': 'secureuser',
                 'email': 'secure@example.com',
                 'password': 'StrongPass123',
+                'first_name': 'Secure',
+                'last_name': 'User',
             },
             format='json',
         )
@@ -39,11 +40,7 @@ class AuthViewSecurityTests(TestCase):
 
     @patch('mysite.auth.views.send_email_task.delay')
     def test_verification_resend_does_not_expose_token(self, mock_delay):
-        user = User.objects.create_user(
-            username='existinguser',
-            email='existing@example.com',
-            password='pw123456',
-        )
+        user = User.objects.create_user(email='existing@example.com', password='pw123456')
 
         self.client.force_authenticate(user=user)
         response = self.client.post(
@@ -62,13 +59,9 @@ class AuthViewSecurityTests(TestCase):
         # Skip when rate limiting disabled in test settings
         if not getattr(settings, 'RATELIMIT_ENABLE', True):
             self.skipTest('Rate limiting disabled in test settings')
-        user = User.objects.create_user(
-            username='ratelimit',
-            email='ratelimit@example.com',
-            password='SuperSecret123',
-        )
+        user = User.objects.create_user(email='ratelimit@example.com', password='SuperSecret123')
 
-        login_payload = {'username': user.username, 'password': 'SuperSecret123'}
+        login_payload = {'email': user.email, 'password': 'SuperSecret123'}
 
         # First five attempts should succeed
         for _ in range(5):
@@ -80,15 +73,11 @@ class AuthViewSecurityTests(TestCase):
 
     @patch('mysite.auth.views.send_email_task.delay')
     def test_password_reset_request_does_not_expose_token(self, mock_delay):
-        User.objects.create_user(
-            username='resetuser',
-            email='reset@example.com',
-            password='pw123456',
-        )
+        User.objects.create_user(email='reset@example.com', password='pw123456')
 
         response = self.client.post(
             reverse('auth-password-reset-request'),
-            {'identifier': 'reset@example.com'},
+            {'email': 'reset@example.com'},
             format='json',
         )
 
@@ -109,13 +98,9 @@ class AuthViewSecurityTests(TestCase):
     @override_settings(RATELIMIT_ENABLE=True, PASSWORD_RESET_RATELIMIT='2/m')
     @patch('mysite.auth.views.send_email_task.delay')
     def test_password_reset_request_rate_limit(self, mock_delay):
-        user = User.objects.create_user(
-            username='limited-reset',
-            email='limited-reset@example.com',
-            password='pw123456',
-        )
+        user = User.objects.create_user(email='limited-reset@example.com', password='pw123456')
 
-        payload = {'identifier': user.email}
+        payload = {'email': user.email}
         for _ in range(2):
             response = self.client.post(
                 reverse('auth-password-reset-request'),
@@ -138,11 +123,7 @@ class AuthViewSecurityTests(TestCase):
     @override_settings(RATELIMIT_ENABLE=True, EMAIL_VERIFICATION_RESEND_RATELIMIT='2/m')
     @patch('mysite.auth.views.send_email_task.delay')
     def test_email_verification_resend_rate_limit(self, mock_delay):
-        user = User.objects.create_user(
-            username='limited-verify',
-            email='limited-verify@example.com',
-            password='pw123456',
-        )
+        user = User.objects.create_user(email='limited-verify@example.com', password='pw123456')
         self.client.force_authenticate(user=user)
         payload = {}
         for _ in range(2):
@@ -166,11 +147,7 @@ class AuthViewSecurityTests(TestCase):
         self.assertEqual(mock_delay.call_count, 2)
 
     def test_email_verification_confirm_returns_tokens_and_cookie(self):
-        user = User.objects.create_user(
-            username='verifyme',
-            email='verify@example.com',
-            password='pw123456',
-        )
+        user = User.objects.create_user(email='verify@example.com', password='pw123456')
         token = store_token(
             'verify-email',
             {'user_id': user.id, 'issued_at': timezone.now().isoformat()},

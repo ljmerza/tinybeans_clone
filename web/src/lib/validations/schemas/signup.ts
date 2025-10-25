@@ -3,7 +3,12 @@
  * Only imported by signup feature
  */
 import { z } from "zod";
-import { emailSchema, passwordSchema, usernameSchema } from "./common";
+import {
+	emailSchema,
+	firstNameSchema,
+	lastNameSchema,
+	passwordSchema,
+} from "./common";
 
 const confirmPasswordSchema = z
 	.string()
@@ -11,7 +16,8 @@ const confirmPasswordSchema = z
 
 // Base schema without refinement - needed for field-level validation
 export const signupSchemaBase = z.object({
-	username: usernameSchema,
+	first_name: firstNameSchema,
+	last_name: lastNameSchema,
 	email: emailSchema,
 	password: passwordSchema,
 	password_confirm: confirmPasswordSchema,

@@ -379,10 +379,7 @@ class GoogleOAuthService:
             pass
         
         # Create new Google-only user
-        username = self._generate_username_from_email(google_email)
-        
         new_user = User.objects.create(
-            username=username,
             email=google_email,
             google_id=google_id,
             google_email=google_email,
@@ -405,28 +402,6 @@ class GoogleOAuthService:
         )
         
         return new_user, 'created'
-    
-    def _generate_username_from_email(self, email: str) -> str:
-        """Generate unique username from email.
-        
-        Args:
-            email: Email address
-            
-        Returns:
-            Unique username
-        """
-        base_username = email.split('@')[0]
-        # Remove special characters
-        base_username = ''.join(c for c in base_username if c.isalnum() or c == '_')
-        
-        # Ensure uniqueness
-        username = base_username
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}_{counter}"
-            counter += 1
-        
-        return username
     
     @transaction.atomic
     def link_google_account(

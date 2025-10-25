@@ -15,8 +15,8 @@ from mysite.notification_utils import create_message
 
 class KeepSerializer(serializers.ModelSerializer):
     """Basic serializer for keeps - used in list views."""
-    
-    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+
+    created_by_display_name = serializers.CharField(source='created_by.display_name', read_only=True)
     circle_name = serializers.CharField(source='circle.name', read_only=True)
     media_count = serializers.SerializerMethodField()
     reaction_count = serializers.SerializerMethodField()
@@ -30,7 +30,7 @@ class KeepSerializer(serializers.ModelSerializer):
             'circle',
             'circle_name',
             'created_by',
-            'created_by_username',
+            'created_by_display_name',
             'keep_type',
             'title',
             'description',

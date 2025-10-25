@@ -37,7 +37,8 @@ describe("CircleInvitationList", () => {
 			reminder_sent_at: null,
 			invited_user: {
 				id: 24,
-				username: "sarah",
+				email: "sarah@example.com",
+				display_name: "Sarah Doe",
 				first_name: "Sarah",
 				last_name: "Doe",
 			},

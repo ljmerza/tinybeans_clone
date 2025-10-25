@@ -3,14 +3,14 @@
  * Split between request and confirm to allow separate code splitting
  */
 import { z } from "zod";
-import { identifierSchema, passwordSchema } from "./common.js";
+import { emailSchema, passwordSchema } from "./common.js";
 
 /**
  * Password reset request (step 1)
- * Accepts email or username
+ * Accepts email only
  */
 export const passwordResetRequestSchema = z.object({
-	identifier: identifierSchema,
+	email: emailSchema,
 });
 
 export type PasswordResetRequestFormData = z.infer<

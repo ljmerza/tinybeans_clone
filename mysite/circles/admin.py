@@ -21,7 +21,7 @@ class CircleAdmin(admin.ModelAdmin):
 class CircleMembershipAdmin(admin.ModelAdmin):
     list_display = ('circle', 'user', 'role', 'created_at')
     list_filter = ('role',)
-    search_fields = ('circle__name', 'user__username')
+    search_fields = ('circle__name', 'user__email', 'user__first_name', 'user__last_name')
 
 
 @admin.register(CircleInvitation)
@@ -29,4 +29,3 @@ class CircleInvitationAdmin(admin.ModelAdmin):
     list_display = ('circle', 'email', 'role', 'status', 'created_at', 'responded_at')
     list_filter = ('status', 'role', 'circle')
     search_fields = ('email',)
-

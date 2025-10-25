@@ -35,7 +35,6 @@ class TestTwoFactorSetupAPI:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -132,7 +131,6 @@ class TestTwoFactorVerifySetupAPI:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -230,11 +228,7 @@ class TestTwoFactorStatusAPI:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = User.objects.create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     def test_status_not_configured(self):
@@ -284,11 +278,7 @@ class TestTwoFactorDisableAPI:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = User.objects.create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     @patch('mysite.auth.services.twofa_service.TwoFactorService.verify_totp')
@@ -366,11 +356,7 @@ class TestTwoFactorMethodRemovalAPI:
 
     def setup_method(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='methoduser',
-            email='method@example.com',
-            password='testpass',
-        )
+        self.user = User.objects.create_user(email='method@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
 
     def test_remove_totp_with_sms_fallback(self):
@@ -532,11 +518,7 @@ class TestRecoveryCodeAPI:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = User.objects.create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     @patch('mysite.auth.services.twofa_service.TwoFactorService.generate_recovery_codes')
@@ -638,11 +620,7 @@ class TestTrustedDevicesAPI:
     def setup_method(self):
         """Set up test client and user"""
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='testpass'
-        )
+        self.user = User.objects.create_user(email='testuser@example.com', password='testpass')
         self.client.force_authenticate(user=self.user)
     
     def test_list_trusted_devices(self):

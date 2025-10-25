@@ -23,7 +23,7 @@ class RecoveryCodeService:
             "Tinybeans Recovery Codes",
             "=" * 50,
             f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            f"User: {user.email or user.username}",
+            f"User: {user.display_name}",
             "",
             "Keep these codes in a safe place. Each code can only be used once.",
             "",
@@ -64,7 +64,7 @@ class RecoveryCodeService:
         # Info
         info_text = f"""
         <b>Generated:</b> {timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC')}<br/>
-        <b>User:</b> {user.email or user.username}<br/>
+        <b>User:</b> {user.display_name}<br/>
         <br/>
         Keep these codes in a safe place. Each code can only be used once.
         """

@@ -198,14 +198,16 @@ class ChildProfileUpgradeConfirmView(APIView):
 
         email = payload['email']
         password = serializer.validated_data['password']
-        username = serializer.validated_data['username']
+        first_name = serializer.validated_data['first_name']
+        last_name = serializer.validated_data['last_name']
 
         with transaction.atomic():
             user = User.objects.create_user(
-                username=username,
                 email=email,
                 password=password,
                 role=UserRole.CIRCLE_MEMBER,
+                first_name=first_name,
+                last_name=last_name,
             )
             user.email_verified = True
             user.save(update_fields=['email_verified'])

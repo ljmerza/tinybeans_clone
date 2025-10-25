@@ -138,7 +138,7 @@ class TwoFactorSettings(models.Model):
         verbose_name_plural = 'Two-Factor Settings'
     
     def __str__(self):
-        return f"{self.user.username} - 2FA: {'Enabled' if self.is_enabled else 'Disabled'}"
+        return f"{self.user.email} - 2FA: {'Enabled' if self.is_enabled else 'Disabled'}"
     
     @property
     def totp_secret(self):
@@ -222,7 +222,7 @@ class TwoFactorCode(models.Model):
     
     def __str__(self):
         preview = self.code_preview or '******'
-        return f"{self.user.username} - {preview} ({self.purpose})"
+        return f"{self.user.email} - {preview} ({self.purpose})"
     
     def is_valid(self):
         """Check if code is still valid"""
@@ -243,7 +243,7 @@ class RecoveryCode(models.Model):
         verbose_name_plural = 'Recovery Codes'
     
     def __str__(self):
-        return f"{self.user.username} - Recovery Code ({'Used' if self.is_used else 'Available'})"
+        return f"{self.user.email} - Recovery Code ({'Used' if self.is_used else 'Available'})"
     
     @classmethod
     def create_recovery_code(cls, user, plain_code):
@@ -293,7 +293,7 @@ class TrustedDevice(models.Model):
         verbose_name_plural = 'Trusted Devices'
     
     def __str__(self):
-        return f"{self.user.username} - {self.device_name}"
+        return f"{self.user.email} - {self.device_name}"
     
     def is_valid(self):
         """Check if device trust is still valid"""
@@ -318,7 +318,7 @@ class TwoFactorAuditLog(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.user.username} - {self.action} - {'Success' if self.success else 'Failed'}"
+        return f"{self.user.email} - {self.action} - {'Success' if self.success else 'Failed'}"
 
 
 class MagicLoginToken(models.Model):
@@ -344,7 +344,7 @@ class MagicLoginToken(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.user.username} - {'Used' if self.is_used else 'Unused'} - {self.created_at}"
+        return f"{self.user.email} - {'Used' if self.is_used else 'Unused'} - {self.created_at}"
     
     def is_valid(self):
         """Check if token is still valid."""

@@ -3,10 +3,10 @@
  * Only imported by login feature - keeps bundle small
  */
 import { z } from "zod";
-import { passwordSchema, usernameSchema } from "./common";
+import { emailSchema, passwordSchema } from "./common";
 
 export const loginSchema = z.object({
-	username: usernameSchema,
+	email: emailSchema,
 	password: passwordSchema,
 });
 

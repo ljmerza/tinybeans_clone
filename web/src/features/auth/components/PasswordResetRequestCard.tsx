@@ -21,7 +21,7 @@ export function PasswordResetRequestCard() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const form = useForm({
-		defaultValues: { identifier: "" },
+		defaultValues: { email: "" },
 		onSubmit: async ({ value }) => {
 			setSuccessMessage(null);
 			setErrorMessage(null);
@@ -85,17 +85,17 @@ export function PasswordResetRequestCard() {
 					}}
 					className="space-y-4"
 				>
-					<form.Field
-						name="identifier"
-						validators={{
-							onBlur: zodValidator(passwordResetRequestSchema.shape.identifier),
-						}}
-					>
-						{(field) => (
-							<FormField
-								field={field}
-								label={t("auth.password_reset.email_or_username")}
-							>
+				<form.Field
+					name="email"
+					validators={{
+						onBlur: zodValidator(passwordResetRequestSchema.shape.email),
+					}}
+				>
+					{(field) => (
+						<FormField
+							field={field}
+							label={t("auth.password_reset.email")}
+						>
 								{({ id, field: fieldApi }) => (
 									<Input
 										id={id}

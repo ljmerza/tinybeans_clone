@@ -223,7 +223,6 @@ class TestGoogleOAuthService(TestCase):
         """Test that linking to unverified account is blocked (CRITICAL)."""
         # Create unverified user
         existing_user = User.objects.create_user(
-            username='existing',
             email='existing@gmail.com',
             password='testpass123',
             email_verified=False  # UNVERIFIED
@@ -261,7 +260,6 @@ class TestGoogleOAuthService(TestCase):
         """Test linking Google to existing verified account."""
         # Create verified user
         existing_user = User.objects.create_user(
-            username='verified',
             email='verified@gmail.com',
             password='testpass123',
             email_verified=True  # VERIFIED
@@ -300,7 +298,6 @@ class TestGoogleOAuthService(TestCase):
         """Test linking Google account to authenticated user."""
         # Create user
         user = User.objects.create_user(
-            username='testuser',
             email='test@gmail.com',
             password='testpass123',
             email_verified=True
@@ -328,7 +325,6 @@ class TestGoogleOAuthService(TestCase):
         """Test unlinking Google account."""
         # Create user with Google linked
         user = User.objects.create_user(
-            username='testuser',
             email='test@gmail.com',
             password='testpass123',
             email_verified=True,

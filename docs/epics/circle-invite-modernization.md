@@ -31,7 +31,7 @@ Modernize the Tinybeans Circles invitation experience so admins can invite by us
 - **UX inconsistency risk**: Reuse shared components and design tokens; align with upcoming design refresh documentation.
 
 ## Story Breakdown
-1. **Backend Support for Username-Aware Invites**  
+1. **Backend Support for Email-Only Invites**  
    - Extend DRF endpoints to accept username/email, keep invites pending, enforce rate limits, and surface status metadata.  
    - Update serializers, tasks, and tests in `mysite/users`.
 

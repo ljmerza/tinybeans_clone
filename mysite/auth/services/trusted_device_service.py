@@ -239,7 +239,7 @@ class TrustedDeviceService:
         device.user_agent = request.META.get('HTTP_USER_AGENT', '')
         device.ip_address = get_client_ip(request) or request.META.get('REMOTE_ADDR', '0.0.0.0')
         device.save(update_fields=['device_id', 'ua_hash', 'ip_hash', 'expires_at', 'user_agent', 'ip_address', 'last_used_at'])
-        logger.info("Rotated trusted device identifier for user %s.", device.user.username)
+        logger.info("Rotated trusted device identifier for user %s.", device.user.email)
         return device
     
     @staticmethod
@@ -262,13 +262,13 @@ class TrustedDeviceService:
         if not secrets.compare_digest(device.ua_hash or '', ua_hash):
             logger.warning(
                 "Trusted device fingerprint mismatch (UA) for user %s. Rejecting device.",
-                user.username,
+                user.email,
             )
             return False, None
         if not secrets.compare_digest(device.ip_hash or '', ip_hash):
             logger.warning(
                 "Trusted device fingerprint mismatch (IP) for user %s. Rejecting device.",
-                user.username,
+                user.email,
             )
             return False, None
         

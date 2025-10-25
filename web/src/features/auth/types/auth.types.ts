@@ -9,8 +9,10 @@ export type CircleOnboardingStatus = "pending" | "completed" | "dismissed";
 
 export interface AuthUser {
 	id: number;
-	username: string;
 	email: string;
+	first_name?: string;
+	last_name?: string;
+	display_name?: string;
 	email_verified?: boolean;
 	language?: string;
 	role?: string;
@@ -21,7 +23,7 @@ export interface AuthUser {
 }
 
 export interface LoginRequest {
-	username: string;
+	email: string;
 	password: string;
 }
 
@@ -48,7 +50,8 @@ export interface LoginSuccess extends AuthUser {
 export type LoginResponse = LoginRequiresTwoFactor | LoginSuccess;
 
 export interface SignupRequest {
-	username: string;
+	first_name: string;
+	last_name: string;
 	email: string;
 	password: string;
 }

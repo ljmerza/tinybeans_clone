@@ -54,7 +54,10 @@ export function InvitationAcceptContent({
 	}
 
 	const circleName = invitationDetails?.circle?.name ?? "";
-	const invitedBy = invitationDetails?.invited_by?.username;
+	const invitedBy =
+		invitationDetails?.invited_by?.display_name ??
+		invitationDetails?.invited_by?.email ??
+		null;
 
 	return (
 		<div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col gap-6 py-12">

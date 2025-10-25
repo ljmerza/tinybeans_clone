@@ -40,7 +40,7 @@ class CircleMemberListView(APIView):
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
             raise PermissionDenied(_('Only circle admins can view members'))
 
-        memberships = CircleMembership.objects.filter(circle=circle).select_related('user').order_by('user__username')
+        memberships = CircleMembership.objects.filter(circle=circle).select_related('user').order_by('user__email')
         serializer = CircleMemberSerializer(memberships, many=True)
         return success_response({'circle': CircleSerializer(circle).data, 'members': serializer.data})
 

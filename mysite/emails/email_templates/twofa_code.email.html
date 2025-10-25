@@ -1,7 +1,7 @@
 {% block subject %}Your Tinybeans verification code{% endblock %}
 
 {% block text_body %}
-Hello {{ username|default:email }},
+Hello {{ full_name|default:email }},
 
 Your verification code is: {{ code }}
 
@@ -11,7 +11,7 @@ If you didn't request this code, you can ignore this email.
 
 {% block html_body %}
 {% include 'emails/partials/header.html' with title="Your verification code" intro_text="Use this code to verify your identity" email_tag="Security" %}
-<p>Hello {{ username|default:email }},</p>
+<p>Hello {{ full_name|default:email }},</p>
 <p>Your verification code is: <strong>{{ code }}</strong></p>
 <p>This code will expire in {{ expires_in_minutes|default:"10" }} minutes.</p>
 <p>If you didn't request this code, you can ignore this email.</p>

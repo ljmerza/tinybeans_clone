@@ -28,7 +28,8 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 
 	const form = useForm({
 		defaultValues: {
-			username: "",
+			first_name: "",
+			last_name: "",
 			email: prefillEmail ?? "",
 			password: "",
 			password_confirm: "",
@@ -108,16 +109,16 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 				className="space-y-4"
 			>
 				<form.Field
-					name="username"
+					name="first_name"
 					validators={{
-						onBlur: zodValidator(signupSchemaBase.shape.username),
+						onBlur: zodValidator(signupSchemaBase.shape.first_name),
 					}}
 				>
 					{(field) => (
 						<FormField
 							field={field}
-							label={t("auth.signup.username")}
-							error={fieldErrors.username}
+							label={t("auth.signup.first_name")}
+							error={fieldErrors.first_name}
 						>
 							{({ id, field: fieldApi }) => (
 								<Input
@@ -127,7 +128,36 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 										fieldApi.handleChange(event.target.value)
 									}
 									onBlur={fieldApi.handleBlur}
-									autoComplete="username"
+									autoComplete="given-name"
+									disabled={signup.isPending}
+									required
+								/>
+							)}
+						</FormField>
+					)}
+				</form.Field>
+
+				<form.Field
+					name="last_name"
+					validators={{
+						onBlur: zodValidator(signupSchemaBase.shape.last_name),
+					}}
+				>
+					{(field) => (
+						<FormField
+							field={field}
+							label={t("auth.signup.last_name")}
+							error={fieldErrors.last_name}
+						>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									value={fieldApi.state.value}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
+									onBlur={fieldApi.handleBlur}
+									autoComplete="family-name"
 									disabled={signup.isPending}
 									required
 								/>

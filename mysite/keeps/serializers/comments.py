@@ -6,15 +6,15 @@ from ..models import KeepComment
 
 class KeepCommentSerializer(serializers.ModelSerializer):
     """Serializer for keep comments."""
-    
-    user_username = serializers.CharField(source='user.username', read_only=True)
+
+    user_display_name = serializers.CharField(source='user.display_name', read_only=True)
     
     class Meta:
         model = KeepComment
         fields = [
             'id',
             'user',
-            'user_username',
+            'user_display_name',
             'comment',
             'created_at',
             'updated_at',

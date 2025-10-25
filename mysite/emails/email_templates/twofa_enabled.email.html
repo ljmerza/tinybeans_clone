@@ -1,7 +1,7 @@
 {% block subject %}Two-Factor Authentication enabled{% endblock %}
 
 {% block text_body %}
-Hello {{ username|default:email }},
+Hello {{ full_name|default:email }},
 
 Two-factor authentication has been enabled on your account.
 From now on, you'll need to enter a verification code when logging in.
@@ -11,7 +11,7 @@ If you didn't enable 2FA, please contact support immediately.
 
 {% block html_body %}
 {% include 'emails/partials/header.html' with title="Two-Factor Authentication enabled" intro_text="Security update" email_tag="Security" %}
-<p>Hello {{ username|default:email }},</p>
+<p>Hello {{ full_name|default:email }},</p>
 <p>Two-factor authentication has been enabled on your account.</p>
 <p>From now on, you'll need to enter a verification code when logging in.</p>
 <p>If you didn't enable 2FA, please contact support immediately.</p>

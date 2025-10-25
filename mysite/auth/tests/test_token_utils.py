@@ -21,11 +21,7 @@ from mysite.auth.token_utils import (
 
 class TokenUtilityTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='test@example.com', password='password123')
 
     def testget_tokens_for_user(self):
         """Test getting JWT tokens for a user."""
@@ -122,11 +118,7 @@ class TokenUtilityTests(TestCase):
 
 class CookieUtilityTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='cookieuser',
-            email='cookie@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='cookie@example.com', password='password123')
 
     @override_settings(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE='Strict')
     def testset_refresh_cookie(self):
@@ -195,16 +187,8 @@ class TokenSecurityTests(TestCase):
     """Tests for token security and validation."""
     
     def setUp(self):
-        self.user1 = User.objects.create_user(
-            username='user1',
-            email='user1@example.com',
-            password='password123'
-        )
-        self.user2 = User.objects.create_user(
-            username='user2',
-            email='user2@example.com',
-            password='password123'
-        )
+        self.user1 = User.objects.create_user(email='user1@example.com', password='password123')
+        self.user2 = User.objects.create_user(email='user2@example.com', password='password123')
 
     def test_tokens_are_unique(self):
         """Test that generated tokens are unique."""
@@ -223,21 +207,9 @@ class PartialTokenBindingTests(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(
-            username='uauser',
-            email='ua@example.com',
-            password='password123'
-        )
-        self.user1 = User.objects.create_user(
-            username='binding-user-1',
-            email='binding1@example.com',
-            password='password123'
-        )
-        self.user2 = User.objects.create_user(
-            username='binding-user-2',
-            email='binding2@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='ua@example.com', password='password123')
+        self.user1 = User.objects.create_user(email='binding1@example.com', password='password123')
+        self.user2 = User.objects.create_user(email='binding2@example.com', password='password123')
 
     def _build_request(self, user_agent: str):
         request = self.factory.post('/auth/login/')

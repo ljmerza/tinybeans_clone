@@ -15,7 +15,7 @@
  * ```typescript
  * {
  *   i18n_key: "auth.login.success",
- *   context: { username: "john_doe" }
+ *   context: { email: "john@example.com" }
  * }
  * ```
  */

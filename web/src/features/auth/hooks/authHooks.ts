@@ -330,8 +330,9 @@ export function useLogout() {
 	});
 }
 
+
 export function usePasswordResetRequest() {
-	return useMutation<ApiResponseWithMessages, ApiError, { identifier: string }>(
+	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>(
 		{
 			mutationFn: (body) => authServices.requestPasswordReset(body),
 			onError: (error) => {

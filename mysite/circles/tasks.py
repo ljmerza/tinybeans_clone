@@ -74,7 +74,7 @@ def send_circle_invitation_reminders(self):
             template_id=CIRCLE_INVITATION_REMINDER_TEMPLATE,
             context={
                 'circle_name': invitation.circle.name,
-                'invited_by': invitation.invited_by.username if invitation.invited_by_id else None,
+                'invited_by': invitation.invited_by.display_name if invitation.invited_by_id else None,
                 'invitation_link': invitation_link,
             },
         )
@@ -83,4 +83,3 @@ def send_circle_invitation_reminders(self):
         sent += 1
 
     return sent
-

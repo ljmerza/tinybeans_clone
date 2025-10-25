@@ -107,7 +107,7 @@ class SignupView(APIView):
             context={
                 'token': verification_token,
                 'email': user.email,
-                'username': user.username,
+                'full_name': user.display_name,
                 'verification_link': verification_link,
                 'verification_expires_in_minutes': expires_in_minutes,
             },
@@ -153,12 +153,12 @@ class LoginView(APIView):
     serializer_class = LoginSerializer
 
     @extend_schema(
-        description='Authenticate with username/password and receive an access token (refresh token stored in HTTP-only cookie). If 2FA is enabled, returns requires_2fa flag and partial token.',
+        description='Authenticate with email/password and receive an access token (refresh token stored in HTTP-only cookie). If 2FA is enabled, returns requires_2fa flag and partial token.',
         request=LoginSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='JWT tokens and user payload or 2FA required response')},
     )
     @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
-    @method_decorator(ratelimit(key='post:username', rate='5/h', method='POST', block=True))
+    @method_decorator(ratelimit(key='post:email', rate='5/h', method='POST', block=True))
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -389,7 +389,7 @@ class EmailVerificationResendView(APIView):
             context={
                 'token': token,
                 'email': user.email,
-                'username': user.username,
+                'full_name': user.display_name,
                 'verification_link': verification_link,
                 'verification_expires_in_minutes': expires_in_minutes,
             },
@@ -603,7 +603,7 @@ class PasswordResetRequestView(APIView):
     serializer_class = PasswordResetRequestSerializer
 
     @extend_schema(
-        description='Initiate the password reset flow for a user by email or username.',
+        description='Initiate the password reset flow for a user by email.',
         request=PasswordResetRequestSerializer,
         responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Password reset email scheduled')},
     )
@@ -644,7 +644,7 @@ class PasswordResetRequestView(APIView):
                 context={
                     'token': token,
                     'email': user.email,
-                    'username': user.username,
+                    'full_name': user.display_name,
                     'reset_link': reset_link,
                     'expires_in_minutes': expires_in_minutes,
                 },
@@ -903,7 +903,7 @@ class MagicLoginRequestView(APIView):
                 context={
                     'token': token,
                     'email': user.email,
-                    'username': user.username,
+                    'full_name': user.display_name,
                     'magic_link': magic_link,
                     'expires_in_minutes': 15,
                 },

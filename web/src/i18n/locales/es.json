@@ -33,7 +33,7 @@
 	"auth": {
 		"login": {
 			"title": "Iniciar sesión",
-			"username": "Nombre de usuario",
+			"email": "Correo electrónico",
 			"password": "Contraseña",
 			"forgot_password": "¿Olvidaste tu contraseña?",
 			"sign_in": "Iniciar sesión",
@@ -45,7 +45,8 @@
 		"signup": {
 			"title": "Crea tu cuenta",
 			"description": "Únete a la comunidad completando los detalles a continuación. Todos los campos son obligatorios.",
-			"username": "Nombre de usuario",
+			"first_name": "Nombre",
+			"last_name": "Apellido",
 			"email": "Correo electrónico",
 			"password": "Contraseña",
 			"confirm_password": "Confirmar contraseña",
@@ -56,11 +57,11 @@
 		},
 		"password_reset": {
 			"request_title": "Restablecer contraseña",
-			"request_description": "Ingresa tu correo electrónico o nombre de usuario y te enviaremos un enlace para restablecer tu contraseña.",
-			"email_or_username": "Correo electrónico o nombre de usuario",
+			"request_description": "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+			"email": "Correo electrónico",
 			"send_reset_link": "Enviar enlace de restablecimiento",
 			"sending": "Enviando…",
-			"success_message": "Si existe una cuenta con ese identificador, enviaremos instrucciones de restablecimiento de contraseña.",
+			"success_message": "Si existe una cuenta con ese correo, enviaremos instrucciones de restablecimiento de contraseña.",
 			"failed": "Error al enviar correo de restablecimiento",
 			"back_to_login": "← Volver al inicio de sesión",
 			"confirm_title": "Establecer nueva contraseña",
@@ -412,17 +413,11 @@
 								"no_members_action": "Invitar a alguien"
 							},
 							"invites": {
-								"form": {
-									"title": "Invitar a alguien a este círculo",
-									"description": "Busca por nombre de usuario o correo, elige su rol y envía la invitación.",
-									"mode_label": "Invitar por",
-									"modes": {
-										"username": "Nombre de usuario",
-										"email": "Correo electrónico"
-									},
-									"identifier_label": "Nombre de usuario o correo",
-									"identifier_help_username": "Los nombres de usuario tienen 3+ caracteres y solo letras o números.",
-									"identifier_help_email": "Usa el correo asociado a la cuenta del invitado.",
+				"form": {
+					"title": "Invitar a alguien a este círculo",
+					"description": "Ingresa su correo electrónico, elige su rol y envía la invitación.",
+					"identifier_label": "Correo electrónico",
+					"identifier_help_email": "Usa el correo asociado a la cuenta del invitado.",
 									"role_label": "Rol tras aceptar",
 									"role_placeholder": "Selecciona un rol",
 									"lookup": "Comprobar disponibilidad",
@@ -430,10 +425,10 @@
 									"submit": "Enviar invitación",
 									"submitting": "Enviando invitación…"
 								},
-								"lookup": {
-									"existing_user": "{{username}} ya tiene una cuenta y recibirá una notificación.",
-									"new_user": "Enviaremos un correo a {{email}} con los pasos para unirse."
-								},
+				"lookup": {
+					"existing_user": "{{email}} ya tiene una cuenta y recibirá una notificación.",
+					"new_user": "Enviaremos un correo a {{email}} con los pasos para unirse."
+				},
 								"roles": {
 									"member": "Miembro del círculo",
 									"admin": "Administrador del círculo"
@@ -464,13 +459,12 @@
 									"cancelled": "Cancelada",
 									"expired": "Expirada"
 								},
-								"validation": {
-									"identifier_required": "Ingresa un nombre de usuario o correo",
-									"identifier_max": "El identificador debe tener 255 caracteres o menos",
-									"email_invalid": "Ingresa un correo válido",
-									"username_min": "El nombre de usuario debe tener al menos 3 caracteres"
-								}
-							}
+				"validation": {
+					"identifier_required": "Ingresa un correo electrónico",
+					"identifier_max": "El correo debe tener 255 caracteres o menos",
+					"email_invalid": "Ingresa un correo válido"
+				}
+			}
 						}
 					}
 				}
@@ -560,8 +554,8 @@
 			"invites": {
 				"form": {
 					"title": "Invitar a alguien a este círculo",
-					"description": "Busca por nombre de usuario o correo, elige su rol y envía la invitación.",
-					"identifier_label": "Nombre de usuario o correo",
+					"description": "Ingresa su correo electrónico, elige su rol y envía la invitación.",
+					"identifier_label": "Correo electrónico",
 					"identifier_help_email": "Usa el correo asociado a su cuenta de Tinybeans o uno que revise con frecuencia.",
 					"role_label": "Rol después de aceptar",
 					"role_placeholder": "Selecciona un rol",
@@ -589,10 +583,8 @@
 		}
 	},
 	"validation": {
-		"username_required": "Se requiere nombre de usuario",
-		"username_min_length": "El nombre de usuario debe tener al menos 3 caracteres",
-		"username_max_length": "El nombre de usuario debe tener como máximo 30 caracteres",
-		"username_invalid_chars": "El nombre de usuario solo puede contener letras, números y guiones bajos",
+		"first_name_required": "Se requiere el nombre",
+		"last_name_required": "Se requiere el apellido",
 		"email_required": "Se requiere correo electrónico",
 		"email_valid": "Se requiere correo electrónico válido",
 		"password_required": "Se requiere contraseña",
@@ -672,7 +664,6 @@
 		"password_too_short": "La contraseña debe tener al menos {{minLength}} caracteres",
 		"password_mismatch": "Las contraseñas no coinciden",
 		"required_field": "Este campo es obligatorio",
-		"username_taken": "Este nombre de usuario ya está en uso",
 		"email_taken": "Este correo electrónico ya está registrado",
 		"email_verification_failed": "Falló la verificación del correo. Inténtalo de nuevo.",
 		"invalid_credentials": "Correo electrónico o contraseña inválidos",
@@ -695,8 +686,8 @@
 		"invitation_not_pending": "La invitación ya no está pendiente",
 		"invitation_not_found": "Invitación no encontrada",
 		"invitation_mismatch": "La invitación no coincide",
-		"invitation_identifier_required": "Proporcione un correo electrónico o un nombre de usuario para la invitación",
-		"invitation_identifier_conflict": "Indique solo uno: correo electrónico o nombre de usuario al enviar la invitación",
+		"invitation_identifier_required": "Proporcione un correo electrónico para la invitación",
+		"invitation_identifier_conflict": "Solo se admite un identificador por invitación",
 		"email_already_registered": "Correo electrónico ya registrado. Por favor inicie sesión.",
 		"child_profile_not_found": "Perfil de niño no encontrado",
 		"child_already_linked": "El perfil del niño ya está vinculado a una cuenta",

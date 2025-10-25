@@ -9,16 +9,12 @@ from mysite.users.models import User
 class AuthTokenCookieTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='cookieuser',
-            email='cookie@example.com',
-            password='password123',
-        )
+        self.user = User.objects.create_user(email='cookie@example.com', password='password123')
 
     def _login(self):
         return self.client.post(
             reverse('auth-login'),
-            {'username': self.user.username, 'password': 'password123'},
+            {'email': self.user.email, 'password': 'password123'},
             format='json',
         )
 

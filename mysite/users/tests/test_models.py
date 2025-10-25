@@ -29,12 +29,13 @@ class UserModelTests(TestCase):
     def test_create_user_with_required_fields(self):
         """Test creating a user with minimum required fields."""
         user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
-            password='password123'
+            password='password123',
+            first_name='Test',
+            last_name='User'
         )
-        self.assertEqual(user.username, 'testuser')
         self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(user.display_name, 'Test User')
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)
         self.assertFalse(user.email_verified)
         self.assertFalse(user.is_staff)
@@ -44,9 +45,10 @@ class UserModelTests(TestCase):
     def test_create_superuser(self):
         """Test creating a superuser."""
         user = User.objects.create_superuser(
-            username='admin',
             email='admin@example.com',
-            password='adminpass'
+            password='adminpass',
+            first_name='Admin',
+            last_name='User',
         )
         self.assertEqual(user.role, UserRole.CIRCLE_ADMIN)
         self.assertTrue(user.is_staff)
@@ -56,7 +58,6 @@ class UserModelTests(TestCase):
         """Test that superuser creation validates required permissions."""
         with self.assertRaises(ValueError) as cm:
             User.objects.create_superuser(
-                username='admin',
                 email='admin@example.com',
                 password='adminpass',
                 is_staff=False
@@ -65,7 +66,6 @@ class UserModelTests(TestCase):
 
         with self.assertRaises(ValueError) as cm:
             User.objects.create_superuser(
-                username='admin2',
                 email='admin2@example.com',
                 password='adminpass',
                 is_superuser=False
@@ -75,35 +75,32 @@ class UserModelTests(TestCase):
     def test_user_creation_validation(self):
         """Test user creation with invalid data."""
         with self.assertRaises(ValueError):
-            User.objects.create_user(username='', email='test@example.com', password='pass')
-        
-        with self.assertRaises(ValueError):
-            User.objects.create_user(username='test', email='', password='pass')
+            User.objects.create_user(email='', password='pass')
 
     def test_email_uniqueness(self):
         """Test that user emails must be unique."""
-        User.objects.create_user(username='user1', email='same@example.com', password='pass')
+        User.objects.create_user(email='same@example.com', password='pass')
         
         with self.assertRaises(IntegrityError):
-            User.objects.create_user(username='user2', email='same@example.com', password='pass')
+            User.objects.create_user(email='same@example.com', password='pass')
 
     def test_user_ordering(self):
-        """Test that users are ordered by username."""
-        User.objects.create_user(username='zebra', email='z@example.com', password='pass')
-        User.objects.create_user(username='alpha', email='a@example.com', password='pass')
-        User.objects.create_user(username='beta', email='b@example.com', password='pass')
+        """Test that users are ordered by email."""
+        User.objects.create_user(email='z@example.com', password='pass')
+        User.objects.create_user(email='a@example.com', password='pass')
+        User.objects.create_user(email='b@example.com', password='pass')
         
         users = list(User.objects.all())
-        usernames = [u.username for u in users]
-        self.assertEqual(usernames, ['alpha', 'beta', 'zebra'])
+        emails = [u.email for u in users]
+        self.assertEqual(emails, ['a@example.com', 'b@example.com', 'z@example.com'])
 
     def test_needs_circle_onboarding_default_pending(self):
-        user = User.objects.create_user(username='pending', email='pending@example.com', password='password123')
+        user = User.objects.create_user(email='pending@example.com', password='password123')
         self.assertEqual(user.circle_onboarding_status, 'pending')
         self.assertTrue(user.needs_circle_onboarding)
 
     def test_needs_circle_onboarding_completed_after_membership(self):
-        user = User.objects.create_user(username='member', email='member@example.com', password='password123')
+        user = User.objects.create_user(email='member@example.com', password='password123')
         circle = Circle.objects.create(name='Family', created_by=user)
         CircleMembership.objects.create(circle=circle, user=user)
         user.refresh_from_db()
@@ -111,7 +108,7 @@ class UserModelTests(TestCase):
         self.assertFalse(user.needs_circle_onboarding)
 
     def test_set_circle_onboarding_status_updates_timestamp(self):
-        user = User.objects.create_user(username='onboard', email='onboard@example.com', password='password123')
+        user = User.objects.create_user(email='onboard@example.com', password='password123')
         self.assertIsNone(user.circle_onboarding_updated_at)
         changed = user.set_circle_onboarding_status('dismissed', save=True)
         self.assertTrue(changed)
@@ -120,11 +117,7 @@ class UserModelTests(TestCase):
 
 class CircleModelTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='creator',
-            email='creator@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='creator@example.com', password='password123')
 
     def test_create_circle(self):
         """Test creating a circle."""
@@ -172,16 +165,8 @@ class CircleModelTests(TestCase):
 
 class CircleMembershipModelTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(
-            username='admin',
-            email='admin@example.com',
-            password='password123'
-        )
-        self.member = User.objects.create_user(
-            username='member',
-            email='member@example.com',
-            password='password123'
-        )
+        self.admin = User.objects.create_user(email='admin@example.com', password='password123')
+        self.member = User.objects.create_user(email='member@example.com', password='password123')
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.admin)
 
     def test_create_membership(self):
@@ -227,11 +212,7 @@ class CircleMembershipModelTests(TestCase):
 
 class ChildProfileModelTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(
-            username='parent',
-            email='parent@example.com',
-            password='password123'
-        )
+        self.admin = User.objects.create_user(email='parent@example.com', password='password123')
         self.circle = Circle.objects.create(name='Family', created_by=self.admin)
 
     def test_create_child_profile(self):
@@ -292,11 +273,7 @@ class ChildProfileModelTests(TestCase):
 
 class UserNotificationPreferencesModelTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password123'
-        )
+        self.user = User.objects.create_user(email='test@example.com', password='password123')
         self.circle = Circle.objects.create(name='Family', created_by=self.user)
 
     def test_create_global_preferences(self):
@@ -357,11 +334,7 @@ class UserNotificationPreferencesModelTests(TestCase):
 
 class CircleInvitationModelTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(
-            username='admin',
-            email='admin@example.com',
-            password='password123'
-        )
+        self.admin = User.objects.create_user(email='admin@example.com', password='password123')
         self.circle = Circle.objects.create(name='Family', created_by=self.admin)
 
     def test_create_invitation(self):
@@ -394,11 +367,7 @@ class CircleInvitationModelTests(TestCase):
 
 class ChildGuardianConsentModelTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(
-            username='admin',
-            email='admin@example.com',
-            password='password123'
-        )
+        self.admin = User.objects.create_user(email='admin@example.com', password='password123')
         self.circle = Circle.objects.create(name='Family', created_by=self.admin)
         self.child = ChildProfile.objects.create(
             circle=self.circle,
@@ -442,11 +411,7 @@ class UtilityFunctionTests(TestCase):
     def testgenerate_unique_slug(self):
         """Test the unique slug generation utility."""
         # Create a circle to test against
-        user = User.objects.create_user(
-            username='test',
-            email='test@example.com',
-            password='pass'
-        )
+        user = User.objects.create_user(email='test@example.com', password='pass')
         Circle.objects.create(name='Test', created_by=user, slug='test')
         
         # Test unique slug generation

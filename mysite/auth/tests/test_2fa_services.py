@@ -21,10 +21,11 @@ User = get_user_model()
 
 
 def create_user(username='testuser', email=None, password='testpass', **extra):
-    """Utility helper to create users with required email field."""
     if email is None:
         email = f"{username}@example.com"
-    return User.objects.create_user(username=username, email=email, password=password, **extra)
+    extra.setdefault('first_name', username.title())
+    extra.setdefault('last_name', 'User')
+    return User.objects.create_user(email=email, password=password, **extra)
 
 
 def create_code(user, code='123456', **kwargs):

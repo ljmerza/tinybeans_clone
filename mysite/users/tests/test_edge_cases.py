@@ -46,7 +46,9 @@ class AuthViewEdgeCaseTests(TestCase):
         response = self.client.post(reverse('auth-signup'), {
             'username': 'existing',
             'email': 'new@example.com',
-            'password': 'password123'
+            'password': 'password123',
+            'first_name': 'New',
+            'last_name': 'User',
         }, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -63,7 +65,9 @@ class AuthViewEdgeCaseTests(TestCase):
         response = self.client.post(reverse('auth-signup'), {
             'username': 'newuser',
             'email': 'existing@example.com',
-            'password': 'password123'
+            'password': 'password123',
+            'first_name': 'Existing',
+            'last_name': 'Email',
         }, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

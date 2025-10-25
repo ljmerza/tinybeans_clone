@@ -39,7 +39,7 @@ class CircleMembership(models.Model):
     class Meta:
         app_label = 'users'
         unique_together = ('user', 'circle')
-        ordering = ['circle__name', 'user__username']
+        ordering = ['circle__name', 'user__email']
 
     def __str__(self) -> str:
         return f"{self.user} in {self.circle} ({self.role})"

@@ -28,15 +28,14 @@ class TestLoginWithout2FA:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
-            password='testpass'
+            password='testpass',
         )
     
     def test_normal_login_no_2fa(self):
         """Test normal login when 2FA is not configured"""
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -55,7 +54,7 @@ class TestLoginWithout2FA:
         )
         
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -72,9 +71,8 @@ class TestLoginWith2FA:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
-            password='testpass'
+            password='testpass',
         )
         self.twofa_settings = TwoFactorSettings.objects.create(
             user=self.user,
@@ -89,7 +87,7 @@ class TestLoginWith2FA:
         mock_rate_limit.return_value = False
         
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -108,7 +106,7 @@ class TestLoginWith2FA:
         self.twofa_settings.save()
         
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -122,7 +120,7 @@ class TestLoginWith2FA:
         mock_rate_limit.return_value = True
         
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -137,9 +135,8 @@ class TestLoginWithTrustedDevice:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
-            password='testpass'
+            password='testpass',
         )
         self.twofa_settings = TwoFactorSettings.objects.create(
             user=self.user,
@@ -158,7 +155,7 @@ class TestLoginWithTrustedDevice:
         mock_is_trusted.return_value = (True, None)
         
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -180,7 +177,7 @@ class TestLoginWithTrustedDevice:
         mock_rate.return_value = False
         
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -196,7 +193,6 @@ class TestTwoFactorVerifyLogin:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -333,7 +329,6 @@ class TestRememberMeFeature:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -395,7 +390,6 @@ class TestCompleteLoginFlow:
         """Set up test client and user"""
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -416,7 +410,7 @@ class TestCompleteLoginFlow:
         
         # Step 1: Login
         login_response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         
@@ -440,7 +434,7 @@ class TestCompleteLoginFlow:
     def test_login_without_2fa_is_unchanged(self):
         """Test that login without 2FA still works as before"""
         response = self.client.post('/api/auth/login/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'testpass'
         })
         

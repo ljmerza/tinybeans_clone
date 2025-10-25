@@ -29,8 +29,8 @@ export function zodValidator<T>(schema: ZodSchema<T>) {
  *
  * @example
  * const errors = mapServerErrors(response.data.errors)
- * // { email: "This email is already taken", username: "Too short" }
- */
+ * // { email: "This email is already taken", first_name: "Too short" }
+*/
 export function mapServerErrors(
 	serverErrors: Record<string, string[]>,
 ): Record<string, string> {

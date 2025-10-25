@@ -17,7 +17,6 @@ User = get_user_model()
 def user():
     """Create a test user."""
     return User.objects.create_user(
-        username='testuser',
         email='test@example.com',
         password='testpass123'
     )
@@ -60,12 +59,13 @@ class TestKeepSerializer:
         data = serializer.data
         
         expected_fields = {
-            'id', 'circle', 'circle_name', 'created_by', 'created_by_username',
+            'id', 'circle', 'circle_name', 'created_by', 'created_by_display_name',
             'keep_type', 'title', 'description', 'date_of_memory', 'created_at',
             'updated_at', 'is_public', 'tags', 'tag_list', 'media_count',
             'reaction_count', 'comment_count'
         }
         assert set(data.keys()) == expected_fields
+        assert data['created_by_display_name'] == keep.created_by.display_name
     
     def test_tag_list_field(self, keep):
         """Test that tag_list field returns tags as a list."""

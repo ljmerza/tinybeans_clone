@@ -55,7 +55,6 @@ export function findMemberId(
 
 	if (!members?.length) return null;
 	const targetEmail = normalizeString(invitation.email);
-	const targetUsername = normalizeString(invitation.invited_user?.username);
 
 	for (const member of members) {
 		const memberId = normalizeId(member.user.id);
@@ -64,10 +63,6 @@ export function findMemberId(
 		}
 		const memberEmail = normalizeString(member.user.email);
 		if (targetEmail && memberEmail === targetEmail) {
-			return memberId ?? null;
-		}
-		const memberUsername = normalizeString(member.user.username);
-		if (targetUsername && memberUsername === targetUsername) {
 			return memberId ?? null;
 		}
 	}

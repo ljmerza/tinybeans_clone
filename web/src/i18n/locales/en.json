@@ -33,7 +33,7 @@
 	"auth": {
 		"login": {
 			"title": "Login",
-			"username": "Username",
+			"email": "Email",
 			"password": "Password",
 			"forgot_password": "Forgot password?",
 			"sign_in": "Sign in",
@@ -45,7 +45,8 @@
 		"signup": {
 			"title": "Create your account",
 			"description": "Join the community by filling out the details below. All fields are required.",
-			"username": "Username",
+			"first_name": "First name",
+			"last_name": "Last name",
 			"email": "Email",
 			"password": "Password",
 			"confirm_password": "Confirm password",
@@ -56,11 +57,11 @@
 		},
 		"password_reset": {
 			"request_title": "Reset Password",
-			"request_description": "Enter your email or username and we'll send you a link to reset your password.",
-			"email_or_username": "Email or username",
+			"request_description": "Enter your email and we'll send you a link to reset your password.",
+			"email": "Email",
 			"send_reset_link": "Send reset link",
 			"sending": "Sending…",
-			"success_message": "If an account exists for that identifier, we'll send password reset instructions.",
+			"success_message": "If an account exists for that email, we'll send password reset instructions.",
 			"failed": "Failed to send reset email",
 			"back_to_login": "← Back to login",
 			"confirm_title": "Set New Password",
@@ -497,11 +498,11 @@
 				"no_members_action": "Invite someone"
 			},
 			"invites": {
-				"form": {
-					"title": "Invite someone to this circle",
-					"description": "Search by username or email, pick their role, and send the invite.",
-					"identifier_label": "Username or email",
-					"identifier_help_email": "Use the email tied to their Tinybeans account, or one they'll check.",
+			"form": {
+				"title": "Invite someone to this circle",
+				"description": "Enter their email, pick their role, and send the invite.",
+				"identifier_label": "Email",
+				"identifier_help_email": "Use the email tied to their Tinybeans account, or one they'll check.",
 					"role_label": "Role after acceptance",
 					"role_placeholder": "Select a role",
 					"submit": "Send invitation",
@@ -549,20 +550,17 @@
 					"cancelled": "Cancelled",
 					"expired": "Expired"
 				},
-				"validation": {
-					"identifier_required": "Enter a username or email",
-					"identifier_max": "Identifier must be 255 characters or fewer",
-					"email_invalid": "Enter a valid email address",
-					"username_min": "Username must be at least 3 characters"
-				}
+			"validation": {
+				"identifier_required": "Enter an email address",
+				"identifier_max": "Email must be 255 characters or fewer",
+				"email_invalid": "Enter a valid email address"
 			}
 		}
+	}
 	},
 	"validation": {
-		"username_required": "Username is required",
-		"username_min_length": "Username must be at least 3 characters",
-		"username_max_length": "Username must be at most 30 characters",
-		"username_invalid_chars": "Username can only contain letters, numbers, and underscores",
+		"first_name_required": "First name is required",
+		"last_name_required": "Last name is required",
 		"email_required": "Email is required",
 		"email_valid": "Valid email required",
 		"password_required": "Password is required",
@@ -642,7 +640,6 @@
 		"password_too_short": "Password must be at least {{minLength}} characters",
 		"password_mismatch": "Passwords do not match",
 		"required_field": "This field is required",
-		"username_taken": "This username is already taken",
 		"email_taken": "This email is already registered",
 		"email_verification_failed": "Email verification failed. Please try again.",
 		"invalid_credentials": "Invalid email or password",
@@ -665,8 +662,8 @@
 		"invitation_not_pending": "Invitation is no longer pending",
 		"invitation_not_found": "Invitation not found",
 		"invitation_mismatch": "Invitation mismatch",
-		"invitation_identifier_required": "Provide either an email address or a username for the invitation",
-		"invitation_identifier_conflict": "Specify only one of email or username when sending an invitation",
+		"invitation_identifier_required": "Provide an email address for the invitation",
+		"invitation_identifier_conflict": "Only one identifier is supported per invitation",
 		"email_already_registered": "Email already registered. Please log in.",
 		"child_profile_not_found": "Child profile not found",
 		"child_already_linked": "Child profile already linked to an account",

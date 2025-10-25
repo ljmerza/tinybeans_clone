@@ -1,7 +1,7 @@
 {% block subject %}New trusted device added{% endblock %}
 
 {% block text_body %}
-Hello {{ username|default:email }},
+Hello {{ full_name|default:email }},
 
 A new device was added to your trusted devices list.
 
@@ -14,7 +14,7 @@ If you don't recognize this device, please remove it from your security settings
 
 {% block html_body %}
 {% include 'emails/partials/header.html' with title="New trusted device added" intro_text="Security update" email_tag="Security" %}
-<p>Hello {{ username|default:email }},</p>
+<p>Hello {{ full_name|default:email }},</p>
 <p>A new device was added to your trusted devices list.</p>
 <ul>
   <li><strong>Device:</strong> {{ device_name }}</li>

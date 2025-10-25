@@ -1,7 +1,7 @@
 {% block subject %}Verify your Tinybeans-inspired account{% endblock %}
 
 {% block text_body %}
-Hi {{ username|default:"there" }},
+Hi {{ full_name|default:"there" }},
 
 Thanks for signing up! Confirm your email using the link below:
 {% if verification_link %}
@@ -21,7 +21,7 @@ Enter this code in the app to activate your account. If you did not create an ac
 {% block html_body %}
 {% include 'emails/partials/header.html' with title="Verify your Tinybeans-inspired account" intro_text="Thanks for signing up! Confirm your email using the link below:" email_tag="Verification" %}
 
-<p>Hi {{ username|default:"there" }},</p>
+<p>Hi {{ full_name|default:"there" }},</p>
 {% if verification_link %}
 <p><a href="{{ verification_link }}">Verify your email</a></p>
 <p>This link expires in {{ verification_expires_in_minutes|default:"15" }} minutes.</p>

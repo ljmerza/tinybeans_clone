@@ -71,7 +71,7 @@ class CircleInvitation(models.Model):
         ]
 
     def __str__(self) -> str:
-        identifier = self.invited_user.username if self.invited_user_id else self.email
+        identifier = self.invited_user.display_name if self.invited_user_id else self.email
         return f"Invite {identifier} to {self.circle} ({self.status})"
 
 

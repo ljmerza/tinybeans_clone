@@ -9,9 +9,10 @@ from mysite.users.models import User
 class EmailVerificationPermissionTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='perm-user',
             email='perm@example.com',
             password='StrongPass123',
+            first_name='Perm',
+            last_name='User',
         )
         self.client.force_authenticate(self.user)
 

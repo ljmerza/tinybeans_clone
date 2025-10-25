@@ -14,7 +14,7 @@ from .models import (
 class TwoFactorSettingsAdmin(admin.ModelAdmin):
     list_display = ['user', 'is_enabled', 'preferred_method', 'created_at']
     list_filter = ['is_enabled', 'preferred_method']
-    search_fields = ['user__username', 'user__email']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name']
     readonly_fields = ['created_at', 'updated_at']
 
 
@@ -22,7 +22,7 @@ class TwoFactorSettingsAdmin(admin.ModelAdmin):
 class TwoFactorCodeAdmin(admin.ModelAdmin):
     list_display = ['user', 'code_preview', 'code_hash_preview', 'method', 'purpose', 'is_used', 'expires_at']
     list_filter = ['is_used', 'method', 'purpose']
-    search_fields = ['user__username', 'user__email', 'code_preview']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'code_preview']
     readonly_fields = ['created_at', 'code_hash']
 
     def code_hash_preview(self, obj):
@@ -34,7 +34,7 @@ class TwoFactorCodeAdmin(admin.ModelAdmin):
 class RecoveryCodeAdmin(admin.ModelAdmin):
     list_display = ['user', 'code_hash_preview', 'is_used', 'used_at', 'created_at']
     list_filter = ['is_used']
-    search_fields = ['user__username']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name']
     readonly_fields = ['code_hash', 'created_at', 'used_at']
     
     def code_hash_preview(self, obj):
@@ -47,7 +47,7 @@ class RecoveryCodeAdmin(admin.ModelAdmin):
 class TrustedDeviceAdmin(admin.ModelAdmin):
     list_display = ['user', 'device_name', 'ip_address', 'last_used_at', 'expires_at']
     list_filter = ['expires_at']
-    search_fields = ['user__username', 'device_name', 'device_id']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'device_name', 'device_id']
     readonly_fields = ['device_id', 'created_at', 'last_used_at']
 
 
@@ -55,7 +55,7 @@ class TrustedDeviceAdmin(admin.ModelAdmin):
 class TwoFactorAuditLogAdmin(admin.ModelAdmin):
     list_display = ['user', 'action', 'method', 'success', 'ip_address', 'created_at']
     list_filter = ['action', 'method', 'success', 'created_at']
-    search_fields = ['user__username', 'action', 'ip_address']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'action', 'ip_address']
     readonly_fields = ['created_at']
     date_hierarchy = 'created_at'
 
@@ -64,7 +64,7 @@ class TwoFactorAuditLogAdmin(admin.ModelAdmin):
 class MagicLoginTokenAdmin(admin.ModelAdmin):
     list_display = ['user', 'token_hash_preview', 'is_used', 'expires_at', 'used_at', 'created_at']
     list_filter = ['is_used', 'created_at', 'expires_at']
-    search_fields = ['user__username', 'user__email', 'token_hash']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'token_hash']
     readonly_fields = ['token_hash', 'created_at', 'used_at']
     exclude = ('token',)
     date_hierarchy = 'created_at'

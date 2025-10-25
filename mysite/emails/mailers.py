@@ -133,7 +133,7 @@ class TwoFactorMailer:
         """Send 2FA verification code via email using template"""
         context = {
             'email': user.email,
-            'username': getattr(user, 'username', None) or user.email,
+            'full_name': user.display_name,
             'code': code,
             'expires_in_minutes': getattr(settings, 'TWOFA_CODE_EXPIRY_MINUTES', 10),
         }
@@ -151,7 +151,7 @@ class TwoFactorMailer:
         """Notify user that 2FA was enabled (template)"""
         context = {
             'email': user.email,
-            'username': getattr(user, 'username', None) or user.email,
+            'full_name': user.display_name,
         }
         try:
             TwoFactorMailer._enqueue_email(
@@ -167,7 +167,7 @@ class TwoFactorMailer:
         """Notify user that 2FA was disabled (template)"""
         context = {
             'email': user.email,
-            'username': getattr(user, 'username', None) or user.email,
+            'full_name': user.display_name,
         }
         try:
             TwoFactorMailer._enqueue_email(
@@ -183,7 +183,7 @@ class TwoFactorMailer:
         """Notify user that a new trusted device was added (template)"""
         context = {
             'email': user.email,
-            'username': getattr(user, 'username', None) or user.email,
+            'full_name': user.display_name,
             'device_name': device.device_name,
             'ip_address': device.ip_address,
             'created_at': device.created_at.strftime('%Y-%m-%d %H:%M:%S UTC'),
@@ -204,7 +204,7 @@ class TwoFactorMailer:
         from django.utils import timezone
         context = {
             'email': user.email,
-            'username': getattr(user, 'username', None) or user.email,
+            'full_name': user.display_name,
             'used_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
         }
         try:

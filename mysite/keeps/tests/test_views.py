@@ -21,7 +21,6 @@ def api_client():
 def user():
     """Create a test user."""
     return User.objects.create_user(
-        username='testuser',
         email='test@example.com',
         password='testpass123'
     )
@@ -31,7 +30,6 @@ def user():
 def other_user():
     """Create another test user."""
     return User.objects.create_user(
-        username='otheruser',
         email='other@example.com',
         password='otherpass123'
     )
@@ -129,7 +127,7 @@ class TestKeepListCreateView:
         
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['title'] == 'New Memory'
-        assert response.data['created_by_username'] == user.username
+        assert response.data['created_by_display_name'] == user.display_name
         
         # Verify keep was created
         keep = Keep.objects.get(id=response.data['id'])

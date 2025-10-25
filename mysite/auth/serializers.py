@@ -10,10 +10,12 @@ from mysite.notification_utils import create_message
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['email', 'password', 'first_name', 'last_name']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -22,11 +24,11 @@ class SignupSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        user = authenticate(username=attrs['username'], password=attrs['password'])
+        user = authenticate(username=attrs['email'], password=attrs['password'])
         if not user:
             raise serializers.ValidationError(create_message('errors.invalid_credentials'))
         if not user.is_active:
@@ -36,14 +38,11 @@ class LoginSerializer(serializers.Serializer):
 
 
 class EmailVerificationSerializer(serializers.Serializer):
-    identifier = serializers.CharField()
+    email = serializers.EmailField()
 
     def validate(self, attrs):
-        identifier = attrs['identifier']
-        try:
-            user = User.objects.get(username=identifier)
-        except User.DoesNotExist:
-            user = User.objects.filter(email__iexact=identifier).first()
+        email = attrs['email']
+        user = User.objects.filter(email__iexact=email).first()
         if not user:
             raise serializers.ValidationError(create_message('errors.user_not_found'))
         attrs['user'] = user
@@ -55,13 +54,11 @@ class EmailVerificationConfirmSerializer(serializers.Serializer):
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    identifier = serializers.CharField()
+    email = serializers.EmailField()
 
     def validate(self, attrs):
-        identifier = attrs['identifier']
-        user = User.objects.filter(username=identifier).first()
-        if not user:
-            user = User.objects.filter(email__iexact=identifier).first()
+        email = attrs['email']
+        user = User.objects.filter(email__iexact=email).first()
         attrs['user'] = user
         return attrs
 

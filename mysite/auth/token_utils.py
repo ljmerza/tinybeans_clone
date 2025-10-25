@@ -182,7 +182,7 @@ def generate_partial_token(user: User, request=None, expires_in: int = 600) -> s
     """Generate a short-lived partial token for 2FA verification with IP binding.
     
     This token is used during the login flow when 2FA is required.
-    It proves the user passed username/password authentication but
+    It proves the user passed email/password authentication but
     still needs to complete 2FA verification. The token is bound to
     the client's IP address for additional security.
     

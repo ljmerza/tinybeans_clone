@@ -63,12 +63,13 @@ const baseInvitations: CircleInvitationSummary[] = [
 		created_at: "2024-02-01T00:00:00Z",
 		responded_at: "2024-02-02T00:00:00Z",
 		reminder_sent_at: null,
-		invited_user: {
-			id: 42,
-			username: "newuser",
-			first_name: "New",
-			last_name: "Member",
-		},
+	invited_user: {
+		id: 42,
+		email: "new@example.com",
+		display_name: "New Member",
+		first_name: "New",
+		last_name: "Member",
+	},
 	},
 ];
 
@@ -76,8 +77,8 @@ const memberFixture: CircleMemberSummary = {
 	membership_id: 101,
 	user: {
 		id: 42,
-		username: "newuser",
 		email: "new@example.com",
+		display_name: "New Member",
 		role: "member",
 		email_verified: true,
 		date_joined: "2024-02-02T00:00:00Z",

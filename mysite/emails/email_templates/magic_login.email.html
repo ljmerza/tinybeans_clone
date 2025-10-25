@@ -1,7 +1,7 @@
 {% block subject %}Your Magic Login Link{% endblock %}
 
 {% block text_body %}
-Hi {{ username|default:"there" }},
+Hi {{ full_name|default:"there" }},
 
 You requested a magic login link for your Tinybeans-inspired account.
 
@@ -21,7 +21,7 @@ The Tinybeans-inspired Team
 {% block html_body %}
 {% include 'emails/partials/header.html' with title="Your Magic Login Link" intro_text="You requested a magic login link for your account." email_tag="Magic Login" %}
 
-<p>Hi {{ username|default:"there" }},</p>
+<p>Hi {{ full_name|default:"there" }},</p>
 
 <p>You requested a magic login link for your Tinybeans-inspired account.</p>
 

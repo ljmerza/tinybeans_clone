@@ -18,7 +18,8 @@ export interface CircleOnboardingPayload {
 
 export interface CircleInvitationMemberSummary {
 	id: number | string;
-	username: string;
+	email: string;
+	display_name: string;
 	first_name?: string | null;
 	last_name?: string | null;
 }
@@ -70,8 +71,10 @@ export interface CircleMemberSummary {
 
 export interface CircleUserSummary {
 	id: number;
-	username: string;
 	email: string;
+	display_name: string;
+	first_name?: string | null;
+	last_name?: string | null;
 	role: string;
 	email_verified: boolean;
 	date_joined: string;
