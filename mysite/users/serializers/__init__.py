@@ -8,7 +8,7 @@ from .children import (
     ChildProfileUpgradeConfirmSerializer,
     ChildProfileUpgradeRequestSerializer,
 )
-from .core import CircleSerializer, UserSerializer
+from .core import CircleSerializer, PublicUserSerializer, UserSerializer
 from .pets import PetProfileSerializer, PetProfileCreateSerializer
 from .profile import EmailPreferencesSerializer, UserProfileSerializer
 
@@ -53,6 +53,7 @@ __all__ = [
     'CircleMemberSerializer',
     'CircleMembershipSerializer',
     'CircleSerializer',
+    'PublicUserSerializer',
     'UserSerializer',
     'PetProfileSerializer',
     'PetProfileCreateSerializer',

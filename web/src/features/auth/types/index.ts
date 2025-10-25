@@ -12,4 +12,5 @@ export type {
 	MagicLoginRequestResponse,
 	MagicLoginVerifyRequest,
 	MagicLoginVerifyResponse,
+	EmailVerificationConfirmResponse,
 } from "./auth.types";

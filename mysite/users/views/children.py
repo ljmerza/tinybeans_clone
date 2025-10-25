@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
+from mysite.auth.permissions import IsEmailVerified
 from mysite.auth.token_utils import (
     TOKEN_TTL_SECONDS,
     get_tokens_for_user,
@@ -41,7 +42,7 @@ from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 class ChildProfileUpgradeRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = ChildProfileUpgradeRequestSerializer
 
     @extend_schema(

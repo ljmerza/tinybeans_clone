@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_ratelimit.decorators import ratelimit
 
+from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
 from .models import TwoFactorSettings, TwoFactorAuditLog
 from .serializers_2fa import (
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 class TwoFactorSetupView(APIView):
     """Initiate 2FA setup"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(
         request=TwoFactorSetupSerializer,
@@ -110,7 +111,7 @@ class TwoFactorSetupView(APIView):
 
 class TwoFactorVerifySetupView(APIView):
     """Verify and complete 2FA setup"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(
         request=TwoFactorVerifySetupSerializer,
@@ -187,7 +188,7 @@ class TwoFactorVerifySetupView(APIView):
 
 class TwoFactorStatusView(APIView):
     """Get current 2FA settings"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
 
     @extend_schema(responses={200: TwoFactorStatusSerializer})
     def get(self, request):
@@ -212,7 +213,7 @@ class TwoFactorStatusView(APIView):
 
 class TwoFactorPreferredMethodView(APIView):
     """Update preferred 2FA method"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
 
     @extend_schema(
         request=TwoFactorPreferredMethodSerializer,
@@ -298,7 +299,7 @@ class TwoFactorPreferredMethodView(APIView):
 class TwoFactorMethodRemoveView(APIView):
     """Remove a configured 2FA method"""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
 
     @extend_schema(
         responses={200: dict},
@@ -425,7 +426,7 @@ class TwoFactorMethodRemoveView(APIView):
 
 class TwoFactorDisableRequestView(APIView):
     """Request a code to disable 2FA"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(responses={200: dict})
     def post(self, request):
@@ -469,7 +470,7 @@ class TwoFactorDisableRequestView(APIView):
 
 class TwoFactorDisableView(APIView):
     """Disable 2FA"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(
         request=TwoFactorDisableSerializer,
@@ -547,7 +548,7 @@ class TwoFactorDisableView(APIView):
 
 class RecoveryCodeGenerateView(APIView):
     """Generate new recovery codes"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(responses={200: dict})
     @method_decorator(ratelimit(key='user', rate='1/d', method='POST', block=True))
@@ -583,7 +584,7 @@ class RecoveryCodeGenerateView(APIView):
 
 class RecoveryCodeDownloadView(APIView):
     """Download recovery codes"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(
         request={
@@ -646,7 +647,7 @@ class RecoveryCodeDownloadView(APIView):
 
 class TrustedDevicesListView(APIView):
     """List and manage trusted devices"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(responses={200: TrustedDeviceSerializer(many=True)})
     def get(self, request):
@@ -719,7 +720,7 @@ class TrustedDevicesListView(APIView):
 
 class TrustedDeviceRemoveView(APIView):
     """Remove specific trusted device"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(responses={200: dict})
     def delete(self, request, device_id):

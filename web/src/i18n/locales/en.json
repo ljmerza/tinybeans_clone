@@ -85,15 +85,32 @@
 			"verifying": "Verifying magic link...",
 			"success": "Successfully logged in!"
 		},
-		"email_verification": {
-			"title": "Verify your email",
-			"verifying": "Verifying your email…",
-			"success": "Your email has been verified. You can continue to the app.",
-			"error": "We couldn't verify your email. The link may be invalid or expired.",
-			"invalid_link": "Invalid verification link.",
-			"close_tab": "Close this tab",
-			"close_tab_error": "Close this tab"
-		},
+	"email_verification": {
+		"title": "Verify your email",
+		"verifying": "Verifying your email…",
+		"success": "Your email has been verified. Redirecting you back to Tinybeans…",
+		"success_toast": "Email verified successfully!",
+		"error": "We couldn't verify your email. The link may be invalid or expired.",
+		"invalid_link": "Invalid verification link.",
+		"close_tab": "Close this tab",
+		"close_tab_error": "Close this tab",
+		"redirect_message": "Please verify your email to continue."
+	},
+	"verify_email_required": {
+		"badge": "Action required",
+		"title": "Verify your email",
+		"message": "We sent a verification email to <strong>{{email}}</strong>.",
+		"instruction": "Open that email on this device and tap the verification button to continue.",
+		"resend_button": "Resend verification email",
+		"resend_sending": "Sending…",
+		"logout_link": "Log out",
+		"wrong_email": "Need to switch accounts?",
+		"spam_hint": "Tip: Check your spam or promotions folder if you don't see the message.",
+		"loading": "Preparing verification page…",
+		"email_unknown": "your email address",
+		"resend_success": "Verification email resent.",
+		"resend_error": "We couldn't resend the verification email."
+	},
 		"oauth": {
 			"google_signin": "Sign in with Google",
 			"google_signup": "Sign up with Google",
@@ -391,21 +408,14 @@
 		"circleOnboarding": {
 			"step": "Step {{current}} of {{total}}",
 			"title": "Create your first circle",
-			"description": "Start by naming the circle that keeps your family connected.",
-			"verifyTitle": "Verify your email to continue",
-			"verifyDescription": "We sent a verification link to {{email}}. Verify your address, then refresh this page.",
-			"resend": "Resend verification email",
-			"resending": "Sending\b5",
-			"refresh": "I've verified my email",
-			"refreshFailed": "We still can't verify your email. Please try again.",
-			"refreshing": "Checking\b5",
+			"description": "Name the circle that keeps your family connected.",
 			"circleNameLabel": "Circle name",
 			"circleNamePlaceholder": "E.g. The Smith Family",
-			"creating": "Creating circle\b5",
+			"creating": "Creating circle…",
 			"createButton": "Create circle",
-			"skipping": "Skipping\b5",
+			"skipping": "Skipping…",
 			"skip": "Skip for now",
-			"loading": "Loading onboarding details\b5",
+			"loading": "Loading onboarding details…",
 			"errorTitle": "Can't load onboarding",
 			"errorMessage": "We couldn't load your onboarding status. Please try again."
 		},
@@ -634,6 +644,7 @@
 		"required_field": "This field is required",
 		"username_taken": "This username is already taken",
 		"email_taken": "This email is already registered",
+		"email_verification_failed": "Email verification failed. Please try again.",
 		"invalid_credentials": "Invalid email or password",
 		"rate_limit": "Too many requests. Please try again in {{retry_after}} seconds.",
 		"rate_limit_2fa": "Too many 2FA requests. Please try again later.",
@@ -736,11 +747,9 @@
 				"verified_label": "Email verified",
 				"verified_message": "Great! Your email is verified and you can create new circles without interruption.",
 				"unverified_label": "Email not verified",
-				"unverified_message": "Please confirm your email to create circles and receive notifications.",
-				"resend": "Resend verification email",
-				"sending": "Sending…",
-				"refresh": "I’ve verified my email",
-				"refreshing": "Checking…"
+				"unverified_message": "Verify your email to continue creating circles and receiving notifications.",
+				"unverified_cta": "Need to resend the link or update your address?",
+				"go_to_verification": "Open verification page"
 			}
 		}
 	}

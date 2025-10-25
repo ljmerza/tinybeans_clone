@@ -1,7 +1,7 @@
 import { Layout } from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { useAuthSession, useResendVerificationMutation } from "@/features/auth";
+import { useAuthSession } from "@/features/auth";
 import { ThemePreferenceSelect, useTheme } from "@/features/theme";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 export function ProfileGeneralSettingsCard() {
@@ -9,7 +9,6 @@ export function ProfileGeneralSettingsCard() {
 	const { preference, resolvedTheme } = useTheme();
 	const session = useAuthSession();
 	const user = session.user;
-	const resendVerification = useResendVerificationMutation();
 
 	const selectedPreferenceLabel = t(
 		`twofa.settings.general.theme.options.${preference}.title`,
@@ -49,27 +48,15 @@ export function ProfileGeneralSettingsCard() {
 							: t("profile.general.email.unverified_message")}
 					</p>
 					{!emailVerified ? (
-						<div className="flex flex-wrap gap-2">
-							<Button
-								onClick={() => resendVerification.mutate(emailAddress)}
-								disabled={!emailAddress || resendVerification.isPending}
+						<p className="text-sm text-muted-foreground">
+							{t("profile.general.email.unverified_cta")}{" "}
+							<Link
+								to="/verify-email-required"
+								className="font-semibold text-primary hover:text-primary/80"
 							>
-								{resendVerification.isPending
-									? t("profile.general.email.sending")
-									: t("profile.general.email.resend")}
-							</Button>
-							<Button
-								variant="outline"
-								onClick={() => {
-									void session.refetchUser();
-								}}
-								disabled={session.isFetchingUser}
-							>
-								{session.isFetchingUser
-									? t("profile.general.email.refreshing")
-									: t("profile.general.email.refresh")}
-							</Button>
-						</div>
+								{t("profile.general.email.go_to_verification")}
+							</Link>
+						</p>
 					) : null}
 				</div>
 			</div>

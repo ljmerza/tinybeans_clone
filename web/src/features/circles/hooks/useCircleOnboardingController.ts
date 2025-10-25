@@ -1,9 +1,7 @@
-import { useResendVerificationMutation } from "@/features/auth";
 import { useApiMessages } from "@/i18n";
-import { showToast } from "@/lib/toast";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { CircleOnboardingPayload } from "../types";
@@ -14,14 +12,12 @@ import {
 
 interface CircleOnboardingControllerOptions {
 	status: CircleOnboardingPayload;
-	onRefresh: () => Promise<CircleOnboardingPayload | undefined>;
 	onNavigateHome: () => void;
 	onCircleCreated?: (circleId: number) => void;
 }
 
 export function useCircleOnboardingController({
 	status,
-	onRefresh,
 	onNavigateHome,
 	onCircleCreated,
 }: CircleOnboardingControllerOptions) {
@@ -30,10 +26,9 @@ export function useCircleOnboardingController({
 
 	const createCircleMutation = useCreateCircleMutation();
 	const skipMutation = useSkipCircleOnboarding();
-	const resendMutation = useResendVerificationMutation();
 
 	const [generalError, setGeneralError] = useState<string | null>(null);
-	const canSubmit = status.email_verified;
+	const canSubmit = status.email_verified ?? true;
 
 	const form = useForm({
 		defaultValues: { name: "" },
@@ -75,60 +70,13 @@ export function useCircleOnboardingController({
 		}
 	}, [onNavigateHome, skipMutation]);
 
-	const resendDisabled = !status.email || resendMutation.isPending;
-
-	const calloutDescription = useMemo(
-		() =>
-			t("pages.circleOnboarding.verifyDescription", {
-				email: status.email,
-			}),
-		[status.email, t],
-	);
-
-	const refreshAndNotify = useCallback(async () => {
-		try {
-			const refreshed = await onRefresh();
-			if (refreshed && !refreshed.email_verified) {
-				showToast({
-					message: t("pages.circleOnboarding.refreshFailed"),
-					level: "warning",
-					id: "circle-onboarding-refresh",
-				});
-				return;
-			}
-
-			if (!refreshed && !status.email_verified) {
-				showToast({
-					message: t("pages.circleOnboarding.refreshFailed"),
-					level: "warning",
-					id: "circle-onboarding-refresh",
-				});
-			}
-		} catch (error) {
-			console.error("Circle onboarding refresh failed:", error);
-		}
-	}, [onRefresh, status.email_verified, t]);
-
-	const handleRefreshClick = useCallback(() => {
-		void refreshAndNotify();
-	}, [refreshAndNotify]);
-
-	const handleResend = useCallback(() => {
-		if (!status.email || resendMutation.isPending) return;
-		resendMutation.mutate(status.email);
-	}, [resendMutation, status.email]);
 
 	return {
 		form,
 		canSubmit,
 		generalError,
-		resendDisabled,
-		calloutDescription,
 		createCirclePending: createCircleMutation.isPending,
 		skipPending: skipMutation.isPending,
-		resendPending: resendMutation.isPending,
-		handleResend,
-		handleRefreshClick,
 		handleSkip,
 	};
 }

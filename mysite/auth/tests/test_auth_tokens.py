@@ -33,7 +33,7 @@ class AuthTokenCookieTests(TestCase):
         self.assertTrue(bool(cookie['secure']))
         self.assertEqual(cookie['path'], '/api/auth/token/refresh/')
 
-    @override_settings(DEBUG=True)
+    @override_settings(DEBUG=True, SESSION_COOKIE_SECURE=False)
     def test_login_cookie_not_secure_in_debug(self):
         response = self._login()
 

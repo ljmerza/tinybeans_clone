@@ -1,5 +1,6 @@
 import type { ApiResponseWithMessages } from "@/types";
 import type {
+	EmailVerificationConfirmResponse,
 	LoginRequest,
 	LoginResponse,
 	MagicLoginRequest,
@@ -21,10 +22,6 @@ export interface PasswordResetConfirmRequest {
 	token: string;
 	password: string;
 	password_confirm: string;
-}
-
-export interface ResendVerificationRequest {
-	identifier: string;
 }
 
 export interface VerifyEmailConfirmRequest {
@@ -85,17 +82,16 @@ export const authServices = {
 		);
 	},
 
-	resendVerificationEmail(body: ResendVerificationRequest) {
+	resendVerificationEmail() {
 		return apiClient.post<ApiResponseWithMessages>(
 			"/auth/verify-email/resend/",
-			body,
+			{},
 		);
 	},
 
 	confirmEmailVerification(body: VerifyEmailConfirmRequest) {
-		return apiClient.post<ApiResponseWithMessages>(
-			"/auth/verify-email/confirm/",
-			body,
-		);
+		return apiClient.post<
+			ApiResponseWithMessages<EmailVerificationConfirmResponse>
+		>("/auth/verify-email/confirm/", body);
 	},
 };

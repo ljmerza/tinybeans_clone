@@ -5,39 +5,17 @@
 
 import { AuthSessionProvider } from "@/features/auth/context/AuthSessionProvider";
 import { ThemeProvider } from "@/features/theme";
+import { router } from "@/router";
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
-// Import the generated route tree
-import { routeTree } from "../routeTree.gen";
 
 interface AppProvidersProps {
 	children?: ReactNode;
 	queryClient: QueryClient;
 	isInitializing?: boolean;
-}
-
-const router = createRouter({
-	routeTree,
-	context: {
-		queryClient: undefined as unknown as QueryClient,
-	},
-	defaultPreload: "intent",
-	scrollRestoration: true,
-	defaultStructuralSharing: true,
-	defaultPreloadStaleTime: 0,
-});
-
-// Register router type
-declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router;
-		context: {
-			queryClient: QueryClient;
-		};
-	}
 }
 
 /**
@@ -64,5 +42,3 @@ export function AppProviders({
 		</ThemeProvider>
 	);
 }
-
-export { router };

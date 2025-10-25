@@ -110,8 +110,10 @@ def set_refresh_cookie(response: Response, refresh_token: str) -> None:
         response: The DRF Response object to attach the cookie to
         refresh_token: The JWT refresh token string to store in the cookie
     """
-    secure = not settings.DEBUG
-    
+    secure = getattr(settings, 'SESSION_COOKIE_SECURE', not settings.DEBUG)
+    samesite = getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax')
+    domain = getattr(settings, 'SESSION_COOKIE_DOMAIN', None)
+
     # SECURITY: Warn if secure cookies are disabled in production
     if not settings.DEBUG and not secure:
         logger.warning(
@@ -120,15 +122,18 @@ def set_refresh_cookie(response: Response, refresh_token: str) -> None:
         )
     
     max_age = int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
-    response.set_cookie(
-        key=REFRESH_COOKIE_NAME,
-        value=refresh_token,
-        path=REFRESH_COOKIE_PATH,
-        max_age=max_age,
-        httponly=True,
-        secure=secure,
-        samesite='Strict' if secure else 'Lax',
-    )
+    cookie_kwargs = {
+        'key': REFRESH_COOKIE_NAME,
+        'value': refresh_token,
+        'path': REFRESH_COOKIE_PATH,
+        'max_age': max_age,
+        'httponly': True,
+        'secure': secure,
+        'samesite': samesite,
+    }
+    if domain:
+        cookie_kwargs['domain'] = domain
+    response.set_cookie(**cookie_kwargs)
 
 
 def clear_refresh_cookie(response: Response) -> None:

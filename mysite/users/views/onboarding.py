@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
 from mysite.notification_utils import create_message, success_response
+from mysite.auth.permissions import IsEmailVerified
 
 from ..models import CircleMembership, CircleOnboardingStatus
 
@@ -25,7 +26,7 @@ def _serialize_onboarding_payload(user) -> dict[str, object]:
 
 
 class CircleOnboardingStatusView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
 
     @extend_schema(
         description="Retrieve the current onboarding status for the authenticated user.",
@@ -41,7 +42,7 @@ class CircleOnboardingStatusView(APIView):
 
 
 class CircleOnboardingSkipView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
 
     @extend_schema(
         description="Dismiss the circle onboarding flow for the current user.",

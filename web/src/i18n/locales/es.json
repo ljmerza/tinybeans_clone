@@ -85,13 +85,32 @@
 			"verifying": "Verificando enlace mágico...",
 			"success": "¡Inicio de sesión exitoso!"
 		},
-		"email_verification": {
-			"title": "Verifica tu correo",
-			"verifying": "Verificando tu correo…",
-			"success": "Tu correo ha sido verificado. Ya puedes continuar en la aplicación.",
-			"error": "No pudimos verificar tu correo. Es posible que el enlace sea inválido o haya expirado.",
-			"invalid_link": "Enlace de verificación inválido."
-		},
+	"email_verification": {
+		"title": "Verifica tu correo",
+		"verifying": "Verificando tu correo…",
+		"success": "Tu correo ha sido verificado. Te redirigiremos a Tinybeans…",
+		"success_toast": "Correo verificado correctamente.",
+		"error": "No pudimos verificar tu correo. Es posible que el enlace sea inválido o haya expirado.",
+		"invalid_link": "Enlace de verificación inválido.",
+		"close_tab": "Cierra esta pestaña",
+		"close_tab_error": "Cerrar pestaña",
+		"redirect_message": "Verifica tu correo para continuar."
+	},
+	"verify_email_required": {
+		"badge": "Acción requerida",
+		"title": "Verifica tu correo",
+		"message": "Enviamos un correo de verificación a <strong>{{email}}</strong>.",
+		"instruction": "Abre ese correo en este dispositivo y toca el botón de verificación para continuar.",
+		"resend_button": "Reenviar correo de verificación",
+		"resend_sending": "Enviando…",
+		"logout_link": "Cerrar sesión",
+		"wrong_email": "¿Necesitas cambiar de cuenta?",
+		"spam_hint": "Consejo: Revisa la carpeta de spam o promociones si no ves el mensaje.",
+		"loading": "Preparando la página de verificación…",
+		"email_unknown": "tu correo",
+		"resend_success": "Correo de verificación reenviado.",
+		"resend_error": "No pudimos reenviar el correo de verificación."
+	},
 		"oauth": {
 			"google_signin": "Iniciar sesión con Google",
 			"google_signup": "Registrarse con Google",
@@ -494,14 +513,7 @@
 		"circleOnboarding": {
 			"step": "Paso {{current}} de {{total}}",
 			"title": "Crea tu primer círculo",
-			"description": "Comienza nombrando el círculo que reunirá a tu familia.",
-			"verifyTitle": "Verifica tu correo para continuar",
-			"verifyDescription": "Enviamos un enlace de verificación a {{email}}. Verifica tu correo y luego actualiza esta página.",
-			"resend": "Reenviar correo de verificación",
-			"resending": "Enviando…",
-			"refresh": "Ya verifiqué mi correo",
-			"refreshFailed": "Todavía no podemos verificar tu correo. Inténtalo de nuevo.",
-			"refreshing": "Comprobando…",
+			"description": "Ponle nombre al círculo que mantendrá a tu familia conectada.",
 			"circleNameLabel": "Nombre del círculo",
 			"circleNamePlaceholder": "Ej. Familia González",
 			"creating": "Creando círculo…",
@@ -662,6 +674,7 @@
 		"required_field": "Este campo es obligatorio",
 		"username_taken": "Este nombre de usuario ya está en uso",
 		"email_taken": "Este correo electrónico ya está registrado",
+		"email_verification_failed": "Falló la verificación del correo. Inténtalo de nuevo.",
 		"invalid_credentials": "Correo electrónico o contraseña inválidos",
 		"rate_limit": "Demasiadas solicitudes. Por favor intente de nuevo en {{retry_after}} segundos.",
 		"rate_limit_2fa": "Demasiadas solicitudes 2FA. Por favor intente de nuevo más tarde.",
@@ -753,23 +766,21 @@
 		}
 	},
 	"profile": {
-		"general": {
-			"loading_title": "Cargando configuración del perfil…",
-			"loading_description": "Obteniendo tus preferencias de cuenta.",
-			"error_title": "La configuración del perfil no está disponible",
-			"error_description": "No pudimos cargar tus datos de cuenta. Intenta nuevamente.",
-			"email": {
-				"title": "Verificación de correo",
-				"description": "Tu correo de cuenta es {{email}}. Mantenlo verificado para usar todas las funciones.",
-				"verified_label": "Correo verificado",
-				"verified_message": "¡Perfecto! Tu correo está verificado y puedes crear círculos sin interrupciones.",
-				"unverified_label": "Correo sin verificar",
-				"unverified_message": "Confirma tu correo para crear círculos y recibir notificaciones.",
-				"resend": "Reenviar correo de verificación",
-				"sending": "Enviando…",
-				"refresh": "Ya verifiqué mi correo",
-				"refreshing": "Comprobando…"
-			}
+	"general": {
+		"loading_title": "Cargando configuración del perfil…",
+		"loading_description": "Obteniendo tus preferencias de cuenta.",
+		"error_title": "La configuración del perfil no está disponible",
+		"error_description": "No pudimos cargar tus datos de cuenta. Intenta nuevamente.",
+		"email": {
+			"title": "Verificación de correo",
+			"description": "Tu correo de cuenta es {{email}}. Mantenlo verificado para usar todas las funciones.",
+			"verified_label": "Correo verificado",
+			"verified_message": "¡Perfecto! Tu correo está verificado y puedes crear círculos sin interrupciones.",
+			"unverified_label": "Correo sin verificar",
+			"unverified_message": "Verifica tu correo para seguir creando círculos y recibiendo notificaciones.",
+			"unverified_cta": "¿Necesitas reenviar el enlace o actualizar tu dirección?",
+			"go_to_verification": "Abrir página de verificación"
 		}
 	}
+}
 }

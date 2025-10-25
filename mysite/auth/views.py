@@ -20,7 +20,7 @@ from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 
 from mysite.users.models import User
-from mysite.users.serializers import UserSerializer
+from mysite.users.serializers import PublicUserSerializer, UserSerializer
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import EMAIL_VERIFICATION_TEMPLATE, PASSWORD_RESET_TEMPLATE
 from .token_utils import (
@@ -34,10 +34,11 @@ from .token_utils import (
     generate_partial_token,
     hash_magic_login_token,
 )
+from mysite.auth.permissions import IsEmailVerified
+from mysite.auth.services import EmailVerificationError, EmailVerificationService
 
 from .serializers import (
     EmailVerificationConfirmSerializer,
-    EmailVerificationSerializer,
     LoginSerializer,
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
@@ -64,6 +65,11 @@ PASSWORD_RESET_RATE = _rate_from_settings('PASSWORD_RESET_RATELIMIT', '5/15m')
 PASSWORD_RESET_CONFIRM_RATE = _rate_from_settings('PASSWORD_RESET_CONFIRM_RATELIMIT', '10/15m')
 EMAIL_VERIFICATION_RESEND_RATE = _rate_from_settings('EMAIL_VERIFICATION_RESEND_RATELIMIT', '5/15m')
 EMAIL_VERIFICATION_CONFIRM_RATE = _rate_from_settings('EMAIL_VERIFICATION_CONFIRM_RATELIMIT', '10/15m')
+EMAIL_VERIFICATION_TOKEN_TTL_SECONDS = getattr(
+    settings,
+    'EMAIL_VERIFICATION_TOKEN_TTL_SECONDS',
+    48 * 60 * 60,
+)
 
 
 class SignupView(APIView):
@@ -88,12 +94,12 @@ class SignupView(APIView):
         verification_token = store_token(
             'verify-email',
             {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
-            ttl=TOKEN_TTL_SECONDS,
+            ttl=EMAIL_VERIFICATION_TOKEN_TTL_SECONDS,
         )
 
         base_url = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
         verification_link = f"{base_url}/verify-email?{urlencode({'token': verification_token})}"
-        expires_in_minutes = max(1, math.ceil(TOKEN_TTL_SECONDS / 60))
+        expires_in_minutes = max(1, math.ceil(EMAIL_VERIFICATION_TOKEN_TTL_SECONDS / 60))
 
         send_email_task.delay(
             to_email=user.email,
@@ -340,12 +346,10 @@ class LoginView(APIView):
 
 
 class EmailVerificationResendView(APIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = EmailVerificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        description='Request that a new email verification message be sent to a user.',
-        request=EmailVerificationSerializer,
+        description='Request that a new email verification message be sent to the authenticated user.',
         responses={202: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Verification email scheduled')},
     )
     @method_decorator(ratelimit(
@@ -355,7 +359,7 @@ class EmailVerificationResendView(APIView):
         block=False,
     ))
     @method_decorator(ratelimit(
-        key='post:identifier',
+        key='user',
         rate=EMAIL_VERIFICATION_RESEND_RATE,
         method='POST',
         block=False,
@@ -363,17 +367,21 @@ class EmailVerificationResendView(APIView):
     def post(self, request):
         if getattr(request, 'limited', False):
             return rate_limit_response('errors.rate_limit')
-        serializer = EmailVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+        user = request.user
+        if user.email_verified:
+            return success_response(
+                {},
+                messages=[create_message('notifications.auth.email_verification_sent')],
+                status_code=status.HTTP_200_OK,
+            )
         token = store_token(
             'verify-email',
             {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
-            ttl=TOKEN_TTL_SECONDS,
+            ttl=EMAIL_VERIFICATION_TOKEN_TTL_SECONDS,
         )
         base_url = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
         verification_link = f"{base_url}/verify-email?{urlencode({'token': token})}"
-        expires_in_minutes = max(1, math.ceil(TOKEN_TTL_SECONDS / 60))
+        expires_in_minutes = max(1, math.ceil(EMAIL_VERIFICATION_TOKEN_TTL_SECONDS / 60))
 
         send_email_task.delay(
             to_email=user.email,
@@ -479,6 +487,8 @@ class TokenRefreshCookieView(APIView):
 class EmailVerificationConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = EmailVerificationConfirmSerializer
+    service_class = EmailVerificationService
+    redirect_path = '/circles/onboarding'
 
     @extend_schema(
         description='Confirm email ownership using a verification token.',
@@ -527,16 +537,36 @@ class EmailVerificationConfirmView(APIView):
                 [create_message('errors.user_not_found')],
                 status.HTTP_404_NOT_FOUND
             )
-        if not user.email_verified:
-            user.email_verified = True
-            user.save(update_fields=['email_verified'])
+        service = self.service_class()
+        try:
+            access_token, refresh_token = service.verify_and_login(user)
+        except EmailVerificationError as exc:
+            logger.warning(
+                'Email verification validation failed',
+                extra={'event': 'auth.email_verification.failed', 'extra': {'user_id': user.id}},
+            )
+            return error_response(
+                'email_verification_failed',
+                [create_message('errors.email_verification_failed', {'message': str(exc)})],
+                status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            logger.error(
+                'Email verification service error',
+                extra={'event': 'auth.email_verification.error', 'extra': {'user_id': user.id}},
+                exc_info=True,
+            )
+            return error_response(
+                'email_verification_failed',
+                [create_message('errors.email_verification_failed')],
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        client_ip = self._get_client_ip(request)
         with project_logging.log_context(user_id=user.id):
             logger.info(
-                'Email verification confirmed',
-                extra={
-                    'event': 'auth.email_verification.confirmed',
-                    'extra': {'user_id': user.id},
-                },
+                'Email verification confirmed with auto-login',
+                extra={'event': 'auth.email_verification.confirmed', 'extra': {'user_id': user.id, 'ip': client_ip}},
             )
             log_audit_event(
                 AuditEvent(
@@ -545,12 +575,27 @@ class EmailVerificationConfirmView(APIView):
                     target_id=str(user.id),
                     status='success',
                     severity='info',
+                    metadata={'auto_login': True, 'ip': client_ip},
                 )
             )
-        return success_response(
-            {},
+
+        response = success_response(
+            {
+                'user': PublicUserSerializer(user).data,
+                'access_token': access_token,
+                'redirect_url': self.redirect_path,
+            },
             messages=[create_message('notifications.auth.email_verified')]
         )
+        set_refresh_cookie(response, refresh_token)
+        return response
+
+    @staticmethod
+    def _get_client_ip(request):
+        forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if forwarded_for:
+            return forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR')
 
 
 class PasswordResetRequestView(APIView):
@@ -718,7 +763,7 @@ class PasswordResetConfirmView(APIView):
 
 
 class PasswordChangeView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = PasswordChangeSerializer
 
     @extend_schema(

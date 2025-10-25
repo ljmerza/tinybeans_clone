@@ -35,6 +35,7 @@ from mysite.auth.serializers import (
     OAuthUnlinkResponseSerializer,
     OAuthErrorSerializer,
 )
+from mysite.auth.permissions import IsEmailVerified
 from mysite.auth.token_utils import get_tokens_for_user, set_refresh_cookie
 from mysite.users.serializers import UserSerializer
 from mysite.notification_utils import error_response, success_response, validation_error_response, create_message, rate_limit_response
@@ -280,7 +281,7 @@ class GoogleOAuthLinkView(APIView):
     
     Requires authentication. Links Google account to the current user.
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(
         request=OAuthLinkRequestSerializer,
@@ -380,7 +381,7 @@ class GoogleOAuthUnlinkView(APIView):
     
     Requires authentication and password verification.
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     
     @extend_schema(
         request=OAuthUnlinkRequestSerializer,

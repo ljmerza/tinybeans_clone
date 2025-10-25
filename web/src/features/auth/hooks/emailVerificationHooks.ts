@@ -5,10 +5,9 @@ import { authKeys } from "../api/queryKeys";
 import { authServices } from "../api/services";
 
 export function useResendVerificationMutation() {
-	return useMutation<ApiResponseWithMessages, ApiError, string>({
+	return useMutation<ApiResponseWithMessages, ApiError, void>({
 		mutationKey: authKeys.mutations.resendVerification(),
-		mutationFn: (identifier) =>
-			authServices.resendVerificationEmail({ identifier }),
+		mutationFn: () => authServices.resendVerificationEmail(),
 		onError: (error) => {
 			console.error("Resend verification error:", error);
 		},
@@ -17,11 +16,11 @@ export function useResendVerificationMutation() {
 			toast: {
 				useResponseMessages: true,
 				success: {
-					key: "common.success",
+					key: "auth.verify_email_required.resend_success",
 					status: 202,
 				},
 				error: {
-					key: "auth.email_verification.error",
+					key: "auth.verify_email_required.resend_error",
 					status: 400,
 				},
 			},

@@ -128,33 +128,49 @@ class CookieUtilityTests(TestCase):
             password='password123'
         )
 
+    @override_settings(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE='Strict')
     def testset_refresh_cookie(self):
-        """Test setting refresh cookie on response."""
+        """Test setting refresh cookie inherits session cookie flags."""
         from django.http import HttpResponse
-        
+
         response = HttpResponse()
         refresh_token = str(RefreshToken.for_user(self.user))
-        
+
         set_refresh_cookie(response, refresh_token)
-        
+
         cookie = response.cookies[REFRESH_COOKIE_NAME]
         self.assertEqual(cookie.value, refresh_token)
         self.assertTrue(cookie['httponly'])
-        self.assertTrue(cookie['secure'])  # Assuming not in DEBUG mode
+        self.assertTrue(cookie['secure'])
+        self.assertEqual(cookie['samesite'], 'Strict')
         self.assertEqual(cookie['path'], '/api/auth/token/refresh/')
 
-    @override_settings(DEBUG=True)
+    @override_settings(DEBUG=True, SESSION_COOKIE_SECURE=False, SESSION_COOKIE_SAMESITE='Lax')
     def testset_refresh_cookie_debug_mode(self):
-        """Test that cookie is not secure in DEBUG mode."""
+        """Test that cookie flags follow settings even in DEBUG."""
         from django.http import HttpResponse
-        
+
         response = HttpResponse()
         refresh_token = str(RefreshToken.for_user(self.user))
-        
+
         set_refresh_cookie(response, refresh_token)
-        
+
         cookie = response.cookies[REFRESH_COOKIE_NAME]
-        self.assertFalse(cookie['secure'])  # Should be False in DEBUG mode
+        self.assertFalse(cookie['secure'])
+        self.assertEqual(cookie['samesite'], 'Lax')
+
+    @override_settings(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE='Strict', SESSION_COOKIE_DOMAIN='example.com')
+    def testset_refresh_cookie_respects_domain(self):
+        """Ensure refresh cookie sets domain when configured."""
+        from django.http import HttpResponse
+
+        response = HttpResponse()
+        refresh_token = str(RefreshToken.for_user(self.user))
+
+        set_refresh_cookie(response, refresh_token)
+
+        cookie = response.cookies[REFRESH_COOKIE_NAME]
+        self.assertEqual(cookie['domain'], 'example.com')
 
     def testclear_refresh_cookie(self):
         """Test clearing refresh cookie."""

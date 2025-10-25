@@ -29,4 +29,27 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.needs_circle_onboarding
 
 
-__all__ = ['CircleSerializer', 'UserSerializer']
+class PublicUserSerializer(serializers.ModelSerializer):
+    """Limited user serializer safe for authentication responses."""
+
+    needs_circle_onboarding = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'email_verified',
+            'first_name',
+            'last_name',
+            'needs_circle_onboarding',
+            'circle_onboarding_status',
+        ]
+        read_only_fields = fields
+
+    def get_needs_circle_onboarding(self, obj) -> bool:
+        return obj.needs_circle_onboarding
+
+
+__all__ = ['CircleSerializer', 'UserSerializer', 'PublicUserSerializer']

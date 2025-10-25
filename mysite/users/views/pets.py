@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
+from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, success_response
 from ..models import Circle, CircleMembership, PetProfile, UserRole
 from ..serializers import PetProfileSerializer, PetProfileCreateSerializer
@@ -16,7 +17,7 @@ from ..serializers import PetProfileSerializer, PetProfileCreateSerializer
 
 class CirclePetListView(APIView):
     """List and create pets for a specific circle."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = PetProfileSerializer
 
     @extend_schema(
@@ -81,7 +82,7 @@ class CirclePetListView(APIView):
 
 class PetProfileDetailView(APIView):
     """View, update, and delete individual pet profiles."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = PetProfileSerializer
 
     def _get_pet_and_check_permission(self, pet_id, user, admin_required=False):

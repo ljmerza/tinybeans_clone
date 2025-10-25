@@ -9,6 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
+from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, error_response, success_response
 
 from ..models import Circle, CircleMembership
@@ -21,7 +22,7 @@ from ..serializers import (
 
 
 class CircleMemberListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleMemberSerializer
 
     @extend_schema(
@@ -74,7 +75,7 @@ class CircleMemberListView(APIView):
 
 
 class CircleMemberRemoveView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleMemberSerializer
 
     @extend_schema(

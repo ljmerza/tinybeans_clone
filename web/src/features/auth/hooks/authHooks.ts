@@ -126,6 +126,11 @@ export function useLogin(options?: { redirect?: string }) {
 			}
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
+			if (!payload.email_verified) {
+				navigate({ to: "/verify-email-required" });
+				return;
+			}
+
 			const needsOnboarding =
 				"needs_circle_onboarding" in payload &&
 				Boolean(
@@ -224,6 +229,11 @@ export function useSignup(options?: { redirect?: string }) {
 			}
 
 			qc.invalidateQueries({ queryKey: authKeys.session() });
+
+			if (payload && !payload.email_verified) {
+				navigate({ to: "/verify-email-required" });
+				return;
+			}
 
 			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
 			const invitationRedirect = parseInvitationRedirect(redirectTarget);

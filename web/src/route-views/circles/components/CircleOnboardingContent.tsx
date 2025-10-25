@@ -10,14 +10,10 @@ import { useTranslation } from "react-i18next";
 
 interface CircleOnboardingContentProps {
 	status: CircleOnboardingPayload;
-	onRefresh: () => Promise<CircleOnboardingPayload | undefined>;
-	isRefreshing: boolean;
 }
 
 export function CircleOnboardingContent({
 	status,
-	onRefresh,
-	isRefreshing,
 }: CircleOnboardingContentProps) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
@@ -25,17 +21,11 @@ export function CircleOnboardingContent({
 		form,
 		canSubmit,
 		generalError,
-		resendDisabled,
-		calloutDescription,
 		createCirclePending,
 		skipPending,
-		resendPending,
-		handleResend,
-		handleRefreshClick,
 		handleSkip,
 	} = useCircleOnboardingController({
 		status,
-		onRefresh,
 		onNavigateHome: () => navigate({ to: "/" }),
 		onCircleCreated: (circleId) => navigate({ to: "/circles/$circleId", params: { circleId: String(circleId) } }),
 	});
@@ -52,32 +42,7 @@ export function CircleOnboardingContent({
 				</p>
 			</header>
 
-			{!status.email_verified ? (
-				<section className="space-y-3 rounded-lg border border-border bg-muted/40 p-4">
-					<h2 className="text-base font-semibold">
-						{t("pages.circleOnboarding.verifyTitle")}
-					</h2>
-					<p className="text-sm text-muted-foreground">{calloutDescription}</p>
-					<div className="flex flex-wrap gap-2">
-						<Button onClick={handleResend} disabled={resendDisabled}>
-							{resendPending
-								? t("pages.circleOnboarding.resending")
-								: t("pages.circleOnboarding.resend")}
-						</Button>
-						<Button
-							variant="outline"
-							onClick={handleRefreshClick}
-							disabled={isRefreshing}
-						>
-							{isRefreshing
-								? t("pages.circleOnboarding.refreshing")
-								: t("pages.circleOnboarding.refresh")}
-						</Button>
-					</div>
-				</section>
-			) : null}
-
-			<form
+		<form
 				onSubmit={(event) => {
 					event.preventDefault();
 					event.stopPropagation();

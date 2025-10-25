@@ -85,3 +85,9 @@ export interface MagicLoginVerifyRequest {
 }
 
 export type MagicLoginVerifyResponse = LoginRequiresTwoFactor | LoginSuccess;
+
+export interface EmailVerificationConfirmResponse {
+	user: AuthUser;
+	access_token: string;
+	redirect_url: string;
+}

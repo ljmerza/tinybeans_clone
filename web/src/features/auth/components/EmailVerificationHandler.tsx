@@ -1,12 +1,15 @@
 import { StatusMessage, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
+import { useAuthSession, setAccessToken } from "@/features/auth";
 import { useApiMessages } from "@/i18n";
+import { showToast } from "@/lib/toast";
 import type { ApiResponseWithMessages } from "@/types";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { HttpError } from "@/lib/httpClient";
+import type { EmailVerificationConfirmResponse } from "../types";
 import { authServices } from "../api/services";
 
 type EmailVerificationHandlerProps = {
@@ -23,6 +26,7 @@ export function EmailVerificationHandler({
 	const { getGeneral } = useApiMessages();
 	const [status, setStatus] = useState<VerificationStatus>("verifying");
 	const [message, setMessage] = useState<string>("");
+	const session = useAuthSession();
 	const latestTokenRef = useRef<string | undefined>(undefined);
 	const inflightTokenRef = useRef<string | null>(null);
 	const getGeneralRef = useRef(getGeneral);
@@ -58,15 +62,36 @@ export function EmailVerificationHandler({
 
 		void authServices
 			.confirmEmailVerification({ token })
-			.then((response) => {
+			.then(async (response) => {
 				if (!isMountedRef.current || latestTokenRef.current !== token) {
 					return;
 				}
 				const generalMessages = getGeneralRef.current(response.messages);
+				const payload = (response.data ?? response) as
+					| EmailVerificationConfirmResponse
+					| undefined;
 				setMessage(
 					generalMessages[0] ?? tRef.current("auth.email_verification.success"),
 				);
 				setStatus("success");
+				const accessToken = payload?.access_token;
+				if (accessToken) {
+					setAccessToken(accessToken);
+				}
+				await session.refetchUser();
+				showToast({
+					message: tRef.current("auth.email_verification.success_toast"),
+					level: "success",
+					id: "email-verification-success",
+				});
+				const redirectTarget = payload?.redirect_url ?? "/circles/onboarding";
+				if (redirectTarget === "/circles/onboarding") {
+					void navigate({ to: "/circles/onboarding", replace: true });
+				} else if (redirectTarget === "/") {
+					void navigate({ to: "/", replace: true });
+				} else if (typeof window !== "undefined") {
+					window.location.assign(redirectTarget);
+				}
 			})
 			.catch((error: unknown) => {
 				if (!isMountedRef.current || latestTokenRef.current !== token) {

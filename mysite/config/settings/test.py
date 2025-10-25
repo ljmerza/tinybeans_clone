@@ -61,6 +61,7 @@ TWOFA_RATE_LIMIT_WINDOW = 0
 TWOFA_RATE_LIMIT_MAX = 0
 # Force frontend base URL in tests to the expected value asserted by tests
 ACCOUNT_FRONTEND_BASE_URL = 'http://localhost:3000'
+EMAIL_VERIFICATION_ENFORCED = False
 
 TWOFA_LOCKOUT_THRESHOLD = 999999
 

@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail, ValidationError
+from rest_framework.exceptions import ErrorDetail, PermissionDenied, ValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
 
 from .notification_utils import create_message, error_response
@@ -66,6 +66,26 @@ def custom_exception_handler(exc, context):
         if not messages:
             messages = [create_message('errors.validation_failed')]
         return error_response('validation_failed', messages, status.HTTP_400_BAD_REQUEST)
+
+    if isinstance(exc, PermissionDenied):
+        detail = exc.detail
+        redirect_to = None
+        if isinstance(detail, Mapping):
+            error_code = detail.get('error', 'permission_denied')
+            redirect_to = detail.get('redirect_to')
+            messages = detail.get('messages')
+            if not messages:
+                message_key = detail.get('message_key', 'errors.forbidden')
+                context_payload = detail.get('context')
+                messages = [create_message(message_key, context_payload)]
+        else:
+            error_code = 'permission_denied'
+            messages = [create_message('errors.forbidden', {'message': _coerce_to_str(detail)})]
+
+        response = error_response(error_code, messages, status.HTTP_403_FORBIDDEN)
+        if redirect_to:
+            response.data['redirect_to'] = redirect_to
+        return response
 
     return drf_exception_handler(exc, context)
 

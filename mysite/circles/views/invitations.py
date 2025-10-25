@@ -18,6 +18,7 @@ from mysite.auth.token_utils import (
     pop_token,
     store_token,
 )
+from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import (
     create_message,
     error_response,
@@ -47,7 +48,7 @@ from ..serializers import (
     UserSerializer,
 )
 class CircleInvitationCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleInvitationCreateSerializer
     @extend_schema(
         description='List invitations for a circle. Only admins can access this endpoint.',
@@ -149,7 +150,7 @@ class CircleInvitationCreateView(APIView):
             )
         )(post)
 class CircleInvitationCancelView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleInvitationSerializer
     @extend_schema(
         description='Cancel a pending invitation for the specified circle.',
@@ -197,7 +198,7 @@ class CircleInvitationCancelView(APIView):
             status_code=status.HTTP_200_OK,
         )
 class CircleInvitationResendView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleInvitationSerializer
     @extend_schema(
         description='Resend a pending invitation email for the specified circle.',
@@ -279,7 +280,7 @@ class CircleInvitationResendView(APIView):
             )
         )(post)
 class CircleInvitationListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleInvitationSerializer
     @extend_schema(
         description='Return pending circle invitations for the authenticated user.',
@@ -298,7 +299,7 @@ class CircleInvitationListView(APIView):
         data = CircleInvitationSerializer(invitations, many=True).data
         return success_response({'invitations': data})
 class CircleInvitationRespondView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleInvitationResponseSerializer
     @extend_schema(
         description='Accept or decline a pending invitation that belongs to the authenticated user.',
@@ -429,7 +430,7 @@ class CircleInvitationAcceptView(APIView):
             status_code=status.HTTP_200_OK,
         )
 class CircleInvitationFinalizeView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = CircleInvitationFinalizeSerializer
     @extend_schema(
         description='Finalize circle invitation onboarding using an onboarding token once the invitee is authenticated.',
