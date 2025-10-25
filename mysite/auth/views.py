@@ -448,6 +448,23 @@ class TokenRefreshCookieView(APIView):
             )
             clear_refresh_cookie(response)
             return response
+        except Exception as e:
+            # Handle case where user was deleted but token still exists
+            from mysite.users.models import User
+            if isinstance(e.__cause__, User.DoesNotExist):
+                logger.warning(
+                    'Refresh token belongs to deleted user',
+                    extra={'event': 'auth.token_refresh.user_deleted'},
+                )
+                response = error_response(
+                    'invalid_refresh_token',
+                    [create_message('errors.token_invalid_expired', {})],
+                    status.HTTP_401_UNAUTHORIZED
+                )
+                clear_refresh_cookie(response)
+                return response
+            # Re-raise if it's a different exception
+            raise
 
         data = serializer.validated_data
         access_token = data['access']

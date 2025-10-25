@@ -169,7 +169,7 @@ export function useRemoveCircleMember(
 			queryClient.invalidateQueries({
 				queryKey: circleKeys.invitations(circleId),
 			});
-			if (response.messages?.length) {
+			if (response?.messages?.length) {
 				showAsToast(response.messages, 200);
 			} else {
 				showToast({

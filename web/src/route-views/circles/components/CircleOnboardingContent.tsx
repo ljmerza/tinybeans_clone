@@ -37,6 +37,7 @@ export function CircleOnboardingContent({
 		status,
 		onRefresh,
 		onNavigateHome: () => navigate({ to: "/" }),
+		onCircleCreated: (circleId) => navigate({ to: "/circles/$circleId", params: { circleId: String(circleId) } }),
 	});
 
 	return (

@@ -66,7 +66,7 @@ class CircleInvitationCreateView(APIView):
         include_archived = request.query_params.get('include') == 'archived'
         base_qs = circle.invitations.select_related('invited_user').order_by('-created_at')
         if not include_archived:
-            base_qs = base_qs.filter(archived_at__isnull=True)
+            base_qs = base_qs.filter(status=CircleInvitationStatus.PENDING)
         invitations = base_qs
         data = CircleInvitationSerializer(invitations, many=True).data
         return success_response({'invitations': data})
@@ -482,11 +482,11 @@ class CircleInvitationFinalizeView(APIView):
                 membership.save(update_fields=['role', 'invited_by'])
             invitation.status = CircleInvitationStatus.ACCEPTED
             invitation.responded_at = timezone.now()
+            invitation.archived_at = timezone.now()
+            invitation.archived_reason = "accepted"
             if invitation.invited_user_id != user.id:
                 invitation.invited_user = user
-            update_fields = ['status', 'responded_at', 'invited_user']
-            if invitation.archived_at:
-                update_fields += ['archived_at', 'archived_reason']
+            update_fields = ['status', 'responded_at', 'invited_user', 'archived_at', 'archived_reason']
             invitation.save(update_fields=update_fields)
         if invitation.invited_by_id:
             base_url = getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000').rstrip('/')

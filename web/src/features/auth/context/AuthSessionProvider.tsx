@@ -19,6 +19,7 @@ export interface AuthSession {
 	isAuthenticated: boolean;
 	isGuest: boolean;
 	isUnknown: boolean;
+	isReady: boolean;
 	user: AuthUser | null;
 	isFetchingUser: boolean;
 	userError: unknown;
@@ -69,6 +70,16 @@ export function AuthSessionProvider({
 
 		const user = sessionQuery.data ?? null;
 		const userError = sessionQuery.error ?? null;
+		
+		// Session is ready when:
+		// - Not initializing, AND
+		// - Either no token (guest is determined), OR
+		// - Has token and query has resolved (success or error)
+		const isReady = !isInitializing && (
+			!accessToken || 
+			sessionQuery.isFetched || 
+			sessionQuery.isError
+		);
 
 		return {
 			status,
@@ -76,6 +87,7 @@ export function AuthSessionProvider({
 			isAuthenticated: status === "authenticated",
 			isGuest: status === "guest",
 			isUnknown: status === "unknown",
+			isReady,
 			user,
 			isFetchingUser: sessionQuery.isFetching,
 			userError,
@@ -85,6 +97,8 @@ export function AuthSessionProvider({
 		accessToken,
 		isInitializing,
 		sessionQuery.data,
+		sessionQuery.isFetched,
+		sessionQuery.isError,
 		sessionQuery.isFetching,
 		sessionQuery.error,
 		sessionQuery.refetch,

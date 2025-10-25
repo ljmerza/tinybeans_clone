@@ -16,12 +16,14 @@ interface CircleOnboardingControllerOptions {
 	status: CircleOnboardingPayload;
 	onRefresh: () => Promise<CircleOnboardingPayload | undefined>;
 	onNavigateHome: () => void;
+	onCircleCreated?: (circleId: number) => void;
 }
 
 export function useCircleOnboardingController({
 	status,
 	onRefresh,
 	onNavigateHome,
+	onCircleCreated,
 }: CircleOnboardingControllerOptions) {
 	const { t } = useTranslation();
 	const { getGeneral } = useApiMessages();
@@ -41,8 +43,14 @@ export function useCircleOnboardingController({
 			setGeneralError(null);
 
 			try {
-				await createCircleMutation.mutateAsync({ name: value.name.trim() });
-				onNavigateHome();
+				const result = await createCircleMutation.mutateAsync({ name: value.name.trim() });
+				const circleId = result.data?.circle?.id;
+				
+				if (circleId && onCircleCreated) {
+					onCircleCreated(circleId);
+				} else {
+					onNavigateHome();
+				}
 			} catch (error) {
 				const apiError = error as ApiError;
 				const messages = getGeneral(apiError.messages);

@@ -15,11 +15,19 @@ interface LayoutProps {
 function LayoutBase({ children, showHeader = true }: LayoutProps) {
 	const session = useAuthSession();
 
+	// Don't show header until auth state is stable to prevent flash
+	const shouldShowHeader = showHeader && session.isReady;
+
 	return (
 		<div className="min-h-screen bg-background text-foreground transition-colors">
-			{showHeader && <Header isAuthenticated={session.isAuthenticated} />}
+			{/* Subtle loading bar when auth is being determined */}
+			{showHeader && !session.isReady && (
+				<div className="h-1 bg-muted animate-pulse" />
+			)}
+			
+			{shouldShowHeader && <Header isAuthenticated={session.isAuthenticated} />}
 
-			<main className={showHeader ? "container-page section-spacing" : ""}>
+			<main className={shouldShowHeader ? "container-page section-spacing" : ""}>
 				{children}
 			</main>
 		</div>
