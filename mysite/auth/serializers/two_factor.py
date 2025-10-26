@@ -1,10 +1,13 @@
-"""Two-Factor Authentication Serializers"""
+"""Two-Factor Authentication Serializers."""
+from __future__ import annotations
+
 from rest_framework import serializers
-from .models import TwoFactorSettings, RecoveryCode, TrustedDevice
+
+from ..models import RecoveryCode, TrustedDevice, TwoFactorSettings
 
 
 class TwoFactorSetupSerializer(serializers.Serializer):
-    """Serializer for initiating 2FA setup"""
+    """Serializer for initiating 2FA setup."""
     method = serializers.ChoiceField(
         choices=['totp', 'email', 'sms'],
         required=True,
@@ -19,7 +22,7 @@ class TwoFactorSetupSerializer(serializers.Serializer):
 
 
 class TwoFactorVerifySetupSerializer(serializers.Serializer):
-    """Serializer for verifying 2FA setup"""
+    """Serializer for verifying 2FA setup."""
     code = serializers.CharField(
         min_length=6,
         max_length=6,
@@ -29,7 +32,7 @@ class TwoFactorVerifySetupSerializer(serializers.Serializer):
 
 
 class TwoFactorVerifySerializer(serializers.Serializer):
-    """Serializer for verifying 2FA code during login"""
+    """Serializer for verifying 2FA code during login."""
     code = serializers.CharField(
         min_length=6,
         max_length=6,
@@ -44,7 +47,7 @@ class TwoFactorVerifySerializer(serializers.Serializer):
 
 
 class TwoFactorStatusSerializer(serializers.ModelSerializer):
-    """Serializer for 2FA settings status"""
+    """Serializer for 2FA settings status."""
 
     has_totp = serializers.SerializerMethodField()
     has_sms = serializers.SerializerMethodField()
@@ -70,22 +73,18 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def get_has_totp(self, obj):
-        # Consider TOTP configured only after verification
         return bool(getattr(obj, '_totp_secret_encrypted', None)) and bool(obj.totp_verified)
 
     def get_has_sms(self, obj):
-        # Consider SMS configured only after phone number verification
         return bool(obj.phone_number) and bool(obj.sms_verified)
 
     def get_has_email(self, obj):
-        # Consider email configured only after verification
         return bool(obj.email_verified)
 
     def get_preferred_method(self, obj):
-        # If no methods are enabled, return None
         has_any_method = (
-            self.get_has_totp(obj) or 
-            self.get_has_sms(obj) or 
+            self.get_has_totp(obj) or
+            self.get_has_sms(obj) or
             self.get_has_email(obj)
         )
         if not has_any_method:
@@ -93,14 +92,14 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
         return obj.preferred_method
 
     def get_email_address(self, obj):
-        # Prefer backup email when present, otherwise fall back to primary account email
         if obj.backup_email:
             return obj.backup_email
         return getattr(obj.user, 'email', None)
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):
-    """Serializer for recovery codes"""
+    """Serializer for recovery codes."""
+
     class Meta:
         model = RecoveryCode
         fields = ['code', 'is_used', 'created_at']
@@ -108,7 +107,8 @@ class RecoveryCodeSerializer(serializers.ModelSerializer):
 
 
 class TrustedDeviceSerializer(serializers.ModelSerializer):
-    """Serializer for trusted devices"""
+    """Serializer for trusted devices."""
+
     class Meta:
         model = TrustedDevice
         fields = [
@@ -123,7 +123,7 @@ class TrustedDeviceSerializer(serializers.ModelSerializer):
 
 
 class TwoFactorDisableSerializer(serializers.Serializer):
-    """Serializer for disabling 2FA"""
+    """Serializer for disabling 2FA."""
     code = serializers.CharField(
         min_length=6,
         max_length=6,
@@ -133,7 +133,7 @@ class TwoFactorDisableSerializer(serializers.Serializer):
 
 
 class TwoFactorVerifyLoginSerializer(serializers.Serializer):
-    """Serializer for verifying 2FA during login"""
+    """Serializer for verifying 2FA during login."""
     code = serializers.CharField(
         required=True,
         help_text="6-digit verification code or recovery code (XXXX-XXXX-XXXX)"
@@ -150,7 +150,7 @@ class TwoFactorVerifyLoginSerializer(serializers.Serializer):
 
 
 class TwoFactorPreferredMethodSerializer(serializers.Serializer):
-    """Serializer for updating the preferred 2FA method"""
+    """Serializer for updating the preferred 2FA method."""
 
     method = serializers.ChoiceField(
         choices=['totp', 'email', 'sms'],
@@ -160,10 +160,24 @@ class TwoFactorPreferredMethodSerializer(serializers.Serializer):
 
 
 class TwoFactorMethodRemoveSerializer(serializers.Serializer):
-    """Serializer for validating removable 2FA method names"""
+    """Serializer for validating removable 2FA method names."""
 
     method = serializers.ChoiceField(
         choices=['totp', 'sms', 'email'],
         required=True,
         help_text="2FA method to remove",
     )
+
+
+__all__ = [
+    'RecoveryCodeSerializer',
+    'TrustedDeviceSerializer',
+    'TwoFactorDisableSerializer',
+    'TwoFactorMethodRemoveSerializer',
+    'TwoFactorPreferredMethodSerializer',
+    'TwoFactorSetupSerializer',
+    'TwoFactorStatusSerializer',
+    'TwoFactorVerifyLoginSerializer',
+    'TwoFactorVerifySerializer',
+    'TwoFactorVerifySetupSerializer',
+]

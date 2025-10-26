@@ -12,8 +12,8 @@ from django_ratelimit.decorators import ratelimit
 
 from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, success_response, error_response, rate_limit_response
-from .models import TwoFactorSettings, TwoFactorAuditLog
-from .serializers_2fa import (
+from ..models import TwoFactorSettings, TwoFactorAuditLog
+from ..serializers import (
     TwoFactorSetupSerializer,
     TwoFactorVerifySetupSerializer,
     TwoFactorVerifySerializer,
@@ -24,9 +24,9 @@ from .serializers_2fa import (
     TwoFactorPreferredMethodSerializer,
     TwoFactorMethodRemoveSerializer,
 )
-from .services.twofa_service import TwoFactorService
-from .services.trusted_device_service import TrustedDeviceService
-from .services.recovery_code_service import RecoveryCodeService
+from ..services.twofa_service import TwoFactorService
+from ..services.trusted_device_service import TrustedDeviceService
+from ..services.recovery_code_service import RecoveryCodeService
 
 
 logger = logging.getLogger(__name__)
@@ -747,7 +747,7 @@ class TwoFactorVerifyLoginView(APIView):
     )
     def post(self, request):
         """Complete login by verifying 2FA code"""
-        from .serializers_2fa import TwoFactorVerifyLoginSerializer
+        from ..serializers import TwoFactorVerifyLoginSerializer
         from .token_utils import verify_partial_token, get_tokens_for_user, set_refresh_cookie
         from mysite.users.serializers import UserSerializer
         

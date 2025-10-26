@@ -38,7 +38,7 @@
 
 ### Authentication & Security Flows
 
-- `mysite/auth/serializers.py:16-120` require username for signup/login/password-reset identifiers.
+- `mysite/auth/serializers/account.py:1-120` require username for signup/login/password-reset identifiers.
 - `mysite/auth/views.py:110-647` responds with usernames, rate-limits on `post:username`, and documents username/password logins.
 - `mysite/auth/services/google_oauth_service.py:382-429` generates usernames for new Google accounts; two-factor and trusted-device services (`mysite/auth/services/twofa_service.py:53`, `recovery_code_service.py:26-67`, `trusted_device_service.py:265-271`) log/display usernames.
 - `mysite/auth/models.py:141-347` string representations use usernames; admin search fields in `mysite/auth/admin.py:17-67` look up `user__username`.
@@ -83,7 +83,7 @@
    - Ensure any DB indexes (`mysite/users/migrations/0001_initial.py`) referencing username are removed before regenerating migrations later.
 
 2. **Authentication & Security Endpoints**
-   - Signup/login serializers (`mysite/auth/serializers.py`) should only request `email` and `password`; adjust copy, validation errors, and tests.
+- Signup/login serializers (`mysite/auth/serializers/account.py`) should only request `email` and `password`; adjust copy, validation errors, and tests.
    - Login view (`mysite/auth/views.py:110-200`) must accept `email`, update OpenAPI docs, swap rate-limit keys to use `post:email` (or IP-only), and ensure we still log attempts without leaking whether an email exists.
    - Password reset/email verification flows should take an email field only; update identifier language and responses.
    - Update JWT payloads, 2FA responses, and `success_response` helpers so `user` objects never include username.
@@ -135,4 +135,3 @@
 ---
 
 This plan surfaces every major dependency on usernames so we can implement the switch to email-only authentication methodically and keep backend/frontend/doc artifacts in sync. Once approved, we can proceed with the outlined workstreams, starting with the schema/back-end changes and then iterating across dependent surfaces.
-

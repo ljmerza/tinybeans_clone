@@ -3,24 +3,32 @@ from django.urls import path
 from .views import (
     EmailVerificationConfirmView,
     EmailVerificationResendView,
+    GoogleOAuthCallbackView,
+    GoogleOAuthInitiateView,
+    GoogleOAuthLinkView,
+    GoogleOAuthUnlinkView,
     LoginView,
     LogoutView,
+    MagicLoginRequestView,
+    MagicLoginVerifyView,
     PasswordChangeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
     SignupView,
     TokenRefreshCookieView,
+    TwoFactorDisableRequestView,
+    TwoFactorDisableView,
+    TwoFactorMethodRemoveView,
+    TwoFactorPreferredMethodView,
+    TwoFactorSetupView,
+    TwoFactorStatusView,
+    TwoFactorVerifyLoginView,
+    TwoFactorVerifySetupView,
+    RecoveryCodeDownloadView,
+    RecoveryCodeGenerateView,
+    TrustedDeviceRemoveView,
+    TrustedDevicesListView,
     get_csrf_token,
-    MagicLoginRequestView,
-    MagicLoginVerifyView,
-)
-
-# Google OAuth Views
-from .views_google_oauth import (
-    GoogleOAuthInitiateView,
-    GoogleOAuthCallbackView,
-    GoogleOAuthLinkView,
-    GoogleOAuthUnlinkView,
 )
 
 urlpatterns = [
@@ -46,22 +54,6 @@ urlpatterns = [
     path('google/link/', GoogleOAuthLinkView.as_view(), name='auth-google-link'),
     path('google/unlink/', GoogleOAuthUnlinkView.as_view(), name='auth-google-unlink'),
 ]
-
-# Two-Factor Authentication URLs
-from .views_2fa import (
-    TwoFactorSetupView,
-    TwoFactorVerifySetupView,
-    TwoFactorStatusView,
-    TwoFactorPreferredMethodView,
-    TwoFactorMethodRemoveView,
-    TwoFactorDisableRequestView,
-    TwoFactorDisableView,
-    RecoveryCodeGenerateView,
-    RecoveryCodeDownloadView,
-    TrustedDevicesListView,
-    TrustedDeviceRemoveView,
-    TwoFactorVerifyLoginView,
-)
 
 urlpatterns += [
     path('2fa/setup/', TwoFactorSetupView.as_view(), name='2fa-setup'),
