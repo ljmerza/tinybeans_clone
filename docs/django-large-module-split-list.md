@@ -14,7 +14,7 @@
 | File | Lines | Why It Feels Overgrown | Suggested Refactor |
 | --- | --- | --- | --- |
 | `mysite/auth/views/two_factor.py` | 851 | Interleaves enrollment, verification, recovery, trusted device, and notification views in one module. | Completed: split into `setup.py`, `management.py`, `recovery.py`, `trusted_devices.py`, and `login.py` (all re-exported from `views/two_factor/__init__.py`). |
-| `mysite/auth/tests/test_2fa_api.py` | 744 | One monolithic test module covering every 2FA API permutation with sprawling fixtures. | Create separate test files for enrollment, verification, recovery codes, and trusted devices to keep fixture scope tight. |
+| `mysite/auth/tests/test_2fa_api.py` | 744 | One monolithic test module covering every 2FA API permutation with sprawling fixtures. | Completed: replaced with `test_2fa_setup_api.py`, `test_2fa_management_api.py`, `test_2fa_recovery_api.py`, and `test_trusted_devices_api.py` plus a shared helper. |
 | `mysite/auth/tests/test_2fa_services.py` | 715 | Mixes TOTPs, SMS, email, and trusted-device service tests, making failures hard to trace. | Break into dedicated modules per service (`test_totp_service.py`, `test_sms_service.py`, etc.) and share fixtures via `conftest.py`. |
 | `mysite/users/tests/test_serializers.py` | 580 | Validates many unrelated serializers (profiles, invites, guardians, children) in a single suite. | Group tests by serializer family (e.g., `test_profile_serializers.py`) so contributors can focus on the relevant domain. |
 | `mysite/config/settings/base.py` | 567 | Core settings file now mixes auth, storage, Celery, DRF, and feature toggles, making merges noisy. | Extract thematic settings modules (`settings/auth.py`, `settings/storage.py`, `settings/celery.py`) and import them inside `base.py`. |
@@ -34,3 +34,4 @@
 
 ### Refactor Progress
 - [x] `mysite/auth/views/two_factor.py` split into `setup.py`, `management.py`, `recovery.py`, `trusted_devices.py`, and `login.py` (re-exported via `mysite/auth/views/two_factor/__init__.py`).
+- [x] `mysite/auth/tests/test_2fa_api.py` replaced with targeted modules per flow (`test_2fa_setup_api.py`, `test_2fa_management_api.py`, `test_2fa_recovery_api.py`, `test_trusted_devices_api.py`) plus `tests/helpers.py`.
