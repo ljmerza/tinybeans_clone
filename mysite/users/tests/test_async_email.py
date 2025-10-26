@@ -124,7 +124,7 @@ class AsyncEmailTaskTests(TestCase):
             last_name='Admin',
         )
         circle = Circle.objects.create(name='Family', created_by=admin)
-        CircleMembership.objects.create(user=admin, circle=circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
 
         self.client.force_authenticate(user=admin)
         response = self.client.post(
@@ -150,7 +150,7 @@ class AsyncEmailTaskTests(TestCase):
             last_name='Admin',
         )
         circle = Circle.objects.create(name='Family 2', created_by=admin)
-        CircleMembership.objects.create(user=admin, circle=circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
         child = ChildProfile.objects.create(circle=circle, display_name='Kiddo')
 
         self.client.force_authenticate(user=admin)

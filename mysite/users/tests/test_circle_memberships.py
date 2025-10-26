@@ -20,11 +20,11 @@ class CircleMembershipViewTests(TestCase):
         self.admin.save()
         
         self.circle = Circle.objects.create(name='Admin Circle', created_by=self.admin)
-        CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
 
     def test_list_user_circles_returns_memberships(self):
         other_circle = Circle.objects.create(name='Second Circle', created_by=self.admin)
-        CircleMembership.objects.create(user=self.admin, circle=other_circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
 
         self.client.force_authenticate(user=self.admin)
         response = self.client.get(reverse('user-circle-list'))

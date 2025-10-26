@@ -28,7 +28,7 @@ class InvitationWorkflowTests(TestCase):
         self.admin.save()
 
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.admin)
-        CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
 
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
     def test_new_user_onboarding_flow(self, mock_delay):

@@ -79,8 +79,12 @@ class CircleMemberRemoveView(APIView):
     serializer_class = CircleMemberSerializer
 
     @extend_schema(
-        description='Remove a member (or yourself) from a circle.',
-        responses={204: OpenApiResponse(description='Membership removed.')},
+        description='Remove a member (or yourself) from a circle. Circle owners cannot be removed.',
+        responses={
+            204: OpenApiResponse(description='Membership removed.'),
+            403: OpenApiResponse(description='Cannot remove circle owner.'),
+            404: OpenApiResponse(description='Membership not found.'),
+        },
     )
     def delete(self, request, circle_id, user_id):
         circle = get_object_or_404(Circle, id=circle_id)
@@ -90,6 +94,14 @@ class CircleMemberRemoveView(APIView):
                 'membership_not_found',
                 [create_message('errors.membership_not_found')],
                 status.HTTP_404_NOT_FOUND
+            )
+
+        # Prevent owner removal (most important check - do this first)
+        if membership_to_remove.is_owner:
+            return error_response(
+                'cannot_remove_owner',
+                [create_message('errors.circle.cannot_remove_owner')],
+                status.HTTP_403_FORBIDDEN
             )
 
         requester_membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()

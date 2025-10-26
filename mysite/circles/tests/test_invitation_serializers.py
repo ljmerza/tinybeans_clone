@@ -16,7 +16,7 @@ class InvitationSerializerTests(TestCase):
             password='password123'
         )
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.admin)
-        CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
 
     def test_role_validation(self):
         """Test role validation at serializer level."""

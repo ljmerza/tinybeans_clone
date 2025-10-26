@@ -571,12 +571,14 @@
 			},
 			"role": {
 				"admin": "Admin",
-				"member": "Member"
+				"member": "Member",
+				"owner": "Owner"
 			},
 			"you": "You",
 			"remove": "Remove",
 			"removing": "Removing…",
-			"joined_at": "Joined {{joinedAt}}"
+			"joined_at": "Joined {{joinedAt}}",
+			"cannot_remove_owner": "Cannot be removed"
 		}
 	}
 	},
@@ -693,6 +695,7 @@
 		"upgrade_invitation_mismatch": "Upgrade invitation mismatch",
 		"upgrade_invitation_expired": "Upgrade invitation has expired",
 		"circle_not_found": "Circle not found or you are not a member",
+		"cannot_remove_owner": "Cannot remove the circle owner. The person who created the circle cannot be removed.",
 		"invalid_keep_type": "Valid keep type required. Options: note, media, milestone",
 		"keep_not_found": "Keep not found",
 		"access_denied": "Access denied",

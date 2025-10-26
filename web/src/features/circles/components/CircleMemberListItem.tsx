@@ -35,7 +35,10 @@ export function CircleMemberListItem({
 	const joinedAt = describeTimestamp(member.created_at, language);
 	const isCurrentUser = currentUserId === member.user.id;
 	const isRemoving = remove.targetId === member.membership_id;
-	const canRemove = canRemoveMembers && !isCurrentUser;
+	const isOwner = member.is_owner;
+
+	// Owner cannot be removed (by anyone, including themselves)
+	const canRemove = !isOwner && (canRemoveMembers && !isCurrentUser);
 
 	return (
 		<li className="border border-border rounded-md px-4 py-3 flex flex-col gap-3 transition-colors bg-card/60">
@@ -49,7 +52,12 @@ export function CircleMemberListItem({
 							{member.user.email}
 						</span>
 					)}
-					{member.role === "admin" && (
+					{isOwner && (
+						<Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+							{t("pages.circles.members.role.owner")}
+						</Badge>
+					)}
+					{member.role === "admin" && !isOwner && (
 						<Badge variant="default">
 							{t("pages.circles.members.role.admin")}
 						</Badge>
@@ -73,6 +81,11 @@ export function CircleMemberListItem({
 								? t("pages.circles.members.removing")
 								: t("pages.circles.members.remove")}
 						</Button>
+					)}
+					{isOwner && (
+						<span className="text-xs text-muted-foreground italic">
+							{t("pages.circles.members.cannot_remove_owner")}
+						</span>
 					)}
 				</div>
 			</div>

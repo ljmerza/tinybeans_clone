@@ -28,11 +28,7 @@ class CircleViewEdgeCaseTests(TestCase):
             role=UserRole.CIRCLE_MEMBER
         )
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.admin)
-        CircleMembership.objects.create(
-            user=self.admin,
-            circle=self.circle,
-            role=UserRole.CIRCLE_ADMIN
-        )
+        # Membership for admin is auto-created by the post_save signal on Circle
 
     def test_circle_creation_with_extremely_long_name(self):
         """Test creating circle with very long name."""

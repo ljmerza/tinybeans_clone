@@ -59,6 +59,7 @@ export interface CircleMembershipSummary {
 	membership_id: number;
 	circle: CircleSummary;
 	role: string;
+	is_owner: boolean;
 	created_at: string;
 }
 
@@ -66,6 +67,7 @@ export interface CircleMemberSummary {
 	membership_id: number;
 	user: CircleUserSummary;
 	role: string;
+	is_owner: boolean;
 	created_at: string;
 }
 

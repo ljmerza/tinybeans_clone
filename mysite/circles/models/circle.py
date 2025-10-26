@@ -30,6 +30,35 @@ class Circle(models.Model):
             self.slug = generate_unique_slug(self.name, Circle.objects)
         super().save(*args, **kwargs)
 
+    def get_owner_membership(self):
+        """Get the owner's membership record.
+
+        Returns:
+            CircleMembership or None if owner hasn't joined yet
+        """
+        from .membership import CircleMembership
+        return self.memberships.filter(is_owner=True).first()
+
+    def is_owner(self, user) -> bool:
+        """Check if the given user is the circle owner.
+
+        Args:
+            user: User instance or user ID
+
+        Returns:
+            True if user is the owner, False otherwise
+        """
+        user_id = user.id if hasattr(user, 'id') else user
+        return self.created_by_id == user_id
+
+    def get_owner_user(self):
+        """Get the user who owns this circle.
+
+        Returns:
+            User instance
+        """
+        return self.created_by
+
     def __str__(self) -> str:
         return self.name
 

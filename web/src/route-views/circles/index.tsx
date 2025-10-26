@@ -8,6 +8,7 @@ import {
 	EmptyState,
 	Layout,
 } from "@/components";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
 import {
@@ -85,10 +86,18 @@ export function CirclesIndexRouteView() {
 					<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 						{memberships.map((membership) => {
 							const isAdmin = membership.role === "admin";
+							const isOwner = membership.is_owner;
 							return (
 								<Card key={membership.membership_id}>
 									<CardHeader>
-										<CardTitle>{membership.circle.name}</CardTitle>
+										<div className="flex items-center gap-2">
+											<CardTitle>{membership.circle.name}</CardTitle>
+											{isOwner && (
+												<Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+													{t("pages.circles.members.role.owner")}
+												</Badge>
+											)}
+										</div>
 										<CardDescription>
 											{t("pages.circles.index.member_count", {
 												count: membership.circle.member_count,
@@ -112,7 +121,7 @@ export function CirclesIndexRouteView() {
 													{t("pages.circles.index.manage")}
 												</Link>
 											</Button>
-										) : (
+										) : !isOwner ? (
 											<Button
 												variant="outline"
 												size="sm"
@@ -128,6 +137,10 @@ export function CirclesIndexRouteView() {
 											>
 												{t("pages.circles.index.leave")}
 											</Button>
+										) : (
+											<span className="text-xs text-muted-foreground italic">
+												{t("pages.circles.members.cannot_remove_owner")}
+											</span>
 										)}
 									</CardContent>
 								</Card>

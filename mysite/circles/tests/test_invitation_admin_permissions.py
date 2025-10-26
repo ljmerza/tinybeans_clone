@@ -26,7 +26,7 @@ class InvitationAdminPermissionTests(TestCase):
         self.admin.save()
 
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.admin)
-        CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
 
         self.member = User.objects.create_user(
             email='member@example.com',

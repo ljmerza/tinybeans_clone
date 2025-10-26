@@ -18,19 +18,21 @@ from ..models import (
 class CircleMembershipSerializer(serializers.ModelSerializer):
     membership_id = serializers.IntegerField(source='id', read_only=True)
     circle = CircleSerializer()
+    is_owner = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = CircleMembership
-        fields = ['membership_id', 'circle', 'role', 'created_at']
+        fields = ['membership_id', 'circle', 'role', 'is_owner', 'created_at']
 
 
 class CircleMemberSerializer(serializers.ModelSerializer):
     membership_id = serializers.IntegerField(source='id', read_only=True)
     user = UserSerializer()
+    is_owner = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = CircleMembership
-        fields = ['membership_id', 'user', 'role', 'created_at']
+        fields = ['membership_id', 'user', 'role', 'is_owner', 'created_at']
 
 
 class CircleCreateSerializer(serializers.ModelSerializer):
@@ -48,7 +50,7 @@ class CircleCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['user']
         circle = Circle.objects.create(created_by=user, **validated_data)
-        CircleMembership.objects.create(user=user, circle=circle, role=UserRole.CIRCLE_ADMIN)
+        # Owner membership is auto-created by the post_save signal on Circle
         return circle
 
 

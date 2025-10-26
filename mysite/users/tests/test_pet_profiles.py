@@ -17,7 +17,7 @@ class PetProfileModelTests(TestCase):
             password='password123'
         )
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.user)
-        CircleMembership.objects.create(user=self.user, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for user is auto-created by the post_save signal on Circle
 
     def test_pet_creation(self):
         """Test creating a pet profile."""
@@ -83,7 +83,7 @@ class PetProfileViewTests(TestCase):
         
         # Create circle
         self.circle = Circle.objects.create(name='Pet Circle', created_by=self.admin)
-        CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
+        # Membership for admin is auto-created by the post_save signal on Circle
         CircleMembership.objects.create(user=self.member, circle=self.circle, role=UserRole.CIRCLE_MEMBER)
 
     def test_list_pets_as_member(self):

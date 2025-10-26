@@ -18,7 +18,7 @@ class CircleSerializerTests(TestCase):
         self.assertEqual(data['name'], 'Test Family')
         self.assertEqual(data['slug'], 'test-family')
         self.assertIn('member_count', data)
-        self.assertEqual(data['member_count'], 0)  # No members added yet
+        self.assertEqual(data['member_count'], 1)  # Owner membership is auto-created
 
 
 class CircleCreateSerializerTests(TestCase):

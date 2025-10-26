@@ -34,15 +34,27 @@ class CircleMembership(models.Model):
         on_delete=models.SET_NULL,
         related_name='memberships_invited',
     )
+    is_owner = models.BooleanField(
+        default=False,
+        help_text="True if this user is the circle owner (creator)",
+    )
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         app_label = 'users'
         unique_together = ('user', 'circle')
         ordering = ['circle__name', 'user__email']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['circle'],
+                condition=models.Q(is_owner=True),
+                name='one_owner_per_circle'
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.user} in {self.circle} ({self.role})"
+        owner_str = " [OWNER]" if self.is_owner else ""
+        return f"{self.user} in {self.circle} ({self.role}){owner_str}"
 
 
 __all__ = ['CircleMembership']
