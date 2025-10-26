@@ -1,29 +1,20 @@
-"""Test role-based invitation functionality."""
-from datetime import timedelta
+"""Test admin permission and CRUD operations for circle invitations."""
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from mysite.circles.models import (
-    Circle,
-    CircleMembership,
-    CircleInvitation,
-    CircleInvitationStatus,
-)
-from mysite.users.models import User, UserRole
-from mysite.circles.serializers import CircleInvitationCreateSerializer
-from mysite.auth.token_utils import store_token, TOKEN_TTL_SECONDS
+from mysite.auth.token_utils import TOKEN_TTL_SECONDS
+from mysite.circles.models import Circle, CircleMembership, CircleInvitation, CircleInvitationStatus
 from mysite.emails.templates import CIRCLE_INVITATION_TEMPLATE
-from mysite.circles.tasks import send_circle_invitation_reminders
+from mysite.users.models import User, UserRole
 
 
-class InvitationRoleTests(TestCase):
-    """Test role assignment in circle invitations."""
-    
+class InvitationAdminPermissionTests(TestCase):
+    """Test admin-only invitation management operations."""
+
     def setUp(self):
         """Set up test data."""
         self.client = APIClient()
@@ -33,80 +24,23 @@ class InvitationRoleTests(TestCase):
         )
         self.admin.email_verified = True
         self.admin.save()
-        
+
         self.circle = Circle.objects.create(name='Test Circle', created_by=self.admin)
         CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
-        
+
         self.member = User.objects.create_user(
             email='member@example.com',
             password='password123'
         )
         CircleMembership.objects.create(user=self.member, circle=self.circle, role=UserRole.CIRCLE_MEMBER)
 
-    def test_serializer_role_validation(self):
-        """Test role validation at serializer level."""
-        # Valid admin role
-        serializer = CircleInvitationCreateSerializer(
-            data={'email': 'test@example.com', 'role': 'admin'},
-            context={'circle': self.circle}
-        )
-        self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['role'], UserRole.CIRCLE_ADMIN)
-        
-        # Valid member role
-        serializer = CircleInvitationCreateSerializer(
-            data={'email': 'test2@example.com', 'role': 'member'},
-            context={'circle': self.circle}
-        )
-        self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['role'], UserRole.CIRCLE_MEMBER)
-        
-        # Default role when not specified
-        serializer = CircleInvitationCreateSerializer(
-            data={'email': 'test3@example.com'},
-            context={'circle': self.circle}
-        )
-        self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['role'], UserRole.CIRCLE_MEMBER)
-        
-        # Invalid role
-        serializer = CircleInvitationCreateSerializer(
-            data={'email': 'test4@example.com', 'role': 'invalid'},
-            context={'circle': self.circle}
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('role', serializer.errors)
-
-    def test_serializer_existing_user_lookup(self):
-        """Serializer should resolve existing users by email."""
-        existing = User.objects.create_user(
-            email='lookup@example.com',
-            password='password123'
-        )
-        serializer = CircleInvitationCreateSerializer(
-            data={'email': 'lookup@example.com'},
-            context={'circle': self.circle}
-        )
-        self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['email'], 'lookup@example.com')
-        self.assertEqual(serializer.validated_data['invited_user'], existing)
-
-    def test_serializer_requires_email(self):
-        """Serializer requires an email address."""
-        serializer = CircleInvitationCreateSerializer(
-            data={},
-            context={'circle': self.circle}
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('email', serializer.errors)
-
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
     @patch('mysite.circles.services.invitation_service.store_token')
-    def test_api_role_assignment(self, mock_store_token, mock_delay):
-        """Test role assignment via API."""
+    def test_admin_can_create_invitations_with_roles(self, mock_store_token, mock_delay):
+        """Admins can create invitations and assign roles."""
         mock_store_token.return_value = 'fake-token'
         self.client.force_authenticate(user=self.admin)
-        
+
         # Test admin role assignment
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
@@ -119,7 +53,7 @@ class InvitationRoleTests(TestCase):
         self.assertIsNone(payload['invited_user'])
         invitation = CircleInvitation.objects.get(email='newadmin@example.com')
         self.assertEqual(invitation.role, UserRole.CIRCLE_ADMIN)
-        
+
         # Test member role assignment
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
@@ -132,7 +66,7 @@ class InvitationRoleTests(TestCase):
         self.assertIsNone(payload['invited_user'])
         invitation = CircleInvitation.objects.get(email='newmember@example.com')
         self.assertEqual(invitation.role, UserRole.CIRCLE_MEMBER)
-        
+
         # Test default role
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
@@ -148,7 +82,7 @@ class InvitationRoleTests(TestCase):
 
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
     @patch('mysite.circles.services.invitation_service.store_token')
-    def test_api_invite_existing_user_by_email(self, mock_store_token, mock_delay):
+    def test_admin_can_invite_existing_users(self, mock_store_token, mock_delay):
         """Admins can invite existing users by email without auto-joining."""
         mock_store_token.return_value = 'fake-token'
         self.client.force_authenticate(user=self.admin)
@@ -173,7 +107,7 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(invitation.status, CircleInvitationStatus.PENDING)
         self.assertFalse(CircleMembership.objects.filter(circle=self.circle, user=existing_user).exists())
 
-    def test_circle_admin_can_list_invitations(self):
+    def test_admin_can_list_invitations(self):
         """Admins should be able to list invitations for their circle."""
         CircleInvitation.objects.create(
             circle=self.circle,
@@ -193,7 +127,7 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(len(invitations), 1)
         self.assertEqual(invitations[0]['email'], 'pending@example.com')
 
-    def test_non_admin_cannot_list_invitations(self):
+    def test_member_cannot_list_invitations(self):
         """Members should not be able to view the full invitation roster."""
         self.client.force_authenticate(user=self.member)
         response = self.client.get(
@@ -202,7 +136,7 @@ class InvitationRoleTests(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_circle_admin_can_cancel_invitation(self):
+    def test_admin_can_cancel_invitation(self):
         """Admins can cancel (delete) pending invitations."""
         invitation = CircleInvitation.objects.create(
             circle=self.circle,
@@ -246,7 +180,7 @@ class InvitationRoleTests(TestCase):
 
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
     @patch('mysite.circles.services.invitation_service.store_token')
-    def test_circle_admin_can_resend_invitation(self, mock_store_token, mock_delay):
+    def test_admin_can_resend_invitation(self, mock_store_token, mock_delay):
         """Admins can resend pending invitations."""
         mock_store_token.return_value = 'fake-token'
         invitation = CircleInvitation.objects.create(
@@ -300,7 +234,7 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
-    def test_resend_requires_pending_invitation(self, mock_delay):
+    def test_resend_requires_pending_status(self, mock_delay):
         """Resend is only allowed for pending invitations."""
         invitation = CircleInvitation.objects.create(
             circle=self.circle,
@@ -321,7 +255,7 @@ class InvitationRoleTests(TestCase):
 
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
     @patch('mysite.circles.services.invitation_service.store_token')
-    def test_api_requires_email(self, mock_store_token, mock_delay):
+    def test_create_requires_email(self, mock_store_token, mock_delay):
         """API should enforce email validation."""
         mock_store_token.return_value = 'fake-token'
         self.client.force_authenticate(user=self.admin)
@@ -359,9 +293,8 @@ class InvitationRoleTests(TestCase):
         )
         self.assertEqual(second.status_code, status.HTTP_429_TOO_MANY_REQUESTS, second.json())
 
-    def test_permission_and_validation_errors(self):
-        """Test permission and validation error cases."""
-        # Non-admin cannot create invitations
+    def test_member_cannot_create_invitations(self):
+        """Non-admin cannot create invitations."""
         self.client.force_authenticate(user=self.member)
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
@@ -369,8 +302,9 @@ class InvitationRoleTests(TestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        
-        # Admin cannot send invalid role
+
+    def test_invalid_role_rejected(self):
+        """Admin cannot send invalid role."""
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
@@ -385,124 +319,3 @@ class InvitationRoleTests(TestCase):
             if message.get('context')
         ]
         self.assertIn('role', fields)
-
-    @patch('mysite.circles.services.invitation_service.send_email_task.delay')
-    def test_new_user_onboarding_flow(self, mock_delay):
-        """End-to-end invite flow for a new user completing onboarding."""
-        invitation = CircleInvitation.objects.create(
-            circle=self.circle,
-            email='invitee@example.com',
-            invited_by=self.admin,
-            role=UserRole.CIRCLE_MEMBER,
-        )
-        CircleInvitation.objects.filter(id=invitation.id).update(created_at=timezone.now() - timedelta(minutes=120))
-        invitation.refresh_from_db()
-
-        invite_token = store_token(
-            'circle-invite',
-            {
-                'invitation_id': str(invitation.id),
-                'circle_id': self.circle.id,
-                'email': invitation.email,
-                'role': invitation.role,
-            },
-        )
-
-        response = self.client.post(
-            reverse('circle-invitation-accept'),
-            {'token': invite_token},
-            format='json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
-        onboarding_token = response.json()['data']['onboarding_token']
-
-        invitee = User.objects.create_user(
-            email='invitee@example.com',
-            password='InviteePass123',
-        )
-        self.client.force_authenticate(user=invitee)
-
-        finalize = self.client.post(
-            reverse('circle-invitation-finalize'),
-            {'onboarding_token': onboarding_token},
-            format='json'
-        )
-        self.assertEqual(finalize.status_code, status.HTTP_201_CREATED, finalize.json())
-
-        invitation.refresh_from_db()
-        self.assertEqual(invitation.status, CircleInvitationStatus.ACCEPTED)
-        self.assertEqual(invitation.invited_user, invitee)
-        membership_exists = CircleMembership.objects.filter(circle=self.circle, user=invitee).exists()
-        self.assertTrue(membership_exists)
-
-    @patch('mysite.circles.services.invitation_service.send_email_task.delay')
-    def test_finalize_rejects_mismatched_user(self, mock_delay):
-        """Finalize should fail when authenticated user email does not match invitation."""
-        invitation = CircleInvitation.objects.create(
-            circle=self.circle,
-            email='invitee@example.com',
-            invited_by=self.admin,
-            role=UserRole.CIRCLE_MEMBER,
-        )
-        CircleInvitation.objects.filter(id=invitation.id).update(created_at=timezone.now() - timedelta(minutes=120))
-        invitation.refresh_from_db()
-
-        invite_token = store_token(
-            'circle-invite',
-            {
-                'invitation_id': str(invitation.id),
-                'circle_id': self.circle.id,
-                'email': invitation.email,
-                'role': invitation.role,
-            },
-        )
-
-        response = self.client.post(
-            reverse('circle-invitation-accept'),
-            {'token': invite_token},
-            format='json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        onboarding_token = response.json()['data']['onboarding_token']
-
-        other_user = User.objects.create_user(
-            email='other@example.com',
-            password='OtherPass123',
-        )
-        self.client.force_authenticate(user=other_user)
-
-        finalize = self.client.post(
-            reverse('circle-invitation-finalize'),
-            {'onboarding_token': onboarding_token},
-            format='json'
-        )
-        self.assertEqual(finalize.status_code, status.HTTP_403_FORBIDDEN)
-        invitation.refresh_from_db()
-        self.assertEqual(invitation.status, CircleInvitationStatus.PENDING)
-
-    @override_settings(
-        CIRCLE_INVITE_REMINDER_DELAY_MINUTES=60,
-        CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES=1440,
-        CIRCLE_INVITE_REMINDER_BATCH_SIZE=50,
-    )
-    @patch('mysite.circles.tasks.send_email_task.delay')
-    def test_reminder_task_sends_email(self, mock_delay):
-        invitation = CircleInvitation.objects.create(
-            circle=self.circle,
-            email='reminder@example.com',
-            invited_by=self.admin,
-            role=UserRole.CIRCLE_MEMBER,
-        )
-        CircleInvitation.objects.filter(id=invitation.id).update(created_at=timezone.now() - timedelta(minutes=180))
-        invitation.refresh_from_db()
-
-        sent = send_circle_invitation_reminders()
-        invitation.refresh_from_db()
-        self.assertEqual(sent, 1)
-        mock_delay.assert_called_once()
-        self.assertIsNotNone(invitation.reminder_sent_at)
-
-        mock_delay.reset_mock()
-        sent_again = send_circle_invitation_reminders()
-        self.assertEqual(sent_again, 0)
-        mock_delay.assert_not_called()
