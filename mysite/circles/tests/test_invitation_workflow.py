@@ -79,6 +79,10 @@ class InvitationWorkflowTests(TestCase):
         membership_exists = CircleMembership.objects.filter(circle=self.circle, user=invitee).exists()
         self.assertTrue(membership_exists)
 
+        # Verify email was auto-verified during invite acceptance
+        invitee.refresh_from_db()
+        self.assertTrue(invitee.email_verified, "Email should be auto-verified when accepting invitation")
+
     @patch('mysite.circles.services.invitation_service.send_email_task.delay')
     def test_finalize_rejects_mismatched_user(self, mock_delay):
         """Finalize should fail when authenticated user email does not match invitation."""

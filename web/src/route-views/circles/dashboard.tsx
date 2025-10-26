@@ -1,6 +1,7 @@
 import { EmptyState, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
-import { CircleInvitationManager, useCircleMembers } from "@/features/circles";
+import { useAuthSession } from "@/features/auth";
+import { CircleInvitationManager, CircleMemberList, useCircleMembers } from "@/features/circles";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,7 @@ interface CircleDashboardProps {
 
 export function CircleDashboard({ circleId }: CircleDashboardProps) {
 	const { t } = useTranslation();
+	const { user } = useAuthSession();
 	const { data, isLoading, error, refetch, isFetching } =
 		useCircleMembers(circleId);
 
@@ -19,6 +21,11 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 		() => members.filter((member) => member.role === "admin").length,
 		[members],
 	);
+	const currentUserMembership = useMemo(
+		() => members.find((member) => member.user.id === user?.id),
+		[members, user?.id],
+	);
+	const isAdmin = currentUserMembership?.role === "admin";
 	const circle = data?.circle;
 
 	if (isLoading && !data) {
@@ -89,12 +96,7 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 
 				<CircleInvitationManager circleId={circleId} />
 
-				{members.length === 0 ? (
-					<EmptyState
-						title={t("pages.circles.dashboard.no_members_title")}
-						description={t("pages.circles.dashboard.no_members_description")}
-					/>
-				) : null}
+				<CircleMemberList circleId={circleId} isAdmin={isAdmin} />
 			</div>
 		</Layout>
 	);

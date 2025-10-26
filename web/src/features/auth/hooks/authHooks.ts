@@ -126,7 +126,21 @@ export function useLogin(options?: { redirect?: string }) {
 			}
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			if (!payload.email_verified) {
+			// Check for invitation redirect FIRST, before checking email verification
+			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
+			const invitationRedirect = parseInvitationRedirect(redirectTarget);
+			const finalizeResult = await finalizeCircleInvitation(
+				showAsToast,
+				invitationRedirect?.onboardingToken,
+			);
+
+			// Refresh session after finalization (email may have been auto-verified)
+			if (finalizeResult.status === "success") {
+				await qc.invalidateQueries({ queryKey: authKeys.session() });
+			}
+
+			// Only redirect to verify email if NO invitation (invitations auto-verify)
+			if (!payload.email_verified && !invitationRedirect) {
 				navigate({ to: "/verify-email-required" });
 				return;
 			}
@@ -141,13 +155,6 @@ export function useLogin(options?: { redirect?: string }) {
 				navigate({ to: "/circles/onboarding" });
 				return;
 			}
-
-			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
-			const invitationRedirect = parseInvitationRedirect(redirectTarget);
-			const finalizeResult = await finalizeCircleInvitation(
-				showAsToast,
-				invitationRedirect?.onboardingToken,
-			);
 			if (invitationRedirect) {
 				if (finalizeResult.status === "success") {
 					const finalizeData =
@@ -230,17 +237,24 @@ export function useSignup(options?: { redirect?: string }) {
 
 			qc.invalidateQueries({ queryKey: authKeys.session() });
 
-			if (payload && !payload.email_verified) {
-				navigate({ to: "/verify-email-required" });
-				return;
-			}
-
+			// Check for invitation redirect FIRST, before checking email verification
 			const redirectTarget = options?.redirect ?? consumeInviteRedirect();
 			const invitationRedirect = parseInvitationRedirect(redirectTarget);
 			const finalizeResult = await finalizeCircleInvitation(
 				showAsToast,
 				invitationRedirect?.onboardingToken,
 			);
+
+			// Refresh session after finalization (email may have been auto-verified)
+			if (finalizeResult.status === "success") {
+				await qc.invalidateQueries({ queryKey: authKeys.session() });
+			}
+
+			// Only redirect to verify email if NO invitation (invitations auto-verify)
+			if (payload && !payload.email_verified && !invitationRedirect) {
+				navigate({ to: "/verify-email-required" });
+				return;
+			}
 
 			const needsOnboarding = Boolean(payload?.needs_circle_onboarding);
 			if (needsOnboarding) {

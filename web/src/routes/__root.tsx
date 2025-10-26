@@ -1,5 +1,6 @@
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAuthSession } from "@/features/auth";
+import { loadInvitation } from "@/features/circles/utils/invitationStorage";
 import { Outlet, createRootRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
@@ -23,9 +24,16 @@ function EmailVerificationRedirect() {
 			"/verify-email-required",
 			"/logout",
 			"/auth/google-callback",
+			"/invitations/accept", // Allow invite acceptance for unverified users (email auto-verified on finalize)
 		];
 
 		if (!session.user?.email_verified) {
+			// Don't redirect if there's a pending invitation (email will be auto-verified during finalization)
+			const pendingInvitation = loadInvitation();
+			if (pendingInvitation) {
+				return;
+			}
+
 			const isAllowed = allowedPaths.some((path) => pathname.startsWith(path));
 			if (!isAllowed) {
 				void navigate({ to: "/verify-email-required", replace: true });

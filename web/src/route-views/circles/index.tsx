@@ -144,8 +144,8 @@ export function CirclesIndexRouteView() {
 				})}
 				confirmLabel={t("pages.circles.index.leave_confirm_cta")}
 				cancelLabel={t("common.cancel")}
-				confirmVariant="destructive"
-				loading={removeSelfMutation.isPending}
+				variant="destructive"
+				isLoading={removeSelfMutation.isPending}
 				onOpenChange={(open) => {
 					if (!open && !removeSelfMutation.isPending) {
 						setRemoveTarget(null);
@@ -158,7 +158,6 @@ export function CirclesIndexRouteView() {
 							circleId: removeTarget.circleId,
 						});
 						setRemoveTarget(null);
-						void refetch();
 					} catch (error) {
 						console.error("Failed to leave circle", error);
 					}

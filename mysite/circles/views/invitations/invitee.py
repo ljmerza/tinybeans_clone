@@ -227,9 +227,13 @@ class CircleInvitationAcceptView(APIView):
 
 
 class CircleInvitationFinalizeView(APIView):
-    """Finalize circle invitation onboarding (authenticated)."""
+    """Finalize circle invitation onboarding (authenticated).
 
-    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
+    Note: Does not require IsEmailVerified because the onboarding token proves
+    email ownership (user clicked link from inbox). Email is auto-verified during finalization.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CircleInvitationFinalizeSerializer
 
     @extend_schema(
@@ -283,6 +287,11 @@ class CircleInvitationFinalizeView(APIView):
 
         # Create membership and update invitation
         with transaction.atomic():
+            # Auto-verify email since they proved ownership by clicking invite link
+            if not user.email_verified:
+                user.email_verified = True
+                user.save(update_fields=['email_verified'])
+
             membership, created = CircleMembership.objects.get_or_create(
                 user=user,
                 circle=invitation.circle,

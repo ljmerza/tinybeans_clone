@@ -515,8 +515,8 @@
 					"admin": "Circle admin"
 				},
 				"list": {
-					"title": "Circle members & invitations",
-					"description": "Manage everyone in the circle, including pending invitations and active members.",
+					"title": "Pending invitations",
+					"description": "Manage pending invitations to join this circle.",
 					"loading": "Refreshing invitations…",
 					"empty": "No invitations yet. Send one to get started.",
 					"empty_title": "No invitations yet",
@@ -555,6 +555,28 @@
 				"identifier_max": "Email must be 255 characters or fewer",
 				"email_invalid": "Enter a valid email address"
 			}
+		},
+		"members": {
+			"list": {
+				"title": "Circle members",
+				"description": "Manage active members of this circle.",
+				"loading": "Loading members…",
+				"empty_title": "No members yet",
+				"empty_description": "Invite people to join this circle.",
+				"error": "Something went wrong ({{status}}). Please try again.",
+				"retry": "Retry",
+				"remove_title": "Remove {{name}} from this circle?",
+				"remove_description": "This will revoke their access to shared posts. They will need a new invitation to rejoin.",
+				"remove_confirm": "Yes, remove member"
+			},
+			"role": {
+				"admin": "Admin",
+				"member": "Member"
+			},
+			"you": "You",
+			"remove": "Remove",
+			"removing": "Removing…",
+			"joined_at": "Joined {{joinedAt}}"
 		}
 	}
 	},
