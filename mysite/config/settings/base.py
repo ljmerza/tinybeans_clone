@@ -8,16 +8,14 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
+
+Core Django settings are defined here. Thematic settings (auth, storage, celery, etc.)
+are imported from separate modules at the end of this file.
 """
 
-import base64
-import binascii
-import hashlib
 import os
-import warnings
 from pathlib import Path
 
-from kombu import Queue
 from django.core.exceptions import ImproperlyConfigured
 
 from mysite.project_logging import get_logging_config
@@ -42,24 +40,6 @@ def _env_int(name: str, default: int) -> int:
     if value is None or value == '':
         return default
     return int(value)
-
-
-def _validate_fernet_key(candidate: str):
-    clean = (candidate or '').strip()
-    if not clean:
-        return None
-
-    padded = clean + '=' * (-len(clean) % 4)
-    try:
-        decoded = base64.urlsafe_b64decode(padded.encode('utf-8'))
-    except (binascii.Error, ValueError):
-        return None
-
-    if len(decoded) != 32:
-        return None
-
-    # Return a normalized base64 string to guarantee padding is present.
-    return base64.urlsafe_b64encode(decoded).decode('utf-8')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -240,328 +220,135 @@ LOGGING = get_logging_config(
     service_name=os.environ.get('SERVICE_NAME', 'mysite-backend'),
 )
 
+# Import settings from modular configuration files
+# These imports bring in thematic settings for better organization and maintainability
 
-AUTH_USER_MODEL = 'users.User'
+# Cache and Redis Configuration
+from .cache import *  # noqa
 
-DRF_USER_THROTTLE_RATE = os.environ.get('DRF_USER_THROTTLE_RATE', '1000/hour')
-DRF_ANON_THROTTLE_RATE = os.environ.get('DRF_ANON_THROTTLE_RATE', '100/hour')
+# Email and SMS Configuration
+from .email import *  # noqa
 
+# Storage and Media Configuration
+from .storage import *  # noqa
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-        'mysite.auth.permissions.IsEmailVerified',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
-    'DEFAULT_THROTTLE_CLASSES': (
-        'rest_framework.throttling.UserRateThrottle',
-        'rest_framework.throttling.AnonRateThrottle',
-    ),
-    'DEFAULT_THROTTLE_RATES': {
-        'user': DRF_USER_THROTTLE_RATE,
-        'anon': DRF_ANON_THROTTLE_RATE,
-    },
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'EXCEPTION_HANDLER': 'mysite.exception_handlers.custom_exception_handler',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': int(os.environ.get('DRF_PAGE_SIZE', 50)),
-}
-
-if DEBUG:
-    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append(
-        'rest_framework.renderers.BrowsableAPIRenderer'
-    )
-
-
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-}
-
-
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-    },
-}
-
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
-
-EMAIL_BACKEND = os.environ.get(
-    'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
-)
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 25))
-EMAIL_USE_TLS = _env_flag('EMAIL_USE_TLS', default=False)
-EMAIL_USE_SSL = _env_flag('EMAIL_USE_SSL', default=False)
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
-
-ACCOUNT_FRONTEND_BASE_URL = os.environ.get(
-    'ACCOUNT_FRONTEND_BASE_URL',
-    os.environ.get('FRONTEND_BASE_URL', 'http://localhost:3000'),
+# Authentication and Authorization Configuration - import settings and helper functions
+from .auth import (  # noqa
+    AUTH_USER_MODEL,
+    SIMPLE_JWT,
+    TWOFA_ENABLED,
+    TWOFA_CODE_LENGTH,
+    TWOFA_CODE_EXPIRY_MINUTES,
+    TWOFA_MAX_ATTEMPTS,
+    TWOFA_RATE_LIMIT_WINDOW,
+    TWOFA_RATE_LIMIT_MAX,
+    TWOFA_RECOVERY_CODE_COUNT,
+    TWOFA_ISSUER_NAME,
+    TWOFA_LOCKOUT_ENABLED,
+    TWOFA_LOCKOUT_DURATION_MINUTES,
+    TWOFA_LOCKOUT_THRESHOLD,
+    TWOFA_TRUSTED_DEVICE_ENABLED,
+    TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS,
+    TWOFA_TRUSTED_DEVICE_MAX_COUNT,
+    TWOFA_TRUSTED_DEVICE_ROTATION_DAYS,
+    GOOGLE_OAUTH_CLIENT_ID,
+    GOOGLE_OAUTH_CLIENT_SECRET,
+    GOOGLE_OAUTH_REDIRECT_URI,
+    OAUTH_ALLOWED_REDIRECT_URIS,
+    OAUTH_STATE_EXPIRATION,
+    OAUTH_RATE_LIMIT_MAX_ATTEMPTS,
+    OAUTH_RATE_LIMIT_WINDOW,
+    GOOGLE_OAUTH_SCOPES,
+    PASSWORD_RESET_RATELIMIT,
+    PASSWORD_RESET_CONFIRM_RATELIMIT,
+    EMAIL_VERIFICATION_RESEND_RATELIMIT,
+    EMAIL_VERIFICATION_CONFIRM_RATELIMIT,
+    CIRCLE_INVITE_RATELIMIT,
+    CIRCLE_INVITE_RESEND_RATELIMIT,
+    CIRCLE_INVITE_CIRCLE_LIMIT,
+    CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES,
+    CIRCLE_INVITE_REMINDER_DELAY_MINUTES,
+    CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES,
+    CIRCLE_INVITE_REMINDER_BATCH_SIZE,
+    CIRCLE_INVITE_ONBOARDING_TTL_MINUTES,
+    EMAIL_VERIFICATION_TOKEN_TTL_HOURS,
+    EMAIL_VERIFICATION_TOKEN_TTL_SECONDS,
+    EMAIL_VERIFICATION_ENFORCED,
+    _get_twofa_encryption_key,
+    _get_ratelimit_enable,
 )
 
-MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY', '')
-MAILJET_API_SECRET = os.environ.get('MAILJET_API_SECRET', '')
-MAILJET_API_URL = os.environ.get('MAILJET_API_URL', 'https://api.mailjet.com/v3.1/send')
-MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL') or DEFAULT_FROM_EMAIL
-MAILJET_FROM_NAME = os.environ.get('MAILJET_FROM_NAME', 'Tinybeans Circles')
-MAILJET_USE_SANDBOX = _env_flag('MAILJET_USE_SANDBOX', default=False)
-MAILJET_ENABLED = bool(MAILJET_API_KEY and MAILJET_API_SECRET)
+# Django REST Framework Configuration
+from .drf import (  # noqa
+    DRF_USER_THROTTLE_RATE,
+    DRF_ANON_THROTTLE_RATE,
+    SPECTACULAR_SETTINGS,
+    _get_rest_framework_config,
+)
+REST_FRAMEWORK = _get_rest_framework_config(DEBUG)
 
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Circle Sharing API',
-    'DESCRIPTION': 'OpenAPI schema for circle management, invitations, and media sharing.',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
-}
+# Security Configuration (CORS, CSRF, SSL/HTTPS, Cookies)
+from .security import (  # noqa
+    SECURE_PROXY_SSL_HEADER,
+    USE_X_FORWARDED_HOST,
+    SECURE_REFERRER_POLICY,
+    SECURE_CONTENT_TYPE_NOSNIFF,
+    SECURE_CROSS_ORIGIN_OPENER_POLICY,
+    _get_cors_config,
+    _get_csrf_config,
+    _get_ssl_redirect,
+    _get_hsts_config,
+    _get_session_cookie_config,
+)
 
+# Apply DEBUG-dependent CORS settings
+_cors_config = _get_cors_config(DEBUG)
+CORS_ALLOWED_ORIGINS = _cors_config['CORS_ALLOWED_ORIGINS']
+CORS_ALLOW_CREDENTIALS = _cors_config.get('CORS_ALLOW_CREDENTIALS', False)
+if 'CORS_ALLOW_HEADERS' in _cors_config:
+    CORS_ALLOW_HEADERS = _cors_config['CORS_ALLOW_HEADERS']
 
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', REDIS_URL)
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', REDIS_URL)
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+# Apply DEBUG-dependent CSRF settings
+_csrf_config = _get_csrf_config(DEBUG)
+CSRF_TRUSTED_ORIGINS = _csrf_config['CSRF_TRUSTED_ORIGINS']
+CSRF_COOKIE_SECURE = _csrf_config['CSRF_COOKIE_SECURE']
+CSRF_COOKIE_HTTPONLY = _csrf_config['CSRF_COOKIE_HTTPONLY']
+CSRF_COOKIE_SAMESITE = _csrf_config['CSRF_COOKIE_SAMESITE']
+
+# Apply DEBUG-dependent SSL/HTTPS settings
+SECURE_SSL_REDIRECT = _get_ssl_redirect(DEBUG)
+_hsts_config = _get_hsts_config(DEBUG)
+SECURE_HSTS_SECONDS = _hsts_config['SECURE_HSTS_SECONDS']
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _hsts_config['SECURE_HSTS_INCLUDE_SUBDOMAINS']
+SECURE_HSTS_PRELOAD = _hsts_config['SECURE_HSTS_PRELOAD']
+
+# Apply DEBUG-dependent session cookie settings
+_session_cookie_config = _get_session_cookie_config(DEBUG)
+SESSION_COOKIE_SECURE = _session_cookie_config['SESSION_COOKIE_SECURE']
+SESSION_COOKIE_SAMESITE = _session_cookie_config['SESSION_COOKIE_SAMESITE']
+
+# Apply DEBUG-dependent auth settings
+TWOFA_ENCRYPTION_KEY = _get_twofa_encryption_key(DEBUG, SECRET_KEY)
+RATELIMIT_ENABLE = _get_ratelimit_enable(DEBUG)
+
+# Celery Configuration
+from .celery import (  # noqa
+    CELERY_ACCEPT_CONTENT,
+    CELERY_TASK_SERIALIZER,
+    CELERY_RESULT_SERIALIZER,
+    CELERY_TASK_DEFAULT_QUEUE,
+    CELERY_TASK_QUEUES,
+    CELERY_TASK_ROUTES,
+    CELERY_WORKER_SEND_TASK_EVENTS,
+    CELERY_TASK_TRACK_STARTED,
+    CELERY_TASK_ALWAYS_EAGER,
+    CELERY_TASK_EAGER_PROPAGATES,
+    CELERY_TASK_SOFT_TIME_LIMIT,
+    CELERY_TASK_TIME_LIMIT,
+    CELERY_BEAT_SCHEDULE,
+    _get_celery_broker_url,
+    _get_celery_result_backend,
+)
+CELERY_BROKER_URL = _get_celery_broker_url(REDIS_URL)
+CELERY_RESULT_BACKEND = _get_celery_result_backend(REDIS_URL)
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_DEFAULT_QUEUE = 'maintenance'
-CELERY_TASK_QUEUES = (
-    Queue('email'),
-    Queue('sms'),
-    Queue('media'),
-    Queue('maintenance'),
-)
-CELERY_TASK_ROUTES = {
-    'mysite.emails.tasks.send_email_task': {'queue': 'email'},
-    'mysite.messaging.tasks.send_sms_async': {'queue': 'sms'},
-    'mysite.messaging.tasks.send_2fa_sms': {'queue': 'sms'},
-    'mysite.keeps.tasks.process_media_upload': {'queue': 'media'},
-    'mysite.keeps.tasks.generate_image_sizes': {'queue': 'media'},
-    'mysite.keeps.tasks.cleanup_failed_uploads': {'queue': 'media'},
-    'mysite.keeps.tasks.validate_media_file': {'queue': 'media'},
-    'mysite.auth.tasks.cleanup_expired_trusted_devices': {'queue': 'maintenance'},
-    'mysite.auth.tasks.cleanup_expired_oauth_states': {'queue': 'maintenance'},
-    'mysite.auth.tasks.cleanup_expired_magic_login_tokens': {'queue': 'maintenance'},
-    'mysite.celery.debug_task': {'queue': 'maintenance'},
-}
-CELERY_WORKER_SEND_TASK_EVENTS = True
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_ALWAYS_EAGER = _env_flag('CELERY_TASK_ALWAYS_EAGER')
-CELERY_TASK_EAGER_PROPAGATES = _env_flag('CELERY_TASK_EAGER_PROPAGATES', default=True)
-CELERY_TASK_SOFT_TIME_LIMIT = int(os.environ.get('CELERY_TASK_SOFT_TIME_LIMIT', 30))
-CELERY_TASK_TIME_LIMIT = int(os.environ.get('CELERY_TASK_TIME_LIMIT', 40))
-
-# Celery Beat Schedule (Periodic Tasks)
-from celery.schedules import crontab
-CELERY_BEAT_SCHEDULE = {
-    'cleanup-expired-oauth-states': {
-        'task': 'mysite.auth.tasks.cleanup_expired_oauth_states',
-        'schedule': crontab(minute='*/15'),  # Every 15 minutes
-    },
-    'cleanup-expired-trusted-devices': {
-        'task': 'mysite.auth.tasks.cleanup_expired_trusted_devices',
-        'schedule': crontab(hour=2, minute=0),  # Daily at 2 AM
-    },
-    'cleanup-expired-magic-login-tokens': {
-        'task': 'mysite.auth.tasks.cleanup_expired_magic_login_tokens',
-        'schedule': crontab(hour=3, minute=0),  # Daily at 3 AM
-    },
-    'send-circle-invitation-reminders': {
-        'task': 'mysite.circles.tasks.send_circle_invitation_reminders',
-        'schedule': crontab(minute='*/30'),  # Every 30 minutes
-    },
-}
-
-# Media Storage Configuration - MinIO Only
-MEDIA_STORAGE_BACKEND = 'minio'
-
-# MinIO Settings (S3-compatible object storage)
-MINIO_ENDPOINT = os.environ.get('MINIO_ENDPOINT', 'http://minio:9020')
-MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY', 'minioadmin')
-MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY', 'minioadmin')
-MINIO_BUCKET_NAME = os.environ.get('MINIO_BUCKET_NAME', 'tinybeans-media')
-MINIO_USE_SSL = _env_flag('MINIO_USE_SSL', default=False)
-
-# Media Upload Settings
-MAX_UPLOAD_SIZE = int(os.environ.get('MAX_UPLOAD_SIZE', 100 * 1024 * 1024))  # 100MB
-ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo']
-
-# Image Processing Settings
-IMAGE_SIZES = {
-    'thumbnail': (150, 150),
-    'gallery': (800, 600),
-    'full': None,  # Original size
-}
-
-# CORS configuration sourced from environment for all environments.
-_DEV_FRONTEND_ORIGINS = [
-    "http://localhost:3053",
-    "http://127.0.0.1:3053",
-    "http://localhost:3053",
-]
-_default_cors_origins = _DEV_FRONTEND_ORIGINS if DEBUG else []
-CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS', default=_default_cors_origins)
-if CORS_ALLOWED_ORIGINS:
-    CORS_ALLOW_CREDENTIALS = _env_flag('CORS_ALLOW_CREDENTIALS', default=True)
-    CORS_ALLOW_HEADERS = [
-        'accept',
-        'accept-encoding',
-        'authorization',
-        'content-type',
-        'dnt',
-        'origin',
-        'user-agent',
-        'x-csrftoken',
-        'x-requested-with',
-    ]
-else:
-    CORS_ALLOW_CREDENTIALS = False
-
-# 2FA Settings
-TWOFA_ENABLED = _env_flag('TWOFA_ENABLED', default=True)
-TWOFA_CODE_LENGTH = 6
-TWOFA_CODE_EXPIRY_MINUTES = 10
-TWOFA_MAX_ATTEMPTS = 5
-TWOFA_RATE_LIMIT_WINDOW = int(os.environ.get('TWOFA_RATE_LIMIT_WINDOW', 900))
-TWOFA_RATE_LIMIT_MAX = int(os.environ.get('TWOFA_RATE_LIMIT_MAX', 3))
-TWOFA_RECOVERY_CODE_COUNT = 10
-TWOFA_ISSUER_NAME = os.environ.get('TWOFA_ISSUER_NAME', 'Tinybeans')
-
-# 2FA Security - Encryption Key for TOTP Secrets
-# SECURITY WARNING: Keep this secret! Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-_raw_twofa_key = os.environ.get('TWOFA_ENCRYPTION_KEY')
-_normalized_twofa_key = _validate_fernet_key(_raw_twofa_key)
-if _normalized_twofa_key:
-    TWOFA_ENCRYPTION_KEY = _normalized_twofa_key
-else:
-    if DEBUG:
-        # Derive a deterministic development key from SECRET_KEY so local setups work out of the box.
-        _derived_key = base64.urlsafe_b64encode(hashlib.sha256(SECRET_KEY.encode('utf-8')).digest()).decode('utf-8')
-        TWOFA_ENCRYPTION_KEY = _derived_key
-        if _raw_twofa_key:
-            warnings.warn(
-                'TWOFA_ENCRYPTION_KEY is not a valid Fernet key; using key derived from SECRET_KEY (development only).',
-                RuntimeWarning,
-                stacklevel=2,
-            )
-    else:
-        raise ImproperlyConfigured('TWOFA_ENCRYPTION_KEY must be set to a Fernet-compatible key when DEBUG is False')
-
-# 2FA Account Lockout
-TWOFA_LOCKOUT_ENABLED = _env_flag('TWOFA_LOCKOUT_ENABLED', default=True)
-TWOFA_LOCKOUT_DURATION_MINUTES = int(os.environ.get('TWOFA_LOCKOUT_DURATION_MINUTES', 30))
-TWOFA_LOCKOUT_THRESHOLD = int(os.environ.get('TWOFA_LOCKOUT_THRESHOLD', 5))
-
-# Trusted Devices (Remember Me)
-TWOFA_TRUSTED_DEVICE_ENABLED = _env_flag('TWOFA_TRUSTED_DEVICE_ENABLED', default=True)
-TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS = int(os.environ.get('TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS', 30))
-TWOFA_TRUSTED_DEVICE_MAX_COUNT = int(os.environ.get('TWOFA_TRUSTED_DEVICE_MAX_COUNT', 5))
-TWOFA_TRUSTED_DEVICE_ROTATION_DAYS = int(os.environ.get('TWOFA_TRUSTED_DEVICE_ROTATION_DAYS', 15))
-
-# SMS Provider Settings
-SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'twilio')
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
-TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
-
-# Google OAuth Configuration
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
-GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '')
-GOOGLE_OAUTH_REDIRECT_URI = os.environ.get(
-    'GOOGLE_OAUTH_REDIRECT_URI', 
-    'http://localhost:3000/auth/google/callback'
-)
-
-# Security: Allowed redirect URIs (whitelist)
-# Prevents open redirect vulnerabilities
-OAUTH_ALLOWED_REDIRECT_URIS = [
-    'https://tinybeans.app/auth/google/callback',
-    'https://staging.tinybeans.app/auth/google/callback',
-    'http://localhost:3000/auth/google/callback',  # Development only
-]
-
-# OAuth state expiration (seconds)
-# State tokens expire after 10 minutes to prevent stale requests
-OAUTH_STATE_EXPIRATION = int(os.environ.get('OAUTH_STATE_EXPIRATION', 600))
-
-# OAuth rate limiting
-# Prevent abuse of OAuth endpoints
-OAUTH_RATE_LIMIT_MAX_ATTEMPTS = int(os.environ.get('OAUTH_RATE_LIMIT_MAX_ATTEMPTS', 5))
-OAUTH_RATE_LIMIT_WINDOW = int(os.environ.get('OAUTH_RATE_LIMIT_WINDOW', 900))  # 15 minutes
-
-# Google OAuth scopes
-# Minimum required scopes for authentication
-GOOGLE_OAUTH_SCOPES = [
-    'openid',
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
-]
-
-# Rate limiting (django-ratelimit)
-RATELIMIT_ENABLE = _env_flag('RATELIMIT_ENABLE', default=not DEBUG)
-PASSWORD_RESET_RATELIMIT = os.environ.get('PASSWORD_RESET_RATELIMIT', '5/15m')
-PASSWORD_RESET_CONFIRM_RATELIMIT = os.environ.get('PASSWORD_RESET_CONFIRM_RATELIMIT', '10/15m')
-EMAIL_VERIFICATION_RESEND_RATELIMIT = os.environ.get('EMAIL_VERIFICATION_RESEND_RATELIMIT', '5/15m')
-EMAIL_VERIFICATION_CONFIRM_RATELIMIT = os.environ.get('EMAIL_VERIFICATION_CONFIRM_RATELIMIT', '10/15m')
-CIRCLE_INVITE_RATELIMIT = os.environ.get('CIRCLE_INVITE_RATELIMIT', '10/15m')
-CIRCLE_INVITE_RESEND_RATELIMIT = os.environ.get('CIRCLE_INVITE_RESEND_RATELIMIT', '5/15m')
-CIRCLE_INVITE_CIRCLE_LIMIT = _env_int('CIRCLE_INVITE_CIRCLE_LIMIT', 25)
-CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES = _env_int('CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES', 60)
-CIRCLE_INVITE_REMINDER_DELAY_MINUTES = _env_int('CIRCLE_INVITE_REMINDER_DELAY_MINUTES', 1440)
-CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES = _env_int('CIRCLE_INVITE_REMINDER_COOLDOWN_MINUTES', 1440)
-CIRCLE_INVITE_REMINDER_BATCH_SIZE = _env_int('CIRCLE_INVITE_REMINDER_BATCH_SIZE', 100)
-CIRCLE_INVITE_ONBOARDING_TTL_MINUTES = _env_int('CIRCLE_INVITE_ONBOARDING_TTL_MINUTES', 60)
-
-# Email verification token expiry (defaults to 48 hours for local/dev)
-EMAIL_VERIFICATION_TOKEN_TTL_HOURS = _env_int('EMAIL_VERIFICATION_TOKEN_TTL_HOURS', 48)
-EMAIL_VERIFICATION_TOKEN_TTL_SECONDS = EMAIL_VERIFICATION_TOKEN_TTL_HOURS * 60 * 60
-EMAIL_VERIFICATION_ENFORCED = _env_flag('EMAIL_VERIFICATION_ENFORCED', default=True)
-
-# HTTPS & security headers
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-USE_X_FORWARDED_HOST = True
-SECURE_SSL_REDIRECT = _env_flag('DJANGO_SECURE_SSL_REDIRECT', default=not DEBUG)
-
-if DEBUG:
-    SECURE_HSTS_SECONDS = 0
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-    SECURE_HSTS_PRELOAD = False
-else:
-    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '31536000'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_flag('DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
-    SECURE_HSTS_PRELOAD = _env_flag('DJANGO_SECURE_HSTS_PRELOAD', default=True)
-
-SECURE_REFERRER_POLICY = os.environ.get('DJANGO_SECURE_REFERRER_POLICY', 'same-origin')
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_CROSS_ORIGIN_OPENER_POLICY = os.environ.get('DJANGO_SECURE_COOP', 'same-origin')
-
-SESSION_COOKIE_SECURE = _env_flag('DJANGO_SESSION_COOKIE_SECURE', default=not DEBUG)
-SESSION_COOKIE_SAMESITE = os.environ.get('DJANGO_SESSION_COOKIE_SAMESITE', 'Lax')
-
-CSRF_COOKIE_SECURE = _env_flag('DJANGO_CSRF_COOKIE_SECURE', default=not DEBUG)
-CSRF_COOKIE_HTTPONLY = _env_flag('DJANGO_CSRF_COOKIE_HTTPONLY', default=False)
-CSRF_COOKIE_SAMESITE = os.environ.get('DJANGO_CSRF_COOKIE_SAMESITE', 'Strict')
-
-CSRF_TRUSTED_ORIGINS = _env_list(
-    'DJANGO_CSRF_TRUSTED_ORIGINS',
-    default=_DEV_FRONTEND_ORIGINS if DEBUG else None,
-)
-
-if not DEBUG and not CSRF_TRUSTED_ORIGINS:
-    raise ImproperlyConfigured('DJANGO_CSRF_TRUSTED_ORIGINS must be set when DEBUG is False')
