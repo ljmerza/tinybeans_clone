@@ -23,7 +23,7 @@ from .reactions import (
     KeepReactionDetailView,
     KeepReactionListCreateView,
 )
-from .upload_views import (
+from .uploads import (
     MediaUploadStatusView,
     MediaUploadView,
 )

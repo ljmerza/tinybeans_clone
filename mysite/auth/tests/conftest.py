@@ -1,11 +1,11 @@
-"""Pytest configuration for 2FA tests"""
+"""Pytest configuration for auth tests (2FA and OAuth)"""
 import pytest
 from unittest.mock import patch
 from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from mysite.auth.models import TwoFactorCode
+from mysite.auth.models import TwoFactorCode, GoogleOAuthState
 from mysite.auth.services.twofa_service import TwoFactorService
 
 User = get_user_model()
@@ -73,3 +73,39 @@ def create_code(user, code='123456', **kwargs):
     }
     defaults.update(kwargs)
     return TwoFactorCode.objects.create(user=user, **defaults)
+
+
+# OAuth-specific fixtures and helpers
+
+@pytest.fixture
+def oauth_redirect_uri():
+    """Standard OAuth redirect URI for tests."""
+    return 'http://localhost:3000/auth/google/callback'
+
+
+@pytest.fixture
+def oauth_ip_address():
+    """Standard IP address for OAuth tests."""
+    return '192.168.1.1'
+
+
+@pytest.fixture
+def oauth_user_agent():
+    """Standard user agent for OAuth tests."""
+    return 'Mozilla/5.0'
+
+
+def create_oauth_state(redirect_uri='http://localhost:3000/auth/google/callback',
+                       ip_address='192.168.1.1', **kwargs):
+    """Helper to create GoogleOAuthState records."""
+    defaults = {
+        'state_token': 'test_state_token',
+        'redirect_uri': redirect_uri,
+        'ip_address': ip_address,
+        'user_agent': 'Mozilla/5.0',
+        'code_verifier': 'test_verifier',
+        'nonce': 'test_nonce',
+        'expires_at': timezone.now() + timedelta(minutes=10),
+    }
+    defaults.update(kwargs)
+    return GoogleOAuthState.objects.create(**defaults)
