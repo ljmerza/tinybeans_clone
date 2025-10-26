@@ -11,7 +11,6 @@ class CircleMembershipViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin = User.objects.create_user(
-            username='adminuser',
             email='admin@example.com',
             password='password123',
             role=UserRole.CIRCLE_ADMIN,
@@ -65,7 +64,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_member_cannot_update_circle_name(self):
         member = User.objects.create_user(
-            username='memberrename',
             email='memberrename@example.com',
             password='password123',
         )
@@ -86,7 +84,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_circle_admin_can_view_members(self):
         member = User.objects.create_user(
-            username='memberuser',
             email='member@example.com',
             password='password123',
         )
@@ -103,7 +100,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_admin_can_add_member(self):
         new_user = User.objects.create_user(
-            username='addmember',
             email='addmember@example.com',
             password='password123',
         )
@@ -117,7 +113,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_admin_add_member_rejects_existing_membership(self):
         existing_member = User.objects.create_user(
-            username='existingmember',
             email='existingmember@example.com',
             password='password123',
         )
@@ -138,7 +133,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_non_admin_cannot_view_circle_members(self):
         member = User.objects.create_user(
-            username='memberuser2',
             email='member2@example.com',
             password='password123',
         )
@@ -151,13 +145,11 @@ class CircleMembershipViewTests(TestCase):
 
     def test_non_admin_cannot_add_member(self):
         member = User.objects.create_user(
-            username='memberadd',
             email='memberadd@example.com',
             password='password123',
         )
         CircleMembership.objects.create(user=member, circle=self.circle, role=UserRole.CIRCLE_MEMBER)
         target = User.objects.create_user(
-            username='targetuser',
             email='target@example.com',
             password='password123',
         )
@@ -171,7 +163,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_user_can_remove_self_from_circle(self):
         member = User.objects.create_user(
-            username='memberuser3',
             email='member3@example.com',
             password='password123',
         )
@@ -186,12 +177,10 @@ class CircleMembershipViewTests(TestCase):
 
     def test_non_admin_cannot_remove_other_member(self):
         member = User.objects.create_user(
-            username='memberuser4',
             email='member4@example.com',
             password='password123',
         )
         other_member = User.objects.create_user(
-            username='memberuser5',
             email='member5@example.com',
             password='password123',
         )
@@ -207,7 +196,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_admin_can_remove_member(self):
         member = User.objects.create_user(
-            username='memberuser6',
             email='member6@example.com',
             password='password123',
         )
@@ -222,7 +210,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_member_can_remove_self(self):
         member = User.objects.create_user(
-            username='memberself',
             email='memberself@example.com',
             password='password123',
         )
@@ -244,7 +231,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_activity_feed_contains_members_and_invitations(self):
         member = User.objects.create_user(
-            username='activitymember',
             email='activitymember@example.com',
             password='password123',
         )
@@ -267,7 +253,6 @@ class CircleMembershipViewTests(TestCase):
 
     def test_activity_feed_requires_admin(self):
         member = User.objects.create_user(
-            username='activitynonadmin',
             email='activitynonadmin@example.com',
             password='password123',
         )

@@ -10,7 +10,6 @@ from mysite.users.models import CircleOnboardingStatus, User
 class CircleOnboardingStatusViewTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="status-user",
             email="status@example.com",
             password="StrongPass123",
         )
@@ -40,7 +39,6 @@ class CircleOnboardingStatusViewTests(APITestCase):
 class CircleOnboardingSkipViewTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="skip-user",
             email="skip@example.com",
             password="StrongPass123",
         )

@@ -104,7 +104,7 @@ For form validation with localized messages:
 ```typescript
 const createSchema = (t: (key: string) => string) => z.object({
   email: z.string().email(t('validation.email_valid')),
-  username: z.string().min(1, t('validation.username_required')),
+  password: z.string().min(8, t('validation.password_required')),
 });
 
 // In component:

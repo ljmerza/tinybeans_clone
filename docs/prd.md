@@ -33,7 +33,7 @@ Using existing project analysis from `docs/brownfield-architecture.md` (generate
 - Other: —
 
 **Enhancement Description**  
-Introduce a robust invite flow that lets circle admins invite by username or email, sends existing users an acceptance email, gracefully onboards new users when accounts do not yet exist, and keeps all flows aligned with the complex auth surface (magic link, Google OAuth, 2FA).
+Introduce a robust invite flow that lets circle admins invite by email only, sends existing users an acceptance email, gracefully onboards new users when accounts do not yet exist, and keeps all flows aligned with the complex auth surface (magic link, Google OAuth, 2FA).
 
 **Impact Assessment**
 - [ ] Minimal Impact (isolated additions)
@@ -43,7 +43,7 @@ Introduce a robust invite flow that lets circle admins invite by username or ema
 
 ### Goals and Background Context
 **Goals**
-- Circle admins can add members via username or email without leaving the app.
+- Circle admins can add members via email without leaving the app.
 - Existing users receive invitation emails and accept before joining the target circle.
 - Invitees without accounts follow an onboarding path that respects magic-link, Google OAuth, and 2FA flows.
 - Invitation lifecycle is auditable for support/debugging.
@@ -52,7 +52,7 @@ Introduce a robust invite flow that lets circle admins invite by username or ema
 **Background Context**  
 Tinybeans Circles reimagines the Tinybeans family-sharing experience for broader social circles. Current circle membership relies on email-only invites with manual onboarding, which clashes with the richer identity surface and security measures already built. Admins need a dependable way to invite both existing and new users while maintaining explicit acceptance, audit trails, and consistent notification coverage.
 
-The invite modernization introduces username search, onboarding handoffs for new accounts, and stronger status/notification feedback so backend services and the React UI stay synchronized across acceptance, decline, or expiration.
+The invite modernization removes username search entirely, doubles down on email as the sole identifier, and still delivers onboarding handoffs for new accounts plus stronger status/notification feedback so backend services and the React UI stay synchronized across acceptance, decline, or expiration.
 
 ### Change Log
 | Change | Date | Version | Description | Author |
@@ -62,7 +62,7 @@ The invite modernization introduces username search, onboarding handoffs for new
 ## Requirements
 
 **Functional Requirements**  
-- FR1: Circle admins must invite members by entering either a username or email and see whether the target already exists.  
+- FR1: Circle admins must invite members by entering an email address and see whether the target already exists.  
 - FR2: When the invitee already has an account, the system must create a pending circle invitation, notify them via existing channels, and only convert them to a member after acceptance.  
 - FR3: When the invitee lacks an account, the system must generate a pending user onboarding token that honors existing magic-link, Google OAuth, and 2FA enrollment flows before granting circle access.  
 - FR4: Circle admins must retrieve real-time invite status (pending, accepted, declined, expired) via REST endpoints and use this data to resend or cancel invites.  
@@ -89,7 +89,7 @@ The invite modernization introduces username search, onboarding handoffs for new
 Invites live inside the existing circles management flow (`web/src/features/circles`), reusing shared Radix/Tailwind components from `web/src/components`. Search inputs, badges, and call-to-action buttons leverage existing `Input`, `Button`, and `Badge` primitives to preserve styling.
 
 **Modified/New Screens and Views**  
-- Circles admin invite modal/panel with username/email search.  
+- Circles admin invite modal/panel with email search and validation.  
 - Pending invitation list with status filters and actions.  
 - Onboarding/acceptance screens for invitees entering via magic link or OAuth callbacks.  
 - Toast notifications confirming success/error states.
@@ -110,8 +110,8 @@ Invites live inside the existing circles management flow (`web/src/features/circ
 **External Dependencies**: Google OAuth 2.0, Twilio SMS (optional), Mailpit, drf-spectacular, Celery email templates, pyotp, Redis token store
 
 **Integration Approach**  
-**Database Integration Strategy**: Extend `CircleInvitation` via Django migrations (support username/email metadata, unique constraints), reuse Redis token store for onboarding links, ensure historic invites remain intact.  
-**API Integration Strategy**: Enhance `mysite/circles/views/` and serializers to support username-aware invitations, explicit acceptance endpoints, and status management.  
+**Database Integration Strategy**: Extend `CircleInvitation` via Django migrations (ensuring email metadata, unique constraints), reuse Redis token store for onboarding links, ensure historic invites remain intact.  
+**API Integration Strategy**: Enhance `mysite/circles/views/` and serializers to enforce email-only invitations, explicit acceptance endpoints, and status management.  
 **Frontend Integration Strategy**: Add invite mutations and list queries using TanStack Query in `web/src/features/circles`, new onboarding views under `web/src/routes`, and shared UI components for consistent feedback.  
 **Testing Integration Strategy**: Pytest coverage in `mysite/users/tests`, Celery task tests for notifications, DRF schema validation, and Vitest specs for new React flows—including invite acceptance edge cases.
 
@@ -129,7 +129,7 @@ Invites live inside the existing circles management flow (`web/src/features/circ
 
 **Risk Assessment and Mitigation**  
 **Technical Risks**: Expanded flows could introduce auth bypasses or inconsistent invitation states; Redis token TTLs must align with onboarding windows.  
-**Integration Risks**: Misalignment with existing magic-link/2FA flows may regress login; frontend must handle both username and email gracefully.  
+**Integration Risks**: Misalignment with existing magic-link/2FA flows may regress login; frontend must enforce email-only identifiers gracefully.  
 **Deployment Risks**: Migrations might disrupt current pending invites if not staged; API adjustments could surprise clients relying on legacy responses.  
 **Mitigation Strategies**: Maintain backward-compatible endpoints, dry-run migrations, comprehensive testing across happy/edge paths, and clear rollout documentation (including rollback procedures).
 
@@ -139,15 +139,15 @@ Invites live inside the existing circles management flow (`web/src/features/circ
 
 ### Epic 1: Circle Invite Modernization
 
-**Epic Goal**: Deliver a unified invite experience that lets circle admins add members by username or email while preserving existing auth safeguards and explicit acceptance.
+**Epic Goal**: Deliver a unified invite experience that lets circle admins add members by email while preserving existing auth safeguards and explicit acceptance.
 
 **Integration Requirements**: Coordinate Django invite APIs, Redis token storage, Celery notifications, and React onboarding views so both existing and new users reach the circle without regressing magic-link/2FA/OAuth flows.
 
-#### Story 1.1 Backend Support for Username-Aware Invites
-As a circle admin, I want to invite members by username or email with clear feedback, so that I can quickly add existing community members without guesswork.
+#### Story 1.1 Backend Support for Email-Only Invites
+As a circle admin, I want to invite members by email with clear feedback, so that I can quickly add existing community members without guesswork.
 
 **Acceptance Criteria**  
-1. API accepts either username or email and indicates whether the target user already exists.  
+1. API accepts an email address and indicates whether the target user already exists.  
 2. Invites always persist as pending until recipients explicitly accept; membership links are created only after acceptance.  
 3. API responses include structured status codes/messages surfaced by drf-spectacular schema updates.  
 4. Rate limiting guards against invite spam per admin and per circle, configurable via settings.
@@ -175,7 +175,7 @@ IV3. Celery worker throughput stays within current thresholds.
 As a circle admin using the web app, I want an intuitive invite UI with status tracking, so that I can manage invitations without leaving the circles dashboard.
 
 **Acceptance Criteria**  
-1. Invite modal/panel allows searching by username/email, displaying existence state and validation errors.  
+1. Invite modal/panel allows entering an email address, displaying existence state and validation errors.  
 2. Pending invitation list surfaces statuses (pending, accepted, declined, expired) with resend/cancel controls.  
 3. UI leverages shared components (Button, Input, Badge, Toast) in line with design tokens.  
 4. Error handling provides actionable messages without exposing backend details.

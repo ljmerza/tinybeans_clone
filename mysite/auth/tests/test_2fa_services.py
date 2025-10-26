@@ -20,10 +20,10 @@ from mysite.auth.services.recovery_code_service import RecoveryCodeService
 User = get_user_model()
 
 
-def create_user(username='testuser', email=None, password='testpass', **extra):
+def create_user(local_part='testuser', email=None, password='testpass', **extra):
     if email is None:
-        email = f"{username}@example.com"
-    extra.setdefault('first_name', username.title())
+        email = f"{local_part}@example.com"
+    extra.setdefault('first_name', local_part.title())
     extra.setdefault('last_name', 'User')
     return User.objects.create_user(email=email, password=password, **extra)
 
@@ -63,7 +63,7 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_valid_code(self):
         """Test OTP verification with valid code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create valid code
         code_obj = create_code(user, code='123456')
@@ -77,14 +77,14 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_invalid_code(self):
         """Test OTP verification with wrong code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         result = TwoFactorService.verify_otp(user, '999999', purpose='login')
         assert result is False
     
     def test_verify_otp_expired_code(self):
         """Test OTP verification with expired code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create expired code
         create_code(
@@ -98,7 +98,7 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_max_attempts_exceeded(self):
         """Test OTP verification fails after max attempts"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create code with max attempts reached
         create_code(
@@ -113,7 +113,7 @@ class TestTwoFactorServiceOTP:
     
     def test_verify_otp_already_used(self):
         """Test OTP verification fails for already used code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create used code
         create_code(
@@ -129,7 +129,7 @@ class TestTwoFactorServiceOTP:
 
     def test_send_otp_invalidates_previous_unused_codes(self):
         """Requesting a new OTP should invalidate previous unused codes for same purpose/method"""
-        user = create_user(username='user1', password='x')
+        user = create_user(local_part='user1', password='x')
         TwoFactorSettings.objects.create(user=user, preferred_method='email', is_enabled=True)
 
         # Create an existing, unused code
@@ -181,7 +181,7 @@ class TestTwoFactorServiceTOTP:
     def test_generate_totp_qr_code(self, mock_qrcode, mock_totp):
         """Test QR code generation"""
         user = create_user(
-            username='testuser',
+            local_part='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -208,7 +208,7 @@ class TestTwoFactorServiceTOTP:
     @patch('mysite.auth.services.twofa_service.pyotp.TOTP')
     def test_verify_totp_valid(self, mock_totp):
         """Test TOTP verification with valid code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -227,7 +227,7 @@ class TestTwoFactorServiceTOTP:
     @patch('mysite.auth.services.twofa_service.pyotp.TOTP')
     def test_verify_totp_invalid(self, mock_totp):
         """Test TOTP verification with invalid code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -245,7 +245,7 @@ class TestTwoFactorServiceTOTP:
     
     def test_verify_totp_no_secret(self):
         """Test TOTP verification fails without secret"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         TwoFactorSettings.objects.create(
             user=user,
             is_enabled=True,
@@ -263,7 +263,7 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_count(self):
         """Test correct number of recovery codes generated"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=10)
         
@@ -272,7 +272,7 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_format(self):
         """Test recovery code format"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=5)
         
@@ -289,7 +289,7 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_uniqueness(self):
         """Test recovery codes are unique"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=10)
         
@@ -297,7 +297,7 @@ class TestRecoveryCodeService:
     
     def test_generate_recovery_codes_deletes_old(self):
         """Test generating new codes deletes old unused codes"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Generate first batch
         TwoFactorService.generate_recovery_codes(user, count=5)
@@ -318,7 +318,7 @@ class TestRecoveryCodeService:
     
     def test_verify_recovery_code_valid(self):
         """Test recovery code verification"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=1)
         code_value = codes[0]
@@ -333,7 +333,7 @@ class TestRecoveryCodeService:
     
     def test_verify_recovery_code_case_insensitive(self):
         """Test recovery code verification is case insensitive"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=1)
         code_value = codes[0].lower()  # Use lowercase
@@ -343,14 +343,14 @@ class TestRecoveryCodeService:
     
     def test_verify_recovery_code_invalid(self):
         """Test recovery code verification with invalid code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         result = TwoFactorService.verify_recovery_code(user, 'INVALID-CODE-1234')
         assert result is False
     
     def test_verify_recovery_code_already_used(self):
         """Test recovery code verification fails for used code"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         codes = TwoFactorService.generate_recovery_codes(user, count=1)
         code_value = codes[0]
@@ -365,7 +365,7 @@ class TestRecoveryCodeService:
     def test_export_recovery_codes_txt(self):
         """Test TXT export of recovery codes"""
         user = create_user(
-            username='testuser',
+            local_part='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -386,7 +386,7 @@ class TestRecoveryCodeService:
     def test_export_recovery_codes_pdf(self, mock_doc):
         """Test PDF export of recovery codes"""
         user = create_user(
-            username='testuser',
+            local_part='testuser',
             email='test@example.com',
             password='testpass'
         )
@@ -455,7 +455,7 @@ class TestTrustedDeviceService:
     
     def test_add_trusted_device(self):
         """Test adding trusted device"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         factory = RequestFactory()
         request = factory.get('/')
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
@@ -480,7 +480,7 @@ class TestTrustedDeviceService:
 
     def test_add_trusted_device_is_idempotent(self):
         """Adding the same device twice should refresh instead of duplicating"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         factory = RequestFactory()
         request = factory.get('/')
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
@@ -507,7 +507,7 @@ class TestTrustedDeviceService:
     
     def test_add_trusted_device_max_limit(self):
         """Test max trusted devices limit"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         factory = RequestFactory()
         
         # Add max devices
@@ -527,7 +527,7 @@ class TestTrustedDeviceService:
     
     def test_is_trusted_device_valid(self):
         """Test checking trusted device"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         request = RequestFactory().get('/')
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
@@ -544,7 +544,7 @@ class TestTrustedDeviceService:
     
     def test_is_trusted_device_expired(self):
         """Test expired trusted device"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         request = RequestFactory().get('/')
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
@@ -560,7 +560,7 @@ class TestTrustedDeviceService:
     
     def test_is_trusted_device_not_found(self):
         """Test non-existent trusted device"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         request = RequestFactory().get('/')
         request.META['HTTP_USER_AGENT'] = 'TestBrowser/1.0'
@@ -573,7 +573,7 @@ class TestTrustedDeviceService:
     
     def test_remove_trusted_device(self):
         """Test removing trusted device"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         TrustedDevice.objects.create(
             user=user,
@@ -598,7 +598,7 @@ class TestTrustedDeviceService:
     
     def test_get_trusted_devices(self):
         """Test getting all trusted devices"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create active devices
         for i in range(3):
@@ -627,7 +627,7 @@ class TestTrustedDeviceService:
     
     def test_cleanup_expired_devices(self):
         """Test cleanup of expired devices"""
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create expired devices
         for i in range(3):
@@ -664,7 +664,7 @@ class TestRateLimiting:
         """Test rate limiting when under limit"""
         settings.TWOFA_RATE_LIMIT_MAX = 3
         settings.TWOFA_RATE_LIMIT_WINDOW = 900
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create 2 codes (under limit of 3)
         for i in range(2):
@@ -681,7 +681,7 @@ class TestRateLimiting:
         """Test rate limiting when at limit"""
         settings.TWOFA_RATE_LIMIT_MAX = 3
         settings.TWOFA_RATE_LIMIT_WINDOW = 900
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create 3 codes (at limit)
         for i in range(3):
@@ -698,7 +698,7 @@ class TestRateLimiting:
         """Test rate limiting ignores expired codes"""
         settings.TWOFA_RATE_LIMIT_MAX = 3
         settings.TWOFA_RATE_LIMIT_WINDOW = 900
-        user = create_user(username='testuser', password='testpass')
+        user = create_user(local_part='testuser', password='testpass')
         
         # Create old codes (outside rate limit window)
         for i in range(5):

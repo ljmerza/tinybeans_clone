@@ -16,7 +16,6 @@ class UserProfileViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='profileuser',
             email='profile@example.com',
             password='password123',
         )
@@ -40,7 +39,6 @@ class NotificationPreferencesViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='notifuser',
             email='notif@example.com',
             password='password123',
         )

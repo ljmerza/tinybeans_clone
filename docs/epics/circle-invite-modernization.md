@@ -6,10 +6,10 @@
 - Related ADRs: `docs/adrs/0001-circle-invite-flow.md`
 
 ## Overview
-Modernize the Tinybeans Circles invitation experience so admins can invite by username or email, invitees explicitly accept before joining, and onboarding respects the existing auth stack (magic link, Google OAuth, 2FA). The epic coordinates backend, frontend, and notification updates while maintaining backward compatibility with the legacy email-only flow.
+Modernize the Tinybeans Circles invitation experience so admins invite by email only, invitees explicitly accept before joining, and onboarding respects the existing auth stack (magic link, Google OAuth, 2FA). The epic coordinates backend, frontend, and notification updates while maintaining compatibility with earlier flows.
 
 ## Goals & Success Metrics
-- Admins send invites using either username or email with clear status feedback.
+- Admins send invites using email with clear status feedback.
 - Invitation lifecycle (pending/accepted/declined/expired) is auditable and visible in the UI.
 - New invitees complete onboarding through established authentication flows without regressions.
 - Invitation abuse is mitigated through rate limiting and token TTL configuration.
@@ -32,7 +32,7 @@ Modernize the Tinybeans Circles invitation experience so admins can invite by us
 
 ## Story Breakdown
 1. **Backend Support for Email-Only Invites**  
-   - Extend DRF endpoints to accept username/email, keep invites pending, enforce rate limits, and surface status metadata.  
+   - Extend DRF endpoints to accept email only, keep invites pending, enforce rate limits, and surface status metadata.  
    - Update serializers, tasks, and tests in `mysite/users`.
 
 2. **Onboarding Flow for New Invitees**  

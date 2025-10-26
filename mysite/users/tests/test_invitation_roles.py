@@ -28,7 +28,6 @@ class InvitationRoleTests(TestCase):
         """Set up test data."""
         self.client = APIClient()
         self.admin = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='password123'
         )
@@ -39,7 +38,6 @@ class InvitationRoleTests(TestCase):
         CircleMembership.objects.create(user=self.admin, circle=self.circle, role=UserRole.CIRCLE_ADMIN)
         
         self.member = User.objects.create_user(
-            username='member',
             email='member@example.com',
             password='password123'
         )
@@ -79,36 +77,28 @@ class InvitationRoleTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('role', serializer.errors)
 
-    def test_serializer_username_lookup(self):
-        """Serializer should resolve usernames to existing users."""
+    def test_serializer_existing_user_lookup(self):
+        """Serializer should resolve existing users by email."""
         existing = User.objects.create_user(
-            username='lookup',
             email='lookup@example.com',
             password='password123'
         )
         serializer = CircleInvitationCreateSerializer(
-            data={'username': 'lookup'},
+            data={'email': 'lookup@example.com'},
             context={'circle': self.circle}
         )
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data['email'], 'lookup@example.com')
         self.assertEqual(serializer.validated_data['invited_user'], existing)
 
-    def test_serializer_requires_identifier(self):
-        """Serializer requires exactly one identifier."""
+    def test_serializer_requires_email(self):
+        """Serializer requires an email address."""
         serializer = CircleInvitationCreateSerializer(
             data={},
             context={'circle': self.circle}
         )
         self.assertFalse(serializer.is_valid())
-        self.assertIn('identifier', serializer.errors)
-
-        serializer = CircleInvitationCreateSerializer(
-            data={'email': 'a@example.com', 'username': 'test'},
-            context={'circle': self.circle}
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('identifier', serializer.errors)
+        self.assertIn('email', serializer.errors)
 
     @patch('mysite.circles.views.invitations.send_email_task.delay')
     @patch('mysite.circles.views.invitations.store_token')
@@ -158,26 +148,25 @@ class InvitationRoleTests(TestCase):
 
     @patch('mysite.circles.views.invitations.send_email_task.delay')
     @patch('mysite.circles.views.invitations.store_token')
-    def test_api_invite_existing_user_by_username(self, mock_store_token, mock_delay):
-        """Admins can invite existing users by username without auto-joining."""
+    def test_api_invite_existing_user_by_email(self, mock_store_token, mock_delay):
+        """Admins can invite existing users by email without auto-joining."""
         mock_store_token.return_value = 'fake-token'
         self.client.force_authenticate(user=self.admin)
 
         existing_user = User.objects.create_user(
-            username='targetuser',
             email='target@example.com',
             password='password123'
         )
 
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
-            {'username': 'targetuser'},
+            {'email': 'target@example.com'},
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED, response.json())
         payload = response.json()['data']['invitation']
         self.assertTrue(payload['existing_user'])
-        self.assertEqual(payload['invited_user']['username'], 'targetuser')
+        self.assertEqual(payload['invited_user']['email'], 'target@example.com')
 
         invitation = CircleInvitation.objects.get(email='target@example.com')
         self.assertEqual(invitation.invited_user, existing_user)
@@ -332,8 +321,8 @@ class InvitationRoleTests(TestCase):
 
     @patch('mysite.circles.views.invitations.send_email_task.delay')
     @patch('mysite.circles.views.invitations.store_token')
-    def test_api_requires_identifier(self, mock_store_token, mock_delay):
-        """API should enforce identifier validation."""
+    def test_api_requires_email(self, mock_store_token, mock_delay):
+        """API should enforce email validation."""
         mock_store_token.return_value = 'fake-token'
         self.client.force_authenticate(user=self.admin)
 
@@ -345,21 +334,8 @@ class InvitationRoleTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         payload = response.json()
         self.assertEqual(payload['error'], 'validation_failed')
-        keys = [message['i18n_key'] for message in payload.get('messages', [])]
-        self.assertIn('errors.invitation_identifier_required', keys)
         fields = [message.get('context', {}).get('field') for message in payload.get('messages', [])]
-        self.assertIn('identifier', fields)
-
-        response = self.client.post(
-            reverse('circle-invitation-create', args=[self.circle.id]),
-            {'email': 'duplicate@example.com', 'username': 'dup'},
-            format='json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        payload = response.json()
-        self.assertEqual(payload['error'], 'validation_failed')
-        keys = [message['i18n_key'] for message in payload.get('messages', [])]
-        self.assertIn('errors.invitation_identifier_conflict', keys)
+        self.assertIn('email', fields)
 
     @override_settings(RATELIMIT_ENABLE=True, CIRCLE_INVITE_CIRCLE_LIMIT=1, CIRCLE_INVITE_CIRCLE_LIMIT_WINDOW_MINUTES=60)
     @patch('mysite.circles.views.invitations.send_email_task.delay')
@@ -441,7 +417,6 @@ class InvitationRoleTests(TestCase):
         onboarding_token = response.json()['data']['onboarding_token']
 
         invitee = User.objects.create_user(
-            username='invitee',
             email='invitee@example.com',
             password='InviteePass123',
         )
@@ -491,7 +466,6 @@ class InvitationRoleTests(TestCase):
         onboarding_token = response.json()['data']['onboarding_token']
 
         other_user = User.objects.create_user(
-            username='other',
             email='other@example.com',
             password='OtherPass123',
         )

@@ -35,35 +35,25 @@ class AuthViewEdgeCaseTests(TestCase):
             if message.get('context', {}).get('field')
         ]
 
-    def test_signup_duplicate_username(self):
-        """Test signup with duplicate username."""
-        User.objects.create_user(
-            username='existing',
-            email='existing@example.com',
-            password='password123'
-        )
-        
+    def test_signup_requires_email(self):
+        """Signup should require an email address."""
         response = self.client.post(reverse('auth-signup'), {
-            'username': 'existing',
-            'email': 'new@example.com',
             'password': 'password123',
             'first_name': 'New',
             'last_name': 'User',
         }, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('username', self._response_fields(response))
+        self.assertIn('email', self._response_fields(response))
 
     def test_signup_duplicate_email(self):
         """Test signup with duplicate email."""
         User.objects.create_user(
-            username='existing',
             email='existing@example.com',
             password='password123'
         )
         
         response = self.client.post(reverse('auth-signup'), {
-            'username': 'newuser',
             'email': 'existing@example.com',
             'password': 'password123',
             'first_name': 'Existing',
@@ -76,7 +66,7 @@ class AuthViewEdgeCaseTests(TestCase):
     def test_password_reset_nonexistent_user(self):
         """Test password reset for non-existent user."""
         response = self.client.post(reverse('auth-password-reset-request'), {
-            'identifier': 'nonexistent@example.com'
+            'email': 'nonexistent@example.com'
         }, format='json')
         
         # Should return 202 even for non-existent users to prevent enumeration
@@ -85,7 +75,6 @@ class AuthViewEdgeCaseTests(TestCase):
     def test_login_inactive_user(self):
         """Test login with inactive user."""
         user = User.objects.create_user(
-            username='inactive',
             email='inactive@example.com',
             password='password123'
         )
@@ -93,7 +82,7 @@ class AuthViewEdgeCaseTests(TestCase):
         user.save()
         
         response = self.client.post(reverse('auth-login'), {
-            'username': 'inactive',
+            'email': 'inactive@example.com',
             'password': 'password123'
         }, format='json')
         
@@ -102,14 +91,13 @@ class AuthViewEdgeCaseTests(TestCase):
     def test_refresh_token_rotation(self):
         """Test that refresh tokens are properly rotated."""
         user = User.objects.create_user(
-            username='tokentest',
             email='token@example.com',
             password='password123'
         )
         
         # Login to get initial tokens
         login_response = self.client.post(reverse('auth-login'), {
-            'username': 'tokentest',
+            'email': 'token@example.com',
             'password': 'password123'
         }, format='json')
         
@@ -142,13 +130,11 @@ class CircleViewEdgeCaseTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='password123',
             role=UserRole.CIRCLE_ADMIN
         )
         self.member = User.objects.create_user(
-            username='member',
             email='member@example.com',
             password='password123',
             role=UserRole.CIRCLE_MEMBER
@@ -189,7 +175,7 @@ class CircleViewEdgeCaseTests(TestCase):
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(
             reverse('circle-invitation-create', args=[self.circle.id]),
-            {'email': self.member.email},  # Use email instead of username
+            {'email': self.member.email},  # Always invite by email
             format='json'
         )
         
@@ -261,7 +247,6 @@ class ChildProfileViewEdgeCaseTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin = User.objects.create_user(
-            username='parent',
             email='parent@example.com',
             password='password123',
             role=UserRole.CIRCLE_ADMIN
@@ -280,7 +265,6 @@ class ChildProfileViewEdgeCaseTests(TestCase):
     def test_upgrade_request_for_already_linked_child(self):
         """Test upgrade request for child that's already linked to a user."""
         linked_user = User.objects.create_user(
-            username='childuser',
             email='child@example.com',
             password='password123'
         )
@@ -336,8 +320,10 @@ class ChildProfileViewEdgeCaseTests(TestCase):
         response = self.client.post(reverse('child-upgrade-confirm'), {
             'child_id': str(self.child.id),
             'token': 'expired_token',
-            'username': 'newchilduser',
-            'password': 'password123'
+            'first_name': 'New',
+            'last_name': 'Guardian',
+            'password': 'password123',
+            'password_confirm': 'password123',
         }, format='json')
         
         self.assertIn(response.status_code, [
@@ -345,15 +331,8 @@ class ChildProfileViewEdgeCaseTests(TestCase):
             status.HTTP_404_NOT_FOUND
         ])
 
-    def test_upgrade_confirm_with_duplicate_username(self):
-        """Test upgrade confirmation with username that already exists."""
-        # Create user with target username
-        User.objects.create_user(
-            username='existinguser',
-            email='existing@example.com',
-            password='password123'
-        )
-        
+    def test_upgrade_confirm_password_mismatch(self):
+        """Test upgrade confirmation enforces matching passwords."""
         # Set up child with valid token
         self.child.upgrade_token = 'valid_token'
         self.child.upgrade_token_expires_at = timezone.now() + timedelta(hours=1)
@@ -363,21 +342,19 @@ class ChildProfileViewEdgeCaseTests(TestCase):
         response = self.client.post(reverse('child-upgrade-confirm'), {
             'child_id': str(self.child.id),
             'token': 'valid_token',
-            'username': 'existinguser',
-            'password': 'password123'
+            'first_name': 'Mismatch',
+            'last_name': 'Guardian',
+            'password': 'password123',
+            'password_confirm': 'different',
         }, format='json')
         
-        self.assertIn(response.status_code, [
-            status.HTTP_400_BAD_REQUEST,
-            status.HTTP_404_NOT_FOUND
-        ])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class NotificationPreferencesEdgeCaseTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='password123'
         )
@@ -446,19 +423,16 @@ class PermissionAndAccessTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='password123',
             role=UserRole.CIRCLE_ADMIN
         )
         self.member = User.objects.create_user(
-            username='member',
             email='member@example.com',
             password='password123',
             role=UserRole.CIRCLE_MEMBER
         )
         self.outsider = User.objects.create_user(
-            username='outsider',
             email='outsider@example.com',
             password='password123',
             role=UserRole.CIRCLE_MEMBER
@@ -530,7 +504,6 @@ class PermissionAndAccessTests(TestCase):
         """Test that users cannot access data from circles they don't belong to."""
         # Create another circle with different admin
         other_admin = User.objects.create_user(
-            username='other_admin',
             email='other@example.com',
             password='password123'
         )

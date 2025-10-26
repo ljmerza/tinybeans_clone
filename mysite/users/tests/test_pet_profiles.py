@@ -13,7 +13,6 @@ class PetProfileModelTests(TestCase):
     
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='password123'
         )
@@ -71,7 +70,6 @@ class PetProfileViewTests(TestCase):
         
         # Create admin user
         self.admin = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='password123',
             email_verified=True
@@ -79,7 +77,6 @@ class PetProfileViewTests(TestCase):
         
         # Create member user
         self.member = User.objects.create_user(
-            username='member',
             email='member@example.com', 
             password='password123'
         )
@@ -250,7 +247,6 @@ class PetProfileViewTests(TestCase):
     def test_non_member_cannot_access_pets(self):
         """Test that non-circle members cannot access pets."""
         outsider = User.objects.create_user(
-            username='outsider',
             email='outsider@example.com',
             password='password123'
         )
@@ -294,7 +290,7 @@ class PetProfileSerializerTests(TestCase):
         from mysite.users.serializers.pets import PetProfileSerializer
         from datetime import date, timedelta
         
-        user = User.objects.create_user(username='test', email='test@example.com', password='pass')
+        user = User.objects.create_user(email='test@example.com', password='pass')
         circle = Circle.objects.create(name='Test', created_by=user)
         
         pet = PetProfile.objects.create(

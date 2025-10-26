@@ -11,14 +11,14 @@ from mysite.auth.services.trusted_device_service import TrustedDeviceService
 User = get_user_model()
 
 
-def create_user(username='testuser', email=None, password='testpass'):
+def create_user(local_part='testuser', email=None, password='testpass'):
     """Utility helper to satisfy required email field on custom user model."""
     if email is None:
-        email = f"{username}@example.com"
+        email = f"{local_part}@example.com"
     return User.objects.create_user(
         email=email,
         password=password,
-        first_name=username.title(),
+        first_name=local_part.title(),
         last_name='User',
     )
 

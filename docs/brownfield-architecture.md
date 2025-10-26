@@ -61,7 +61,7 @@ REST APIs are exposed through Django REST Framework with schema annotations in m
 - **Models**: `Circle`, `CircleMembership`, `CircleInvitation` in `mysite/users/models/circle.py`; ownership is tracked through `UserRole` choices (`mysite/users/models/user.py`).
 - **API Endpoints**: `mysite/circles/views` provides list/create, detail update, invitation create/list/accept endpoints. Invitations currently email-based with Celery email dispatch (`mysite/circles/tasks.py`).
 - **Serializers**: `CircleInvitationCreateSerializer` and companion serializers under `mysite/users/serializers/`.
-- **Technical Debt**: Invitations only support email, no username path; onboarding for invitees without existing accounts is manual; limited rate limiting on invites; minimal audit logging.
+- **Technical Debt**: Invitations intentionally rely on email-only identifiers per the identity plan; onboarding for invitees without existing accounts is manual; limited rate limiting on invites; minimal audit logging.
 
 ### Keeps & Media
 - **Keep Model**: `mysite/keeps/models/keep.py` stores metadata, relationships to circles and users.
@@ -140,7 +140,7 @@ REST APIs are exposed through Django REST Framework with schema annotations in m
 
 ## Technical Debt, Risks, and Gotchas
 - **Auth Surface Complexity**: Multiple login methods; invite onboarding must not bypass 2FA/Google flows. Token utilities rely on Redis; ensure TTL alignment for invites vs auth tokens.
-- **Invitation Flow Limitations**: Only email-based; no username search or pre-creation handshake. Accept/decline flows triggered via tokens, but UI handling for new-account onboarding is thin.
+- **Invitation Flow Notes**: Email is now the sole identifier; no username search or pre-creation handshake is provided by design. Accept/decline flows triggered via tokens, but UI handling for new-account onboarding is thin.
 - **Rate Limiting**: Environment toggles exist but defaults disable limits; production hardening required before launch.
 - **Media Scaling**: MinIO buckets seeded automatically but S3 parity not tested; large file handling depends on env vars (`MAX_UPLOAD_SIZE`).
 - **Documentation Debt**: `_docs/` now deprecated; ADR process must be rebuilt inside `docs/`. Keep legacy files for historical reference but avoid mixing content.
