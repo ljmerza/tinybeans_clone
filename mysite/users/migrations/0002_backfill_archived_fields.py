@@ -15,26 +15,29 @@ class Migration(migrations.Migration):
         ("users", "0001_initial"),
     ]
 
-    operations = [
-        migrations.RunSQL(
-            sql="""
+    def backfill_archived_metadata(apps, schema_editor):
+        if schema_editor.connection.vendor != "postgresql":
+            return
+
+        statements = [
+            """
                 ALTER TABLE users_circleinvitation
                 ADD COLUMN IF NOT EXISTS archived_at timestamptz NULL
             """,
-            reverse_sql=migrations.RunSQL.noop,
-        ),
-        migrations.RunSQL(
-            sql="""
+            """
                 ALTER TABLE users_circleinvitation
                 ADD COLUMN IF NOT EXISTS archived_reason varchar(100) NULL
             """,
-            reverse_sql=migrations.RunSQL.noop,
-        ),
-        migrations.RunSQL(
-            sql="""
+            """
                 CREATE INDEX IF NOT EXISTS users_circl_circle__325fa5_idx
                 ON users_circleinvitation (circle_id, archived_at)
             """,
-            reverse_sql=migrations.RunSQL.noop,
-        ),
+        ]
+
+        with schema_editor.connection.cursor() as cursor:
+            for statement in statements:
+                cursor.execute(statement)
+
+    operations = [
+        migrations.RunPython(backfill_archived_metadata, migrations.RunPython.noop),
     ]

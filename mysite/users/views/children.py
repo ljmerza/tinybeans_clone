@@ -164,6 +164,7 @@ class ChildProfileUpgradeConfirmView(APIView):
         payload = pop_token('child-upgrade', serializer.validated_data['token'])
         if not payload:
             return error_response(
+                'token_invalid_or_expired',
                 messages=[create_message('errors.token_invalid_expired')],
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -171,27 +172,32 @@ class ChildProfileUpgradeConfirmView(APIView):
         child = ChildProfile.objects.filter(id=payload['child_id']).select_related('circle').first()
         if not child:
             return error_response(
+                'child_profile_not_found',
                 messages=[create_message('errors.child_profile_not_found')],
                 status_code=status.HTTP_404_NOT_FOUND
             )
         if child.linked_user:
             return error_response(
+                'child_already_linked',
                 messages=[create_message('errors.child_already_linked')],
                 status_code=status.HTTP_400_BAD_REQUEST
             )
         if not child.upgrade_token:
             return error_response(
+                'upgrade_invitation_revoked',
                 messages=[create_message('errors.upgrade_invitation_revoked')],
                 status_code=status.HTTP_400_BAD_REQUEST
             )
         provided_token = serializer.validated_data['token']
         if child.upgrade_token != provided_token:
             return error_response(
+                'upgrade_invitation_mismatch',
                 messages=[create_message('errors.upgrade_invitation_mismatch')],
                 status_code=status.HTTP_400_BAD_REQUEST
             )
         if child.upgrade_token_expires_at and timezone.now() > child.upgrade_token_expires_at:
             return error_response(
+                'upgrade_invitation_expired',
                 messages=[create_message('errors.upgrade_invitation_expired')],
                 status_code=status.HTTP_400_BAD_REQUEST
             )
