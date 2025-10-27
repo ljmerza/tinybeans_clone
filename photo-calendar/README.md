@@ -45,6 +45,10 @@ Use `onDaySelect` to react when users click a day; the handler receives both the
 ISO date string and the corresponding `Date` instance so consuming apps can hook
 up modals, drawers, or detail views.
 
+Inject custom day rendering with the `renderDay` prop—see `example/App.tsx` for
+placeholder images loaded from placehold.co while the real thumbnail
+stack is still under construction.
+
 Once the component architecture stabilizes, this folder can be promoted into a
 stand-alone repository without significant changes—package metadata already
 assumes an eventual npm distribution.
