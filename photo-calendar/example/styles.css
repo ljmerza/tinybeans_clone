@@ -1,0 +1,96 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+main > h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+main > p {
+  margin: 0;
+  max-width: 60ch;
+}
+
+.calendar-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  padding: 1.5rem 2.5rem;
+}
+
+.nav-button {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.4rem;
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.nav-button--prev {
+  left: 0;
+}
+
+.nav-button--next {
+  right: 0;
+}
+
+@media (pointer: fine) {
+  .nav-button {
+    display: inline-flex;
+  }
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.calendar-cell {
+  min-height: 72px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid currentColor;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.calendar-cell:disabled {
+  cursor: default;
+}
+
+.cell-label {
+  pointer-events: none;
+}

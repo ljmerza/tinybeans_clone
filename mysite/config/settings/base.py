@@ -299,6 +299,7 @@ from .security import (  # noqa
     _get_ssl_redirect,
     _get_hsts_config,
     _get_session_cookie_config,
+    _get_ip_trust_config,
 )
 
 # Apply DEBUG-dependent CORS settings
@@ -326,6 +327,11 @@ SECURE_HSTS_PRELOAD = _hsts_config['SECURE_HSTS_PRELOAD']
 _session_cookie_config = _get_session_cookie_config(DEBUG)
 SESSION_COOKIE_SECURE = _session_cookie_config['SESSION_COOKIE_SECURE']
 SESSION_COOKIE_SAMESITE = _session_cookie_config['SESSION_COOKIE_SAMESITE']
+
+# Apply proxy/IP trust configuration
+_ip_trust_config = _get_ip_trust_config(DEBUG)
+TRUST_FORWARDED_FOR = _ip_trust_config['TRUST_FORWARDED_FOR']
+TRUSTED_PROXY_IPS = _ip_trust_config['TRUSTED_PROXY_IPS']
 
 # Apply DEBUG-dependent auth settings
 TWOFA_ENCRYPTION_KEY = _get_twofa_encryption_key(DEBUG, SECRET_KEY)

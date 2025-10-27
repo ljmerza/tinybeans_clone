@@ -51,7 +51,11 @@ class SignupView(APIView):
             )
         },
     )
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=False))
+    @method_decorator(ratelimit(key='post:email', rate='3/30m', method='POST', block=False))
     def post(self, request):
+        if getattr(request, 'limited', False):
+            return rate_limit_response('errors.rate_limit')
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()

@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 from mysite.auth.models import TwoFactorCode, GoogleOAuthState
+from mysite.auth.services.oauth.pkce_state_service import PKCEStateService
 from mysite.auth.services.twofa_service import TwoFactorService
 
 User = get_user_model()
@@ -98,14 +99,19 @@ def oauth_user_agent():
 def create_oauth_state(redirect_uri='http://localhost:3000/auth/google/callback',
                        ip_address='192.168.1.1', **kwargs):
     """Helper to create GoogleOAuthState records."""
+    service = PKCEStateService()
+    code_verifier = kwargs.pop('code_verifier', 'test_verifier')
+    state_token = kwargs.get('state_token', 'test_state_token')
     defaults = {
-        'state_token': 'test_state_token',
+        'state_token': state_token,
         'redirect_uri': redirect_uri,
         'ip_address': ip_address,
         'user_agent': 'Mozilla/5.0',
-        'code_verifier': 'test_verifier',
+        'code_verifier_hash': service._code_hash(code_verifier),
         'nonce': 'test_nonce',
         'expires_at': timezone.now() + timedelta(minutes=10),
     }
     defaults.update(kwargs)
-    return GoogleOAuthState.objects.create(**defaults)
+    oauth_state = GoogleOAuthState.objects.create(**defaults)
+    service._store_code_verifier(oauth_state.state_token, code_verifier)
+    return oauth_state

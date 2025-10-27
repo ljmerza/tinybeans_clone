@@ -14,9 +14,9 @@ class GoogleOAuthState(models.Model):
         db_index=True,
         help_text="Unique OAuth state token"
     )
-    code_verifier = models.CharField(
+    code_verifier_hash = models.CharField(
         max_length=128,
-        help_text="PKCE code verifier"
+        help_text="SHA-256 hash of PKCE code verifier"
     )
     redirect_uri = models.URLField(
         help_text="OAuth redirect URI"

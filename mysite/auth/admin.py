@@ -94,7 +94,7 @@ class GoogleOAuthStateAdmin(admin.ModelAdmin):
     search_fields = ['state_token', 'ip_address', 'redirect_uri']
     readonly_fields = [
         'state_token',
-        'code_verifier',
+        'code_verifier_hash',
         'nonce',
         'created_at',
         'used_at',

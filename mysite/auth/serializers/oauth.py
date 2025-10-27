@@ -47,7 +47,9 @@ class JWTTokenSerializer(serializers.Serializer):
         help_text="JWT access token (short-lived)"
     )
     refresh = serializers.CharField(
-        help_text="JWT refresh token (long-lived)"
+        help_text="JWT refresh token (long-lived)",
+        required=False,
+        allow_blank=True
     )
 
 

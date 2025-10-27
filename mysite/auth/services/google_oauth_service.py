@@ -164,7 +164,12 @@ class GoogleOAuthService:
         Raises:
             OAuthError: If token exchange fails
         """
-        return self.google_api_service.exchange_code_for_token(authorization_code, oauth_state)
+        code_verifier = self.pkce_state_service.pop_code_verifier(oauth_state)
+        return self.google_api_service.exchange_code_for_token(
+            authorization_code,
+            oauth_state,
+            code_verifier
+        )
     
     def get_or_create_user(
         self,

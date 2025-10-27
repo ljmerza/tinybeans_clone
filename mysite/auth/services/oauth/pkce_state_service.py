@@ -5,14 +5,15 @@ This service handles:
 - OAuth state token generation and validation
 - Redirect URI validation
 """
-import secrets
-import hashlib
 import base64
 import logging
+import hashlib
+import secrets
 from datetime import timedelta
 from typing import Tuple, Optional
 
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
 
 from mysite.auth.models import GoogleOAuthState
@@ -36,6 +37,7 @@ class PKCEStateService:
     def __init__(self):
         self.allowed_redirect_uris = settings.OAUTH_ALLOWED_REDIRECT_URIS
         self.state_expiration = settings.OAUTH_STATE_EXPIRATION
+        self.cache_timeout = self.state_expiration
 
     def generate_pkce_pair(self) -> Tuple[str, str]:
         """Generate PKCE code verifier and code challenge.
@@ -53,6 +55,32 @@ class PKCEStateService:
         code_challenge = code_challenge.rstrip('=')  # Remove padding
 
         return code_verifier, code_challenge
+
+    @staticmethod
+    def _code_hash(value: str) -> str:
+        return hashlib.sha256(value.encode('utf-8')).hexdigest()
+
+    @staticmethod
+    def _cache_key(state_token: str) -> str:
+        return f"oauth:code-verifier:{state_token}"
+
+    def _store_code_verifier(self, state_token: str, code_verifier: str) -> None:
+        cache.set(self._cache_key(state_token), code_verifier, timeout=self.cache_timeout)
+
+    def pop_code_verifier(self, oauth_state: GoogleOAuthState) -> str:
+        """Retrieve and remove the plaintext code verifier from cache."""
+        cache_key = self._cache_key(oauth_state.state_token)
+        code_verifier = cache.get(cache_key)
+        if code_verifier is None:
+            raise InvalidStateError("Code verifier no longer available for this state")
+
+        expected_hash = oauth_state.code_verifier_hash
+        actual_hash = self._code_hash(code_verifier)
+        if not secrets.compare_digest(expected_hash, actual_hash):
+            raise InvalidStateError("Code verifier hash mismatch")
+
+        cache.delete(cache_key)
+        return code_verifier
 
     def validate_redirect_uri(self, redirect_uri: str) -> None:
         """Validate redirect URI against whitelist.
@@ -98,13 +126,14 @@ class PKCEStateService:
         # Store state in database
         oauth_state = GoogleOAuthState.objects.create(
             state_token=state_token,
-            code_verifier=code_verifier,
+            code_verifier_hash=self._code_hash(code_verifier),
             redirect_uri=redirect_uri,
             nonce=nonce,
             ip_address=ip_address,
             user_agent=user_agent,
             expires_at=expires_at
         )
+        self._store_code_verifier(state_token, code_verifier)
 
         logger.info(
             "OAuth state created",

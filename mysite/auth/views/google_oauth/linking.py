@@ -15,6 +15,7 @@ from mysite.auth.services.google_oauth_service import (
     GoogleOAuthService,
     OAuthError,
     GoogleAccountAlreadyLinkedError,
+    InvalidStateError,
 )
 from mysite.auth.serializers import (
     OAuthLinkRequestSerializer,
@@ -110,6 +111,17 @@ class GoogleOAuthLinkView(APIView):
             return success_response(
                 response_serializer.data,
                 messages=[create_message('notifications.oauth.account_linked', {})]
+            )
+
+        except InvalidStateError:
+            logger.warning(
+                "Invalid OAuth state token for link operation",
+                extra={'user_id': request.user.id, 'ip': ip_address}
+            )
+            return error_response(
+                'invalid_state_token',
+                [create_message('errors.oauth.invalid_state', {})],
+                status.HTTP_400_BAD_REQUEST
             )
 
         except GoogleAccountAlreadyLinkedError as e:

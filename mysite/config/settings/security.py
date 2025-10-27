@@ -122,6 +122,16 @@ def _get_session_cookie_config(debug: bool) -> dict:
         'SESSION_COOKIE_SAMESITE': os.environ.get('DJANGO_SESSION_COOKIE_SAMESITE', 'Lax'),
     }
 
+# Client IP / Proxy trust configuration
+def _get_ip_trust_config(debug: bool) -> dict:
+    """Configure forwarding trust and proxy allowlists."""
+    default_trust = debug
+    default_proxies = ['127.0.0.1', '::1'] if debug else []
+    return {
+        'TRUST_FORWARDED_FOR': _env_flag('DJANGO_TRUST_FORWARDED_FOR', default=default_trust),
+        'TRUSTED_PROXY_IPS': _env_list('DJANGO_TRUSTED_PROXY_IPS', default=default_proxies),
+    }
+
 
 # This will be set by base.py after DEBUG is available
 # SESSION_COOKIE_SECURE = ...

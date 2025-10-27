@@ -27,6 +27,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .custom_tokens import CustomRefreshToken
 from mysite.users.models import User
+from mysite.security.ip_utils import get_client_ip as resolve_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -170,12 +171,7 @@ def get_client_ip(request) -> str:
     Returns:
         Client IP address as string
     """
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0].strip()
-    else:
-        ip = request.META.get('REMOTE_ADDR', '')
-    return ip
+    return resolve_client_ip(request) or ''
 
 
 def generate_partial_token(user: User, request=None, expires_in: int = 600) -> str:

@@ -108,8 +108,7 @@ class GoogleOAuthCallbackView(APIView):
             response_data = {
                 'user': UserSerializer(user).data,
                 'tokens': {
-                    'access': str(tokens['access']),
-                    'refresh': str(tokens['refresh'])
+                    'access': str(tokens['access'])
                 },
                 'account_action': account_action
             }

@@ -51,7 +51,7 @@ class TestGoogleOAuthURLGeneration(TestCase):
         oauth_state = GoogleOAuthState.objects.get(state_token=state_token)
         self.assertEqual(oauth_state.redirect_uri, self.redirect_uri)
         self.assertEqual(oauth_state.ip_address, self.ip_address)
-        self.assertIsNotNone(oauth_state.code_verifier)
+        self.assertIsNotNone(oauth_state.code_verifier_hash)
         self.assertIsNotNone(oauth_state.nonce)
 
     def test_generate_auth_url_invalid_redirect_uri(self):

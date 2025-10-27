@@ -22,6 +22,14 @@ We want a reusable React library that renders a month-view calendar where each d
 - Published as a separate React library in its own folder/repository structure (not embedded in the app source tree). Uses a shared browserslist for tooling targets.
 
 
+## Implementation & Distribution
+- Target React 18.2+ and TypeScript 5.x so the package aligns with the main SPA runtime and typing expectations.
+- Build with `tsup` to emit both ESM (`index.mjs`) and CJS (`index.cjs`) bundles plus tree-shakable TypeScript declarations (`index.d.ts`), and verify SSR-compatibility for Node 18+.
+- Package lives under `web/packages/photo-calendar`; publish internally through the workspace registry (no public NPM publish in the initial release) and version via Changesets alongside the SPA.
+- Consumers import from `@tinybeans/photo-calendar` through the workspace alias; apps that need per-app theming ship styles locally, while the core package stays unstyled.
+- Reuse the shared `browserslist` targets and ensure the bundle stays <12kb gzipped for the default export (excluding consumer-provided UI).
+
+
 ## Requirements
 1. Rendering & Navigation
    - Monthly grid with weekday headers; supports min/max date bounds.
@@ -49,11 +57,16 @@ We want a reusable React library that renders a month-view calendar where each d
    - Roving tabindex for day cells; arrow-key navigation; enter/space to open day.
    - ARIA roles/labels (grid, gridcell, row, rowheader); readable overflow counts.
    - High-contrast and reduced-motion support.
+   - Automated audits: run `npm run test -- --runInBand` with `@testing-library/react` focused keyboard specs, `axe-core` smoke tests in CI, and Storybook a11y plugin checks for the reference implementation.
+   - Manual QA: verify keyboard navigation matrix, screen-reader narration (NVDA + VoiceOver), and contrast ratios against WCAG AA before GA.
 
 6. Performance
    - O(visible days) render; avoid list re-creation on navigation.
    - Preload adjacent months’ metadata; prefetch images on hover/focus.
    - Optional virtualization for infinite month scroller.
+   - Use `@tanstack/react-virtual` for multi-month virtualization and memoize day cell renders by `date` + `itemIds` to keep month switches under 50 ms on mid-tier laptops.
+   - Enforce image decoding budget: limit concurrent `decode()` calls to 4 and gate eager decodes behind visibility heuristics; warn via dev-only logging when thresholds are exceeded.
+   - Capture perf baselines (Chrome mid-tier laptop, Moto G Power) and regressions via Lighthouse CI; fail CI if month navigation FPS drops below 45fps on the reference fixture.
 
 7. Theming & Extensibility
    - Unstyled primitives with className/style passthroughs.
@@ -132,6 +145,9 @@ PhotoItem {
 }
 ```
 Library groups items by day; consumers pass `itemsByDate` or `items` and a `groupBy` function.
+- Library helpers ship `normalizeCalendarDate(date, timezone)` and `groupItemsByDate(items, timezone)` utilities; invalid dates trigger a development warning and the item is skipped instead of breaking rendering.
+- Thumbnails are required; missing URLs fall back to the optional `renderMissingThumbnail` slot so consumers can inject placeholders.
+- Consumers decide the canonical timezone; the library never mutates incoming objects and emits the normalized ISO string alongside each day for reliable analytics.
 
 ## Public API (draft)
 - <Calendar
@@ -168,6 +184,12 @@ Library groups items by day; consumers pass `itemsByDate` or `items` and a `grou
 // Optional collage
 <Calendar maxThumbnailsPerDay={3} thumbnailLayout="grid" ... />
 ```
+
+## Integration Guidance
+- **Keeps query contract:** pair the calendar with the existing `useKeepCalendar` TanStack Query (fetching `/api/keeps?start&end`); pass the returned `items` to `groupItemsByDate` and forward `onRangeChange` to the query’s `refetch` with the normalized start/end.
+- **Styling:** map design tokens from `web/components.json` to the slots (e.g., `Calendar.DayCell` uses `--calendar-surface` and `--calendar-today-ring`); maintain styles within the consuming app so multiple brands can reuse the headless core.
+- **Analytics:** expose `onDayOpen`, `onThumbnailSelect`, and `onMonthChange` callbacks so apps emit existing Keeps analytics events; ensure callbacks fire after internal state settles to keep telemetry consistent.
+- **Testing in host apps:** add snapshot + interaction tests in the consuming app to guard integration (focus traps, analytics firing) and run the shared Storybook stories to validate theming overrides.
 
 
 ## Additional Ideas (Future Enhancements)

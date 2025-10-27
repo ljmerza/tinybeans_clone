@@ -72,7 +72,8 @@ class GoogleAPIService:
     def exchange_code_for_token(
         self,
         authorization_code: str,
-        oauth_state: GoogleOAuthState
+        oauth_state: GoogleOAuthState,
+        code_verifier: str
     ) -> Dict[str, any]:
         """Exchange authorization code for access token using PKCE.
 
@@ -102,7 +103,7 @@ class GoogleAPIService:
             )
 
             # Set code verifier for PKCE
-            flow.code_verifier = oauth_state.code_verifier
+            flow.code_verifier = code_verifier
 
             # Exchange code for token
             flow.fetch_token(code=authorization_code)
