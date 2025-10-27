@@ -1,6 +1,17 @@
 import { useMemo, useState } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 
+export interface PhotoEntry {
+  /**
+   * ISO datetime string indicating when this photo was taken
+   */
+  datetime: string;
+  /**
+   * Array of photo URLs, the first one will be displayed in the calendar
+   */
+  photos: string[];
+}
+
 export interface PhotoCalendarProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * Visible month identifier (ISO yyyy-mm) used for quick visual validation while the real library takes shape.
@@ -23,6 +34,10 @@ export interface PhotoCalendarProps extends HTMLAttributes<HTMLDivElement> {
    * Keeps the placeholder grid alignment consistent with locale expectations.
    */
   firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  /**
+   * Array of photo entries with datetime and photos array. First photo will be displayed.
+   */
+  entries?: PhotoEntry[];
   /**
    * Optional slot for dev-only scaffolding while the headless primitives are built.
    */
@@ -89,6 +104,7 @@ export function PhotoCalendar({
   onMonthChange,
   onDaySelect,
   firstDayOfWeek = 0,
+  entries,
   children,
   ...rest
 }: PhotoCalendarProps) {
@@ -101,6 +117,20 @@ export function PhotoCalendar({
   const currentMonth = monthDate.getUTCMonth();
   const monthLabel = monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' });
   const calendarCells = useMemo(() => createCalendarCells(monthDate, firstDayOfWeek), [monthDate, firstDayOfWeek]);
+
+  // Convert entries array to a map for quick lookup by date
+  const photosByDate = useMemo(() => {
+    if (!entries) return {};
+    const map: Record<string, string> = {};
+    entries.forEach((entry) => {
+      if (entry.photos.length > 0) {
+        // Extract date portion from ISO datetime string (yyyy-mm-dd)
+        const dateKey = entry.datetime.slice(0, 10);
+        map[dateKey] = entry.photos[0];
+      }
+    });
+    return map;
+  }, [entries]);
 
   const navigateToMonth = (monthIndex: number) => {
     const nextDate = new Date(Date.UTC(currentYear, monthIndex, 1));
@@ -133,26 +163,26 @@ export function PhotoCalendar({
   return (
     <div role="grid" aria-label={`Photo calendar prototype for ${monthLabel}`} data-view="calendar" {...rest}>
       <div className="calendar-banner">
-        <button
-          type="button"
-          className="nav-button nav-button--prev"
-          aria-label="Previous year"
-          onClick={() => navigateYear(-1)}
-        >
-          ‹
-        </button>
-        <div className="calendar-header-content">
-          <div className="calendar-year-row">
-            <strong className="calendar-year">{currentYear}</strong>
-            <button
-              type="button"
-              className="today-button"
-              aria-label="Go to current month"
-              onClick={goToToday}
-            >
-              Today
-            </button>
-          </div>
+        <div className="calendar-year-row">
+          <strong className="calendar-year">{currentYear}</strong>
+          <button
+            type="button"
+            className="today-button"
+            aria-label="Go to current month"
+            onClick={goToToday}
+          >
+            Today
+          </button>
+        </div>
+        <div className="month-chips-row">
+          <button
+            type="button"
+            className="nav-button nav-button--prev"
+            aria-label="Previous year"
+            onClick={() => navigateYear(-1)}
+          >
+            ‹
+          </button>
           <div className="month-chips">
             {MONTH_NAMES_SHORT.map((monthName, monthIndex) => (
               <button
@@ -167,15 +197,15 @@ export function PhotoCalendar({
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className="nav-button nav-button--next"
+            aria-label="Next year"
+            onClick={() => navigateYear(1)}
+          >
+            ›
+          </button>
         </div>
-        <button
-          type="button"
-          className="nav-button nav-button--next"
-          aria-label="Next year"
-          onClick={() => navigateYear(1)}
-        >
-          ›
-        </button>
       </div>
       <div className="calendar-grid">
         {calendarCells.map((cell, index) => {
@@ -185,23 +215,33 @@ export function PhotoCalendar({
               ? new Date(Date.UTC(monthDate.getUTCFullYear(), monthDate.getUTCMonth(), cell.day))
               : undefined;
 
+          const isoDate = dateForCell?.toISOString().slice(0, 10);
+          const photoUrl = isoDate ? photosByDate[isoDate] : undefined;
+
           return (
             <button
               key={`calendar-cell-${index}`}
               type="button"
-              className="calendar-cell"
+              className={`calendar-cell ${photoUrl ? 'calendar-cell--has-photo' : ''}`}
               role="gridcell"
               aria-disabled={isPlaceholder}
               disabled={isPlaceholder}
               onClick={() => {
-                if (!isPlaceholder && dateForCell) {
+                if (!isPlaceholder && dateForCell && isoDate) {
                   onDaySelect?.({
-                    isoDate: dateForCell.toISOString().slice(0, 10),
+                    isoDate,
                     date: dateForCell
                   });
                 }
               }}
             >
+              {photoUrl && (
+                <img
+                  src={photoUrl}
+                  alt={`Photo for ${isoDate}`}
+                  className="calendar-cell-image"
+                />
+              )}
               {!isPlaceholder && <span className="cell-label">{cell.day}</span>}
             </button>
           );
