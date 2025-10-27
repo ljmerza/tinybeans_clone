@@ -4,8 +4,8 @@ import { PhotoCalendar, type PhotoEntry } from '@tinybeans/photo-calendar';
 // Using various image sizes to show object-fit: cover working properly
 const generateSampleEntries = (): PhotoEntry[] => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
 
   // Add photos for various days in the current month with different aspect ratios
   const photoDays = [1, 3, 5, 7, 9, 12, 14, 16, 18, 20, 22, 25, 27, 28];

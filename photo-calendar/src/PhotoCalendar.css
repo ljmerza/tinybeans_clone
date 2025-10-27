@@ -1,0 +1,116 @@
+/* Calendar Banner Layout */
+.calendar-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1rem;
+}
+
+.calendar-year-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.calendar-year {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.today-button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.month-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.month-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  flex: 1;
+}
+
+.month-chip {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.month-chip:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0.5rem;
+  flex-shrink: 0;
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Calendar Grid Layout */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.1rem;
+}
+
+.calendar-cell {
+  min-height: 120px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.calendar-cell-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+.cell-label {
+  pointer-events: none;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+}
