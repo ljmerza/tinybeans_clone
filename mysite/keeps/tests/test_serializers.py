@@ -29,10 +29,7 @@ def circle(user):
         name='Test Family',
         created_by=user
     )
-    CircleMembership.objects.create(
-        user=user,
-        circle=circle
-    )
+    # Membership for user is auto-created by the post_save signal on Circle
     return circle
 
 

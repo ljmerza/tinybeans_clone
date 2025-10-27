@@ -21,10 +21,7 @@ class KeepModelTest(TestCase):
             name='Test Family',
             created_by=self.user
         )
-        CircleMembership.objects.create(
-            user=self.user,
-            circle=self.circle
-        )
+        # Membership for user is auto-created by the post_save signal on Circle
     
     def test_create_basic_keep(self):
         """Test creating a basic keep."""
@@ -217,13 +214,9 @@ class KeepAdminPermissionsTest(TestCase):
             name='Test Family',
             created_by=self.admin_user
         )
-        
-        # Create memberships
-        CircleMembership.objects.create(
-            user=self.admin_user,
-            circle=self.circle,
-            role=UserRole.CIRCLE_ADMIN
-        )
+        # Membership for admin_user is auto-created by the post_save signal on Circle
+
+        # Create membership for regular user
         CircleMembership.objects.create(
             user=self.regular_user,
             circle=self.circle,

@@ -102,7 +102,7 @@ class UserModelTests(TestCase):
     def test_needs_circle_onboarding_completed_after_membership(self):
         user = User.objects.create_user(email='member@example.com', password='password123')
         circle = Circle.objects.create(name='Family', created_by=user)
-        CircleMembership.objects.create(circle=circle, user=user)
+        # Membership for user is auto-created by the post_save signal on Circle
         user.refresh_from_db()
         self.assertEqual(user.circle_onboarding_status, 'completed')
         self.assertFalse(user.needs_circle_onboarding)

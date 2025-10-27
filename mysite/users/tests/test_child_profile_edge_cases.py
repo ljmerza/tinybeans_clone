@@ -25,11 +25,7 @@ class ChildProfileViewEdgeCaseTests(TestCase):
             role=UserRole.CIRCLE_ADMIN
         )
         self.circle = Circle.objects.create(name='Family', created_by=self.admin)
-        CircleMembership.objects.create(
-            user=self.admin,
-            circle=self.circle,
-            role=UserRole.CIRCLE_ADMIN
-        )
+        # Membership for admin is auto-created by the post_save signal on Circle
         self.child = ChildProfile.objects.create(
             circle=self.circle,
             display_name='Test Child'

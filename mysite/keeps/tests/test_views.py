@@ -42,11 +42,7 @@ def circle(user):
         name='Test Family',
         created_by=user
     )
-    CircleMembership.objects.create(
-        user=user,
-        circle=circle,
-        role=UserRole.CIRCLE_ADMIN
-    )
+    # Membership for user is auto-created by the post_save signal on Circle
     return circle
 
 
@@ -57,10 +53,7 @@ def other_circle(other_user):
         name='Other Family',
         created_by=other_user
     )
-    CircleMembership.objects.create(
-        user=other_user,
-        circle=circle
-    )
+    # Membership for other_user is auto-created by the post_save signal on Circle
     return circle
 
 

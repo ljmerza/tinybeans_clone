@@ -111,6 +111,7 @@ export function useRespondToCircleInvitation(): UseMutationResult<
 		mutationFn: ({ invitationId, action }) =>
 			circleServices.respondToInvitation(invitationId, action),
 		onSuccess: (response, variables) => {
+			clearInvitation();
 			if (response.messages?.length) {
 				showAsToast(response.messages, 200);
 			}
@@ -123,6 +124,7 @@ export function useRespondToCircleInvitation(): UseMutationResult<
 			});
 		},
 		onError: (error) => {
+			clearInvitation();
 			const status = error.status ?? 400;
 			showAsToast(error.messages, status);
 			trackCircleInviteEvent("invitation_onboarding_respond_failed", {

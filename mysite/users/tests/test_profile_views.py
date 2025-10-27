@@ -43,11 +43,7 @@ class NotificationPreferencesViewTests(TestCase):
             password='password123',
         )
         self.circle = Circle.objects.create(name='Notif Circle', created_by=self.user)
-        CircleMembership.objects.create(
-            user=self.user,
-            circle=self.circle,
-            role=UserRole.CIRCLE_ADMIN,
-        )
+        # Membership for user is auto-created by the post_save signal on Circle
 
     def test_get_preferences_returns_extended_fields(self):
         self.client.force_authenticate(user=self.user)

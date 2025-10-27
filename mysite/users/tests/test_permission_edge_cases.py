@@ -33,11 +33,7 @@ class PermissionAndAccessTests(TestCase):
             role=UserRole.CIRCLE_MEMBER
         )
         self.circle = Circle.objects.create(name='Private Circle', created_by=self.admin)
-        CircleMembership.objects.create(
-            user=self.admin,
-            circle=self.circle,
-            role=UserRole.CIRCLE_ADMIN
-        )
+        # Membership for admin is auto-created by the post_save signal on Circle
         CircleMembership.objects.create(
             user=self.member,
             circle=self.circle,
@@ -103,11 +99,7 @@ class PermissionAndAccessTests(TestCase):
             password='password123'
         )
         other_circle = Circle.objects.create(name='Other Circle', created_by=other_admin)
-        CircleMembership.objects.create(
-            user=other_admin,
-            circle=other_circle,
-            role=UserRole.CIRCLE_ADMIN
-        )
+        # Membership for other_admin is auto-created by the post_save signal on Circle
 
         # Member from first circle should not access second circle
         self.client.force_authenticate(user=self.member)

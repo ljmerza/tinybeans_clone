@@ -26,7 +26,7 @@ class CircleOnboardingStatusViewTests(APITestCase):
 
     def test_updates_when_membership_created(self):
         circle = Circle.objects.create(name="Family", created_by=self.user)
-        CircleMembership.objects.create(circle=circle, user=self.user)
+        # Membership for user is auto-created by the post_save signal on Circle
         self.user.refresh_from_db()
 
         response = self.client.get(reverse("circle-onboarding-status"))
@@ -55,7 +55,7 @@ class CircleOnboardingSkipViewTests(APITestCase):
 
     def test_skip_noop_when_completed(self):
         circle = Circle.objects.create(name="Family", created_by=self.user)
-        CircleMembership.objects.create(circle=circle, user=self.user)
+        # Membership for user is auto-created by the post_save signal on Circle
         self.user.refresh_from_db()
         response = self.client.post(reverse("circle-onboarding-skip"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)

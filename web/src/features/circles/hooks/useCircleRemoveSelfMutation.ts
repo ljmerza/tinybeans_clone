@@ -35,7 +35,7 @@ export function useCircleRemoveSelfMutation() {
 				queryKey: circleKeys.list(),
 			});
 
-			if (response.messages?.length) {
+			if (response?.messages?.length) {
 				showAsToast(response.messages, 200);
 			} else {
 				showToast({

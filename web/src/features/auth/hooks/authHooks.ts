@@ -7,6 +7,7 @@ import {
 import {
 	consumeInviteRedirect,
 	parseInvitationRedirect,
+	rememberInviteRedirect,
 } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
@@ -335,6 +336,9 @@ export function useLogout() {
 		mutationFn: async () => {
 			await authServices.logout();
 			setAccessToken(null);
+			// Clear invitation-related sessionStorage to prevent cross-user contamination
+			clearInvitation();
+			rememberInviteRedirect(null);
 			return true;
 		},
 		onSuccess: () => {
@@ -344,16 +348,13 @@ export function useLogout() {
 	});
 }
 
-
 export function usePasswordResetRequest() {
-	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>(
-		{
-			mutationFn: (body) => authServices.requestPasswordReset(body),
-			onError: (error) => {
-				console.error("Password reset error:", error);
-			},
+	return useMutation<ApiResponseWithMessages, ApiError, { email: string }>({
+		mutationFn: (body) => authServices.requestPasswordReset(body),
+		onError: (error) => {
+			console.error("Password reset error:", error);
 		},
-	);
+	});
 }
 
 export function usePasswordResetConfirm() {
