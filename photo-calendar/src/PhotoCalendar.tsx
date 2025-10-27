@@ -81,6 +81,8 @@ function addMonths(date: Date, offset: number): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + offset, 1));
 }
 
+const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export function PhotoCalendar({
   monthKey,
   defaultMonthKey,
@@ -95,11 +97,32 @@ export function PhotoCalendar({
 
   const effectiveMonthKey = isControlled ? (monthKey as string) : internalMonthKey;
   const monthDate = useMemo(() => parseMonthKey(effectiveMonthKey), [effectiveMonthKey]);
+  const currentYear = monthDate.getUTCFullYear();
+  const currentMonth = monthDate.getUTCMonth();
   const monthLabel = monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' });
   const calendarCells = useMemo(() => createCalendarCells(monthDate, firstDayOfWeek), [monthDate, firstDayOfWeek]);
 
-  const navigateMonth = (delta: number) => {
-    const nextDate = addMonths(monthDate, delta);
+  const navigateToMonth = (monthIndex: number) => {
+    const nextDate = new Date(Date.UTC(currentYear, monthIndex, 1));
+    const nextKey = formatMonthKey(nextDate);
+    onMonthChange?.(nextKey);
+    if (!isControlled) {
+      setInternalMonthKey(nextKey);
+    }
+  };
+
+  const navigateYear = (delta: number) => {
+    const nextDate = new Date(Date.UTC(currentYear + delta, currentMonth, 1));
+    const nextKey = formatMonthKey(nextDate);
+    onMonthChange?.(nextKey);
+    if (!isControlled) {
+      setInternalMonthKey(nextKey);
+    }
+  };
+
+  const goToToday = () => {
+    const now = new Date();
+    const nextDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     const nextKey = formatMonthKey(nextDate);
     onMonthChange?.(nextKey);
     if (!isControlled) {
@@ -113,17 +136,43 @@ export function PhotoCalendar({
         <button
           type="button"
           className="nav-button nav-button--prev"
-          aria-label="Previous month"
-          onClick={() => navigateMonth(-1)}
+          aria-label="Previous year"
+          onClick={() => navigateYear(-1)}
         >
           ‹
         </button>
-        <strong>{monthLabel}</strong>
+        <div className="calendar-header-content">
+          <div className="calendar-year-row">
+            <strong className="calendar-year">{currentYear}</strong>
+            <button
+              type="button"
+              className="today-button"
+              aria-label="Go to current month"
+              onClick={goToToday}
+            >
+              Today
+            </button>
+          </div>
+          <div className="month-chips">
+            {MONTH_NAMES_SHORT.map((monthName, monthIndex) => (
+              <button
+                key={monthName}
+                type="button"
+                className={`month-chip ${monthIndex === currentMonth ? 'month-chip--active' : ''}`}
+                aria-label={`Go to ${monthName} ${currentYear}`}
+                aria-current={monthIndex === currentMonth ? 'date' : undefined}
+                onClick={() => navigateToMonth(monthIndex)}
+              >
+                {monthName}
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           type="button"
           className="nav-button nav-button--next"
-          aria-label="Next month"
-          onClick={() => navigateMonth(1)}
+          aria-label="Next year"
+          onClick={() => navigateYear(1)}
         >
           ›
         </button>
