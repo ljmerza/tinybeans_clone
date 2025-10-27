@@ -7,8 +7,9 @@
   padding: 1.5rem 1rem;
 }
 
+/* Mobile: Hide year row */
 .calendar-year-row {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 1rem;
 }
@@ -26,9 +27,11 @@
   transition: background 0.2s;
 }
 
+/* Mobile: Space buttons on sides */
 .month-chips-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   width: 100%;
 }
@@ -39,6 +42,16 @@
   gap: 0.5rem;
   justify-content: center;
   flex: 1;
+}
+
+/* Mobile: Show month label */
+.month-label-mobile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  font-size: 1.25rem;
+  text-align: center;
 }
 
 .month-chip {
@@ -69,6 +82,49 @@
 .nav-button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
+}
+
+/* Default: Show month nav buttons, hide year nav and chips */
+.nav-button--month {
+  display: flex;
+}
+
+.nav-button--year {
+  display: none;
+}
+
+.month-chips {
+  display: none;
+}
+
+/* Large screens (875px+): Show year nav and chips, hide month nav */
+@media (min-width: 875px) {
+  /* Show year row on desktop */
+  .calendar-year-row {
+    display: flex;
+  }
+
+  /* Hide mobile month label on desktop */
+  .month-label-mobile {
+    display: none;
+  }
+
+  /* Center align content on desktop */
+  .month-chips-row {
+    justify-content: center;
+  }
+
+  .nav-button--month {
+    display: none;
+  }
+
+  .nav-button--year {
+    display: flex;
+  }
+
+  .month-chips {
+    display: flex;
+  }
 }
 
 /* Calendar Grid Layout */

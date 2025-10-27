@@ -142,6 +142,15 @@ export function PhotoCalendar({
     }
   };
 
+  const navigateMonth = (delta: number) => {
+    const nextDate = addMonths(monthDate, delta);
+    const nextKey = formatMonthKey(nextDate);
+    onMonthChange?.(nextKey);
+    if (!isControlled) {
+      setInternalMonthKey(nextKey);
+    }
+  };
+
   const navigateYear = (delta: number) => {
     const nextDate = new Date(Date.UTC(currentYear + delta, currentMonth, 1));
     const nextKey = formatMonthKey(nextDate);
@@ -178,9 +187,17 @@ export function PhotoCalendar({
         <div className="month-chips-row">
           <button
             type="button"
-            className="nav-button nav-button--prev"
+            className="nav-button nav-button--prev nav-button--year"
             aria-label="Previous year"
             onClick={() => navigateYear(-1)}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="nav-button nav-button--prev nav-button--month"
+            aria-label="Previous month"
+            onClick={() => navigateMonth(-1)}
           >
             ‹
           </button>
@@ -198,13 +215,32 @@ export function PhotoCalendar({
               </button>
             ))}
           </div>
+          <div className="month-label-mobile">
+            <strong>{monthLabel}</strong>
+          </div>
           <button
             type="button"
-            className="nav-button nav-button--next"
+            className="nav-button nav-button--next nav-button--year"
             aria-label="Next year"
             onClick={() => navigateYear(1)}
           >
             ›
+          </button>
+          <button
+            type="button"
+            className="nav-button nav-button--next nav-button--month"
+            aria-label="Next month"
+            onClick={() => navigateMonth(1)}
+          >
+            ›
+          </button>
+          <button
+            type="button"
+            className="today-button-icon"
+            aria-label="Go to current month"
+            onClick={goToToday}
+          >
+            📅
           </button>
         </div>
       </div>
