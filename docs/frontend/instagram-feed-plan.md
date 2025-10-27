@@ -23,7 +23,7 @@
 ## 4. Frontend Architecture
 **Stack Alignment**  
 - Reuse TanStack Router + Query already powering SPA; standardize on TanStack Virtual (`@tanstack/react-virtual`) for list virtualization.
-- Extract shared feed logic into `packages/feed-virtualizer/` npm workspace library (private initially). Host feed route wrapper in app code, but keep virtualization hooks/components inside the package for reuse across surfaces.
+- Extract shared feed logic into a new top-level template directory `tmpl/instagram-feed-virtualizer/`. The template acts as an incubator for a standalone repo, while the main app consumes its build artifacts or packages via npm workspace linkage.
 
 **Data Fetching & Caching**  
 - Feed hook `useFeedQuery({ circleId, cursor, filters })` wraps paginated GET `/api/feed/`.
@@ -31,7 +31,7 @@
 - Prefetch next page during idle periods using `queryClient.prefetchInfiniteQuery`.
 
 **Virtualization Strategy**  
-- Use TanStack Virtual’s window ref to recycle DOM nodes, but retain media elements to avoid re-buffering video. Implement `overscan={2}` and dynamic measurement callback for posts with expanded comments. Export as `useInstagramFeedVirtualizer` hook from new npm package.
+- Use TanStack Virtual’s window ref to recycle DOM nodes, but retain media elements to avoid re-buffering video. Implement `overscan={2}` and dynamic measurement callback for posts with expanded comments. Export as `useInstagramFeedVirtualizer` hook from the template package so other projects can adopt the same behavior.
 - Handle masonry vs single-column: start single-column to reduce complexity; revisit multi-column after MVP.
 - Intersection Observer tracks when posts become visible to kick off media requests or analytics events.
 
@@ -95,16 +95,16 @@
 ## 13. Milestones & Deliverables
 1. **Design & API Alignment (Week 0-1)** — Wireframes, endpoint schema review, confirm TanStack Virtual abstraction boundaries.  
 2. **Backend Foundations (Week 1-2)** — Implement feed endpoint, counters, access control tests.  
-3. **Library Bootstrap (Week 2)** — Scaffold `packages/feed-virtualizer`, expose virtualization hooks/components, document API.  
-4. **Frontend MVP (Week 2-4)** — Integrate library into feed route, media rendering, likes/comments optimistic flows, loading/error states.  
-5. **Performance Hardening (Week 4-5)** — Profiling, image optimization, offline queue, a11y polishing, publish library beta to private npm registry.  
+3. **Template Bootstrap (Week 2)** — Scaffold `tmpl/instagram-feed-virtualizer`, expose virtualization hooks/components, document API.  
+4. **Frontend MVP (Week 2-4)** — Integrate template package into feed route, media rendering, likes/comments optimistic flows, loading/error states.  
+5. **Performance Hardening (Week 4-5)** — Profiling, image optimization, offline queue, a11y polishing, publish template artifacts to private npm registry.  
 6. **Real-Time & Analytics (Week 5+)** — Optional SSE/WebSocket integration, metric dashboards, iterative UX enhancements.
 
 ## 14. Distribution Strategy
-- Treat `packages/feed-virtualizer` as an internal npm workspace package with semver releases; expose hooks (`useInstagramFeedVirtualizer`), presentational container (`FeedVirtualizer`), and utility types.  
-- Publish to GitHub Packages/private npm registry after beta readiness; provide README with usage within `web` app and potential external surfaces (admin dashboards, mobile wrapper).  
-- Add Storybook stories illustrating feed virtualization states for regression testing.  
-- Ensure package exports remain tree-shakeable and typed (TS declaration maps on build).
+- Treat `tmpl/instagram-feed-virtualizer` as a self-contained template repo: own package.json, build tooling, Storybook, and README. Use npm workspaces or `pnpm link` to consume in the main app during incubation.  
+- Plan to split the template into its own Git repository once stabilized; keep CI scripts ready for independent testing/publishing.  
+- Publish releases to GitHub Packages/private npm registry after beta readiness while maintaining template docs for future OSS consideration.  
+- Ensure package exports remain tree-shakeable and typed (TS declaration maps on build); include Storybook stories illustrating virtualization states for regression testing.
 
 ## 15. Open Questions
 - Do we prioritize multi-circle aggregate feed or per-circle feeds at launch?  
