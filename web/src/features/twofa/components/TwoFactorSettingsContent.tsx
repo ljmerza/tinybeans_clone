@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -29,7 +28,6 @@ interface TwoFactorSettingsContentProps {
 	onRequestRemoval: (method: TwoFactorMethod) => void;
 	onSetAsDefault: (method: TwoFactorMethod) => void;
 	onNavigateToSetup: (path: string) => void;
-	onBackHome: () => void;
 }
 
 export function TwoFactorSettingsContent({
@@ -42,7 +40,6 @@ export function TwoFactorSettingsContent({
 	onRequestRemoval,
 	onSetAsDefault,
 	onNavigateToSetup,
-	onBackHome,
 }: TwoFactorSettingsContentProps) {
 	const { t } = useTranslation();
 
@@ -131,17 +128,6 @@ export function TwoFactorSettingsContent({
 			</div>
 
 			{status.is_enabled ? <TwoFactorEnabledSettings /> : null}
-
-			<div className="text-center">
-				<Button
-					type="button"
-					variant="link"
-					onClick={onBackHome}
-					className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-				>
-					{t("common.back_home")}
-				</Button>
-			</div>
 		</div>
 	);
 }

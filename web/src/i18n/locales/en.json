@@ -473,7 +473,10 @@
 				"leave": "Leave circle",
 				"leave_confirm_title": "Leave this circle?",
 				"leave_confirm_body": "You'll lose access to {{circle}} and its shared memories.",
-				"leave_confirm_cta": "Yes, leave the circle"
+				"leave_confirm_cta": "Yes, leave the circle",
+				"create_own_title": "Create your own circle",
+				"create_own_description": "You're part of circles, but you haven't created your own yet. Start your own circle to invite family and friends.",
+				"create_own_action": "Create circle"
 			},
 			"dashboard": {
 				"loading": "Loading circle details…",

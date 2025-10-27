@@ -165,10 +165,20 @@ class User(AbstractUser):
 
     @property
     def needs_circle_onboarding(self) -> bool:
-        """Return True when the user should be guided through circle onboarding."""
-        if self.circle_onboarding_status != CircleOnboardingStatus.PENDING:
-            return False
-        return not self.circle_memberships.exists()
+        """Return True when the user should be guided through circle onboarding.
+
+        This includes:
+        - Users who have never completed onboarding (status = PENDING, no circles)
+        - Users who need to re-onboard (no circles, regardless of previous status)
+
+        This allows users who left all their circles to re-onboard.
+        """
+        # If user has no circles, they need onboarding regardless of past status
+        if not self.circle_memberships.exists():
+            return True
+
+        # User has circles - no onboarding needed
+        return False
 
     def set_circle_onboarding_status(self, status: str, *, save: bool = True) -> bool:
         """Update the onboarding status and timestamp.

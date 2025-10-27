@@ -388,7 +388,10 @@
 								"leave": "Salir del círculo",
 								"leave_confirm_title": "¿Salir de este círculo?",
 								"leave_confirm_body": "Perderás el acceso a {{circle}} y a sus recuerdos compartidos.",
-								"leave_confirm_cta": "Sí, salir del círculo"
+								"leave_confirm_cta": "Sí, salir del círculo",
+								"create_own_title": "Crea tu propio círculo",
+								"create_own_description": "Eres parte de círculos, pero aún no has creado el tuyo. Comienza tu propio círculo para invitar a familiares y amigos.",
+								"create_own_action": "Crear círculo"
 							},
 							"dashboard": {
 								"loading": "Cargando detalles del círculo…",

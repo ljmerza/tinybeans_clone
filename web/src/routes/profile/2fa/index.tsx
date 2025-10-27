@@ -77,7 +77,6 @@ function TwoFactorSettingsPage() {
 						onRequestRemoval={requestRemoval}
 						onSetAsDefault={setAsDefault}
 						onNavigateToSetup={handleNavigateToSetup}
-						onBackHome={() => navigate({ to: "/" })}
 					/>
 				}
 			/>

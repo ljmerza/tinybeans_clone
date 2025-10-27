@@ -52,6 +52,8 @@ export function CirclesIndexRouteView() {
 	}
 
 	const memberships = data ?? [];
+	const hasOwnedCircle = memberships.some((m) => m.is_owner);
+	const hasMemberships = memberships.length > 0;
 
 	return (
 		<Layout>
@@ -69,6 +71,26 @@ export function CirclesIndexRouteView() {
 						/>
 					) : null}
 				</header>
+
+				{hasMemberships && !hasOwnedCircle && (
+					<div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+						<div className="flex items-start justify-between gap-4">
+							<div className="flex-1">
+								<h3 className="font-semibold text-blue-900">
+									{t("pages.circles.index.create_own_title")}
+								</h3>
+								<p className="mt-1 text-sm text-blue-700">
+									{t("pages.circles.index.create_own_description")}
+								</p>
+							</div>
+							<Button asChild variant="default" size="sm">
+								<Link to="/circles/onboarding">
+									{t("pages.circles.index.create_own_action")}
+								</Link>
+							</Button>
+						</div>
+					</div>
+				)}
 
 				{memberships.length === 0 ? (
 					<EmptyState

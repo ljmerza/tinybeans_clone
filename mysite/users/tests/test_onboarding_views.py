@@ -51,7 +51,8 @@ class CircleOnboardingSkipViewTests(APITestCase):
         self.user.refresh_from_db()
         self.assertEqual(payload["status"], CircleOnboardingStatus.DISMISSED)
         self.assertEqual(self.user.circle_onboarding_status, CircleOnboardingStatus.DISMISSED)
-        self.assertFalse(payload["needs_circle_onboarding"])
+        # User still needs onboarding if they have no circles (re-onboarding case)
+        self.assertTrue(payload["needs_circle_onboarding"])
 
     def test_skip_noop_when_completed(self):
         circle = Circle.objects.create(name="Family", created_by=self.user)

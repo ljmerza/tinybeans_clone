@@ -107,6 +107,25 @@ class UserModelTests(TestCase):
         self.assertEqual(user.circle_onboarding_status, 'completed')
         self.assertFalse(user.needs_circle_onboarding)
 
+    def test_needs_circle_onboarding_reonboarding_after_leaving_circle(self):
+        """Test that users who left all circles can re-onboard."""
+        user = User.objects.create_user(email='reonboard@example.com', password='password123')
+        circle = Circle.objects.create(name='Family', created_by=user)
+        # Membership for user is auto-created by the post_save signal on Circle
+        user.refresh_from_db()
+
+        # User has circle, onboarding is completed
+        self.assertEqual(user.circle_onboarding_status, 'completed')
+        self.assertFalse(user.needs_circle_onboarding)
+
+        # User leaves the circle
+        CircleMembership.objects.filter(user=user, circle=circle).delete()
+        user.refresh_from_db()
+
+        # User now has no circles, should need onboarding again
+        self.assertEqual(user.circle_onboarding_status, 'completed')  # Status stays completed
+        self.assertTrue(user.needs_circle_onboarding)  # But needs onboarding is true
+
     def test_set_circle_onboarding_status_updates_timestamp(self):
         user = User.objects.create_user(email='onboard@example.com', password='password123')
         self.assertIsNone(user.circle_onboarding_updated_at)
