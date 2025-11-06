@@ -11,6 +11,10 @@ vi.mock("@/features/circles", async (importOriginal) => {
 	};
 });
 
+vi.mock("@/features/keeps", () => ({
+	CircleMediaSection: () => <div data-testid="circle-media-section" />,
+}));
+
 import { useCircleMembers } from "@/features/circles";
 import { CircleDashboard } from "./dashboard";
 

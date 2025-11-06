@@ -15,7 +15,7 @@ from mysite.notification_utils import create_message, success_response, error_re
 from ..models import Keep, MediaUpload, MediaUploadStatus
 from ..tasks import validate_media_file
 from ..serializers import MediaUploadSerializer, MediaUploadStatusSerializer
-from .permissions import IsCircleMember
+from .permissions import IsCircleMember, is_circle_admin
 
 
 class MediaUploadView(APIView):
@@ -64,14 +64,16 @@ class MediaUploadView(APIView):
         # Validate parameters
         if not keep_id or not media_type or not uploaded_file:
             return error_response(
-                messages=[create_message('errors.required_fields_missing')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'required_fields_missing',
+                [create_message('errors.required_fields_missing')],
+                status.HTTP_400_BAD_REQUEST,
             )
         
         if media_type not in ['photo', 'video']:
             return error_response(
-                messages=[create_message('errors.invalid_media_type')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'invalid_media_type',
+                [create_message('errors.invalid_media_type')],
+                status.HTTP_400_BAD_REQUEST,
             )
         
         # Get keep and verify access
@@ -79,22 +81,32 @@ class MediaUploadView(APIView):
             keep = Keep.objects.get(id=keep_id)
         except Keep.DoesNotExist:
             return error_response(
-                messages=[create_message('errors.keep_not_found')],
-                status_code=status.HTTP_404_NOT_FOUND
+                'keep_not_found',
+                [create_message('errors.keep_not_found')],
+                status.HTTP_404_NOT_FOUND,
             )
         
         # Verify user has access to the keep's circle
         if not keep.circle.memberships.filter(user=request.user).exists():
             return error_response(
-                messages=[create_message('errors.access_denied')],
-                status_code=status.HTTP_403_FORBIDDEN
+                'access_denied',
+                [create_message('errors.access_denied')],
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        if not is_circle_admin(request.user, keep.circle):
+            return error_response(
+                'circle_admin_required',
+                [create_message('errors.circle_admin_required')],
+                status.HTTP_403_FORBIDDEN,
             )
         
         # Validate file size
         if uploaded_file.size > settings.MAX_UPLOAD_SIZE:
             return error_response(
-                messages=[create_message('errors.file_too_large', {'maxSize': settings.MAX_UPLOAD_SIZE})],
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+                'file_too_large',
+                [create_message('errors.file_too_large', {'maxSize': settings.MAX_UPLOAD_SIZE})],
+                status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             )
         
         # Validate file type
@@ -105,8 +117,9 @@ class MediaUploadView(APIView):
         
         if uploaded_file.content_type not in allowed_types:
             return error_response(
-                messages=[create_message('errors.invalid_file_type', {'allowedTypes': ', '.join(allowed_types)})],
-                status_code=status.HTTP_400_BAD_REQUEST
+                'invalid_file_type',
+                [create_message('errors.invalid_file_type', {'allowedTypes': ', '.join(allowed_types)})],
+                status.HTTP_400_BAD_REQUEST,
             )
         
         # Create temporary file
@@ -144,14 +157,15 @@ class MediaUploadView(APIView):
                 status_code=status.HTTP_202_ACCEPTED
             )
             
-        except Exception as e:
+        except Exception:
             # Clean up temporary file on error
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
             
             return error_response(
-                messages=[create_message('errors.upload_failed')],
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                'upload_failed',
+                [create_message('errors.upload_failed')],
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -191,7 +205,14 @@ class MediaUploadStatusView(APIView):
             return error_response(
                 'access_denied',
                 [create_message('errors.access_denied')],
-                status.HTTP_403_FORBIDDEN
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        if not is_circle_admin(request.user, upload.keep.circle):
+            return error_response(
+                'circle_admin_required',
+                [create_message('errors.circle_admin_required')],
+                status.HTTP_403_FORBIDDEN,
             )
         
         serializer = MediaUploadStatusSerializer(upload)

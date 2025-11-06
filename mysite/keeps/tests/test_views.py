@@ -1,12 +1,24 @@
 """Tests for Keep API views."""
+from unittest.mock import patch
+
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
 from mysite.circles.models import Circle, CircleMembership
 from mysite.users.models import UserRole
-from mysite.keeps.models import Keep, KeepType, KeepReaction, KeepComment
+from mysite.keeps.models import (
+    Keep,
+    KeepType,
+    KeepReaction,
+    KeepComment,
+    KeepMedia,
+    MediaUpload,
+    MediaUploadStatus,
+)
 
 User = get_user_model()
 
@@ -33,6 +45,21 @@ def other_user():
         email='other@example.com',
         password='otherpass123'
     )
+
+
+@pytest.fixture
+def circle_admin(circle):
+    """Create a circle admin distinct from the keep creator."""
+    admin_user = User.objects.create_user(
+        email='admin@example.com',
+        password='adminpass123'
+    )
+    CircleMembership.objects.create(
+        user=admin_user,
+        circle=circle,
+        role=UserRole.CIRCLE_ADMIN
+    )
+    return admin_user
 
 
 @pytest.fixture
@@ -360,3 +387,138 @@ class TestCommentViews:
         
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not KeepComment.objects.filter(id=comment.id).exists()
+
+
+@pytest.mark.django_db
+class TestKeepMediaPermissions:
+    """Test permission rules for keep media operations."""
+
+    def test_circle_admin_can_delete_keep_media(self, api_client, circle_admin, keep):
+        """Ensure any circle admin can delete media from the circle."""
+        media = KeepMedia.objects.create(
+            keep=keep,
+            media_type='photo',
+            caption='Family photo',
+            upload_order=0,
+            storage_key_original='media/original.jpg',
+            original_filename='photo.jpg',
+            content_type='image/jpeg',
+            file_size=123,
+        )
+
+        api_client.force_authenticate(user=circle_admin)
+        response = api_client.delete(f'/api/keeps/media/{media.id}/')
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not KeepMedia.objects.filter(id=media.id).exists()
+
+    def test_non_admin_member_cannot_delete_keep_media(self, api_client, other_user, circle, keep):
+        """Verify regular circle members cannot delete media."""
+        CircleMembership.objects.create(
+            user=other_user,
+            circle=circle,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+        media = KeepMedia.objects.create(
+            keep=keep,
+            media_type='photo',
+            caption='Family photo',
+            upload_order=0,
+            storage_key_original='media/original.jpg',
+            original_filename='photo.jpg',
+            content_type='image/jpeg',
+            file_size=123,
+        )
+
+        api_client.force_authenticate(user=other_user)
+        response = api_client.delete(f'/api/keeps/media/{media.id}/')
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert KeepMedia.objects.filter(id=media.id).exists()
+
+
+@pytest.mark.django_db
+class TestMediaUploadPermissions:
+    """Test permissions for media upload workflow."""
+
+    def test_circle_admin_can_initiate_media_upload(self, api_client, circle_admin, keep):
+        """Circle admins should be able to start media uploads."""
+        upload_file = SimpleUploadedFile(
+            "photo.jpg",
+            b"fake-image-data",
+            content_type="image/jpeg",
+        )
+
+        api_client.force_authenticate(user=circle_admin)
+
+        with patch("mysite.keeps.views.uploads.validate_media_file.delay") as mock_delay:
+            response = api_client.post(
+                "/api/keeps/upload/",
+                {
+                    "keep_id": str(keep.id),
+                    "media_type": "photo",
+                    "file": upload_file,
+                    "caption": "Sunset",
+                    "upload_order": 0,
+                },
+                format="multipart",
+            )
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert "data" in response.data
+        assert response.data["data"]["keep"] == str(keep.id)
+        mock_delay.assert_called_once()
+
+    def test_non_admin_member_cannot_upload_media(self, api_client, other_user, circle, keep):
+        """Regular circle members should receive a 403."""
+        CircleMembership.objects.create(
+            user=other_user,
+            circle=circle,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+        upload_file = SimpleUploadedFile(
+            "photo.jpg",
+            b"fake-image-data",
+            content_type="image/jpeg",
+        )
+
+        api_client.force_authenticate(user=other_user)
+
+        with patch("mysite.keeps.views.uploads.validate_media_file.delay") as mock_delay:
+            response = api_client.post(
+                "/api/keeps/upload/",
+                {
+                    "keep_id": str(keep.id),
+                    "media_type": "photo",
+                    "file": upload_file,
+                },
+                format="multipart",
+            )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        mock_delay.assert_not_called()
+
+    def test_non_admin_cannot_view_upload_status(self, api_client, other_user, circle, keep):
+        """Regular members should be blocked from polling upload status."""
+        membership = CircleMembership.objects.create(
+            user=other_user,
+            circle=circle,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+        upload = MediaUpload.objects.create(
+            keep=keep,
+            media_type="photo",
+            original_filename="photo.jpg",
+            content_type="image/jpeg",
+            file_size=123,
+            caption="",
+            upload_order=0,
+            temp_file_path="/tmp/fake",
+            status=MediaUploadStatus.PENDING,
+        )
+
+        api_client.force_authenticate(user=other_user)
+        response = api_client.get(f"/api/keeps/upload/{upload.id}/status/")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        membership.delete()

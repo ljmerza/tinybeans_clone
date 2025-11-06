@@ -41,11 +41,15 @@ class IsCircleAdminOrOwner(permissions.BasePermission):
         # For Keep objects
         if hasattr(obj, 'circle'):
             circle = obj.circle
-            owner_field = 'created_by'
-        # For related objects (comments, reactions, etc.)
+            owner = getattr(obj, 'created_by', None)
+        # For related objects (comments, reactions, media, etc.)
         elif hasattr(obj, 'keep'):
             circle = obj.keep.circle
-            owner_field = 'user'
+            owner = getattr(obj, 'user', None)
+            if owner is None:
+                owner = getattr(obj, 'created_by', None)
+            if owner is None and hasattr(obj.keep, 'created_by'):
+                owner = obj.keep.created_by
         else:
             return False
         
@@ -63,7 +67,6 @@ class IsCircleAdminOrOwner(permissions.BasePermission):
             return True
         
         # Allow if user is the owner of the object
-        owner = getattr(obj, owner_field, None)
         return owner == request.user
 
 

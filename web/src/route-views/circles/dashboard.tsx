@@ -5,6 +5,7 @@ import { CircleInvitationManager, CircleMemberList, useCircleMembers } from "@/f
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CircleMediaSection } from "@/features/keeps";
 
 interface CircleDashboardProps {
 	circleId: number | string;
@@ -93,6 +94,8 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 						</div>
 					</div>
 				</div>
+
+				<CircleMediaSection circleId={circleId} isAdmin={Boolean(isAdmin)} />
 
 				<CircleInvitationManager circleId={circleId} />
 

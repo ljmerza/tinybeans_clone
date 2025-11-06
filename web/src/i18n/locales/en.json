@@ -493,14 +493,52 @@
 				"admin_count_other": "{{count}} admins",
 				"member_count": "{{count}} members",
 				"member_count_one": "{{count}} member",
-				"member_count_other": "{{count}} members",
-				"refreshing": "Refreshing…",
-				"no_members": "Invite your first member to get started.",
-				"no_members_title": "No members yet",
-				"no_members_description": "Send an invitation so this circle isn't empty.",
-				"no_members_action": "Invite someone"
-			},
-			"invites": {
+			"member_count_other": "{{count}} members",
+			"refreshing": "Refreshing…",
+			"no_members": "Invite your first member to get started.",
+			"no_members_title": "No members yet",
+			"no_members_description": "Send an invitation so this circle isn't empty.",
+			"no_members_action": "Invite someone",
+			"media": {
+				"title": "Circle media uploads",
+				"description": "Admins can add photos to this circle and monitor processing status in real time.",
+				"select_keep_label": "Upload to keep",
+				"select_keep_placeholder": "Select a media keep",
+				"create_keep": "Create media keep",
+				"creating_keep": "Creating…",
+				"new_keep_title": "Circle gallery {{date}}",
+				"new_keep_description": "Shared photos uploaded by circle admins.",
+				"uploader": {
+					"input_label": "Upload circle media",
+					"disabled": "Select a media keep to enable uploads.",
+					"drop_active": "Drop the files to start uploading",
+					"prompt": "Drag & drop photos here",
+					"browse": "Browse files",
+					"helper": "JPEG, PNG, GIF, or WebP up to 100 MB each",
+					"queue_title": "Upload queue"
+				},
+				"status": {
+					"pending": "Pending",
+					"validating": "Validating",
+					"processing": "Processing",
+					"completed": "Completed",
+					"failed": "Failed"
+				},
+				"gallery": {
+					"title": "Uploaded media",
+					"refresh": "Refresh gallery",
+					"empty": "Media will appear here once processing finishes.",
+					"delete": "Delete media"
+				},
+				"toasts": {
+					"keep_created": "Media keep “{{title}}” created.",
+					"completed": "{{filename}} is ready to view.",
+					"failed": "{{filename}} failed to process.",
+					"media_deleted": "Media deleted."
+				}
+			}
+		},
+		"invites": {
 			"form": {
 				"title": "Invite someone to this circle",
 				"description": "Enter their email, pick their role, and send the invite.",
@@ -702,6 +740,7 @@
 		"invalid_keep_type": "Valid keep type required. Options: note, media, milestone",
 		"keep_not_found": "Keep not found",
 		"access_denied": "Access denied",
+		"circle_admin_required": "Only circle admins can perform this action.",
 		"required_fields_missing": "Required fields are missing",
 		"invalid_media_type": "Media type must be photo or video",
 		"upload_failed": "Upload failed. Please try again.",

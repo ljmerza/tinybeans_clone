@@ -413,7 +413,45 @@
 								"no_members": "Invita a tu primer miembro para comenzar.",
 								"no_members_title": "Aún no hay miembros",
 								"no_members_description": "Envía una invitación para que el círculo no quede vacío.",
-								"no_members_action": "Invitar a alguien"
+								"no_members_action": "Invitar a alguien",
+								"media": {
+									"title": "Cargas de fotos del círculo",
+									"description": "Los administradores pueden agregar fotos a este círculo y supervisar el estado del procesamiento en tiempo real.",
+									"select_keep_label": "Subir al recuerdo",
+									"select_keep_placeholder": "Selecciona un recuerdo multimedia",
+									"create_keep": "Crear recuerdo multimedia",
+									"creating_keep": "Creando…",
+									"new_keep_title": "Galería del círculo {{date}}",
+									"new_keep_description": "Fotos compartidas subidas por los administradores del círculo.",
+									"uploader": {
+										"input_label": "Subir medios del círculo",
+										"disabled": "Selecciona un recuerdo multimedia para habilitar las cargas.",
+										"drop_active": "Suelta los archivos para comenzar la carga",
+										"prompt": "Arrastra y suelta fotos aquí",
+										"browse": "Buscar archivos",
+										"helper": "JPEG, PNG, GIF o WebP de hasta 100 MB cada uno",
+										"queue_title": "Cola de carga"
+									},
+									"status": {
+										"pending": "Pendiente",
+										"validating": "Validando",
+										"processing": "Procesando",
+										"completed": "Completado",
+										"failed": "Fallido"
+									},
+									"gallery": {
+										"title": "Medios cargados",
+										"refresh": "Actualizar galería",
+										"empty": "Los medios aparecerán aquí cuando termine el procesamiento.",
+										"delete": "Eliminar medio"
+									},
+									"toasts": {
+										"keep_created": "Recuerdo multimedia «{{title}}» creado.",
+										"completed": "{{filename}} está listo para ver.",
+										"failed": "{{filename}} no se pudo procesar.",
+										"media_deleted": "Medio eliminado."
+									}
+								}
 							},
 							"invites": {
 				"form": {
@@ -701,6 +739,7 @@
 		"invalid_keep_type": "Tipo de momento requerido. Opciones: nota, media, hito",
 		"keep_not_found": "Momento no encontrado",
 		"access_denied": "Acceso denegado",
+		"circle_admin_required": "Solo los administradores del círculo pueden realizar esta acción.",
 		"required_fields_missing": "Faltan campos requeridos",
 		"invalid_media_type": "El tipo de medio debe ser foto o video",
 		"upload_failed": "Error en la carga. Por favor intente de nuevo.",
