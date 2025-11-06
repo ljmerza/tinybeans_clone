@@ -15,10 +15,10 @@
    - Update `MediaUploadView`/`MediaUploadStatusView` to use an `IsCircleAdmin` permission that verifies the caller’s `CircleMembership.role` is `CIRCLE_ADMIN`.  
    - The serializer outputs remain unchanged so existing consumers continue to function.
 
-2. **Frontend uploader built around `react-dropzone` + TanStack stack**  
+2. **Frontend uploader built around `react-dropzone` + TanStack Query**  
    - Introduce `react-dropzone` for drag-and-drop plus file browsing; leverage the HTML file input fallback for accessibility.  
-   - Wrap the uploader in a `CircleMediaUploader` component that uses `@tanstack/react-form` for validation (file size, type, caption) and a `useMutation` from `@tanstack/react-query` to post `FormData` to `/api/keeps/uploads/`.
-   - Maintain optimistic UI by immediately listing pending files with progress derived from `MediaUploadStatus.progress_percentage`.
+   - Wrap the uploader in a `CircleMediaUploader` component that runs client-side validation, then uses `@tanstack/react-query` mutations to post `FormData` to `/api/keeps/upload/`.  
+   - Maintain an optimistic queue UI by immediately listing pending files with progress derived from `MediaUploadStatus.progress_percentage`.
 
 3. **Asynchronous processing with deterministic image derivatives**  
    - Preserve the existing Celery pipeline: `validate_media_file` → `process_media_upload` → `generate_image_sizes`. These tasks continue to persist originals and produce 150×150 thumbnails and 800×600 gallery assets before marking uploads `completed`.  
@@ -30,8 +30,8 @@
    - Send structured audit logs (`keeps.media.process_success`/`failure`) to the existing logging stack and trigger websocket/webhook hooks when those events are available, keeping room for a richer real-time channel later.
 
 5. **Job status UI within circle keeps**  
-   - Add an `UploadManager` panel that lists in-flight uploads with their filename, current status label (Pending, Validating, Processing, Completed, Failed), and progress bar fed by the `progress_percentage` serializer field.  
-   - When an upload completes, swap the list item for the rendered media card by refetching the keep detail query; on failure, provide retry/delete affordances gated to admins.
+   - Surface an admin-only media section that shows queued uploads with filename, status label (Pending, Validating, Processing, Completed, Failed), and a progress bar fed by the `progress_percentage` serializer field.  
+   - When an upload completes, refetch the keep detail query so the gallery renders the new media; on failure, display a toast and keep the queue item for retry/removal.
 
 ## Rationale
 - Tightening upload permissions prevents non-admin members from altering the shared circle gallery, aligning with moderation expectations and privacy commitments.

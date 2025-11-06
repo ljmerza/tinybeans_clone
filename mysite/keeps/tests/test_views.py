@@ -466,7 +466,7 @@ class TestMediaUploadPermissions:
 
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert "data" in response.data
-        assert response.data["data"]["keep"] == str(keep.id)
+        assert str(response.data["data"]["keep"]) == str(keep.id)
         mock_delay.assert_called_once()
 
     def test_non_admin_member_cannot_upload_media(self, api_client, other_user, circle, keep):
