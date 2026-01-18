@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -100,6 +100,7 @@ export function CircleMediaSection({
 	});
 
 	const [deletingId, setDeletingId] = useState<number | null>(null);
+	const autoKeepAttempted = useRef<Set<string>>(new Set());
 
 	const deleteMediaMutation = useMutation({
 		mutationFn: (mediaId: number) => keepsServices.deleteMedia(mediaId),
@@ -123,6 +124,28 @@ export function CircleMediaSection({
 			setDeletingId(null);
 		},
 	});
+
+	useEffect(() => {
+		if (
+			circlePk == null ||
+			keepsQuery.isLoading ||
+			createKeepMutation.isPending ||
+			keeps.length > 0
+		) {
+			return;
+		}
+
+		const key = String(circlePk);
+		if (!autoKeepAttempted.current.has(key)) {
+			autoKeepAttempted.current.add(key);
+			createKeepMutation.mutate();
+		}
+	}, [
+		circlePk,
+		keeps.length,
+		keepsQuery.isLoading,
+		createKeepMutation,
+	]);
 
 	if (!isAdmin) {
 		return null;

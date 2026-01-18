@@ -22,6 +22,9 @@ function AuthenticatedHeaderActions() {
 	return (
 		<>
 			<Button asChild variant="ghost" size="sm">
+				<Link to="/keeps/upload">{t("nav.upload_media")}</Link>
+			</Button>
+			<Button asChild variant="ghost" size="sm">
 				<Link to="/circles">{t("nav.circles")}</Link>
 			</Button>
 			<Button asChild variant="ghost" size="sm">

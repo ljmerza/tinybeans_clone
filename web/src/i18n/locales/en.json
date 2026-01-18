@@ -24,6 +24,7 @@
 	},
 	"nav": {
 		"home": "Home",
+		"upload_media": "Upload media",
 		"circles": "Circles",
 		"login": "Login",
 		"signup": "Sign up",
@@ -620,10 +621,28 @@
 			"removing": "Removing…",
 			"joined_at": "Joined {{joinedAt}}",
 			"cannot_remove_owner": "Cannot be removed"
+			}
+		},
+		"keeps": {
+			"upload": {
+				"title": "Upload circle media",
+				"description": "Create media keeps and upload photos without visiting each circle dashboard.",
+				"form_title": "Choose a circle",
+				"form_description": "Select a circle where you're an admin to manage uploads.",
+				"select_circle_label": "Circle",
+				"select_circle_placeholder": "Select a circle",
+				"selection_title": "Select a circle",
+				"selection_description": "Pick a circle above to manage its media uploads.",
+				"no_admin_title": "Admin access required",
+				"no_admin_description": "You need to be an admin of at least one circle to upload media.",
+				"loading": "Loading upload tools…",
+				"error_title": "Can't load circles",
+				"error_message": "We couldn't load your circles right now. Please try again.",
+				"retry": "Try again"
+			}
 		}
-	}
-	},
-	"validation": {
+		},
+		"validation": {
 		"first_name_required": "First name is required",
 		"last_name_required": "Last name is required",
 		"email_required": "Email is required",

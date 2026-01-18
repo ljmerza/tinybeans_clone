@@ -24,6 +24,7 @@
 	},
 	"nav": {
 		"home": "Inicio",
+		"upload_media": "Subir medios",
 		"circles": "Círculos",
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
@@ -621,9 +622,27 @@
 					"remove_error": "No pudimos encontrar a este miembro. Actualiza e inténtalo de nuevo."
 				}
 			}
+		},
+		"keeps": {
+			"upload": {
+				"title": "Subir medios de un círculo",
+				"description": "Crea keeps de medios y sube fotos sin abrir cada panel del círculo.",
+				"form_title": "Elige un círculo",
+				"form_description": "Selecciona un círculo donde seas administrador para gestionar las cargas.",
+				"select_circle_label": "Círculo",
+				"select_circle_placeholder": "Selecciona un círculo",
+				"selection_title": "Selecciona un círculo",
+				"selection_description": "Elige un círculo arriba para gestionar sus cargas de medios.",
+				"no_admin_title": "Se requiere acceso de administrador",
+				"no_admin_description": "Debes ser administrador de al menos un círculo para subir medios.",
+				"loading": "Cargando herramientas de subida…",
+				"error_title": "No se pueden cargar los círculos",
+				"error_message": "No pudimos cargar tus círculos. Inténtalo de nuevo.",
+				"retry": "Volver a intentar"
+			}
 		}
-	},
-	"validation": {
+		},
+		"validation": {
 		"first_name_required": "Se requiere el nombre",
 		"last_name_required": "Se requiere el apellido",
 		"email_required": "Se requiere correo electrónico",

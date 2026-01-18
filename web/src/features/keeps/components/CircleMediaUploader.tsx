@@ -184,6 +184,9 @@ export function CircleMediaUploader({
 		[t],
 	);
 
+	const uploadIsDisabled = disabled || !keepId;
+	const dropzoneIsDisabled = uploadIsDisabled || uploadMutation.isPending;
+
 	const {
 		getRootProps,
 		getInputProps,
@@ -194,9 +197,9 @@ export function CircleMediaUploader({
 		onDropRejected,
 		multiple: true,
 		accept: ACCEPTED_IMAGE_TYPES,
-		disabled: disabled || !keepId || uploadMutation.isPending,
+		disabled: dropzoneIsDisabled,
 		noKeyboard: true,
-		noClick: true,
+		noClick: dropzoneIsDisabled,
 	});
 
 	const activeUploadIds = useMemo(
@@ -311,15 +314,13 @@ export function CircleMediaUploader({
 		);
 	}, []);
 
-	const uploadIsDisabled = disabled || !keepId;
-
 	return (
 		<div className="space-y-4">
 			<div
 				{...getRootProps({
 					className:
 						"border-dashed border-2 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer bg-muted/20 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-					"data-disabled": uploadIsDisabled ? "" : undefined,
+					"data-disabled": dropzoneIsDisabled ? "" : undefined,
 				})}
 			>
 				<input {...getInputProps()} aria-label={t("pages.circles.dashboard.media.uploader.input_label")} />
