@@ -37,7 +37,8 @@ class TestDeviceAreaAPI:
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert len(data) == 2
+        assert data['count'] == 2
+        assert len(data['results']) == 2
     
     def test_create_area(self):
         """Test creating a new area."""
@@ -186,9 +187,10 @@ class TestDeviceAreaAssignmentAPI:
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert len(data) == 1
-        assert data[0]['area_name'] == 'Living Room'
-        assert data[0]['device_name'] == 'Device 1'
+        assert data['count'] == 1
+        assert len(data['results']) == 1
+        assert data['results'][0]['area_name'] == 'Living Room'
+        assert data['results'][0]['device_name'] == 'Device 1'
     
     def test_create_assignment(self):
         """Test creating a device area assignment."""
@@ -284,4 +286,5 @@ class TestDeviceAreaAssignmentAPI:
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert len(data) == 0
+        assert data['count'] == 0
+        assert len(data['results']) == 0
