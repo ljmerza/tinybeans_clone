@@ -34,10 +34,8 @@ class DeviceArea(models.Model):
 class DeviceAreaAssignment(models.Model):
     """Links trusted devices to areas."""
     
-    from mysite.auth.models import TrustedDevice
-    
     device = models.OneToOneField(
-        TrustedDevice,
+        'auth_app.TrustedDevice',
         on_delete=models.CASCADE,
         related_name='area_assignment'
     )

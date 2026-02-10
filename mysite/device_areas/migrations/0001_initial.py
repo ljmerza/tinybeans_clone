@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('auth', '0001_initial'),
+        ('auth_app', '0001_initial'),
     ]
 
     operations = [
@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('area', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='device_assignments', to='device_areas.devicearea')),
                 ('assigned_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='device_assignments_made', to=settings.AUTH_USER_MODEL)),
-                ('device', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='area_assignment', to='auth.trusteddevice')),
+                ('device', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='area_assignment', to='auth_app.trusteddevice')),
             ],
             options={
                 'verbose_name': 'Device Area Assignment',
