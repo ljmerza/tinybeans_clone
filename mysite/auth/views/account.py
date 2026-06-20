@@ -16,6 +16,7 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from mysite import project_logging
 from mysite.audit import AuditEvent, log_audit_event, log_security_event
@@ -359,6 +360,16 @@ class LogoutView(APIView):
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description='Logged out successfully')},
     )
     def post(self, request):
+        # Revoke the presented refresh token so it cannot be reused after
+        # logout (ADR-015). Best-effort: logout must always succeed, so an
+        # invalid/expired/already-blacklisted token is swallowed.
+        refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
+        if refresh_token:
+            try:
+                RefreshToken(refresh_token).blacklist()
+            except TokenError:
+                pass
+
         response = success_response(
             {},
             messages=[create_message('notifications.auth.logout_success')],

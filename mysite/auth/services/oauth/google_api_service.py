@@ -15,6 +15,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
 
+from mysite.auth.log_utils import mask_email, mask_id
 from mysite.auth.models import GoogleOAuthState
 
 logger = logging.getLogger(__name__)
@@ -62,8 +63,12 @@ class GoogleAPIService:
             'state': state_token,
             'code_challenge': code_challenge,
             'code_challenge_method': 'S256',
-            'access_type': 'offline',
-            'prompt': 'consent',
+            # Sign-in only (ADR-015): request online access so Google does not
+            # issue a refresh token we would only discard, and do not force the
+            # consent screen on every login. Switch back to
+            # 'access_type': 'offline' (and store the refresh token encrypted)
+            # only if we ever need to call Google APIs on the user's behalf.
+            'access_type': 'online',
             'nonce': nonce,
         }
 
@@ -125,8 +130,8 @@ class GoogleAPIService:
             logger.info(
                 "OAuth token exchange successful",
                 extra={
-                    'google_id': id_info.get('sub'),
-                    'email': id_info.get('email')
+                    'google_id': mask_id(id_info.get('sub')),
+                    'email': mask_email(id_info.get('email'))
                 }
             )
 

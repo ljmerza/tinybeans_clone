@@ -48,7 +48,12 @@ AUTH_USER_MODEL = 'users.User'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': False,
+    # Rotate the refresh token on every refresh and blacklist the previous one
+    # (ADR-015). This bounds the lifetime of a stolen refresh token to a single
+    # use and enables explicit revocation on logout. Requires
+    # 'rest_framework_simplejwt.token_blacklist' in INSTALLED_APPS so the
+    # OutstandingToken / BlacklistedToken tables exist.
+    'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
 

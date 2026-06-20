@@ -87,6 +87,7 @@ Create an ADR when making decisions about:
 | [ADR-003](./ADR-003-TWO-FACTOR-AUTHENTICATION.md) | Two-Factor Authentication | Accepted | 2024-12-29 | TOTP, SMS, and email 2FA with recovery codes |
 | [ADR-005](./ADR-005-CSRF-TOKEN-MANAGEMENT.md) | CSRF Token Management | Accepted | 2024-12-29 | CSRF protection strategy for SPA with Django backend |
 | [ADR-010](./ADR-010-GOOGLE-OAUTH-INTEGRATION.md) | Google OAuth Integration | Proposed | 2025-01-12 | OAuth 2.0 with secure account linking and PKCE |
+| [ADR-015](./ADR-015-OAUTH-JWT-HARDENING.md) | OAuth & JWT Session Token Hardening | Accepted | 2026-06-19 | Refresh-token rotation + logout revocation, online-only OAuth, atomic state, PII-masked logs |
 
 ### Frontend Architecture
 
@@ -212,7 +213,7 @@ When adding ADRs:
 
 ---
 
-**Last Updated**: 2025-01-15  
+**Last Updated**: 2026-06-19  
 **Maintainer**: Architecture Team  
-**Total ADRs**: 12 (including template)
+**Total ADRs**: 13 (including template)
 
