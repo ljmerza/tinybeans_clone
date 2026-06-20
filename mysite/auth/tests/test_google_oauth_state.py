@@ -54,6 +54,18 @@ class TestGoogleOAuthURLGeneration(TestCase):
         self.assertIsNotNone(oauth_state.code_verifier_hash)
         self.assertIsNotNone(oauth_state.nonce)
 
+    def test_auth_url_requests_online_access_only(self):
+        """Sign-in only (ADR-015): no offline access / forced consent."""
+        result = self.service.generate_auth_url(
+            redirect_uri=self.redirect_uri,
+            ip_address=self.ip_address,
+            user_agent=self.user_agent
+        )
+        url = result['url']
+        self.assertIn('access_type=online', url)
+        self.assertNotIn('access_type=offline', url)
+        self.assertNotIn('prompt=consent', url)
+
     def test_generate_auth_url_invalid_redirect_uri(self):
         """Test that invalid redirect URI raises error."""
         from mysite.auth.services.google_oauth_service import InvalidRedirectURIError
@@ -168,7 +180,19 @@ class TestOAuthStateModel(TestCase):
 
         self.assertIsNone(state.used_at)
 
-        state.mark_as_used()
+        self.assertTrue(state.mark_as_used())
 
         self.assertIsNotNone(state.used_at)
         self.assertTrue(state.is_used())
+
+    def test_mark_as_used_is_atomic_single_winner(self):
+        """Concurrent/replayed claims: only the first wins (ADR-015)."""
+        state = create_oauth_state()
+
+        # First claim succeeds.
+        self.assertTrue(state.mark_as_used())
+
+        # A second claim from a separate instance (simulating a concurrent
+        # callback that already passed validation) must lose.
+        other = GoogleOAuthState.objects.get(pk=state.pk)
+        self.assertFalse(other.mark_as_used())

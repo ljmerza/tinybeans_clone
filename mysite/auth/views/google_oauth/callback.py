@@ -22,6 +22,7 @@ from mysite.auth.serializers import (
     OAuthCallbackResponseSerializer,
     OAuthErrorSerializer,
 )
+from mysite.auth.log_utils import mask_email
 from mysite.auth.token_utils import get_tokens_for_user, set_refresh_cookie
 from mysite.users.serializers import UserSerializer
 from mysite.notification_utils import error_response, success_response, create_message
@@ -87,6 +88,13 @@ class GoogleOAuthCallbackView(APIView):
             # Validate state token
             oauth_state = oauth_service.validate_state_token(state_token, ip_address)
 
+            # Atomically claim the state BEFORE the expensive token exchange so
+            # two concurrent callbacks on the same state cannot both proceed
+            # (ADR-015). A losing race is reported as the same "already used"
+            # error as a replay attempt.
+            if not oauth_state.mark_as_used():
+                raise InvalidStateError("State token already used")
+
             # Exchange code for token
             token_result = oauth_service.exchange_code_for_token(
                 authorization_code,
@@ -97,9 +105,6 @@ class GoogleOAuthCallbackView(APIView):
             user, account_action = oauth_service.get_or_create_user(
                 token_result['user_info']
             )
-
-            # Mark state as used
-            oauth_state.mark_as_used()
 
             # Generate JWT tokens
             tokens = get_tokens_for_user(user)
@@ -141,8 +146,8 @@ class GoogleOAuthCallbackView(APIView):
 
         except UnverifiedAccountError as e:
             logger.warning(
-                f"OAuth blocked - unverified account: {e.email}",
-                extra={'email': e.email, 'ip': ip_address}
+                "OAuth blocked - unverified account",
+                extra={'email': mask_email(e.email), 'ip': ip_address}
             )
             return error_response(
                 'unverified_account_exists',

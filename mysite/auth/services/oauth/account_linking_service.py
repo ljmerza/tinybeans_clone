@@ -12,6 +12,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
 
+from mysite.auth.log_utils import mask_email, mask_id
+
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class AccountLinkingService:
             existing_user = User.objects.get(google_id=google_id)
             logger.info(
                 "OAuth login - existing Google user",
-                extra={'user_id': existing_user.id, 'google_id': google_id}
+                extra={'user_id': existing_user.id, 'google_id': mask_id(google_id)}
             )
             return existing_user, 'login'
         except User.DoesNotExist:
@@ -83,7 +85,7 @@ class AccountLinkingService:
             if not existing_user.email_verified:
                 logger.warning(
                     "OAuth blocked - unverified account exists",
-                    extra={'email': google_email, 'google_id': google_id}
+                    extra={'email': mask_email(google_email), 'google_id': mask_id(google_id)}
                 )
                 raise UnverifiedAccountError(google_email)
 
@@ -98,7 +100,7 @@ class AccountLinkingService:
 
             logger.info(
                 "OAuth account linked",
-                extra={'user_id': existing_user.id, 'google_id': google_id}
+                extra={'user_id': existing_user.id, 'google_id': mask_id(google_id)}
             )
 
             return existing_user, 'linked'
@@ -126,7 +128,7 @@ class AccountLinkingService:
 
         logger.info(
             "OAuth user created",
-            extra={'user_id': new_user.id, 'google_id': google_id, 'email': google_email}
+            extra={'user_id': new_user.id, 'google_id': mask_id(google_id), 'email': mask_email(google_email)}
         )
 
         return new_user, 'created'
@@ -176,7 +178,7 @@ class AccountLinkingService:
 
         logger.info(
             "Google account linked to user",
-            extra={'user_id': user.id, 'google_id': google_id}
+            extra={'user_id': user.id, 'google_id': mask_id(google_id)}
         )
 
         return user

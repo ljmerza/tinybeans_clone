@@ -73,6 +73,22 @@ class GoogleOAuthState(models.Model):
         return self.expires_at <= timezone.now()
 
     def mark_as_used(self):
-        """Mark state as used to prevent replay attacks."""
-        self.used_at = timezone.now()
-        self.save(update_fields=['used_at'])
+        """Atomically claim this state so it is usable exactly once.
+
+        Uses a conditional UPDATE (``used_at IS NULL``) instead of a plain save
+        so that two concurrent OAuth callbacks racing on the same state token
+        cannot both succeed: only the request whose UPDATE matches a row wins.
+
+        Returns ``True`` if this call claimed the state, ``False`` if it had
+        already been used (replay or concurrent double-submit). See ADR-015.
+        """
+        now = timezone.now()
+        claimed = (
+            type(self).objects
+            .filter(pk=self.pk, used_at__isnull=True)
+            .update(used_at=now)
+        )
+        if claimed:
+            self.used_at = now
+            return True
+        return False
