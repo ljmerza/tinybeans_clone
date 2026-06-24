@@ -30,5 +30,6 @@ urlpatterns = [
     path('api/auth/', include('mysite.auth.urls')),
     path('api/users/', include('mysite.users.urls')),
     path('api/keeps/', include('mysite.keeps.urls')),
+    path('api/device-areas/', include('mysite.device_areas.urls')),
     path('health/', include('health_check.urls')),
 ]
