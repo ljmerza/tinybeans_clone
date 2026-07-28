@@ -1,4 +1,7 @@
 """Public interface for the keeps.views package."""
+from .calendar import (
+    KeepCalendarView,
+)
 from .comments import (
     KeepCommentDetailView,
     KeepCommentListCreateView,
@@ -29,6 +32,7 @@ from .uploads import (
 )
 
 __all__ = [
+    'KeepCalendarView',
     'KeepCommentDetailView',
     'KeepCommentListCreateView',
     'KeepByCircleView',
