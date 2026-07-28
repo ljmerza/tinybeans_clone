@@ -24,6 +24,7 @@
 	},
 	"nav": {
 		"home": "Inicio",
+		"calendar": "Calendario",
 		"circles": "Círculos",
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
@@ -501,6 +502,17 @@
 			"welcome": "Bienvenido",
 			"authenticated_message": "¡Has iniciado sesión!",
 			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
+		},
+		"calendar": {
+			"title": "Calendario",
+			"subtitle": "Las fotos de tu familia, mes a mes.",
+			"loading": "Cargando tu calendario…",
+			"refreshing": "Actualizando…",
+			"error_title": "No se pudo cargar el calendario",
+			"error_message": "Algo salió mal al cargar tus fotos.",
+			"retry": "Reintentar",
+			"all_circles": "Todos los círculos",
+			"select_circle": "Elige un círculo"
 		},
 		"error": {
 			"something_wrong": "Algo salió mal",

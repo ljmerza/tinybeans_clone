@@ -5,12 +5,28 @@
 
 import { AuthSessionProvider } from "@/features/auth/context/AuthSessionProvider";
 import { ThemeProvider } from "@/features/theme";
+import { createQueryPersistOptions } from "@/lib/query/persister";
 import { router } from "@/router";
-import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient, useIsRestoring } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { RouterProvider } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
+const persistOptions = createQueryPersistOptions();
+
+/**
+ * Holds rendering until the persisted query cache is restored from
+ * localStorage so route loaders see cached data instead of racing it.
+ * Restoring from sync storage resolves within a microtask.
+ */
+function WaitForCacheRestore({ children }: { children: ReactNode }) {
+	const isRestoring = useIsRestoring();
+	if (isRestoring) {
+		return null;
+	}
+	return <>{children}</>;
+}
 
 interface AppProvidersProps {
 	children?: ReactNode;
@@ -27,18 +43,23 @@ export function AppProviders({
 }: AppProvidersProps) {
 	return (
 		<ThemeProvider>
-			<QueryClientProvider client={queryClient}>
-				<AuthSessionProvider isInitializing={isInitializing}>
-					<RouterProvider router={router} context={{ queryClient }} />
-					<Toaster
-						richColors
-						position="top-right"
-						duration={3000}
-						closeButton
-						containerAriaLabel="Notifications"
-					/>
-				</AuthSessionProvider>
-			</QueryClientProvider>
+			<PersistQueryClientProvider
+				client={queryClient}
+				persistOptions={persistOptions}
+			>
+				<WaitForCacheRestore>
+					<AuthSessionProvider isInitializing={isInitializing}>
+						<RouterProvider router={router} context={{ queryClient }} />
+						<Toaster
+							richColors
+							position="top-right"
+							duration={3000}
+							closeButton
+							containerAriaLabel="Notifications"
+						/>
+					</AuthSessionProvider>
+				</WaitForCacheRestore>
+			</PersistQueryClientProvider>
 		</ThemeProvider>
 	);
 }

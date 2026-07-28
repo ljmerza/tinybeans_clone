@@ -24,6 +24,7 @@
 	},
 	"nav": {
 		"home": "Home",
+		"calendar": "Calendar",
 		"circles": "Circles",
 		"login": "Login",
 		"signup": "Sign up",
@@ -400,6 +401,17 @@
 			"welcome": "Welcome",
 			"authenticated_message": "You are signed in!",
 			"guest_message": "Get started by signing up or logging in to your account."
+		},
+		"calendar": {
+			"title": "Calendar",
+			"subtitle": "Your family's photos, one month at a time.",
+			"loading": "Loading your calendar…",
+			"refreshing": "Refreshing…",
+			"error_title": "Couldn't load the calendar",
+			"error_message": "Something went wrong while loading your photos.",
+			"retry": "Try again",
+			"all_circles": "All circles",
+			"select_circle": "Choose a circle"
 		},
 		"error": {
 			"something_wrong": "Something went wrong",

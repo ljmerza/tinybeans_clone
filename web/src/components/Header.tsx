@@ -22,6 +22,9 @@ function AuthenticatedHeaderActions() {
 	return (
 		<>
 			<Button asChild variant="ghost" size="sm">
+				<Link to="/calendar">{t("nav.calendar")}</Link>
+			</Button>
+			<Button asChild variant="ghost" size="sm">
 				<Link to="/circles">{t("nav.circles")}</Link>
 			</Button>
 			<Button asChild variant="ghost" size="sm">
