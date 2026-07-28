@@ -118,10 +118,10 @@ class KeepMedia(models.Model):
             size: 'original', 'gallery', or 'thumbnail'
             expires_in: URL expiration time in seconds
         """
-        from .storage import get_storage_backend
-        
+        from ..storage import get_storage_backend
+
         storage = get_storage_backend()
-        
+
         if size == 'thumbnail' and self.storage_key_thumbnail:
             storage_key = self.storage_key_thumbnail
         elif size == 'gallery' and self.storage_key_gallery:
@@ -147,10 +147,10 @@ class KeepMedia(models.Model):
     
     def delete_from_storage(self):
         """Delete this media file and all sizes from storage."""
-        from .storage import get_storage_backend
-        
+        from ..storage import get_storage_backend
+
         storage = get_storage_backend()
-        
+
         # Delete all versions
         storage.delete(self.storage_key_original)
         if self.storage_key_thumbnail:
