@@ -38,6 +38,7 @@ interface AppProvidersProps {
  * Wraps the application with all necessary providers
  */
 export function AppProviders({
+	children,
 	queryClient,
 	isInitializing = false,
 }: AppProvidersProps) {
@@ -49,7 +50,13 @@ export function AppProviders({
 			>
 				<WaitForCacheRestore>
 					<AuthSessionProvider isInitializing={isInitializing}>
-						<RouterProvider router={router} context={{ queryClient }} />
+						{/* While bootstrapping (or on bootstrap error) render the given
+						    screen instead of the router: mounting the router early runs
+						    route guards before the session is restored, so a refresh on
+						    a protected page bounced to /login. */}
+						{children ?? (
+							<RouterProvider router={router} context={{ queryClient }} />
+						)}
 						<Toaster
 							richColors
 							position="top-right"
