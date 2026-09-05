@@ -137,8 +137,20 @@ class TestKeepCalendarView:
         entries = response.data['data']['entries']
         assert entries[0]['photos'] == [f'https://cdn.test/original/{keep.id}.jpg']
 
+    def test_includes_videos_that_have_a_poster_thumbnail(self, api_client, user, circle):
+        keep = make_photo_keep(
+            circle, user, datetime(2026, 7, 16, tzinfo=timezone.utc), media_type='video'
+        )
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(CALENDAR_URL, {'month': '2026-07'})
+
+        entries = response.data['data']['entries']
+        assert [e['keep_id'] for e in entries] == [str(keep.id)]
+        assert entries[0]['photos'] == [f'https://cdn.test/thumb/{keep.id}.jpg']
+
     def test_excludes_keeps_without_photos(self, api_client, user, circle):
-        # Note keep with no media, and a video-only keep
+        # Note keep with no media, and a video-only keep with no poster yet
         Keep.objects.create(
             circle=circle,
             created_by=user,
@@ -147,7 +159,8 @@ class TestKeepCalendarView:
             date_of_memory=datetime(2026, 7, 15, tzinfo=timezone.utc),
         )
         make_photo_keep(
-            circle, user, datetime(2026, 7, 16, tzinfo=timezone.utc), media_type='video'
+            circle, user, datetime(2026, 7, 16, tzinfo=timezone.utc),
+            media_type='video', thumbnails=False,
         )
 
         api_client.force_authenticate(user=user)

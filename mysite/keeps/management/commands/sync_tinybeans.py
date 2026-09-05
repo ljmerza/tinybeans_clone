@@ -26,6 +26,7 @@ Credentials can also come from the TINYBEANS_EMAIL / TINYBEANS_PASSWORD
 import getpass
 import mimetypes
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone as dt_timezone
 from urllib.parse import urlparse
@@ -54,8 +55,14 @@ API_BASE = 'https://tinybeans.com/api/1'
 # project uses); required by the API on every request.
 CLIENT_ID = '13bcd503-2137-9085-a437-d9f2ac9281a1'
 PAGE_SIZE = 200
-# Preferred blob (image rendition) keys, best quality first.
-BLOB_PREFERENCE = ('o2', 'o', 'xl', 'l', 'm', 's2', 's', 't', 'p')
+# Preferred blob (image rendition) keys, best quality first. ``p`` is the
+# uncropped full-size image (2000px long edge); ``o2`` is a 2000x2000 square
+# crop, sometimes upscaled, so it is only a fallback. Video entries carry the
+# same renditions for their poster frame.
+BLOB_PREFERENCE = ('p', 'o2', 'o', 'xl', 'l', 'm', 's2', 's', 't')
+# Filenames of originals that were downloaded from a lesser rendition.
+LESSER_RENDITION_RE = re.compile(r'-(o2|o|xl|l|m|s2|s|t)\.[A-Za-z0-9]+$')
+MAX_REPLY_DEPTH = 3
 # Tinybeans emotion labels -> KeepReaction types. Unknown labels fall back to 'like'.
 REACTION_MAP = {
     'love': 'love',
@@ -102,6 +109,15 @@ class TinybeansClient:
         """List followed journals (includes the account's own journals)."""
         response = self._request('GET', 'followings', params={'clientId': CLIENT_ID})
         return response.json().get('followings') or []
+
+    def comment_replies(self, journal_id, entry_id, comment_id) -> list:
+        """Replies to a comment (the entries feed only carries ``repliesCount``)."""
+        response = self._request(
+            'GET',
+            f'journals/{journal_id}/entries/{entry_id}/comments/{comment_id}/replies',
+            params={'clientId': CLIENT_ID},
+        )
+        return response.json().get('comments') or []
 
     def entries_page(self, journal_id, last_ms: int) -> dict:
         """One page of journal entries, ordered by ``lastUpdatedTimestamp`` desc.
@@ -214,8 +230,10 @@ class Command(BaseCommand):
         self.limit = options['limit']
         self.counts = {
             'circles': 0, 'children': 0, 'users': 0, 'entries': 0, 'media': 0,
-            'comments': 0, 'reactions': 0, 'entries_skipped': 0, 'entries_redated': 0,
-            'entries_deleted': 0, 'errors': 0,
+            'comments': 0, 'replies': 0, 'reactions': 0, 'entries_skipped': 0,
+            'entries_redated': 0, 'entries_deleted': 0, 'media_upgraded': 0,
+            'video_posters': 0, 'child_tags': 0, 'comments_removed': 0,
+            'reactions_removed': 0, 'errors': 0,
         }
         self.storage = None if self.dry else get_storage_backend()
 
@@ -248,9 +266,12 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"Done. Circles {verb}: {c['circles']}, children: {c['children']}, "
             f"users: {c['users']}, entries: {c['entries']} (media files: {c['media']}), "
-            f"comments: {c['comments']}, reactions: {c['reactions']}. "
-            f"Entries already synced: {c['entries_skipped']} (dates corrected: {c['entries_redated']}). "
-            f"Deleted on Tinybeans (ignored): {c['entries_deleted']}. Errors: {c['errors']}."
+            f"comments: {c['comments']} (of which replies: {c['replies']}), reactions: {c['reactions']}. "
+            f"Entries already synced: {c['entries_skipped']} (dates corrected: {c['entries_redated']}, "
+            f"originals upgraded: {c['media_upgraded']}, video posters: {c['video_posters']}, "
+            f"child tags: {c['child_tags']}). Removed because deleted on Tinybeans: "
+            f"comments {c['comments_removed']}, reactions {c['reactions_removed']}. "
+            f"Deleted entries ignored: {c['entries_deleted']}. Errors: {c['errors']}."
         ))
         if c['errors']:
             self.stdout.write(self.style.WARNING(
@@ -472,11 +493,14 @@ class Command(BaseCommand):
         if record:
             self.counts['entries_skipped'] += 1
             keep = record.keep
-            if keep.date_of_memory != memory_ts and not self.dry:
-                # Earlier imports stored the upload time as the memory date.
-                keep.date_of_memory = memory_ts
-                keep.save(update_fields=['date_of_memory'])
-                self.counts['entries_redated'] += 1
+            if not self.dry:
+                if keep.date_of_memory != memory_ts:
+                    # Earlier imports stored the upload time as the memory date.
+                    keep.date_of_memory = memory_ts
+                    keep.save(update_fields=['date_of_memory'])
+                    self.counts['entries_redated'] += 1
+                self._refresh_media(entry, keep)
+                self._apply_child_tags(entry, keep)
         else:
             keep = self._create_keep(entry, circle, ts, memory_ts, entry_id)
         # Comments/reactions are keyed by their own Tinybeans ids, so new ones
@@ -519,8 +543,13 @@ class Command(BaseCommand):
 
         # Download + store media BEFORE opening the DB transaction.
         media_specs = []  # (storage_key, filename, content_type, media_type, size)
+        poster_key = None
         if is_video:
             media_specs.append(self._fetch_media(entry['attachmentUrl_mp4'], entry_id, 'video'))
+            if blob_url:
+                # Tinybeans ships a poster frame with every video; the
+                # thumbnail task derives the renditions from it.
+                poster_key = self._fetch_media(blob_url, entry_id, 'photo')[0]
         elif blob_url:
             media_specs.append(self._fetch_media(blob_url, entry_id, 'photo'))
 
@@ -532,8 +561,11 @@ class Command(BaseCommand):
                 description=entry.get('caption') or '',
                 date_of_memory=memory_ts,
                 created_at=ts,
+                tags=', '.join(self._child_names(entry)),
             )
-            photo_media_ids = []
+            if keep.tags:
+                self.counts['child_tags'] += 1
+            thumbnail_jobs = []  # (media_id, source_key)
             for order, (key, filename, content_type, media_type, size) in enumerate(media_specs):
                 media = KeepMedia.objects.create(
                     keep=keep,
@@ -546,16 +578,78 @@ class Command(BaseCommand):
                 )
                 self.counts['media'] += 1
                 if media_type == 'photo':
-                    photo_media_ids.append(media.id)
+                    thumbnail_jobs.append((media.id, None))
+                elif poster_key:
+                    thumbnail_jobs.append((media.id, poster_key))
+                    self.counts['video_posters'] += 1
             self._save_record(
                 TinybeansObjectType.ENTRY, entry_id, keep=keep,
                 payload={'type': entry.get('type'), 'timestamp': entry.get('timestamp'),
                          'journalId': entry.get('journalId')},
             )
 
-        for media_id in photo_media_ids:
-            self._generate_thumbnails(media_id)
+        for media_id, source_key in thumbnail_jobs:
+            self._generate_thumbnails(media_id, source_key=source_key)
         return keep
+
+    def _refresh_media(self, entry, keep):
+        """Bring an already-imported keep's media up to the current standard.
+
+        Photos whose original came from a lesser rendition are re-downloaded
+        from ``p`` (the uncropped full-size image) and their renditions are
+        regenerated; videos without renditions get them from the poster frame.
+        """
+        blobs = entry.get('blobs') or {}
+        best_url = next((blobs[k] for k in BLOB_PREFERENCE if blobs.get(k)), None)
+        if not best_url:
+            return
+        entry_id = entry.get('id') or entry.get('uuid')
+        for media in keep.media_files.all():
+            if media.media_type == 'photo':
+                if not blobs.get('p') or not LESSER_RENDITION_RE.search(media.original_filename or ''):
+                    continue
+                key, filename, content_type, _, size = self._fetch_media(blobs['p'], entry_id, 'photo')
+                old_key = media.storage_key_original
+                media.storage_key_original = key
+                media.original_filename = filename
+                media.content_type = content_type
+                media.file_size = size
+                media.thumbnails_generated = False
+                media.save(update_fields=[
+                    'storage_key_original', 'original_filename', 'content_type',
+                    'file_size', 'thumbnails_generated',
+                ])
+                self._delete_object(old_key)
+                self.counts['media_upgraded'] += 1
+                self._generate_thumbnails(media.id)
+            elif media.media_type == 'video' and not media.thumbnails_generated:
+                poster_key = self._fetch_media(best_url, entry_id, 'photo')[0]
+                self.counts['video_posters'] += 1
+                self._generate_thumbnails(media.id, source_key=poster_key)
+
+    @staticmethod
+    def _child_names(entry):
+        return [c.get('firstName') for c in (entry.get('children') or []) if c.get('firstName')]
+
+    def _apply_child_tags(self, entry, keep):
+        names = self._child_names(entry)
+        if not names:
+            return
+        existing = [t.strip() for t in (keep.tags or '').split(',') if t.strip()]
+        missing = [n for n in names if n not in existing]
+        if not missing:
+            return
+        keep.tags = ', '.join(existing + missing)
+        keep.save(update_fields=['tags'])
+        self.counts['child_tags'] += 1
+
+    def _delete_object(self, storage_key):
+        if not storage_key:
+            return
+        try:
+            self.storage.delete(storage_key)
+        except Exception as exc:
+            self.stderr.write(self.style.WARNING(f'Could not delete superseded object {storage_key}: {exc}'))
 
     def _entry_author(self, entry):
         author_id = entry.get('userId')
@@ -575,44 +669,79 @@ class Command(BaseCommand):
         )
         return storage_key, filename[:255], content_type, media_type, len(content)
 
-    def _generate_thumbnails(self, media_id):
+    def _generate_thumbnails(self, media_id, source_key=None):
         try:
             if self.sync_thumbnails:
-                generate_image_sizes.apply(args=[media_id])
+                generate_image_sizes.apply(args=[media_id], kwargs={'source_key': source_key})
             else:
-                generate_image_sizes.delay(media_id)
+                generate_image_sizes.delay(media_id, source_key=source_key)
         except Exception as exc:
             self.stderr.write(self.style.WARNING(
                 f'Thumbnail generation for media {media_id} could not be started: {exc}'
             ))
 
-    def _sync_comments(self, entry, keep, circle, ts):
-        for comment in entry.get('comments') or []:
+    def _sync_comments(self, entry, keep, circle, ts, comments=None, depth=0):
+        """Import comments (and, recursively, their replies) for one entry.
+
+        The entries feed carries top-level comments with a ``repliesCount``;
+        replies themselves come from a per-comment endpoint. Comments flagged
+        ``deleted`` are skipped, and removed locally if imported earlier.
+        """
+        items = entry.get('comments') if comments is None else comments
+        for comment in items or []:
             comment_id = comment.get('id')
-            if comment_id is None or self._record(TinybeansObjectType.COMMENT, comment_id):
+            if comment_id is None:
                 continue
-            self.counts['comments'] += 1
-            if self.dry or keep is None:
+            record = self._record(TinybeansObjectType.COMMENT, comment_id)
+            if comment.get('deleted'):
+                if record and record.comment_id and not self.dry:
+                    record.comment.delete()  # cascades to the import record
+                    self.counts['comments_removed'] += 1
                 continue
-            user = self._ensure_user(comment.get('user') or {}, circle)
-            created_at = ts
-            if comment.get('timestamp'):
-                created_at = datetime.fromtimestamp(comment['timestamp'] / 1000, tz=dt_timezone.utc)
-            with transaction.atomic():
-                obj = KeepComment.objects.create(
-                    keep=keep, user=user,
-                    comment=comment.get('details') or '',
-                    created_at=created_at,
-                )
-                self._save_record(
-                    TinybeansObjectType.COMMENT, comment_id, comment=obj,
-                    payload={'entryId': entry.get('id')},
-                )
+            if not record:
+                self.counts['comments'] += 1
+                if depth:
+                    self.counts['replies'] += 1
+                if not self.dry and keep is not None:
+                    user = self._ensure_user(comment.get('user') or {}, circle)
+                    created_at = ts
+                    if comment.get('timestamp'):
+                        created_at = datetime.fromtimestamp(comment['timestamp'] / 1000, tz=dt_timezone.utc)
+                    with transaction.atomic():
+                        obj = KeepComment.objects.create(
+                            keep=keep, user=user,
+                            comment=comment.get('details') or '',
+                            created_at=created_at,
+                        )
+                        self._save_record(
+                            TinybeansObjectType.COMMENT, comment_id, comment=obj,
+                            payload={'entryId': entry.get('id'), 'parentId': comment.get('parentId')},
+                        )
+            if (comment.get('repliesCount') or 0) > 0 and depth < MAX_REPLY_DEPTH:
+                try:
+                    replies = self.client.comment_replies(
+                        entry.get('journalId'), entry.get('id'), comment_id,
+                    )
+                except Exception as exc:
+                    self.counts['errors'] += 1
+                    self.stderr.write(self.style.WARNING(
+                        f"Could not fetch replies for comment {comment_id}: {exc}"
+                    ))
+                    continue
+                self._sync_comments(entry, keep, circle, ts, comments=replies, depth=depth + 1)
 
     def _sync_emotions(self, entry, keep, circle, ts):
         for emotion in entry.get('emotions') or []:
             emotion_id = emotion.get('id')
-            if emotion_id is None or self._record(TinybeansObjectType.EMOTION, emotion_id):
+            if emotion_id is None:
+                continue
+            record = self._record(TinybeansObjectType.EMOTION, emotion_id)
+            if emotion.get('deleted'):
+                if record and record.reaction_id and not self.dry:
+                    record.reaction.delete()  # cascades to the import record
+                    self.counts['reactions_removed'] += 1
+                continue
+            if record:
                 continue
             self.counts['reactions'] += 1
             if self.dry or keep is None:

@@ -30,7 +30,11 @@ PHOTO_ENTRY = {
     'timestamp': ENTRY_TS,
     'userId': 1,
     'caption': 'First steps!',
-    'blobs': {'o': 'https://cdn.example.com/photos/full-o.jpg', 't': 'https://cdn.example.com/photos/t.jpg'},
+    'blobs': {
+        'p': 'https://cdn.example.com/photos/full-p.jpg',
+        'o2': 'https://cdn.example.com/photos/full-o2.jpg',
+        't': 'https://cdn.example.com/photos/t.jpg',
+    },
     'comments': [
         {
             'id': 501,
@@ -42,6 +46,22 @@ PHOTO_ENTRY = {
     'emotions': [
         {'id': 601, 'entryId': 111, 'userId': 2, 'type': {'label': 'Love'}},
     ],
+}
+VIDEO_ENTRY = {
+    'id': 113,
+    'uuid': 'abc-113',
+    'type': 'PHOTO',
+    'attachmentType': 'VIDEO',
+    'attachmentUrl_mp4': 'https://cdn.example.com/videos/clip-mp4.mp4',
+    'timestamp': ENTRY_TS + 7200 * 1000,
+    'userId': 1,
+    'caption': 'First steps on video',
+    'blobs': {
+        'p': 'https://cdn.example.com/videos/poster-p.jpg',
+        'o2': 'https://cdn.example.com/videos/poster-o2.jpg',
+    },
+    'comments': [],
+    'emotions': [],
 }
 NOTE_ENTRY = {
     'id': 112,
@@ -59,8 +79,12 @@ NOTE_ENTRY = {
 class FakeClient:
     """Stands in for TinybeansClient; serves the fixture journal/entries."""
 
-    def __init__(self, entries=None):
+    def __init__(self, entries=None, replies=None):
         self.entries = entries if entries is not None else [PHOTO_ENTRY, NOTE_ENTRY]
+        self.replies = replies or {}
+
+    def comment_replies(self, journal_id, entry_id, comment_id):
+        return list(self.replies.get(comment_id, []))
 
     def login(self, username, password):
         return dict(LOGIN_USER)
@@ -78,17 +102,29 @@ class FakeClient:
         return b'fake-image-bytes', 'image/jpeg'
 
 
+DELETED_KEYS = []
+
+
 class FakeStorage:
     def save(self, file_content, filename, content_type=None):
         return f'keeps/test/{filename}'
 
+    def delete(self, storage_key):
+        DELETED_KEYS.append(storage_key)
+        return True
+
 
 class SyncTinybeansCommandTests(TestCase):
-    def run_sync(self, *args, entries=None):
+    def setUp(self):
+        DELETED_KEYS.clear()
+        self.thumbnail_calls = []
+
+    def run_sync(self, *args, entries=None, replies=None):
+        calls = self.thumbnail_calls
         patches = [
             mock.patch(
                 'mysite.keeps.management.commands.sync_tinybeans.TinybeansClient',
-                lambda: FakeClient(entries=entries),
+                lambda: FakeClient(entries=entries, replies=replies),
             ),
             mock.patch(
                 'mysite.keeps.management.commands.sync_tinybeans.get_storage_backend',
@@ -96,7 +132,7 @@ class SyncTinybeansCommandTests(TestCase):
             ),
             mock.patch(
                 'mysite.keeps.management.commands.sync_tinybeans.Command._generate_thumbnails',
-                lambda self, media_id: None,
+                lambda self, media_id, source_key=None: calls.append((media_id, source_key)),
             ),
         ]
         for p in patches:
@@ -120,7 +156,8 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertEqual(photo_keep.description, 'First steps!')
         media = KeepMedia.objects.get(keep=photo_keep)
         self.assertEqual(media.media_type, 'photo')
-        self.assertEqual(media.original_filename, 'full-o.jpg')
+        self.assertEqual(media.original_filename, 'full-p.jpg')  # uncropped, not the o2 square
+        self.assertEqual(self.thumbnail_calls, [(media.id, None)])
 
         comment = KeepComment.objects.get()
         self.assertEqual(comment.comment, 'So cute!')
@@ -195,6 +232,104 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertEqual(Keep.objects.count(), 0)
         self.run_sync('--start', '2023-06-10', '--end', '2023-06-10', entries=[backdated])
         self.assertEqual(Keep.objects.count(), 1)
+
+    def test_video_entry_imports_mp4_and_poster(self):
+        self.run_sync(entries=[VIDEO_ENTRY])
+
+        media = KeepMedia.objects.get()
+        self.assertEqual(media.media_type, 'video')
+        self.assertEqual(media.original_filename, 'clip-mp4.mp4')
+        self.assertEqual(self.thumbnail_calls, [(media.id, 'keeps/test/poster-p.jpg')])
+
+    def test_rerun_adds_poster_for_video_without_renditions(self):
+        self.run_sync(entries=[VIDEO_ENTRY])
+        self.thumbnail_calls.clear()
+
+        self.run_sync(entries=[VIDEO_ENTRY])
+
+        media = KeepMedia.objects.get()
+        self.assertEqual(self.thumbnail_calls, [(media.id, 'keeps/test/poster-p.jpg')])
+
+    def test_rerun_upgrades_square_crop_original_to_full_size(self):
+        square_only = dict(PHOTO_ENTRY, blobs={'o2': 'https://cdn.example.com/photos/full-o2.jpg'})
+        self.run_sync(entries=[square_only])
+        media = KeepMedia.objects.get()
+        self.assertEqual(media.original_filename, 'full-o2.jpg')
+        self.thumbnail_calls.clear()
+
+        self.run_sync(entries=[PHOTO_ENTRY])
+
+        media.refresh_from_db()
+        self.assertEqual(media.original_filename, 'full-p.jpg')
+        self.assertEqual(media.storage_key_original, 'keeps/test/full-p.jpg')
+        self.assertFalse(media.thumbnails_generated)
+        self.assertIn('keeps/test/full-o2.jpg', DELETED_KEYS)
+        self.assertEqual(self.thumbnail_calls, [(media.id, None)])
+        self.assertEqual(KeepMedia.objects.count(), 1)
+
+    def test_full_size_original_is_not_downloaded_again(self):
+        self.run_sync(entries=[PHOTO_ENTRY])
+        self.thumbnail_calls.clear()
+
+        self.run_sync(entries=[PHOTO_ENTRY])
+
+        self.assertEqual(self.thumbnail_calls, [])
+        self.assertEqual(DELETED_KEYS, [])
+
+    def test_deleted_comment_and_reaction_are_removed_on_rerun(self):
+        self.run_sync(entries=[PHOTO_ENTRY])
+        self.assertEqual(KeepComment.objects.count(), 1)
+        self.assertEqual(KeepReaction.objects.count(), 1)
+
+        gone = dict(
+            PHOTO_ENTRY,
+            comments=[dict(PHOTO_ENTRY['comments'][0], deleted=True)],
+            emotions=[dict(PHOTO_ENTRY['emotions'][0], deleted=True)],
+        )
+        self.run_sync(entries=[gone])
+
+        self.assertEqual(KeepComment.objects.count(), 0)
+        self.assertEqual(KeepReaction.objects.count(), 0)
+        self.assertFalse(TinybeansImportRecord.objects.filter(object_type='comment').exists())
+        self.assertFalse(TinybeansImportRecord.objects.filter(object_type='emotion').exists())
+
+    def test_deleted_comment_is_never_imported(self):
+        entry = dict(PHOTO_ENTRY, comments=[dict(PHOTO_ENTRY['comments'][0], deleted=True)])
+        self.run_sync(entries=[entry])
+        self.assertEqual(KeepComment.objects.count(), 0)
+
+    def test_replies_are_imported_as_comments(self):
+        threaded = dict(PHOTO_ENTRY, comments=[dict(PHOTO_ENTRY['comments'][0], repliesCount=1)])
+        replies = {
+            501: [{
+                'id': 502,
+                'parentId': 501,
+                'details': 'Reply!',
+                'repliesCount': 0,
+                'timestamp': ENTRY_TS + 120000,
+                'user': dict(LOGIN_USER),
+            }],
+        }
+        self.run_sync(entries=[threaded], replies=replies)
+
+        self.assertEqual(KeepComment.objects.count(), 2)
+        reply = TinybeansImportRecord.objects.get(object_type='comment', tinybeans_id='502').comment
+        self.assertEqual(reply.comment, 'Reply!')
+        self.assertEqual(reply.user.email, 'parent@example.com')
+
+        # replies are keyed by their own id, so a rerun adds nothing
+        self.run_sync(entries=[threaded], replies=replies)
+        self.assertEqual(KeepComment.objects.count(), 2)
+
+    def test_child_tags_are_added_to_keep(self):
+        tagged = dict(PHOTO_ENTRY, children=[{'id': 55, 'firstName': 'Sam', 'lastName': 'Parent'}])
+        self.run_sync(entries=[tagged])
+        self.assertEqual(Keep.objects.get().tags, 'Sam')
+
+        # rerun does not duplicate the tag, and adds a newly tagged child
+        both = dict(tagged, children=tagged['children'] + [{'id': 56, 'firstName': 'Alex'}])
+        self.run_sync(entries=[both])
+        self.assertEqual(Keep.objects.get().tags, 'Sam, Alex')
 
     def test_deleted_entries_are_ignored(self):
         # Tinybeans leaves deleted entries in the feed with their media gone.

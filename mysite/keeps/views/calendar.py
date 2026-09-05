@@ -102,7 +102,10 @@ class KeepCalendarView(APIView):
                 if media.thumbnails_generated
                 else media.get_url('original', expires_in)
                 for media in keep.media_files.all()
+                # Videos count once they have a poster-derived thumbnail; their
+                # original is an mp4, so there is no fallback for them.
                 if media.media_type == 'photo'
+                or (media.media_type == 'video' and media.thumbnails_generated)
             ]
             if not photos:
                 continue
