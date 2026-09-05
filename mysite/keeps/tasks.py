@@ -132,6 +132,25 @@ def process_media_upload(self, upload_id: str):
                 raise
 
 
+def _to_rgb(image: Image.Image) -> Image.Image:
+    """Return an RGB copy suitable for JPEG output.
+
+    JPEG cannot store alpha, so RGBA/LA/transparent-palette images are
+    flattened onto a white background; any other non-RGB mode is converted.
+    """
+    if image.mode == 'RGB':
+        return image
+    has_alpha = image.mode in ('RGBA', 'LA') or (
+        image.mode == 'P' and 'transparency' in image.info
+    )
+    if has_alpha:
+        rgba = image.convert('RGBA')
+        background = Image.new('RGB', rgba.size, (255, 255, 255))
+        background.paste(rgba, mask=rgba.getchannel('A'))
+        return background
+    return image.convert('RGB')
+
+
 @shared_task(bind=True, max_retries=3)
 def generate_image_sizes(self, media_id: int):
     """Generate thumbnail and gallery size images."""
@@ -162,6 +181,7 @@ def generate_image_sizes(self, media_id: int):
                 image = Image.open(BytesIO(image_data))
                 image = ImageOps.exif_transpose(image)
                 media.width, media.height = image.size
+                image = _to_rgb(image)
 
                 thumbnail_image = image.copy()
                 thumbnail_image.thumbnail((150, 150), Image.Resampling.LANCZOS)
