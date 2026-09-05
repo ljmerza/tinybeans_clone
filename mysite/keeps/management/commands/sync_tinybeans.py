@@ -104,7 +104,12 @@ class TinybeansClient:
         return response.json().get('followings') or []
 
     def entries_page(self, journal_id, last_ms: int) -> dict:
-        """One page of journal entries older than ``last_ms`` (newest first)."""
+        """One page of journal entries, ordered by ``lastUpdatedTimestamp`` desc.
+
+        ``last`` is compared against ``lastUpdatedTimestamp`` (not the entry
+        date), so the page after this one must use the smallest
+        ``lastUpdatedTimestamp`` seen so far as its cursor.
+        """
         response = self._request(
             'GET',
             f'journals/{journal_id}/entries',
@@ -113,24 +118,34 @@ class TinybeansClient:
         return response.json()
 
     def iter_entries(self, journal_id, start_ms=None, end_ms=None):
-        """Yield entries newest-to-oldest, stopping once past ``start_ms``.
+        """Yield every journal entry, most recently *updated* first.
 
-        Callers must still filter each entry by exact timestamp; page
-        boundaries are only used to stop paginating early.
+        The API pages by ``lastUpdatedTimestamp``, not by entry date: an old
+        entry that just received a comment shows up on the first page. So the
+        cursor is always the smallest ``lastUpdatedTimestamp`` on the page,
+        and paging always starts from "now" regardless of ``end_ms`` (an entry
+        dated before ``end_ms`` may have been updated after it).
+
+        Callers must filter each entry by exact timestamp. ``start_ms`` only
+        allows an early stop: an entry is never updated before it is created,
+        so once a whole page was last updated before ``start_ms`` nothing
+        older can fall inside the range.
         """
-        last = end_ms
-        if last is None:
-            last = int(time.time() * 1000) + 24 * 3600 * 1000
+        last = int(time.time() * 1000) + 24 * 3600 * 1000
         while True:
             data = self.entries_page(journal_id, last)
             entries = data.get('entries') or []
             if not entries:
                 return
             yield from entries
-            timestamps = [e['timestamp'] for e in entries if e.get('timestamp')]
-            if not timestamps:
+            cursors = [
+                e.get('lastUpdatedTimestamp') or e.get('timestamp')
+                for e in entries
+                if e.get('lastUpdatedTimestamp') or e.get('timestamp')
+            ]
+            if not cursors:
                 return
-            page_min = min(timestamps)
+            page_min = min(cursors)
             remaining = data.get('numEntriesRemaining') or 0
             if remaining <= 0:
                 return
@@ -199,7 +214,8 @@ class Command(BaseCommand):
         self.limit = options['limit']
         self.counts = {
             'circles': 0, 'children': 0, 'users': 0, 'entries': 0, 'media': 0,
-            'comments': 0, 'reactions': 0, 'entries_skipped': 0, 'errors': 0,
+            'comments': 0, 'reactions': 0, 'entries_skipped': 0, 'entries_redated': 0,
+            'entries_deleted': 0, 'errors': 0,
         }
         self.storage = None if self.dry else get_storage_backend()
 
@@ -233,7 +249,8 @@ class Command(BaseCommand):
             f"Done. Circles {verb}: {c['circles']}, children: {c['children']}, "
             f"users: {c['users']}, entries: {c['entries']} (media files: {c['media']}), "
             f"comments: {c['comments']}, reactions: {c['reactions']}. "
-            f"Entries already synced: {c['entries_skipped']}. Errors: {c['errors']}."
+            f"Entries already synced: {c['entries_skipped']} (dates corrected: {c['entries_redated']}). "
+            f"Deleted on Tinybeans (ignored): {c['entries_deleted']}. Errors: {c['errors']}."
         ))
         if c['errors']:
             self.stdout.write(self.style.WARNING(
@@ -342,7 +359,13 @@ class Command(BaseCommand):
             ts_ms = entry.get('timestamp')
             if ts_ms is None:
                 continue
-            if (start_ms is not None and ts_ms < start_ms) or (end_ms is not None and ts_ms > end_ms):
+            if entry.get('deleted'):
+                # Tinybeans keeps deleted entries in the feed but removes their
+                # media (every rendition 404s), so there is nothing to import.
+                self.counts['entries_deleted'] += 1
+                continue
+            memory_ms = int(self._memory_datetime(entry).timestamp() * 1000)
+            if (start_ms is not None and memory_ms < start_ms) or (end_ms is not None and memory_ms > end_ms):
                 continue
             try:
                 self._import_entry(entry, circle)
@@ -444,18 +467,40 @@ class Command(BaseCommand):
         if entry_id is None:
             return
         ts = datetime.fromtimestamp(entry['timestamp'] / 1000, tz=dt_timezone.utc)
+        memory_ts = self._memory_datetime(entry)
         record = self._record(TinybeansObjectType.ENTRY, entry_id)
         if record:
             self.counts['entries_skipped'] += 1
             keep = record.keep
+            if keep.date_of_memory != memory_ts and not self.dry:
+                # Earlier imports stored the upload time as the memory date.
+                keep.date_of_memory = memory_ts
+                keep.save(update_fields=['date_of_memory'])
+                self.counts['entries_redated'] += 1
         else:
-            keep = self._create_keep(entry, circle, ts, entry_id)
+            keep = self._create_keep(entry, circle, ts, memory_ts, entry_id)
         # Comments/reactions are keyed by their own Tinybeans ids, so new ones
         # attached to an already-synced entry are still picked up.
         self._sync_comments(entry, keep, circle, ts)
         self._sync_emotions(entry, keep, circle, ts)
 
-    def _create_keep(self, entry, circle, ts, entry_id):
+    @staticmethod
+    def _memory_datetime(entry):
+        """The date the memory belongs to, as Tinybeans shows it.
+
+        ``timestamp`` is when the entry was uploaded; the user-chosen date lives
+        in ``year``/``month``/``day`` (a batch upload puts many days' photos on
+        one timestamp). Noon UTC keeps the calendar day stable in any timezone.
+        """
+        try:
+            return datetime(
+                int(entry['year']), int(entry['month']), int(entry['day']),
+                12, 0, tzinfo=dt_timezone.utc,
+            )
+        except (KeyError, TypeError, ValueError):
+            return datetime.fromtimestamp(entry['timestamp'] / 1000, tz=dt_timezone.utc)
+
+    def _create_keep(self, entry, circle, ts, memory_ts, entry_id):
         self.counts['entries'] += 1
         if self.limit is not None and self.counts['entries'] > self.limit:
             self.counts['entries'] -= 1
@@ -469,7 +514,7 @@ class Command(BaseCommand):
         if self.dry:
             kind = 'video' if is_video else ('photo' if blob_url else 'note')
             self.counts['media'] += 1 if has_media else 0
-            self.stdout.write(f"  Would import {kind} entry {entry_id} from {ts.date()}")
+            self.stdout.write(f"  Would import {kind} entry {entry_id} from {memory_ts.date()}")
             return None
 
         # Download + store media BEFORE opening the DB transaction.
@@ -485,7 +530,7 @@ class Command(BaseCommand):
                 created_by=self._entry_author(entry),
                 keep_type=KeepType.MEDIA if has_media else KeepType.NOTE,
                 description=entry.get('caption') or '',
-                date_of_memory=ts,
+                date_of_memory=memory_ts,
                 created_at=ts,
             )
             photo_media_ids = []

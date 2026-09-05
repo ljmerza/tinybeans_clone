@@ -2,9 +2,10 @@
 from unittest import mock
 
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from mysite.circles.models import Circle
+from mysite.keeps.management.commands.sync_tinybeans import TinybeansClient
 from mysite.keeps.models import (
     Keep,
     KeepComment,
@@ -169,3 +170,110 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertEqual(Keep.objects.count(), 0)
         self.assertEqual(User.objects.count(), 0)
         self.assertEqual(TinybeansImportRecord.objects.count(), 0)
+
+    def test_memory_date_comes_from_day_fields_not_upload_time(self):
+        # Uploaded 2023-06-15 12:00Z, but the user dated the memory 2023-06-10.
+        backdated = dict(PHOTO_ENTRY, year=2023, month=6, day=10)
+        self.run_sync(entries=[backdated])
+
+        keep = Keep.objects.get()
+        self.assertEqual(keep.date_of_memory.isoformat(), '2023-06-10T12:00:00+00:00')
+        self.assertEqual(keep.created_at.isoformat(), '2023-06-15T12:00:00+00:00')
+
+    def test_rerun_corrects_memory_date_of_existing_keep(self):
+        # First import had no day fields (older importer used the upload time).
+        self.run_sync(entries=[PHOTO_ENTRY])
+        self.assertEqual(Keep.objects.get().date_of_memory.date().isoformat(), '2023-06-15')
+
+        self.run_sync(entries=[dict(PHOTO_ENTRY, year=2023, month=6, day=10)])
+        self.assertEqual(Keep.objects.count(), 1)
+        self.assertEqual(Keep.objects.get().date_of_memory.date().isoformat(), '2023-06-10')
+
+    def test_date_range_uses_memory_date(self):
+        backdated = dict(PHOTO_ENTRY, year=2023, month=6, day=10)
+        self.run_sync('--start', '2023-06-15', '--end', '2023-06-15', entries=[backdated])
+        self.assertEqual(Keep.objects.count(), 0)
+        self.run_sync('--start', '2023-06-10', '--end', '2023-06-10', entries=[backdated])
+        self.assertEqual(Keep.objects.count(), 1)
+
+    def test_deleted_entries_are_ignored(self):
+        # Tinybeans leaves deleted entries in the feed with their media gone.
+        deleted = dict(PHOTO_ENTRY, deleted=True)
+        self.run_sync(entries=[deleted, NOTE_ENTRY])
+
+        self.assertEqual(Keep.objects.count(), 1)
+        self.assertFalse(
+            TinybeansImportRecord.objects.filter(object_type='entry', tinybeans_id='111').exists()
+        )
+
+
+class TinybeansClientPagingTests(SimpleTestCase):
+    """The entries endpoint pages by lastUpdatedTimestamp, not entry date."""
+
+    DAY = 24 * 3600 * 1000
+    NOW = ENTRY_TS + 400 * DAY
+
+    def make_entries(self):
+        # 7 entries, ids 1..7, dated one per day. Entry 1 is the oldest by date
+        # but was updated most recently (a new comment), so it leads page 1.
+        entries = []
+        for i in range(1, 8):
+            entries.append({
+                'id': i,
+                'timestamp': ENTRY_TS + i * self.DAY,
+                'lastUpdatedTimestamp': ENTRY_TS + i * self.DAY + 3600 * 1000,
+            })
+        entries[0]['lastUpdatedTimestamp'] = self.NOW - 1
+        return entries
+
+    def make_client(self, entries, page_size=3):
+        client = TinybeansClient()
+        client.calls = []
+        by_updated = sorted(entries, key=lambda e: e['lastUpdatedTimestamp'], reverse=True)
+
+        def entries_page(journal_id, last_ms):
+            client.calls.append(last_ms)
+            older = [e for e in by_updated if e['lastUpdatedTimestamp'] < last_ms]
+            page = older[:page_size]
+            return {'entries': page, 'numEntriesRemaining': len(older) - len(page)}
+
+        client.entries_page = entries_page
+        return client
+
+    def test_walks_every_entry_using_last_updated_cursor(self):
+        entries = self.make_entries()
+        client = self.make_client(entries)
+
+        with mock.patch('mysite.keeps.management.commands.sync_tinybeans.time.time', return_value=self.NOW / 1000):
+            got = list(client.iter_entries(900))
+
+        self.assertEqual(sorted(e['id'] for e in got), list(range(1, 8)))
+        # cursor after page 1 is the smallest lastUpdatedTimestamp on that page,
+        # not the smallest entry date (which would have skipped ids 2..6)
+        first_page = got[:3]
+        self.assertEqual(client.calls[1], min(e['lastUpdatedTimestamp'] for e in first_page))
+        self.assertEqual(len(client.calls), 3)
+
+    def test_end_date_does_not_move_the_starting_cursor(self):
+        entries = self.make_entries()
+        client = self.make_client(entries)
+        end_ms = ENTRY_TS + 2 * self.DAY  # would exclude entry 1 by lastUpdated
+
+        with mock.patch('mysite.keeps.management.commands.sync_tinybeans.time.time', return_value=self.NOW / 1000):
+            got = list(client.iter_entries(900, start_ms=None, end_ms=end_ms))
+
+        self.assertIn(1, [e['id'] for e in got])
+        self.assertGreaterEqual(client.calls[0], self.NOW)
+
+    def test_start_date_stops_paging_early(self):
+        entries = self.make_entries()
+        client = self.make_client(entries)
+        # page 1 is ids 1, 7, 6 (by lastUpdated); its oldest update is
+        # entry 6 at day 6 + 1h, so a start just after that stops paging there.
+        start_ms = ENTRY_TS + 6 * self.DAY + 2 * 3600 * 1000
+
+        with mock.patch('mysite.keeps.management.commands.sync_tinybeans.time.time', return_value=self.NOW / 1000):
+            got = list(client.iter_entries(900, start_ms=start_ms))
+
+        self.assertEqual([e['id'] for e in got], [1, 7, 6])
+        self.assertEqual(len(client.calls), 1)
