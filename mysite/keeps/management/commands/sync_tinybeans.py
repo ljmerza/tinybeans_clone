@@ -738,6 +738,13 @@ class Command(BaseCommand):
                     record.comment.delete()  # cascades to the import record
                     self.counts['comments_removed'] += 1
                 continue
+            if record and record.comment_id and comment.get('parentId') is not None and not self.dry:
+                # Replies imported before threading existed have no parent yet.
+                if record.comment.parent_id is None:
+                    parent_record = self._record(TinybeansObjectType.COMMENT, comment['parentId'])
+                    if parent_record and parent_record.comment_id:
+                        record.comment.parent_id = parent_record.comment_id
+                        record.comment.save(update_fields=['parent'])
             if not record:
                 self.counts['comments'] += 1
                 if depth:
@@ -747,9 +754,13 @@ class Command(BaseCommand):
                     created_at = ts
                     if comment.get('timestamp'):
                         created_at = datetime.fromtimestamp(comment['timestamp'] / 1000, tz=dt_timezone.utc)
+                    parent = None
+                    if comment.get('parentId') is not None:
+                        parent_record = self._record(TinybeansObjectType.COMMENT, comment['parentId'])
+                        parent = parent_record.comment if parent_record else None
                     with transaction.atomic():
                         obj = KeepComment.objects.create(
-                            keep=keep, user=user,
+                            keep=keep, user=user, parent=parent,
                             comment=comment.get('details') or '',
                             created_at=created_at,
                         )

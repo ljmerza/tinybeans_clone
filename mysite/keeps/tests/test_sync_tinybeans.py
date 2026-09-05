@@ -324,12 +324,28 @@ class SyncTinybeansCommandTests(TestCase):
 
         self.assertEqual(KeepComment.objects.count(), 2)
         reply = TinybeansImportRecord.objects.get(object_type='comment', tinybeans_id='502').comment
+        parent = TinybeansImportRecord.objects.get(object_type='comment', tinybeans_id='501').comment
         self.assertEqual(reply.comment, 'Reply!')
         self.assertEqual(reply.user.email, 'parent@example.com')
+        self.assertEqual(reply.parent, parent)
+        self.assertEqual(list(parent.replies.all()), [reply])
 
         # replies are keyed by their own id, so a rerun adds nothing
         self.run_sync(entries=[threaded], replies=replies)
         self.assertEqual(KeepComment.objects.count(), 2)
+
+    def test_rerun_links_parent_of_previously_imported_reply(self):
+        threaded = dict(PHOTO_ENTRY, comments=[dict(PHOTO_ENTRY['comments'][0], repliesCount=1)])
+        replies = {501: [{'id': 502, 'parentId': 501, 'details': 'Reply!', 'repliesCount': 0,
+                          'timestamp': ENTRY_TS + 120000, 'user': dict(LOGIN_USER)}]}
+        self.run_sync(entries=[threaded], replies=replies)
+        KeepComment.objects.update(parent=None)  # as imported before threading existed
+
+        self.run_sync(entries=[threaded], replies=replies)
+
+        reply = TinybeansImportRecord.objects.get(object_type='comment', tinybeans_id='502').comment
+        self.assertIsNotNone(reply.parent)
+        self.assertEqual(reply.parent.comment, 'So cute!')
 
     def test_child_tags_are_added_to_keep(self):
         tagged = dict(PHOTO_ENTRY, children=[{'id': 55, 'firstName': 'Sam', 'lastName': 'Parent'}])
