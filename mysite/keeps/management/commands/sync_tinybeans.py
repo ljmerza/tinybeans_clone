@@ -44,6 +44,8 @@ from mysite.keeps.models import (
     KeepType,
     TinybeansImportRecord,
     TinybeansObjectType,
+    TinybeansSyncRun,
+    TinybeansSyncStatus,
 )
 from mysite.keeps.storage import get_storage_backend
 from mysite.keeps.tasks import generate_image_sizes
@@ -63,6 +65,8 @@ BLOB_PREFERENCE = ('p', 'o2', 'o', 'xl', 'l', 'm', 's2', 's', 't')
 # Filenames of originals that were downloaded from a lesser rendition.
 LESSER_RENDITION_RE = re.compile(r'-(o2|o|xl|l|m|s2|s|t)\.[A-Za-z0-9]+$')
 MAX_REPLY_DEPTH = 3
+# --since-last-run looks this far behind the previous successful run's start.
+INCREMENTAL_MARGIN = timedelta(hours=1)
 # Tinybeans emotion labels -> KeepReaction types. Unknown labels fall back to 'like'.
 REACTION_MAP = {
     'love': 'love',
@@ -133,7 +137,7 @@ class TinybeansClient:
         )
         return response.json()
 
-    def iter_entries(self, journal_id, start_ms=None, end_ms=None):
+    def iter_entries(self, journal_id, start_ms=None, end_ms=None, updated_since_ms=None):
         """Yield every journal entry, most recently *updated* first.
 
         The API pages by ``lastUpdatedTimestamp``, not by entry date: an old
@@ -145,8 +149,12 @@ class TinybeansClient:
         Callers must filter each entry by exact timestamp. ``start_ms`` only
         allows an early stop: an entry is never updated before it is created,
         so once a whole page was last updated before ``start_ms`` nothing
-        older can fall inside the range.
+        older can fall inside the range. ``updated_since_ms`` stops the walk
+        the same way for incremental runs (anything updated earlier was
+        covered by a previous run).
         """
+        stops = [v for v in (start_ms, updated_since_ms) if v is not None]
+        stop_ms = max(stops) if stops else None
         last = int(time.time() * 1000) + 24 * 3600 * 1000
         while True:
             data = self.entries_page(journal_id, last)
@@ -167,7 +175,7 @@ class TinybeansClient:
                 return
             if page_min >= last:  # no progress; avoid an infinite loop
                 return
-            if start_ms is not None and page_min < start_ms:
+            if stop_ms is not None and page_min < stop_ms:
                 return
             last = page_min
 
@@ -223,6 +231,9 @@ class Command(BaseCommand):
                             help='Report what would be imported without writing anything')
         parser.add_argument('--sync-thumbnails', action='store_true',
                             help='Generate photo thumbnails inline instead of queueing Celery tasks')
+        parser.add_argument('--since-last-run', action='store_true',
+                            help='Only walk entries updated since the last successful run '
+                                 '(minus a 1 hour margin); falls back to a full walk if none')
 
     def handle(self, *args, **options):
         self.dry = options['dry_run']
@@ -235,6 +246,33 @@ class Command(BaseCommand):
             'video_posters': 0, 'child_tags': 0, 'comments_removed': 0,
             'reactions_removed': 0, 'errors': 0,
         }
+        self.updated_since_ms = self._incremental_cutoff_ms(options)
+        run = None
+        if not self.dry:
+            run = TinybeansSyncRun.objects.create(incremental=self.updated_since_ms is not None)
+        try:
+            self._execute(options)
+        except BaseException as exc:
+            if run:
+                run.finish(TinybeansSyncStatus.FAILED, self.counts, error=str(exc)[:2000])
+            raise
+        if run:
+            run.finish(TinybeansSyncStatus.SUCCESS, self.counts)
+
+    def _incremental_cutoff_ms(self, options):
+        if not options.get('since_last_run'):
+            return None
+        last = TinybeansSyncRun.last_successful()
+        if last is None:
+            self.stdout.write(self.style.WARNING(
+                'No successful sync recorded yet; walking the whole journal.'
+            ))
+            return None
+        cutoff = last.started_at - INCREMENTAL_MARGIN
+        self.stdout.write(f'Incremental: only entries updated since {cutoff.isoformat()}')
+        return int(cutoff.timestamp() * 1000)
+
+    def _execute(self, options):
         self.storage = None if self.dry else get_storage_backend()
 
         start_ms, end_ms, start_dt, end_dt = self._parse_range(options)
@@ -376,7 +414,9 @@ class Command(BaseCommand):
             self._ensure_child(child, circle)
 
         processed = 0
-        for entry in self.client.iter_entries(journal['id'], start_ms, end_ms):
+        for entry in self.client.iter_entries(
+            journal['id'], start_ms, end_ms, updated_since_ms=self.updated_since_ms,
+        ):
             ts_ms = entry.get('timestamp')
             if ts_ms is None:
                 continue

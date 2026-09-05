@@ -1,14 +1,17 @@
 """Celery tasks for media upload and processing."""
 import os
+from datetime import timedelta
 from io import BytesIO
 from PIL import Image, ImageOps
 from django.conf import settings
+from django.core.management import call_command
+from django.utils import timezone
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from mysite import project_logging
 
-from .models import KeepMedia, MediaUpload, MediaUploadStatus
+from .models import KeepMedia, MediaUpload, MediaUploadStatus, TinybeansSyncRun, TinybeansSyncStatus
 from .storage import get_storage_backend
 
 logger = get_task_logger(__name__)
@@ -390,3 +393,37 @@ def validate_media_file(upload_id: str):
                     )
 
                 raise
+
+
+# A sync still marked running after this long is assumed to have died.
+TINYBEANS_SYNC_STALE_AFTER = timedelta(hours=6)
+
+
+@shared_task(soft_time_limit=3600, time_limit=3660)
+def sync_tinybeans_incremental():
+    """Scheduled incremental import from the Tinybeans account in the environment.
+
+    Reads TINYBEANS_EMAIL / TINYBEANS_PASSWORD; does nothing when they are not
+    configured or when another sync is in progress. The command records its
+    own run row, so a failed run never advances the incremental cutoff.
+    """
+    if not (os.environ.get('TINYBEANS_EMAIL') and os.environ.get('TINYBEANS_PASSWORD')):
+        logger.info(
+            'Tinybeans credentials not configured; skipping scheduled sync',
+            extra={'event': 'keeps.tinybeans_sync.skipped', 'extra': {'reason': 'no_credentials'}},
+        )
+        return False
+
+    in_progress = TinybeansSyncRun.objects.filter(
+        status=TinybeansSyncStatus.RUNNING,
+        started_at__gte=timezone.now() - TINYBEANS_SYNC_STALE_AFTER,
+    ).exists()
+    if in_progress:
+        logger.info(
+            'A Tinybeans sync is already running; skipping scheduled sync',
+            extra={'event': 'keeps.tinybeans_sync.skipped', 'extra': {'reason': 'in_progress'}},
+        )
+        return False
+
+    call_command('sync_tinybeans', since_last_run=True)
+    return True

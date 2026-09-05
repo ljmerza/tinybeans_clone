@@ -70,3 +70,43 @@ class TinybeansImportRecord(models.Model):
 
     def __str__(self):
         return f"tinybeans {self.object_type} {self.tinybeans_id}"
+
+
+class TinybeansSyncStatus(models.TextChoices):
+    RUNNING = 'running', 'Running'
+    SUCCESS = 'success', 'Success'
+    FAILED = 'failed', 'Failed'
+
+
+class TinybeansSyncRun(models.Model):
+    """One execution of ``manage.py sync_tinybeans`` (dry runs are not recorded).
+
+    ``--since-last-run`` takes the ``started_at`` of the latest successful run
+    (minus a safety margin) as the cutoff for its incremental walk, so a run
+    that fails part-way never advances the cutoff.
+    """
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=10, choices=TinybeansSyncStatus.choices, default=TinybeansSyncStatus.RUNNING,
+    )
+    incremental = models.BooleanField(default=False)
+    counts = models.JSONField(default=dict, blank=True)
+    error = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f"tinybeans sync {self.started_at:%Y-%m-%d %H:%M} ({self.status})"
+
+    @classmethod
+    def last_successful(cls):
+        return cls.objects.filter(status=TinybeansSyncStatus.SUCCESS).order_by('-started_at').first()
+
+    def finish(self, status, counts=None, error=''):
+        self.status = status
+        self.finished_at = timezone.now()
+        self.counts = counts or {}
+        self.error = error
+        self.save(update_fields=['status', 'finished_at', 'counts', 'error'])

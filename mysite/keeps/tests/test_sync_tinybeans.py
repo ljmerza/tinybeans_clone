@@ -1,8 +1,11 @@
 """Tests for the sync_tinybeans management command (API + storage mocked)."""
+from datetime import timedelta
 from unittest import mock
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase
+from django.utils import timezone
 
 from mysite.circles.models import Circle
 from mysite.keeps.management.commands.sync_tinybeans import TinybeansClient
@@ -12,7 +15,10 @@ from mysite.keeps.models import (
     KeepMedia,
     KeepReaction,
     TinybeansImportRecord,
+    TinybeansSyncRun,
+    TinybeansSyncStatus,
 )
+from mysite.keeps.tasks import sync_tinybeans_incremental
 from mysite.users.models import ChildProfile, User
 
 # 2023-06-15T12:00:00Z in ms
@@ -79,6 +85,8 @@ NOTE_ENTRY = {
 class FakeClient:
     """Stands in for TinybeansClient; serves the fixture journal/entries."""
 
+    last_updated_since = None  # cutoff passed to iter_entries on the most recent run
+
     def __init__(self, entries=None, replies=None):
         self.entries = entries if entries is not None else [PHOTO_ENTRY, NOTE_ENTRY]
         self.replies = replies or {}
@@ -95,7 +103,8 @@ class FakeClient:
     def followings(self):
         return [{'journal': dict(JOURNAL)}]
 
-    def iter_entries(self, journal_id, start_ms=None, end_ms=None):
+    def iter_entries(self, journal_id, start_ms=None, end_ms=None, updated_since_ms=None):
+        FakeClient.last_updated_since = updated_since_ms
         yield from self.entries
 
     def download(self, url):
@@ -117,6 +126,7 @@ class FakeStorage:
 class SyncTinybeansCommandTests(TestCase):
     def setUp(self):
         DELETED_KEYS.clear()
+        FakeClient.last_updated_since = None
         self.thumbnail_calls = []
 
     def run_sync(self, *args, entries=None, replies=None):
@@ -331,6 +341,51 @@ class SyncTinybeansCommandTests(TestCase):
         self.run_sync(entries=[both])
         self.assertEqual(Keep.objects.get().tags, 'Sam, Alex')
 
+    def test_run_is_recorded(self):
+        self.run_sync()
+
+        run = TinybeansSyncRun.objects.get()
+        self.assertEqual(run.status, TinybeansSyncStatus.SUCCESS)
+        self.assertIsNotNone(run.finished_at)
+        self.assertFalse(run.incremental)
+        self.assertEqual(run.counts['entries'], 2)
+
+    def test_dry_run_is_not_recorded(self):
+        self.run_sync('--dry-run')
+        self.assertEqual(TinybeansSyncRun.objects.count(), 0)
+
+    def test_failed_run_is_recorded_as_failed(self):
+        with mock.patch.object(FakeClient, 'followings', return_value=[]):
+            with self.assertRaises(CommandError):
+                self.run_sync()
+
+        run = TinybeansSyncRun.objects.get()
+        self.assertEqual(run.status, TinybeansSyncStatus.FAILED)
+        self.assertIn('No Tinybeans journals', run.error)
+        self.assertIsNotNone(run.finished_at)
+
+    def test_since_last_run_uses_last_successful_start_minus_margin(self):
+        self.run_sync()
+        first = TinybeansSyncRun.objects.get()
+        # a later failed run must not move the cutoff
+        TinybeansSyncRun.objects.create(
+            status=TinybeansSyncStatus.FAILED, started_at=first.started_at + timedelta(hours=2),
+        )
+
+        self.run_sync('--since-last-run')
+
+        expected = int((first.started_at - timedelta(hours=1)).timestamp() * 1000)
+        self.assertEqual(FakeClient.last_updated_since, expected)
+        latest = TinybeansSyncRun.objects.order_by('-id').first()  # the fake FAILED row has a later started_at
+        self.assertTrue(latest.incremental)
+        self.assertEqual(latest.status, TinybeansSyncStatus.SUCCESS)
+
+    def test_since_last_run_without_history_walks_everything(self):
+        self.run_sync('--since-last-run')
+
+        self.assertIsNone(FakeClient.last_updated_since)
+        self.assertFalse(TinybeansSyncRun.objects.get().incremental)
+
     def test_deleted_entries_are_ignored(self):
         # Tinybeans leaves deleted entries in the feed with their media gone.
         deleted = dict(PHOTO_ENTRY, deleted=True)
@@ -400,6 +455,18 @@ class TinybeansClientPagingTests(SimpleTestCase):
         self.assertIn(1, [e['id'] for e in got])
         self.assertGreaterEqual(client.calls[0], self.NOW)
 
+    def test_updated_since_stops_paging_early(self):
+        entries = self.make_entries()
+        client = self.make_client(entries)
+        # page 1 = ids 1, 7, 6 (by lastUpdated); its oldest update is day 6 + 1h
+        since = ENTRY_TS + 6 * self.DAY + 2 * 3600 * 1000
+
+        with mock.patch('mysite.keeps.management.commands.sync_tinybeans.time.time', return_value=self.NOW / 1000):
+            got = list(client.iter_entries(900, updated_since_ms=since))
+
+        self.assertEqual([e['id'] for e in got], [1, 7, 6])
+        self.assertEqual(len(client.calls), 1)
+
     def test_start_date_stops_paging_early(self):
         entries = self.make_entries()
         client = self.make_client(entries)
@@ -412,3 +479,37 @@ class TinybeansClientPagingTests(SimpleTestCase):
 
         self.assertEqual([e['id'] for e in got], [1, 7, 6])
         self.assertEqual(len(client.calls), 1)
+
+
+class SyncTinybeansIncrementalTaskTests(TestCase):
+    """The scheduled task only runs with credentials and no run in progress."""
+
+    CREDS = {'TINYBEANS_EMAIL': 'parent@example.com', 'TINYBEANS_PASSWORD': 'pw'}
+
+    def test_skips_without_credentials(self):
+        with mock.patch.dict('os.environ', {}, clear=True):
+            with mock.patch('mysite.keeps.tasks.call_command') as call:
+                self.assertFalse(sync_tinybeans_incremental())
+        call.assert_not_called()
+
+    def test_runs_incremental_sync_with_credentials(self):
+        with mock.patch.dict('os.environ', self.CREDS):
+            with mock.patch('mysite.keeps.tasks.call_command') as call:
+                self.assertTrue(sync_tinybeans_incremental())
+        call.assert_called_once_with('sync_tinybeans', since_last_run=True)
+
+    def test_skips_while_another_run_is_in_progress(self):
+        TinybeansSyncRun.objects.create(status=TinybeansSyncStatus.RUNNING)
+        with mock.patch.dict('os.environ', self.CREDS):
+            with mock.patch('mysite.keeps.tasks.call_command') as call:
+                self.assertFalse(sync_tinybeans_incremental())
+        call.assert_not_called()
+
+    def test_ignores_stale_running_rows(self):
+        TinybeansSyncRun.objects.create(
+            status=TinybeansSyncStatus.RUNNING, started_at=timezone.now() - timedelta(hours=7),
+        )
+        with mock.patch.dict('os.environ', self.CREDS):
+            with mock.patch('mysite.keeps.tasks.call_command') as call:
+                self.assertTrue(sync_tinybeans_incremental())
+        call.assert_called_once()

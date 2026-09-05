@@ -57,6 +57,9 @@ services:
       - ./:/app
     env_file:
       - ./.env.development
+      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
+      - path: ./env/tinybeans.env
+        required: false
     environment:
       <<: *django-common-env
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
@@ -93,6 +96,9 @@ services:
       - ./:/app
     env_file:
       - ./.env.development
+      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
+      - path: ./env/tinybeans.env
+        required: false
     environment:
       <<: *django-common-env
     depends_on:
@@ -107,6 +113,9 @@ services:
       - ./:/app
     env_file:
       - ./.env.development
+      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
+      - path: ./env/tinybeans.env
+        required: false
     environment:
       <<: *django-common-env
     depends_on:
