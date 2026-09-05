@@ -62,14 +62,18 @@ export function CalendarRouteView() {
 					<div className="space-y-2">
 						<h1 className="heading-2">{t("pages.calendar.title")}</h1>
 						<p className="text-subtitle">{t("pages.calendar.subtitle")}</p>
-						{isFetching ? (
-							<LoadingState
-								layout="inline"
-								spinnerSize="sm"
-								className="text-sm text-muted-foreground"
-								message={t("pages.calendar.refreshing")}
-							/>
-						) : null}
+						{/* Fixed-height slot so the indicator appearing/disappearing
+						    does not push the calendar down. */}
+						<div className="h-5">
+							{isFetching ? (
+								<LoadingState
+									layout="inline"
+									spinnerSize="sm"
+									className="text-sm text-muted-foreground"
+									message={t("pages.calendar.refreshing")}
+								/>
+							) : null}
+						</div>
 					</div>
 					{circles.length > 1 ? (
 						<Select

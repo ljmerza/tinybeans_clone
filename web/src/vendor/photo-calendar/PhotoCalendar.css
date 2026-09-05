@@ -20,6 +20,19 @@
   --calendar-font-size-day: 0.85rem;
 }
 
+/* Dark theme (the app toggles a `dark` class on <html>) */
+.dark {
+  --calendar-color-surface: #18181b;
+  --calendar-color-surface-muted: #27272a;
+  --calendar-color-text: #f4f4f5;
+  --calendar-color-text-muted: rgba(244, 244, 245, 0.6);
+  --calendar-color-accent: #3b9dff;
+  --calendar-color-accent-soft: rgba(59, 157, 255, 0.25);
+  --calendar-color-chip-bg: rgba(255, 255, 255, 0.1);
+  --calendar-color-chip-active-bg: rgba(59, 157, 255, 0.2);
+  --calendar-color-chip-active-text: #9ccbff;
+}
+
 /* Calendar Banner Layout */
 .calendar-banner {
   display: flex;
@@ -200,6 +213,26 @@
   display: none;
 }
 
+/* Small screens: arrows only (no button text, no today button), tighter banner */
+@media (max-width: 874.98px) {
+  .calendar-banner {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .nav-button--month {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .nav-button--month .nav-button-label {
+    display: none;
+  }
+
+  .today-button-icon {
+    display: none;
+  }
+}
+
 /* Large screens (875px+): Show year nav and chips, hide month nav */
 @media (min-width: 875px) {
   /* Show year row on desktop */
@@ -320,11 +353,22 @@
   bottom: 0.5rem;
   right: 0.5rem;
   z-index: 2;
-  padding: 0.25rem 0.45rem;
-  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
   font-weight: 600;
   color: #fff;
   background: var(--calendar-color-overflow-bg);
+}
+
+@media (max-width: 600px) {
+  .calendar-cell-overflow {
+    /* Match the compact .cell-label sizing, anchored bottom-right */
+    bottom: 0.25rem;
+    right: 0.25rem;
+    padding: 0.1rem 0.225rem;
+    border-radius: 2px;
+    font-size: 0.5rem;
+  }
 }
 
 .calendar-cell--placeholder {
