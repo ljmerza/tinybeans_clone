@@ -58,7 +58,8 @@ class TestKeepSerializer:
         expected_fields = {
             'id', 'circle', 'circle_name', 'created_by', 'created_by_display_name',
             'keep_type', 'title', 'description', 'date_of_memory', 'created_at',
-            'updated_at', 'is_public', 'tags', 'tag_list', 'media_count',
+            'updated_at', 'is_public', 'tags', 'tag_list',
+            'children', 'media_count',
             'reaction_count', 'comment_count'
         }
         assert set(data.keys()) == expected_fields

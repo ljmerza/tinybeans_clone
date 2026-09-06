@@ -243,7 +243,7 @@ class Command(BaseCommand):
             'circles': 0, 'children': 0, 'users': 0, 'entries': 0, 'media': 0,
             'comments': 0, 'replies': 0, 'reactions': 0, 'entries_skipped': 0,
             'entries_redated': 0, 'entries_deleted': 0, 'media_upgraded': 0,
-            'video_posters': 0, 'child_tags': 0, 'comments_removed': 0,
+            'video_posters': 0, 'child_tags': 0, 'child_links': 0, 'comments_removed': 0,
             'reactions_removed': 0, 'errors': 0,
         }
         self.updated_since_ms = self._incremental_cutoff_ms(options)
@@ -307,7 +307,8 @@ class Command(BaseCommand):
             f"comments: {c['comments']} (of which replies: {c['replies']}), reactions: {c['reactions']}. "
             f"Entries already synced: {c['entries_skipped']} (dates corrected: {c['entries_redated']}, "
             f"originals upgraded: {c['media_upgraded']}, video posters: {c['video_posters']}, "
-            f"child tags: {c['child_tags']}). Removed because deleted on Tinybeans: "
+            f"child tags: {c['child_tags']}, child links: {c['child_links']}). "
+            f"Removed because deleted on Tinybeans: "
             f"comments {c['comments_removed']}, reactions {c['reactions_removed']}. "
             f"Deleted entries ignored: {c['entries_deleted']}. Errors: {c['errors']}."
         ))
@@ -541,6 +542,7 @@ class Command(BaseCommand):
                     self.counts['entries_redated'] += 1
                 self._refresh_media(entry, keep)
                 self._apply_child_tags(entry, keep)
+                self._link_children(entry, keep)
         else:
             keep = self._create_keep(entry, circle, ts, memory_ts, entry_id)
         # Comments/reactions are keyed by their own Tinybeans ids, so new ones
@@ -630,6 +632,7 @@ class Command(BaseCommand):
 
         for media_id, source_key in thumbnail_jobs:
             self._generate_thumbnails(media_id, source_key=source_key)
+        self._link_children(entry, keep)
         return keep
 
     def _refresh_media(self, entry, keep):
@@ -682,6 +685,19 @@ class Command(BaseCommand):
         keep.tags = ', '.join(existing + missing)
         keep.save(update_fields=['tags'])
         self.counts['child_tags'] += 1
+
+    def _link_children(self, entry, keep):
+        """Attach the child profiles an entry is tagged with (idempotent)."""
+        existing = set(keep.children.values_list('id', flat=True))
+        for child in entry.get('children') or []:
+            if child.get('id') is None:
+                continue
+            record = self._record(TinybeansObjectType.CHILD, child['id'])
+            if not record or not record.child_id or record.child_id in existing:
+                continue
+            keep.children.add(record.child_id)
+            existing.add(record.child_id)
+            self.counts['child_links'] += 1
 
     def _delete_object(self, storage_key):
         if not storage_key:

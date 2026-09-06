@@ -350,12 +350,26 @@ class SyncTinybeansCommandTests(TestCase):
     def test_child_tags_are_added_to_keep(self):
         tagged = dict(PHOTO_ENTRY, children=[{'id': 55, 'firstName': 'Sam', 'lastName': 'Parent'}])
         self.run_sync(entries=[tagged])
-        self.assertEqual(Keep.objects.get().tags, 'Sam')
+        keep = Keep.objects.get()
+        self.assertEqual(keep.tags, 'Sam')
+        self.assertEqual([c.display_name for c in keep.children.all()], ['Sam Parent'])
 
-        # rerun does not duplicate the tag, and adds a newly tagged child
+        # rerun does not duplicate the tag or the link; child 56 is not a
+        # journal child so it gets a tag but no link
         both = dict(tagged, children=tagged['children'] + [{'id': 56, 'firstName': 'Alex'}])
         self.run_sync(entries=[both])
-        self.assertEqual(Keep.objects.get().tags, 'Sam, Alex')
+        keep.refresh_from_db()
+        self.assertEqual(keep.tags, 'Sam, Alex')
+        self.assertEqual(keep.children.count(), 1)
+
+    def test_rerun_links_children_of_previously_imported_keep(self):
+        tagged = dict(PHOTO_ENTRY, children=[{'id': 55, 'firstName': 'Sam', 'lastName': 'Parent'}])
+        self.run_sync(entries=[tagged])
+        Keep.objects.get().children.clear()  # as imported before the link existed
+
+        self.run_sync(entries=[tagged])
+
+        self.assertEqual(Keep.objects.get().children.count(), 1)
 
     def test_run_is_recorded(self):
         self.run_sync()
