@@ -1,6 +1,7 @@
 """Tests for the email service layer."""
 
 from pathlib import Path
+from smtplib import SMTPException
 from unittest.mock import patch
 
 from django.core import mail
@@ -174,9 +175,9 @@ class EmailServiceTests(SimpleTestCase):
     @patch("mysite.emails.services.send_mail")
     @patch("mysite.emails.services.logger")
     def test_send_email_django_send_error(self, mock_logger, mock_send_mail):
-        mock_send_mail.side_effect = Exception("SMTP Error")
+        mock_send_mail.side_effect = SMTPException("SMTP Error")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(SMTPException):
             email_dispatch_service.send_email(
                 to_email="user@example.com",
                 template_id="test_template",

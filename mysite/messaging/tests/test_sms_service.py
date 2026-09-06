@@ -106,24 +106,28 @@ class TestTwilioProvider:
 
     def test_initialization_success(self):
         """Test successful Twilio client initialization."""
-        with override_settings(
-            TWILIO_ACCOUNT_SID="test_sid", TWILIO_AUTH_TOKEN="test_token", TWILIO_PHONE_NUMBER="+15555555555"
+        with (
+            override_settings(
+                TWILIO_ACCOUNT_SID="test_sid", TWILIO_AUTH_TOKEN="test_token", TWILIO_PHONE_NUMBER="+15555555555"
+            ),
+            patch("twilio.rest.Client") as mock_client,
         ):
-            with patch("twilio.rest.Client") as mock_client:
-                provider = TwilioProvider()
+            provider = TwilioProvider()
 
-                assert provider.client is not None
-                assert provider.from_number == "+15555555555"
-                mock_client.assert_called_once_with("test_sid", "test_token")
+            assert provider.client is not None
+            assert provider.from_number == "+15555555555"
+            mock_client.assert_called_once_with("test_sid", "test_token")
 
     def test_initialization_failure(self):
         """Test that initialization failure is handled gracefully."""
-        with override_settings(
-            TWILIO_ACCOUNT_SID="test_sid", TWILIO_AUTH_TOKEN="test_token", TWILIO_PHONE_NUMBER="+15555555555"
+        with (
+            override_settings(
+                TWILIO_ACCOUNT_SID="test_sid", TWILIO_AUTH_TOKEN="test_token", TWILIO_PHONE_NUMBER="+15555555555"
+            ),
+            patch("twilio.rest.Client", side_effect=Exception("Init error")),
         ):
-            with patch("twilio.rest.Client", side_effect=Exception("Init error")):
-                provider = TwilioProvider()
-                assert provider.client is None
+            provider = TwilioProvider()
+            assert provider.client is None
 
     def test_send_sms_success(self):
         """Test successful SMS sending via Twilio."""

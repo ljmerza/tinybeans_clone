@@ -302,11 +302,8 @@ def get_client_ip(request) -> str:
         str: Client IP address
     """
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        # Take the first IP in the chain
-        ip = x_forwarded_for.split(",")[0].strip()
-    else:
-        ip = request.META.get("REMOTE_ADDR", "0.0.0.0")
+    # Take the first IP in the chain when the request came through a proxy.
+    ip = x_forwarded_for.split(",")[0].strip() if x_forwarded_for else request.META.get("REMOTE_ADDR", "0.0.0.0")
     return ip
 
 

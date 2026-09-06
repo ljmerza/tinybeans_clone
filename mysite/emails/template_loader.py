@@ -89,10 +89,7 @@ def _build_renderer(template, block_map: Dict[str, BlockNode], template_id: str)
         html_body = _render_block(compiled, block_map.get(_BLOCK_HTML), ctx_data).strip() or None
 
         if not text_body:
-            if html_body:
-                text_body = strip_tags(html_body)
-            else:
-                text_body = ""
+            text_body = strip_tags(html_body) if html_body else ""
 
         return RenderedEmail(subject=subject, text_body=text_body, html_body=html_body)
 

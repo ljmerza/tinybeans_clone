@@ -130,7 +130,7 @@ def process_media_upload(self, upload_id: str):
                             "extra": {"upload_id": upload_id, "attempt": attempt},
                         },
                     )
-                    raise self.retry(countdown=60 * (2**self.request.retries))
+                    raise self.retry(countdown=60 * (2**self.request.retries)) from exc
 
                 raise
 
@@ -261,7 +261,7 @@ def generate_image_sizes(self, media_id: int, source_key: str | None = None):
                     },
                 )
                 return True
-            except Exception:
+            except Exception as exc:
                 logger.exception(
                     "Failed to generate image sizes",
                     extra={
@@ -279,7 +279,7 @@ def generate_image_sizes(self, media_id: int, source_key: str | None = None):
                             "extra": {"media_id": media_id, "attempt": attempt},
                         },
                     )
-                    raise self.retry(countdown=60 * (2**self.request.retries))
+                    raise self.retry(countdown=60 * (2**self.request.retries)) from exc
 
                 raise
 

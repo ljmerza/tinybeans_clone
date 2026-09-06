@@ -436,9 +436,8 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertEqual(TinybeansSyncRun.objects.count(), 0)
 
     def test_failed_run_is_recorded_as_failed(self):
-        with mock.patch.object(FakeClient, "followings", return_value=[]):
-            with self.assertRaises(CommandError):
-                self.run_sync()
+        with mock.patch.object(FakeClient, "followings", return_value=[]), self.assertRaises(CommandError):
+            self.run_sync()
 
         run = TinybeansSyncRun.objects.get()
         self.assertEqual(run.status, TinybeansSyncStatus.FAILED)
@@ -569,22 +568,19 @@ class SyncTinybeansIncrementalTaskTests(TestCase):
     CREDS = {"TINYBEANS_EMAIL": "parent@example.com", "TINYBEANS_PASSWORD": "pw"}
 
     def test_skips_without_credentials(self):
-        with mock.patch.dict("os.environ", {}, clear=True):
-            with mock.patch("mysite.keeps.tasks.call_command") as call:
-                self.assertFalse(sync_tinybeans_incremental())
+        with mock.patch.dict("os.environ", {}, clear=True), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertFalse(sync_tinybeans_incremental())
         call.assert_not_called()
 
     def test_runs_incremental_sync_with_credentials(self):
-        with mock.patch.dict("os.environ", self.CREDS):
-            with mock.patch("mysite.keeps.tasks.call_command") as call:
-                self.assertTrue(sync_tinybeans_incremental())
+        with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertTrue(sync_tinybeans_incremental())
         call.assert_called_once_with("sync_tinybeans", since_last_run=True)
 
     def test_skips_while_another_run_is_in_progress(self):
         TinybeansSyncRun.objects.create(status=TinybeansSyncStatus.RUNNING)
-        with mock.patch.dict("os.environ", self.CREDS):
-            with mock.patch("mysite.keeps.tasks.call_command") as call:
-                self.assertFalse(sync_tinybeans_incremental())
+        with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertFalse(sync_tinybeans_incremental())
         call.assert_not_called()
 
     def test_ignores_stale_running_rows(self):
@@ -592,7 +588,6 @@ class SyncTinybeansIncrementalTaskTests(TestCase):
             status=TinybeansSyncStatus.RUNNING,
             started_at=timezone.now() - timedelta(hours=7),
         )
-        with mock.patch.dict("os.environ", self.CREDS):
-            with mock.patch("mysite.keeps.tasks.call_command") as call:
-                self.assertTrue(sync_tinybeans_incremental())
+        with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertTrue(sync_tinybeans_incremental())
         call.assert_called_once()

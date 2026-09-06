@@ -155,7 +155,7 @@ class PKCEStateService:
             oauth_state = GoogleOAuthState.objects.get(state_token=state_token)
         except GoogleOAuthState.DoesNotExist:
             logger.warning("Invalid OAuth state token", extra={"state": state_token[:8] + "...", "ip": ip_address})
-            raise InvalidStateError("State token not found")
+            raise InvalidStateError("State token not found") from None
 
         # Check if already used
         if oauth_state.used_at:

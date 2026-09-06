@@ -161,11 +161,7 @@ class User(AbstractUser):
         This allows users who left all their circles to re-onboard.
         """
         # If user has no circles, they need onboarding regardless of past status
-        if not self.circle_memberships.exists():
-            return True
-
-        # User has circles - no onboarding needed
-        return False
+        return not self.circle_memberships.exists()
 
     def set_circle_onboarding_status(self, status: str, *, save: bool = True) -> bool:
         """Update the onboarding status and timestamp.

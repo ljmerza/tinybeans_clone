@@ -49,10 +49,7 @@ class MediaStorageBackend(ABC):
         date_path = now.strftime("%Y/%m/%d")
 
         # Use content hash if provided, otherwise generate UUID
-        if content_hash:
-            unique_id = content_hash[:16]
-        else:
-            unique_id = str(uuid.uuid4()).replace("-", "")[:16]
+        unique_id = content_hash[:16] if content_hash else str(uuid.uuid4()).replace("-", "")[:16]
 
         # Preserve file extension
         name, ext = os.path.splitext(filename)
@@ -74,8 +71,8 @@ class MinIOStorageBackend(MediaStorageBackend):
             from minio.error import S3Error
 
             self.S3Error = S3Error
-        except ImportError:
-            raise ImportError("minio package is required for MinIO backend")
+        except ImportError as err:
+            raise ImportError("minio package is required for MinIO backend") from err
 
         self.endpoint = settings.MINIO_ENDPOINT.replace("http://", "").replace("https://", "")
         self.access_key = settings.MINIO_ACCESS_KEY
@@ -119,8 +116,8 @@ class MinIOStorageBackend(MediaStorageBackend):
         try:
             response = self.client.get_object(self.bucket_name, storage_key)
             return response.read()
-        except self.S3Error:
-            raise FileNotFoundError(f"File not found: {storage_key}")
+        except self.S3Error as err:
+            raise FileNotFoundError(f"File not found: {storage_key}") from err
         finally:
             if "response" in locals():
                 response.close()

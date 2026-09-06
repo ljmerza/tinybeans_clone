@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import math
 from urllib.parse import urlencode
@@ -378,10 +379,8 @@ class LogoutView(APIView):
         # invalid/expired/already-blacklisted token is swallowed.
         refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
         if refresh_token:
-            try:
+            with contextlib.suppress(TokenError):
                 RefreshToken(refresh_token).blacklist()
-            except TokenError:
-                pass
 
         response = success_response(
             {}, messages=[create_message("notifications.auth.logout_success")], status_code=status.HTTP_200_OK

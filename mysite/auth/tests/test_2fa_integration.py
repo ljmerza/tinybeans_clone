@@ -314,7 +314,7 @@ class TestRateLimitingFlow:
     def test_rate_limiting_enforced(self, mock_send):
         """Test rate limiting prevents excessive requests"""
         # Make requests up to limit
-        for i in range(3):
+        for _ in range(3):
             response = self.client.post("/api/auth/2fa/setup/", {"method": "email"})
             assert response.status_code == status.HTTP_200_OK
 

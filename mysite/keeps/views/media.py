@@ -59,10 +59,7 @@ class KeepMediaDetailView(generics.RetrieveDestroyAPIView):
 
     def get_permissions(self):
         """Return appropriate permissions based on action."""
-        if self.request.method == "DELETE":
-            permission_classes = [IsCircleAdminOrOwner]
-        else:
-            permission_classes = [IsCircleMember]
+        permission_classes = [IsCircleAdminOrOwner] if self.request.method == "DELETE" else [IsCircleMember]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):

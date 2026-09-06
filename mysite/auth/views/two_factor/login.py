@@ -72,12 +72,10 @@ class TwoFactorVerifyLoginView(APIView):
         else:
             verified = TwoFactorService.verify_otp(user, code, purpose="login")
 
-        # If regular code fails, try recovery code
-        if not verified:
-            # Check if it's a recovery code format (XXXX-XXXX-XXXX)
-            if "-" in code and len(code) >= 14:
-                verified = TwoFactorService.verify_recovery_code(user, code)
-                is_recovery_code = verified
+        # If the regular code fails, try it as a recovery code (XXXX-XXXX-XXXX)
+        if not verified and "-" in code and len(code) >= 14:
+            verified = TwoFactorService.verify_recovery_code(user, code)
+            is_recovery_code = verified
 
         if not verified:
             # Increment failed attempts

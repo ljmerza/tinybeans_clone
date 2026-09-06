@@ -145,7 +145,9 @@ class KeepCreateSerializer(serializers.ModelSerializer):
             try:
                 CircleMembership.objects.get(user=user, circle=circle)
             except CircleMembership.DoesNotExist:
-                raise serializers.ValidationError({"circle": create_message("errors.circle_membership_required")})
+                raise serializers.ValidationError(
+                    {"circle": create_message("errors.circle_membership_required")}
+                ) from None
 
         # Milestone keeps should have milestone data
         if keep_type == KeepType.MILESTONE and not milestone_data:

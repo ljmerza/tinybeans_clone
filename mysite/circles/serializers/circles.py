@@ -64,7 +64,7 @@ class CircleMemberAddSerializer(serializers.Serializer):
         try:
             user = User.objects.get(id=attrs["user_id"])
         except User.DoesNotExist:
-            raise serializers.ValidationError({"user_id": create_message("errors.user_not_found")})
+            raise serializers.ValidationError({"user_id": create_message("errors.user_not_found")}) from None
 
         if CircleMembership.objects.filter(circle=circle, user=user).exists():
             raise serializers.ValidationError({"user_id": create_message("errors.circle_member_exists")})

@@ -24,6 +24,9 @@ class Circle(models.Model):
         app_label = "users"
         ordering = ["name"]
 
+    def __str__(self) -> str:
+        return self.name
+
     def save(self, *args, **kwargs):
         """Persist the circle, auto-generating the slug when missing."""
         if not self.slug:
@@ -57,9 +60,6 @@ class Circle(models.Model):
             User instance
         """
         return self.created_by
-
-    def __str__(self) -> str:
-        return self.name
 
 
 __all__ = ["Circle"]

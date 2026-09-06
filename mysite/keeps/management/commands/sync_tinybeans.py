@@ -24,6 +24,7 @@ Credentials can also come from the TINYBEANS_EMAIL / TINYBEANS_PASSWORD
 (or TINYBEANS_ACCESS_TOKEN) environment variables.
 """
 
+import contextlib
 import getpass
 import mimetypes
 import os
@@ -382,7 +383,7 @@ class Command(BaseCommand):
         try:
             return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=dt_timezone.utc)
         except ValueError:
-            raise CommandError(f"{flag} must be YYYY-MM-DD, got {value!r}")
+            raise CommandError(f"{flag} must be YYYY-MM-DD, got {value!r}") from None
 
     def _authenticate(self, options):
         if options["token"]:
@@ -398,7 +399,7 @@ class Command(BaseCommand):
         try:
             user = self.client.login(email, password)
         except (requests.RequestException, TinybeansApiError) as exc:
-            raise CommandError(f"Tinybeans login failed: {exc}")
+            raise CommandError(f"Tinybeans login failed: {exc}") from exc
         return user
 
     def _resolve_owner(self, options, login_user):
@@ -445,7 +446,7 @@ class Command(BaseCommand):
         try:
             followings = self.client.followings()
         except (requests.RequestException, TinybeansApiError) as exc:
-            raise CommandError(f"Could not list Tinybeans journals: {exc}")
+            raise CommandError(f"Could not list Tinybeans journals: {exc}") from exc
         journals = [f.get("journal") for f in followings if f.get("journal")]
         if options["journal"]:
             wanted = {str(j) for j in options["journal"]}
@@ -524,10 +525,8 @@ class Command(BaseCommand):
             return
         birthdate = None
         if child.get("dob"):
-            try:
+            with contextlib.suppress(ValueError):
                 birthdate = datetime.strptime(child["dob"], "%Y-%m-%d").date()
-            except ValueError:
-                pass
         profile = ChildProfile.objects.create(
             circle=circle,
             display_name=name[:150],
@@ -836,13 +835,18 @@ class Command(BaseCommand):
                     record.comment.delete()  # cascades to the import record
                     self.counts["comments_removed"] += 1
                 continue
-            if record and record.comment_id and comment.get("parentId") is not None and not self.dry:
-                # Replies imported before threading existed have no parent yet.
-                if record.comment.parent_id is None:
-                    parent_record = self._record(TinybeansObjectType.COMMENT, comment["parentId"])
-                    if parent_record and parent_record.comment_id:
-                        record.comment.parent_id = parent_record.comment_id
-                        record.comment.save(update_fields=["parent"])
+            # Replies imported before threading existed have no parent yet.
+            if (
+                record
+                and record.comment_id
+                and comment.get("parentId") is not None
+                and not self.dry
+                and record.comment.parent_id is None
+            ):
+                parent_record = self._record(TinybeansObjectType.COMMENT, comment["parentId"])
+                if parent_record and parent_record.comment_id:
+                    record.comment.parent_id = parent_record.comment_id
+                    record.comment.save(update_fields=["parent"])
             if not record:
                 self.counts["comments"] += 1
                 if depth:

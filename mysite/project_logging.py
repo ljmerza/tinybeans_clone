@@ -254,9 +254,9 @@ def bind_celery_signals(app) -> None:
             task_name=getattr(task, "name", None),
         )
         if request is not None:
-            setattr(request, "_logging_token", token)
+            request._logging_token = token
         else:
-            setattr(task, "_logging_token", token)
+            task._logging_token = token
 
     @signals.task_postrun.connect
     def _task_postrun(task_id=None, task=None, **kwargs):

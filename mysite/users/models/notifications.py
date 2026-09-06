@@ -72,6 +72,10 @@ class UserNotificationPreferences(models.Model):
     class Meta:
         unique_together = (("user", "circle"),)
 
+    def __str__(self):
+        target = self.circle.name if self.circle else "all circles"
+        return f"Preferences for {self.user} ({target})"
+
     @property
     def is_circle_override(self) -> bool:
         """Check if these preferences are circle-specific overrides.
@@ -80,7 +84,3 @@ class UserNotificationPreferences(models.Model):
             True if this is a circle-specific override, False if global defaults
         """
         return self.circle_id is not None
-
-    def __str__(self):
-        target = self.circle.name if self.circle else "all circles"
-        return f"Preferences for {self.user} ({target})"

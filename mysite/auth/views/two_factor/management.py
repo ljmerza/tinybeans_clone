@@ -110,13 +110,12 @@ class TwoFactorPreferredMethodView(APIView):
                     status.HTTP_400_BAD_REQUEST,
                 )
 
-        if method == "email":
-            if not settings_obj.email_verified:
-                return error_response(
-                    "email_not_verified",
-                    [create_message("errors.twofa.email_not_verified")],
-                    status.HTTP_400_BAD_REQUEST,
-                )
+        if method == "email" and not settings_obj.email_verified:
+            return error_response(
+                "email_not_verified",
+                [create_message("errors.twofa.email_not_verified")],
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         settings_obj.preferred_method = method
         settings_obj.save(update_fields=["preferred_method"])

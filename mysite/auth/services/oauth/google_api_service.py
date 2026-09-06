@@ -124,4 +124,4 @@ class GoogleAPIService:
 
         except Exception as e:
             logger.error(f"OAuth token exchange failed: {str(e)}", extra={"error": str(e)}, exc_info=True)
-            raise OAuthError(f"Token exchange failed: {str(e)}")
+            raise OAuthError(f"Token exchange failed: {str(e)}") from e
