@@ -100,7 +100,7 @@ class TwoFactorDisableSerializer(serializers.Serializer):
     """Serializer for disabling 2FA."""
 
     code = serializers.CharField(
-        min_length=6, max_length=6, required=True, help_text="Current 2FA code to confirm disable"
+        required=True, help_text="6-digit verification code or recovery code (XXXX-XXXX-XXXX) to confirm disable"
     )
 
 
