@@ -29,7 +29,7 @@ x-common-env: &django-common-env
   EMAIL_USE_TLS: ${EMAIL_USE_TLS:-0}
   EMAIL_USE_SSL: ${EMAIL_USE_SSL:-0}
   ACCOUNT_FRONTEND_BASE_URL: ${ACCOUNT_FRONTEND_BASE_URL:-http://localhost:3053}
-  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://192.168.1.76:9220}
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
   MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-tinybeans-media}
@@ -57,6 +57,9 @@ services:
       - ./:/app
     env_file:
       - ./.env.development
+      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
+      - path: ./env/tinybeans.env
+        required: false
     environment:
       <<: *django-common-env
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
@@ -81,7 +84,7 @@ services:
       - "3053:3000"
     environment:
       NODE_ENV: development
-      VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8100/api}
+      VITE_API_BASE: ${VITE_API_BASE:-/api}
     stdin_open: true
     tty: true
 
@@ -93,6 +96,9 @@ services:
       - ./:/app
     env_file:
       - ./.env.development
+      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
+      - path: ./env/tinybeans.env
+        required: false
     environment:
       <<: *django-common-env
     depends_on:
@@ -107,6 +113,9 @@ services:
       - ./:/app
     env_file:
       - ./.env.development
+      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
+      - path: ./env/tinybeans.env
+        required: false
     environment:
       <<: *django-common-env
     depends_on:

@@ -3,7 +3,12 @@ from .keep import Keep, KeepType
 from .media import KeepMedia, MediaUpload, MediaUploadStatus
 from .milestone import Milestone, MilestoneType
 from .social import KeepReaction, KeepComment
-from .tinybeans_import import TinybeansImportRecord, TinybeansObjectType
+from .tinybeans_import import (
+    TinybeansImportRecord,
+    TinybeansObjectType,
+    TinybeansSyncRun,
+    TinybeansSyncStatus,
+)
 
 __all__ = [
     'Keep', 'KeepType',
@@ -11,4 +16,5 @@ __all__ = [
     'Milestone', 'MilestoneType',
     'KeepReaction', 'KeepComment',
     'TinybeansImportRecord', 'TinybeansObjectType',
+    'TinybeansSyncRun', 'TinybeansSyncStatus',
 ]

@@ -34,6 +34,7 @@ class Keep(models.Model):
         updated_at: When the keep was last modified
         is_public: Whether the keep is visible to all circle members
         tags: Comma-separated tags for categorization
+        children: Child profiles this memory is about
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     circle = models.ForeignKey(
@@ -58,6 +59,12 @@ class Keep(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_public = models.BooleanField(default=True)
     tags = models.CharField(max_length=500, blank=True, help_text="Comma-separated tags")
+    children = models.ManyToManyField(
+        'users.ChildProfile',
+        blank=True,
+        related_name='keeps',
+        help_text="Children this memory is about",
+    )
 
     class Meta:
         ordering = ['-date_of_memory', '-created_at']

@@ -2,6 +2,7 @@
 from django.urls import path
 
 from .views import (
+    KeepCalendarView,
     KeepListCreateView,
     KeepDetailView,
     KeepByCircleView,
@@ -21,6 +22,7 @@ app_name = 'keeps'
 urlpatterns = [
     # Keep endpoints
     path('', KeepListCreateView.as_view(), name='keep-list-create'),
+    path('calendar/', KeepCalendarView.as_view(), name='keep-calendar'),
     path('<uuid:keep_id>/', KeepDetailView.as_view(), name='keep-detail'),
     path('by-circle/<str:circle_slug>/', KeepByCircleView.as_view(), name='keep-by-circle'),
     path('by-type/', KeepByTypeView.as_view(), name='keep-by-type'),

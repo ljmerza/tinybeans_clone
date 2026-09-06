@@ -26,6 +26,7 @@ Credentials can also come from the TINYBEANS_EMAIL / TINYBEANS_PASSWORD
 import getpass
 import mimetypes
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone as dt_timezone
 from urllib.parse import urlparse
@@ -43,6 +44,8 @@ from mysite.keeps.models import (
     KeepType,
     TinybeansImportRecord,
     TinybeansObjectType,
+    TinybeansSyncRun,
+    TinybeansSyncStatus,
 )
 from mysite.keeps.storage import get_storage_backend
 from mysite.keeps.tasks import generate_image_sizes
@@ -54,8 +57,19 @@ API_BASE = 'https://tinybeans.com/api/1'
 # project uses); required by the API on every request.
 CLIENT_ID = '13bcd503-2137-9085-a437-d9f2ac9281a1'
 PAGE_SIZE = 200
-# Preferred blob (image rendition) keys, best quality first.
-BLOB_PREFERENCE = ('o2', 'o', 'xl', 'l', 'm', 's2', 's', 't', 'p')
+# Preferred blob (image rendition) keys, best quality first. ``p`` is the
+# uncropped full-size image (2000px long edge); ``o2`` is a 2000x2000 square
+# crop, sometimes upscaled, so it is only a fallback. Video entries carry the
+# same renditions for their poster frame.
+BLOB_PREFERENCE = ('p', 'o2', 'o', 'xl', 'l', 'm', 's2', 's', 't')
+# Filenames of originals that were downloaded from a lesser rendition.
+LESSER_RENDITION_RE = re.compile(r'-(o2|o|xl|l|m|s2|s|t)\.[A-Za-z0-9]+$')
+MAX_REPLY_DEPTH = 3
+# Static images Tinybeans serves instead of a real rendition (e.g. the
+# "processing video" card for a video whose poster was never generated).
+PLACEHOLDER_IMAGE_PREFIX = 'https://public.tinybeans.com/images/'
+# --since-last-run looks this far behind the previous successful run's start.
+INCREMENTAL_MARGIN = timedelta(hours=1)
 # Tinybeans emotion labels -> KeepReaction types. Unknown labels fall back to 'like'.
 REACTION_MAP = {
     'love': 'love',
@@ -103,8 +117,22 @@ class TinybeansClient:
         response = self._request('GET', 'followings', params={'clientId': CLIENT_ID})
         return response.json().get('followings') or []
 
+    def comment_replies(self, journal_id, entry_id, comment_id) -> list:
+        """Replies to a comment (the entries feed only carries ``repliesCount``)."""
+        response = self._request(
+            'GET',
+            f'journals/{journal_id}/entries/{entry_id}/comments/{comment_id}/replies',
+            params={'clientId': CLIENT_ID},
+        )
+        return response.json().get('comments') or []
+
     def entries_page(self, journal_id, last_ms: int) -> dict:
-        """One page of journal entries older than ``last_ms`` (newest first)."""
+        """One page of journal entries, ordered by ``lastUpdatedTimestamp`` desc.
+
+        ``last`` is compared against ``lastUpdatedTimestamp`` (not the entry
+        date), so the page after this one must use the smallest
+        ``lastUpdatedTimestamp`` seen so far as its cursor.
+        """
         response = self._request(
             'GET',
             f'journals/{journal_id}/entries',
@@ -112,31 +140,45 @@ class TinybeansClient:
         )
         return response.json()
 
-    def iter_entries(self, journal_id, start_ms=None, end_ms=None):
-        """Yield entries newest-to-oldest, stopping once past ``start_ms``.
+    def iter_entries(self, journal_id, start_ms=None, end_ms=None, updated_since_ms=None):
+        """Yield every journal entry, most recently *updated* first.
 
-        Callers must still filter each entry by exact timestamp; page
-        boundaries are only used to stop paginating early.
+        The API pages by ``lastUpdatedTimestamp``, not by entry date: an old
+        entry that just received a comment shows up on the first page. So the
+        cursor is always the smallest ``lastUpdatedTimestamp`` on the page,
+        and paging always starts from "now" regardless of ``end_ms`` (an entry
+        dated before ``end_ms`` may have been updated after it).
+
+        Callers must filter each entry by exact timestamp. ``start_ms`` only
+        allows an early stop: an entry is never updated before it is created,
+        so once a whole page was last updated before ``start_ms`` nothing
+        older can fall inside the range. ``updated_since_ms`` stops the walk
+        the same way for incremental runs (anything updated earlier was
+        covered by a previous run).
         """
-        last = end_ms
-        if last is None:
-            last = int(time.time() * 1000) + 24 * 3600 * 1000
+        stops = [v for v in (start_ms, updated_since_ms) if v is not None]
+        stop_ms = max(stops) if stops else None
+        last = int(time.time() * 1000) + 24 * 3600 * 1000
         while True:
             data = self.entries_page(journal_id, last)
             entries = data.get('entries') or []
             if not entries:
                 return
             yield from entries
-            timestamps = [e['timestamp'] for e in entries if e.get('timestamp')]
-            if not timestamps:
+            cursors = [
+                e.get('lastUpdatedTimestamp') or e.get('timestamp')
+                for e in entries
+                if e.get('lastUpdatedTimestamp') or e.get('timestamp')
+            ]
+            if not cursors:
                 return
-            page_min = min(timestamps)
+            page_min = min(cursors)
             remaining = data.get('numEntriesRemaining') or 0
             if remaining <= 0:
                 return
             if page_min >= last:  # no progress; avoid an infinite loop
                 return
-            if start_ms is not None and page_min < start_ms:
+            if stop_ms is not None and page_min < stop_ms:
                 return
             last = page_min
 
@@ -192,6 +234,9 @@ class Command(BaseCommand):
                             help='Report what would be imported without writing anything')
         parser.add_argument('--sync-thumbnails', action='store_true',
                             help='Generate photo thumbnails inline instead of queueing Celery tasks')
+        parser.add_argument('--since-last-run', action='store_true',
+                            help='Only walk entries updated since the last successful run '
+                                 '(minus a 1 hour margin); falls back to a full walk if none')
 
     def handle(self, *args, **options):
         self.dry = options['dry_run']
@@ -199,8 +244,38 @@ class Command(BaseCommand):
         self.limit = options['limit']
         self.counts = {
             'circles': 0, 'children': 0, 'users': 0, 'entries': 0, 'media': 0,
-            'comments': 0, 'reactions': 0, 'entries_skipped': 0, 'errors': 0,
+            'comments': 0, 'replies': 0, 'reactions': 0, 'entries_skipped': 0,
+            'entries_redated': 0, 'entries_deleted': 0, 'media_upgraded': 0,
+            'video_posters': 0, 'child_tags': 0, 'child_links': 0, 'comments_removed': 0,
+            'reactions_removed': 0, 'errors': 0,
         }
+        self.updated_since_ms = self._incremental_cutoff_ms(options)
+        run = None
+        if not self.dry:
+            run = TinybeansSyncRun.objects.create(incremental=self.updated_since_ms is not None)
+        try:
+            self._execute(options)
+        except BaseException as exc:
+            if run:
+                run.finish(TinybeansSyncStatus.FAILED, self.counts, error=str(exc)[:2000])
+            raise
+        if run:
+            run.finish(TinybeansSyncStatus.SUCCESS, self.counts)
+
+    def _incremental_cutoff_ms(self, options):
+        if not options.get('since_last_run'):
+            return None
+        last = TinybeansSyncRun.last_successful()
+        if last is None:
+            self.stdout.write(self.style.WARNING(
+                'No successful sync recorded yet; walking the whole journal.'
+            ))
+            return None
+        cutoff = last.started_at - INCREMENTAL_MARGIN
+        self.stdout.write(f'Incremental: only entries updated since {cutoff.isoformat()}')
+        return int(cutoff.timestamp() * 1000)
+
+    def _execute(self, options):
         self.storage = None if self.dry else get_storage_backend()
 
         start_ms, end_ms, start_dt, end_dt = self._parse_range(options)
@@ -232,8 +307,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"Done. Circles {verb}: {c['circles']}, children: {c['children']}, "
             f"users: {c['users']}, entries: {c['entries']} (media files: {c['media']}), "
-            f"comments: {c['comments']}, reactions: {c['reactions']}. "
-            f"Entries already synced: {c['entries_skipped']}. Errors: {c['errors']}."
+            f"comments: {c['comments']} (of which replies: {c['replies']}), reactions: {c['reactions']}. "
+            f"Entries already synced: {c['entries_skipped']} (dates corrected: {c['entries_redated']}, "
+            f"originals upgraded: {c['media_upgraded']}, video posters: {c['video_posters']}, "
+            f"child tags: {c['child_tags']}, child links: {c['child_links']}). "
+            f"Removed because deleted on Tinybeans: "
+            f"comments {c['comments_removed']}, reactions {c['reactions_removed']}. "
+            f"Deleted entries ignored: {c['entries_deleted']}. Errors: {c['errors']}."
         ))
         if c['errors']:
             self.stdout.write(self.style.WARNING(
@@ -338,11 +418,19 @@ class Command(BaseCommand):
             self._ensure_child(child, circle)
 
         processed = 0
-        for entry in self.client.iter_entries(journal['id'], start_ms, end_ms):
+        for entry in self.client.iter_entries(
+            journal['id'], start_ms, end_ms, updated_since_ms=self.updated_since_ms,
+        ):
             ts_ms = entry.get('timestamp')
             if ts_ms is None:
                 continue
-            if (start_ms is not None and ts_ms < start_ms) or (end_ms is not None and ts_ms > end_ms):
+            if entry.get('deleted'):
+                # Tinybeans keeps deleted entries in the feed but removes their
+                # media (every rendition 404s), so there is nothing to import.
+                self.counts['entries_deleted'] += 1
+                continue
+            memory_ms = int(self._memory_datetime(entry).timestamp() * 1000)
+            if (start_ms is not None and memory_ms < start_ms) or (end_ms is not None and memory_ms > end_ms):
                 continue
             try:
                 self._import_entry(entry, circle)
@@ -444,38 +532,77 @@ class Command(BaseCommand):
         if entry_id is None:
             return
         ts = datetime.fromtimestamp(entry['timestamp'] / 1000, tz=dt_timezone.utc)
+        memory_ts = self._memory_datetime(entry)
         record = self._record(TinybeansObjectType.ENTRY, entry_id)
         if record:
             self.counts['entries_skipped'] += 1
             keep = record.keep
+            if not self.dry:
+                if keep.date_of_memory != memory_ts:
+                    # Earlier imports stored the upload time as the memory date.
+                    keep.date_of_memory = memory_ts
+                    keep.save(update_fields=['date_of_memory'])
+                    self.counts['entries_redated'] += 1
+                self._refresh_media(entry, keep)
+                self._apply_child_tags(entry, keep)
+                self._link_children(entry, keep)
         else:
-            keep = self._create_keep(entry, circle, ts, entry_id)
+            keep = self._create_keep(entry, circle, ts, memory_ts, entry_id)
         # Comments/reactions are keyed by their own Tinybeans ids, so new ones
         # attached to an already-synced entry are still picked up.
         self._sync_comments(entry, keep, circle, ts)
         self._sync_emotions(entry, keep, circle, ts)
 
-    def _create_keep(self, entry, circle, ts, entry_id):
+    @staticmethod
+    def _best_blob_url(entry):
+        """Best real image rendition for an entry, or None for placeholders."""
+        blobs = entry.get('blobs') or {}
+        url = next((blobs[k] for k in BLOB_PREFERENCE if blobs.get(k)), None)
+        if url and url.startswith(PLACEHOLDER_IMAGE_PREFIX):
+            return None
+        return url
+
+    @staticmethod
+    def _memory_datetime(entry):
+        """The date the memory belongs to, as Tinybeans shows it.
+
+        ``timestamp`` is when the entry was uploaded; the user-chosen date lives
+        in ``year``/``month``/``day`` (a batch upload puts many days' photos on
+        one timestamp). Noon UTC keeps the calendar day stable in any timezone.
+        """
+        try:
+            return datetime(
+                int(entry['year']), int(entry['month']), int(entry['day']),
+                12, 0, tzinfo=dt_timezone.utc,
+            )
+        except (KeyError, TypeError, ValueError):
+            return datetime.fromtimestamp(entry['timestamp'] / 1000, tz=dt_timezone.utc)
+
+    def _create_keep(self, entry, circle, ts, memory_ts, entry_id):
         self.counts['entries'] += 1
         if self.limit is not None and self.counts['entries'] > self.limit:
             self.counts['entries'] -= 1
             raise _LimitReached()
 
         is_video = entry.get('attachmentType') == 'VIDEO' and entry.get('attachmentUrl_mp4')
-        blobs = entry.get('blobs') or {}
-        blob_url = next((blobs[k] for k in BLOB_PREFERENCE if blobs.get(k)), None)
+        blob_url = self._best_blob_url(entry)
         has_media = bool(is_video or blob_url)
 
         if self.dry:
             kind = 'video' if is_video else ('photo' if blob_url else 'note')
             self.counts['media'] += 1 if has_media else 0
-            self.stdout.write(f"  Would import {kind} entry {entry_id} from {ts.date()}")
+            self.stdout.write(f"  Would import {kind} entry {entry_id} from {memory_ts.date()}")
             return None
 
         # Download + store media BEFORE opening the DB transaction.
         media_specs = []  # (storage_key, filename, content_type, media_type, size)
+        poster_key = None
         if is_video:
             media_specs.append(self._fetch_media(entry['attachmentUrl_mp4'], entry_id, 'video'))
+            if blob_url:
+                # Tinybeans ships a poster frame with every video; the
+                # thumbnail task derives the renditions from it.
+                poster_key = self._fetch_media(blob_url, entry_id, 'photo')[0]
         elif blob_url:
             media_specs.append(self._fetch_media(blob_url, entry_id, 'photo'))
 
@@ -485,10 +612,13 @@ class Command(BaseCommand):
                 created_by=self._entry_author(entry),
                 keep_type=KeepType.MEDIA if has_media else KeepType.NOTE,
                 description=entry.get('caption') or '',
-                date_of_memory=ts,
+                date_of_memory=memory_ts,
                 created_at=ts,
+                tags=', '.join(self._child_names(entry)),
             )
-            photo_media_ids = []
+            if keep.tags:
+                self.counts['child_tags'] += 1
+            thumbnail_jobs = []  # (media_id, source_key)
             for order, (key, filename, content_type, media_type, size) in enumerate(media_specs):
                 media = KeepMedia.objects.create(
                     keep=keep,
@@ -501,16 +631,92 @@ class Command(BaseCommand):
                 )
                 self.counts['media'] += 1
                 if media_type == 'photo':
-                    photo_media_ids.append(media.id)
+                    thumbnail_jobs.append((media.id, None))
+                elif poster_key:
+                    thumbnail_jobs.append((media.id, poster_key))
+                    self.counts['video_posters'] += 1
             self._save_record(
                 TinybeansObjectType.ENTRY, entry_id, keep=keep,
                 payload={'type': entry.get('type'), 'timestamp': entry.get('timestamp'),
                          'journalId': entry.get('journalId')},
             )
 
-        for media_id in photo_media_ids:
-            self._generate_thumbnails(media_id)
+        for media_id, source_key in thumbnail_jobs:
+            self._generate_thumbnails(media_id, source_key=source_key)
+        self._link_children(entry, keep)
         return keep
+
+    def _refresh_media(self, entry, keep):
+        """Bring an already-imported keep's media up to the current standard.
+
+        Photos whose original came from a lesser rendition are re-downloaded
+        from ``p`` (the uncropped full-size image) and their renditions are
+        regenerated; videos without renditions get them from the poster frame.
+        """
+        blobs = entry.get('blobs') or {}
+        best_url = self._best_blob_url(entry)
+        if not best_url:
+            return
+        entry_id = entry.get('id') or entry.get('uuid')
+        for media in keep.media_files.all():
+            if media.media_type == 'photo':
+                if not blobs.get('p') or not LESSER_RENDITION_RE.search(media.original_filename or ''):
+                    continue
+                key, filename, content_type, _, size = self._fetch_media(blobs['p'], entry_id, 'photo')
+                old_key = media.storage_key_original
+                media.storage_key_original = key
+                media.original_filename = filename
+                media.content_type = content_type
+                media.file_size = size
+                media.thumbnails_generated = False
+                media.save(update_fields=[
+                    'storage_key_original', 'original_filename', 'content_type',
+                    'file_size', 'thumbnails_generated',
+                ])
+                self._delete_object(old_key)
+                self.counts['media_upgraded'] += 1
+                self._generate_thumbnails(media.id)
+            elif media.media_type == 'video' and not media.thumbnails_generated:
+                poster_key = self._fetch_media(best_url, entry_id, 'photo')[0]
+                self.counts['video_posters'] += 1
+                self._generate_thumbnails(media.id, source_key=poster_key)
+
+    @staticmethod
+    def _child_names(entry):
+        return [c.get('firstName') for c in (entry.get('children') or []) if c.get('firstName')]
+
+    def _apply_child_tags(self, entry, keep):
+        names = self._child_names(entry)
+        if not names:
+            return
+        existing = [t.strip() for t in (keep.tags or '').split(',') if t.strip()]
+        missing = [n for n in names if n not in existing]
+        if not missing:
+            return
+        keep.tags = ', '.join(existing + missing)
+        keep.save(update_fields=['tags'])
+        self.counts['child_tags'] += 1
+
+    def _link_children(self, entry, keep):
+        """Attach the child profiles an entry is tagged with (idempotent)."""
+        existing = set(keep.children.values_list('id', flat=True))
+        for child in entry.get('children') or []:
+            if child.get('id') is None:
+                continue
+            record = self._record(TinybeansObjectType.CHILD, child['id'])
+            if not record or not record.child_id or record.child_id in existing:
+                continue
+            keep.children.add(record.child_id)
+            existing.add(record.child_id)
+            self.counts['child_links'] += 1
+
+    def _delete_object(self, storage_key):
+        if not storage_key:
+            return
+        try:
+            self.storage.delete(storage_key)
+        except Exception as exc:
+            self.stderr.write(self.style.WARNING(f'Could not delete superseded object {storage_key}: {exc}'))
 
     def _entry_author(self, entry):
         author_id = entry.get('userId')
@@ -530,44 +736,90 @@ class Command(BaseCommand):
         )
         return storage_key, filename[:255], content_type, media_type, len(content)
 
-    def _generate_thumbnails(self, media_id):
+    def _generate_thumbnails(self, media_id, source_key=None):
         try:
             if self.sync_thumbnails:
-                generate_image_sizes.apply(args=[media_id])
+                generate_image_sizes.apply(args=[media_id], kwargs={'source_key': source_key})
             else:
-                generate_image_sizes.delay(media_id)
+                generate_image_sizes.delay(media_id, source_key=source_key)
         except Exception as exc:
             self.stderr.write(self.style.WARNING(
                 f'Thumbnail generation for media {media_id} could not be started: {exc}'
             ))
 
-    def _sync_comments(self, entry, keep, circle, ts):
-        for comment in entry.get('comments') or []:
+    def _sync_comments(self, entry, keep, circle, ts, comments=None, depth=0):
+        """Import comments (and, recursively, their replies) for one entry.
+
+        The entries feed carries top-level comments with a ``repliesCount``;
+        replies themselves come from a per-comment endpoint. Comments flagged
+        ``deleted`` are skipped, and removed locally if imported earlier.
+        """
+        items = entry.get('comments') if comments is None else comments
+        for comment in items or []:
             comment_id = comment.get('id')
-            if comment_id is None or self._record(TinybeansObjectType.COMMENT, comment_id):
+            if comment_id is None:
                 continue
-            self.counts['comments'] += 1
-            if self.dry or keep is None:
+            record = self._record(TinybeansObjectType.COMMENT, comment_id)
+            if comment.get('deleted'):
+                if record and record.comment_id and not self.dry:
+                    record.comment.delete()  # cascades to the import record
+                    self.counts['comments_removed'] += 1
                 continue
-            user = self._ensure_user(comment.get('user') or {}, circle)
-            created_at = ts
-            if comment.get('timestamp'):
-                created_at = datetime.fromtimestamp(comment['timestamp'] / 1000, tz=dt_timezone.utc)
-            with transaction.atomic():
-                obj = KeepComment.objects.create(
-                    keep=keep, user=user,
-                    comment=comment.get('details') or '',
-                    created_at=created_at,
-                )
-                self._save_record(
-                    TinybeansObjectType.COMMENT, comment_id, comment=obj,
-                    payload={'entryId': entry.get('id')},
-                )
+            if record and record.comment_id and comment.get('parentId') is not None and not self.dry:
+                # Replies imported before threading existed have no parent yet.
+                if record.comment.parent_id is None:
+                    parent_record = self._record(TinybeansObjectType.COMMENT, comment['parentId'])
+                    if parent_record and parent_record.comment_id:
+                        record.comment.parent_id = parent_record.comment_id
+                        record.comment.save(update_fields=['parent'])
+            if not record:
+                self.counts['comments'] += 1
+                if depth:
+                    self.counts['replies'] += 1
+                if not self.dry and keep is not None:
+                    user = self._ensure_user(comment.get('user') or {}, circle)
+                    created_at = ts
+                    if comment.get('timestamp'):
+                        created_at = datetime.fromtimestamp(comment['timestamp'] / 1000, tz=dt_timezone.utc)
+                    parent = None
+                    if comment.get('parentId') is not None:
+                        parent_record = self._record(TinybeansObjectType.COMMENT, comment['parentId'])
+                        parent = parent_record.comment if parent_record else None
+                    with transaction.atomic():
+                        obj = KeepComment.objects.create(
+                            keep=keep, user=user, parent=parent,
+                            comment=comment.get('details') or '',
+                            created_at=created_at,
+                        )
+                        self._save_record(
+                            TinybeansObjectType.COMMENT, comment_id, comment=obj,
+                            payload={'entryId': entry.get('id'), 'parentId': comment.get('parentId')},
+                        )
+            if (comment.get('repliesCount') or 0) > 0 and depth < MAX_REPLY_DEPTH:
+                try:
+                    replies = self.client.comment_replies(
+                        entry.get('journalId'), entry.get('id'), comment_id,
+                    )
+                except Exception as exc:
+                    self.counts['errors'] += 1
+                    self.stderr.write(self.style.WARNING(
+                        f"Could not fetch replies for comment {comment_id}: {exc}"
+                    ))
+                    continue
+                self._sync_comments(entry, keep, circle, ts, comments=replies, depth=depth + 1)
 
     def _sync_emotions(self, entry, keep, circle, ts):
         for emotion in entry.get('emotions') or []:
             emotion_id = emotion.get('id')
-            if emotion_id is None or self._record(TinybeansObjectType.EMOTION, emotion_id):
+            if emotion_id is None:
+                continue
+            record = self._record(TinybeansObjectType.EMOTION, emotion_id)
+            if emotion.get('deleted'):
+                if record and record.reaction_id and not self.dry:
+                    record.reaction.delete()  # cascades to the import record
+                    self.counts['reactions_removed'] += 1
+                continue
+            if record:
                 continue
             self.counts['reactions'] += 1
             if self.dry or keep is None:

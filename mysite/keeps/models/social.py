@@ -55,6 +55,7 @@ class KeepComment(models.Model):
     Attributes:
         keep: The keep being commented on
         user: User who made the comment
+        parent: Parent comment when this is a reply (null for top-level)
         comment: The comment text
         created_at: When the comment was made
         updated_at: When the comment was last edited
@@ -64,6 +65,14 @@ class KeepComment(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='keep_comments'
+    )
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='replies',
+        help_text='Comment this one replies to (same keep); null for top-level comments',
     )
     comment = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)

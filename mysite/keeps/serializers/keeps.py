@@ -9,8 +9,18 @@ from drf_spectacular.utils import extend_schema_field
 from ..models import Keep, KeepType, KeepMedia, Milestone
 from mysite.circles.models import CircleMembership
 from mysite.users.models import UserRole
+from mysite.users.models.child_profile import ChildProfile
 from .core import KeepMediaSerializer, MilestoneSerializer
 from mysite.notification_utils import create_message
+
+
+class KeepChildSerializer(serializers.ModelSerializer):
+    """Child profile as shown on a keep."""
+
+    class Meta:
+        model = ChildProfile
+        fields = ['id', 'display_name']
+        read_only_fields = fields
 
 
 class KeepSerializer(serializers.ModelSerializer):
@@ -22,6 +32,7 @@ class KeepSerializer(serializers.ModelSerializer):
     reaction_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     tag_list = serializers.SerializerMethodField()
+    children = KeepChildSerializer(many=True, read_only=True)
     
     class Meta:
         model = Keep
@@ -40,6 +51,7 @@ class KeepSerializer(serializers.ModelSerializer):
             'is_public',
             'tags',
             'tag_list',
+            'children',
             'media_count',
             'reaction_count',
             'comment_count',
@@ -49,6 +61,7 @@ class KeepSerializer(serializers.ModelSerializer):
             'created_by',
             'created_at',
             'updated_at',
+            'children',
             'media_count',
             'reaction_count',
             'comment_count',

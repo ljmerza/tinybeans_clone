@@ -81,4 +81,8 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'mysite.circles.tasks.send_circle_invitation_reminders',
         'schedule': crontab(minute='*/30'),  # Every 30 minutes
     },
+    'sync-tinybeans-incremental': {
+        'task': 'mysite.keeps.tasks.sync_tinybeans_incremental',
+        'schedule': crontab(hour=4, minute=0),  # Nightly at 4 AM; no-op without credentials
+    },
 }

@@ -24,6 +24,7 @@
 	},
 	"nav": {
 		"home": "Inicio",
+		"calendar": "Calendario",
 		"circles": "Círculos",
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
@@ -502,6 +503,17 @@
 			"authenticated_message": "¡Has iniciado sesión!",
 			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
 		},
+		"calendar": {
+			"title": "Calendario",
+			"subtitle": "Las fotos de tu familia, mes a mes.",
+			"loading": "Cargando tu calendario…",
+			"refreshing": "Actualizando…",
+			"error_title": "No se pudo cargar el calendario",
+			"error_message": "Algo salió mal al cargar tus fotos.",
+			"retry": "Reintentar",
+			"all_circles": "Todos los círculos",
+			"select_circle": "Elige un círculo"
+		},
 		"error": {
 			"something_wrong": "Algo salió mal",
 			"unexpected_error": "Ocurrió un error inesperado",
@@ -714,6 +726,7 @@
 		"milestone_required": "Se requieren datos de hito para los recuerdos de tipo hito.",
 		"milestone_not_allowed": "Los datos de hito solo deben proporcionarse para recuerdos de tipo hito.",
 		"media_files_required": "Los recuerdos de tipo multimedia deben incluir archivos multimedia.",
+		"reaction_exists": "Ya has reaccionado a este recuerdo.",
 		"keep_update_forbidden": "Solo puedes actualizar recuerdos que creaste o como administrador del círculo.",
 		"validation_error": "{{field}}: {{message}}",
 		"general_validation_error": "{{message}}",

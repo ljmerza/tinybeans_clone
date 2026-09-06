@@ -2,7 +2,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIRequestFactory
-from mysite.circles.models import Circle, CircleMembership
+from mysite.circles.models import Circle
 from mysite.keeps.models import Keep, KeepType, KeepMedia, Milestone, MilestoneType
 from mysite.keeps.serializers import (
     KeepSerializer,
@@ -58,7 +58,8 @@ class TestKeepSerializer:
         expected_fields = {
             'id', 'circle', 'circle_name', 'created_by', 'created_by_display_name',
             'keep_type', 'title', 'description', 'date_of_memory', 'created_at',
-            'updated_at', 'is_public', 'tags', 'tag_list', 'media_count',
+            'updated_at', 'is_public', 'tags', 'tag_list',
+            'children', 'media_count',
             'reaction_count', 'comment_count'
         }
         assert set(data.keys()) == expected_fields
@@ -173,6 +174,8 @@ class TestKeepCreateSerializer:
             'keep_type': KeepType.MEDIA,
             'title': 'Beach Day',
             'description': 'Fun at the beach',
+            # media keeps must carry at least one media file
+            'media_files': [{'media_type': 'photo', 'caption': 'Waves'}],
         }
         
         factory = APIRequestFactory()
@@ -184,6 +187,7 @@ class TestKeepCreateSerializer:
         
         keep = serializer.save(created_by=user)
         assert keep.keep_type == KeepType.MEDIA
+        assert keep.media_files.count() == 1
     
     def test_validation_requires_circle(self, user):
         """Test that circle is required."""
@@ -224,7 +228,7 @@ class TestKeepDetailSerializer:
     def test_includes_media_files(self, keep):
         """Test that detailed serializer includes media files."""
         # Add media
-        media = KeepMedia.objects.create(
+        KeepMedia.objects.create(
             keep=keep,
             media_type='photo',
             upload_order=1,
@@ -248,7 +252,7 @@ class TestKeepDetailSerializer:
             title='First Steps'
         )
         
-        milestone = Milestone.objects.create(
+        Milestone.objects.create(
             keep=keep,
             milestone_type=MilestoneType.FIRST_STEPS,
             age_at_milestone='12 months',

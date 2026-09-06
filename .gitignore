@@ -116,3 +116,6 @@ $RECYCLE.BIN/
 volumes/
 !volumes/.gitignore
 !volumes/README.md
+
+# Family milestone notes (names and birth dates; repo is public)
+docs/milestones.md

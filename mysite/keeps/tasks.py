@@ -1,14 +1,17 @@
 """Celery tasks for media upload and processing."""
 import os
+from datetime import timedelta
 from io import BytesIO
 from PIL import Image, ImageOps
 from django.conf import settings
+from django.core.management import call_command
+from django.utils import timezone
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from mysite import project_logging
 
-from .models import KeepMedia, MediaUpload, MediaUploadStatus
+from .models import KeepMedia, MediaUpload, MediaUploadStatus, TinybeansSyncRun, TinybeansSyncStatus
 from .storage import get_storage_backend
 
 logger = get_task_logger(__name__)
@@ -132,9 +135,51 @@ def process_media_upload(self, upload_id: str):
                 raise
 
 
+def _to_rgb(image: Image.Image) -> Image.Image:
+    """Return an RGB copy suitable for JPEG output.
+
+    JPEG cannot store alpha, so RGBA/LA/transparent-palette images are
+    flattened onto a white background; any other non-RGB mode is converted.
+    """
+    if image.mode == 'RGB':
+        return image
+    has_alpha = image.mode in ('RGBA', 'LA') or (
+        image.mode == 'P' and 'transparency' in image.info
+    )
+    if has_alpha:
+        rgba = image.convert('RGBA')
+        background = Image.new('RGB', rgba.size, (255, 255, 255))
+        background.paste(rgba, mask=rgba.getchannel('A'))
+        return background
+    return image.convert('RGB')
+
+
+# Bounding boxes for the derived renditions. 300px keeps calendar tiles crisp on
+# high-DPI screens; 1200px fills a phone screen at 2x and is adequate on desktop.
+THUMBNAIL_SIZE = (300, 300)
+GALLERY_SIZE = (1200, 1200)
+
+
+def _delete_quietly(storage, storage_key: str, media_id: int, what: str) -> None:
+    if not storage_key:
+        return
+    try:
+        storage.delete(storage_key)
+    except Exception:
+        logger.warning(
+            'Could not delete superseded %s', what,
+            extra={'event': 'keeps.media.cleanup_failed', 'extra': {'media_id': media_id, 'storage_key': storage_key}},
+        )
+
+
 @shared_task(bind=True, max_retries=3)
-def generate_image_sizes(self, media_id: int):
-    """Generate thumbnail and gallery size images."""
+def generate_image_sizes(self, media_id: int, source_key: str | None = None):
+    """Generate thumbnail and gallery size images.
+
+    ``source_key`` points at an alternative image to derive the renditions
+    from (a video's poster frame). It is treated as temporary and deleted once
+    the renditions exist. Without it only photo media is processed.
+    """
     with project_logging.log_context(task='keeps.generate_image_sizes', media_id=media_id):
         try:
             media = KeepMedia.objects.get(id=media_id)
@@ -146,7 +191,7 @@ def generate_image_sizes(self, media_id: int):
             return False
 
         with project_logging.log_context(keep_id=media.keep_id, media_type=media.media_type):
-            if media.media_type != 'photo':
+            if media.media_type != 'photo' and not source_key:
                 logger.info(
                     'Skipping image processing for non-photo media',
                     extra={
@@ -158,13 +203,17 @@ def generate_image_sizes(self, media_id: int):
 
             try:
                 storage = get_storage_backend()
-                image_data = storage.get_file_content(media.storage_key_original)
+                image_key = source_key or media.storage_key_original
+                image_data = storage.get_file_content(image_key)
                 image = Image.open(BytesIO(image_data))
                 image = ImageOps.exif_transpose(image)
                 media.width, media.height = image.size
+                image = _to_rgb(image)
+
+                previous_keys = [k for k in (media.storage_key_thumbnail, media.storage_key_gallery) if k]
 
                 thumbnail_image = image.copy()
-                thumbnail_image.thumbnail((150, 150), Image.Resampling.LANCZOS)
+                thumbnail_image.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
                 thumbnail_io = BytesIO()
                 thumbnail_image.save(thumbnail_io, format='JPEG', quality=85, optimize=True)
                 thumbnail_data = thumbnail_io.getvalue()
@@ -175,7 +224,7 @@ def generate_image_sizes(self, media_id: int):
                 )
 
                 gallery_image = image.copy()
-                gallery_image.thumbnail((800, 600), Image.Resampling.LANCZOS)
+                gallery_image.thumbnail(GALLERY_SIZE, Image.Resampling.LANCZOS)
                 gallery_io = BytesIO()
                 gallery_image.save(gallery_io, format='JPEG', quality=90, optimize=True)
                 gallery_data = gallery_io.getvalue()
@@ -193,6 +242,14 @@ def generate_image_sizes(self, media_id: int):
                     'storage_key_gallery',
                     'thumbnails_generated',
                 ])
+
+                # Renditions were regenerated: drop the superseded objects, and
+                # the temporary source image if one was supplied.
+                for key in previous_keys:
+                    if key not in (media.storage_key_thumbnail, media.storage_key_gallery):
+                        _delete_quietly(storage, key, media_id, 'rendition')
+                if source_key and source_key != media.storage_key_original:
+                    _delete_quietly(storage, source_key, media_id, 'source image')
 
                 logger.info(
                     'Successfully generated image sizes',
@@ -228,7 +285,6 @@ def generate_image_sizes(self, media_id: int):
                     raise self.retry(countdown=60 * (2 ** self.request.retries))
 
                 raise
-
 
 @shared_task
 def cleanup_failed_uploads():
@@ -337,3 +393,37 @@ def validate_media_file(upload_id: str):
                     )
 
                 raise
+
+
+# A sync still marked running after this long is assumed to have died.
+TINYBEANS_SYNC_STALE_AFTER = timedelta(hours=6)
+
+
+@shared_task(soft_time_limit=3600, time_limit=3660)
+def sync_tinybeans_incremental():
+    """Scheduled incremental import from the Tinybeans account in the environment.
+
+    Reads TINYBEANS_EMAIL / TINYBEANS_PASSWORD; does nothing when they are not
+    configured or when another sync is in progress. The command records its
+    own run row, so a failed run never advances the incremental cutoff.
+    """
+    if not (os.environ.get('TINYBEANS_EMAIL') and os.environ.get('TINYBEANS_PASSWORD')):
+        logger.info(
+            'Tinybeans credentials not configured; skipping scheduled sync',
+            extra={'event': 'keeps.tinybeans_sync.skipped', 'extra': {'reason': 'no_credentials'}},
+        )
+        return False
+
+    in_progress = TinybeansSyncRun.objects.filter(
+        status=TinybeansSyncStatus.RUNNING,
+        started_at__gte=timezone.now() - TINYBEANS_SYNC_STALE_AFTER,
+    ).exists()
+    if in_progress:
+        logger.info(
+            'A Tinybeans sync is already running; skipping scheduled sync',
+            extra={'event': 'keeps.tinybeans_sync.skipped', 'extra': {'reason': 'in_progress'}},
+        )
+        return False
+
+    call_command('sync_tinybeans', since_last_run=True)
+    return True
