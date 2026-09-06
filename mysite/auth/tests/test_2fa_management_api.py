@@ -272,7 +272,7 @@ class TestTwoFactorMethodRemovalAPI:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "not_configured"
 
-    def test_remove_email_not_supported(self):
+    def test_remove_email_not_configured(self):
         TwoFactorSettings.objects.create(
             user=self.user,
             is_enabled=True,
@@ -283,3 +283,19 @@ class TestTwoFactorMethodRemovalAPI:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "method_not_configured"
+
+    def test_remove_email_clears_verification_and_disables_when_last_method(self):
+        settings_obj = TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method="email",
+            email_verified=True,
+        )
+
+        response = self.client.delete("/api/auth/2fa/methods/email/")
+
+        assert response.status_code == status.HTTP_200_OK
+        settings_obj.refresh_from_db()
+        assert settings_obj.email_verified is False
+        # No TOTP or SMS to fall back to, so 2FA switches off entirely.
+        assert settings_obj.is_enabled is False

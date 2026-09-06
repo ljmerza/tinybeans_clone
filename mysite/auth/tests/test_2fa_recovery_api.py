@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from mysite.auth.models import RecoveryCode, TwoFactorSettings
+from mysite.auth.models import TwoFactorSettings
 
 from .helpers import response_payload
 
@@ -49,12 +49,8 @@ class TestRecoveryCodeAPI:
 
     def test_download_recovery_codes_txt(self):
         """Test downloading recovery codes as TXT"""
-        TwoFactorSettings.objects.create(user=self.user, is_enabled=True)
-
-        # Create recovery codes - these will be sent in the request body
+        # The endpoint formats the codes posted to it; hashed rows are unreadable.
         codes = [f"CODE-{i:04d}-TEST" for i in range(5)]
-        for code in codes:
-            RecoveryCode.create_recovery_code(self.user, code)
 
         response = self.client.post(
             "/api/auth/2fa/recovery-codes/download/", {"format": "txt", "codes": codes}, content_type="application/json"
@@ -70,12 +66,8 @@ class TestRecoveryCodeAPI:
     @patch("mysite.auth.services.recovery_code_service.RecoveryCodeService.export_as_pdf")
     def test_download_recovery_codes_pdf(self, mock_pdf):
         """Test downloading recovery codes as PDF"""
-        TwoFactorSettings.objects.create(user=self.user, is_enabled=True)
-
-        # Create recovery codes - these will be sent in the request body
+        # The endpoint formats the codes posted to it; hashed rows are unreadable.
         codes = [f"CODE-{i:04d}-TEST" for i in range(5)]
-        for code in codes:
-            RecoveryCode.create_recovery_code(self.user, code)
 
         mock_pdf.return_value = b"fake-pdf-content"
 
