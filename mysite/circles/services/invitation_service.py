@@ -1,4 +1,5 @@
 """Shared business logic for circle invitations."""
+
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +9,7 @@ from mysite.auth.token_utils import TOKEN_TTL_SECONDS, store_token
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import CIRCLE_INVITATION_TEMPLATE
 from mysite.users.models import UserRole
+
 from ..models import Circle, CircleMembership
 
 
@@ -18,13 +20,13 @@ def check_admin_permission(user, circle: Circle) -> None:
     """
     membership = CircleMembership.objects.filter(circle=circle, user=user).first()
     if not membership or membership.role != UserRole.CIRCLE_ADMIN:
-        raise PermissionDenied(_('Only circle admins can manage invitations'))
+        raise PermissionDenied(_("Only circle admins can manage invitations"))
 
 
 def build_invitation_link(token: str) -> str:
     """Build the frontend invitation acceptance link with the given token."""
-    base_url = getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000'
-    base_url = base_url.rstrip('/')
+    base_url = getattr(settings, "ACCOUNT_FRONTEND_BASE_URL", "http://localhost:3000") or "http://localhost:3000"
+    base_url = base_url.rstrip("/")
     return f"{base_url}/invitations/accept?token={token}"
 
 
@@ -37,15 +39,15 @@ def create_invitation_token(invitation, existing_user: bool = None) -> str:
         existing_user = bool(invitation.invited_user_id)
 
     token = store_token(
-        'circle-invite',
+        "circle-invite",
         {
-            'invitation_id': str(invitation.id),
-            'circle_id': invitation.circle_id,
-            'email': invitation.email,
-            'role': invitation.role,
-            'issued_at': timezone.now().isoformat(),
-            'existing_user': existing_user,
-            'invited_user_id': invitation.invited_user_id,
+            "invitation_id": str(invitation.id),
+            "circle_id": invitation.circle_id,
+            "email": invitation.email,
+            "role": invitation.role,
+            "issued_at": timezone.now().isoformat(),
+            "existing_user": existing_user,
+            "invited_user_id": invitation.invited_user_id,
         },
         ttl=TOKEN_TTL_SECONDS,
     )
@@ -67,11 +69,11 @@ def send_invitation_email(invitation, invited_by_name: str, token: str = None) -
         to_email=invitation.email,
         template_id=CIRCLE_INVITATION_TEMPLATE,
         context={
-            'token': token,
-            'email': invitation.email,
-            'circle_name': invitation.circle.name,
-            'invited_by': invited_by_name,
-            'invitation_link': invitation_link,
+            "token": token,
+            "email": invitation.email,
+            "circle_name": invitation.circle.name,
+            "invited_by": invited_by_name,
+            "invitation_link": invitation_link,
         },
     )
     return token

@@ -13,16 +13,16 @@ from .setup import TwoFactorSetupView, TwoFactorVerifySetupView
 from .trusted_devices import TrustedDeviceRemoveView, TrustedDevicesListView
 
 __all__ = [
-    'TwoFactorSetupView',
-    'TwoFactorVerifySetupView',
-    'TwoFactorStatusView',
-    'TwoFactorPreferredMethodView',
-    'TwoFactorMethodRemoveView',
-    'TwoFactorDisableRequestView',
-    'TwoFactorDisableView',
-    'RecoveryCodeGenerateView',
-    'RecoveryCodeDownloadView',
-    'TrustedDevicesListView',
-    'TrustedDeviceRemoveView',
-    'TwoFactorVerifyLoginView',
+    "TwoFactorSetupView",
+    "TwoFactorVerifySetupView",
+    "TwoFactorStatusView",
+    "TwoFactorPreferredMethodView",
+    "TwoFactorMethodRemoveView",
+    "TwoFactorDisableRequestView",
+    "TwoFactorDisableView",
+    "RecoveryCodeGenerateView",
+    "RecoveryCodeDownloadView",
+    "TrustedDevicesListView",
+    "TrustedDeviceRemoveView",
+    "TwoFactorVerifyLoginView",
 ]

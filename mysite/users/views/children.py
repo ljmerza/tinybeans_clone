@@ -1,4 +1,5 @@
 """Child profile upgrade workflow views."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,21 +8,23 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 
 from mysite.auth.permissions import IsEmailVerified
 from mysite.auth.token_utils import (
     TOKEN_TTL_SECONDS,
-    get_tokens_for_user,
     delete_token,
+    get_tokens_for_user,
     pop_token,
     store_token,
 )
-from mysite.notification_utils import create_message, success_response, error_response
+from mysite.emails.tasks import send_email_task
+from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
+from mysite.notification_utils import create_message, error_response, success_response
+
 from ..models import (
     ChildGuardianConsent,
     ChildProfile,
@@ -34,11 +37,8 @@ from ..models import (
 from ..serializers import (
     ChildProfileUpgradeConfirmSerializer,
     ChildProfileUpgradeRequestSerializer,
-    CircleSerializer,
     UserSerializer,
 )
-from mysite.emails.tasks import send_email_task
-from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 class ChildProfileUpgradeRequestView(APIView):
@@ -46,42 +46,42 @@ class ChildProfileUpgradeRequestView(APIView):
     serializer_class = ChildProfileUpgradeRequestSerializer
 
     @extend_schema(
-        description='Trigger the guardian consent workflow to promote a child profile to a full account.',
+        description="Trigger the guardian consent workflow to promote a child profile to a full account.",
         request=ChildProfileUpgradeRequestSerializer,
         responses={
             202: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
-                description='Upgrade invitation issued successfully.',
+                description="Upgrade invitation issued successfully.",
             ),
-            400: OpenApiResponse(description='Validation error'),
+            400: OpenApiResponse(description="Validation error"),
         },
     )
     def post(self, request, child_id):
         child = get_object_or_404(ChildProfile, id=child_id)
         membership = CircleMembership.objects.filter(circle=child.circle, user=request.user).first()
         if not membership or membership.role != UserRole.CIRCLE_ADMIN:
-            raise PermissionDenied(_('Only circle admins can upgrade child profiles'))
+            raise PermissionDenied(_("Only circle admins can upgrade child profiles"))
 
-        serializer = ChildProfileUpgradeRequestSerializer(data=request.data, context={'child': child})
+        serializer = ChildProfileUpgradeRequestSerializer(data=request.data, context={"child": child})
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
             previous_token = child.upgrade_token
             if previous_token:
-                delete_token('child-upgrade', previous_token)
-            child.pending_invite_email = serializer.validated_data['email']
+                delete_token("child-upgrade", previous_token)
+            child.pending_invite_email = serializer.validated_data["email"]
             child.upgrade_status = ChildProfileUpgradeStatus.PENDING
             child.upgrade_requested_by = request.user
 
             ttl = TOKEN_TTL_SECONDS
             expires_at = timezone.now() + timedelta(seconds=ttl) if ttl else None
             token = store_token(
-                'child-upgrade',
+                "child-upgrade",
                 {
-                    'child_id': str(child.id),
-                    'circle_id': child.circle_id,
-                    'email': child.pending_invite_email,
-                    'issued_at': timezone.now().isoformat(),
+                    "child_id": str(child.id),
+                    "circle_id": child.circle_id,
+                    "email": child.pending_invite_email,
+                    "issued_at": timezone.now().isoformat(),
                 },
                 ttl=TOKEN_TTL_SECONDS,
             )
@@ -89,22 +89,22 @@ class ChildProfileUpgradeRequestView(APIView):
             child.upgrade_token_expires_at = expires_at
             child.save(
                 update_fields=[
-                    'pending_invite_email',
-                    'upgrade_status',
-                    'upgrade_requested_by',
-                    'upgrade_token',
-                    'upgrade_token_expires_at',
-                    'updated_at',
+                    "pending_invite_email",
+                    "upgrade_status",
+                    "upgrade_requested_by",
+                    "upgrade_token",
+                    "upgrade_token_expires_at",
+                    "updated_at",
                 ]
             )
 
             consent = ChildGuardianConsent.objects.create(
                 child=child,
-                guardian_name=serializer.validated_data['guardian_name'],
-                guardian_relationship=serializer.validated_data['guardian_relationship'],
-                agreement_reference=serializer.validated_data.get('agreement_reference', ''),
-                consent_method=serializer.validated_data['consent_method'],
-                consent_metadata=serializer.validated_data.get('consent_metadata', {}),
+                guardian_name=serializer.validated_data["guardian_name"],
+                guardian_relationship=serializer.validated_data["guardian_relationship"],
+                agreement_reference=serializer.validated_data.get("agreement_reference", ""),
+                consent_method=serializer.validated_data["consent_method"],
+                consent_metadata=serializer.validated_data.get("consent_metadata", {}),
                 captured_by=request.user,
             )
 
@@ -112,17 +112,17 @@ class ChildProfileUpgradeRequestView(APIView):
                 child.log_upgrade_event(
                     ChildUpgradeEventType.TOKEN_REISSUED,
                     performed_by=request.user,
-                    metadata={'old_token': previous_token, 'new_token': token},
+                    metadata={"old_token": previous_token, "new_token": token},
                 )
 
             child.log_upgrade_event(
                 ChildUpgradeEventType.REQUEST_INITIATED,
                 performed_by=request.user,
                 metadata={
-                    'email': child.pending_invite_email,
-                    'token': token,
-                    'consent_id': str(consent.id),
-                    'consent_method': consent.consent_method,
+                    "email": child.pending_invite_email,
+                    "token": token,
+                    "consent_id": str(consent.id),
+                    "consent_method": consent.consent_method,
                 },
             )
 
@@ -130,16 +130,16 @@ class ChildProfileUpgradeRequestView(APIView):
             to_email=child.pending_invite_email,
             template_id=CHILD_UPGRADE_TEMPLATE,
             context={
-                'token': token,
-                'email': child.pending_invite_email,
-                'child_name': child.display_name,
-                'circle_name': child.circle.name,
+                "token": token,
+                "email": child.pending_invite_email,
+                "child_name": child.display_name,
+                "circle_name": child.circle.name,
             },
         )
         return success_response(
-            {'token': token},
-            messages=[create_message('notifications.child.upgrade_invitation_sent')],
-            status_code=status.HTTP_202_ACCEPTED
+            {"token": token},
+            messages=[create_message("notifications.child.upgrade_invitation_sent")],
+            status_code=status.HTTP_202_ACCEPTED,
         )
 
 
@@ -148,64 +148,64 @@ class ChildProfileUpgradeConfirmView(APIView):
     serializer_class = ChildProfileUpgradeConfirmSerializer
 
     @extend_schema(
-        description='Confirm a child profile upgrade using the guardian-issued token.',
+        description="Confirm a child profile upgrade using the guardian-issued token.",
         request=ChildProfileUpgradeConfirmSerializer,
         responses={
             201: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
-                description='Account created and linked successfully.',
+                description="Account created and linked successfully.",
             ),
-            400: OpenApiResponse(description='Invalid or expired token'),
+            400: OpenApiResponse(description="Invalid or expired token"),
         },
     )
     def post(self, request):
         serializer = ChildProfileUpgradeConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = pop_token('child-upgrade', serializer.validated_data['token'])
+        payload = pop_token("child-upgrade", serializer.validated_data["token"])
         if not payload:
             return error_response(
-                'token_invalid_or_expired',
-                messages=[create_message('errors.token_invalid_expired')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                "token_invalid_or_expired",
+                messages=[create_message("errors.token_invalid_expired")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        child = ChildProfile.objects.filter(id=payload['child_id']).select_related('circle').first()
+        child = ChildProfile.objects.filter(id=payload["child_id"]).select_related("circle").first()
         if not child:
             return error_response(
-                'child_profile_not_found',
-                messages=[create_message('errors.child_profile_not_found')],
-                status_code=status.HTTP_404_NOT_FOUND
+                "child_profile_not_found",
+                messages=[create_message("errors.child_profile_not_found")],
+                status_code=status.HTTP_404_NOT_FOUND,
             )
         if child.linked_user:
             return error_response(
-                'child_already_linked',
-                messages=[create_message('errors.child_already_linked')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                "child_already_linked",
+                messages=[create_message("errors.child_already_linked")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
         if not child.upgrade_token:
             return error_response(
-                'upgrade_invitation_revoked',
-                messages=[create_message('errors.upgrade_invitation_revoked')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                "upgrade_invitation_revoked",
+                messages=[create_message("errors.upgrade_invitation_revoked")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
-        provided_token = serializer.validated_data['token']
+        provided_token = serializer.validated_data["token"]
         if child.upgrade_token != provided_token:
             return error_response(
-                'upgrade_invitation_mismatch',
-                messages=[create_message('errors.upgrade_invitation_mismatch')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                "upgrade_invitation_mismatch",
+                messages=[create_message("errors.upgrade_invitation_mismatch")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
         if child.upgrade_token_expires_at and timezone.now() > child.upgrade_token_expires_at:
             return error_response(
-                'upgrade_invitation_expired',
-                messages=[create_message('errors.upgrade_invitation_expired')],
-                status_code=status.HTTP_400_BAD_REQUEST
+                "upgrade_invitation_expired",
+                messages=[create_message("errors.upgrade_invitation_expired")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        email = payload['email']
-        password = serializer.validated_data['password']
-        first_name = serializer.validated_data['first_name']
-        last_name = serializer.validated_data['last_name']
+        email = payload["email"]
+        password = serializer.validated_data["password"]
+        first_name = serializer.validated_data["first_name"]
+        last_name = serializer.validated_data["last_name"]
 
         with transaction.atomic():
             user = User.objects.create_user(
@@ -216,7 +216,7 @@ class ChildProfileUpgradeConfirmView(APIView):
                 last_name=last_name,
             )
             user.email_verified = True
-            user.save(update_fields=['email_verified'])
+            user.save(update_fields=["email_verified"])
 
             CircleMembership.objects.create(user=user, circle=child.circle, role=UserRole.CIRCLE_MEMBER)
             child.linked_user = user
@@ -227,27 +227,27 @@ class ChildProfileUpgradeConfirmView(APIView):
             child.upgrade_requested_by = None
             child.save(
                 update_fields=[
-                    'linked_user',
-                    'upgrade_status',
-                    'pending_invite_email',
-                    'upgrade_token',
-                    'upgrade_token_expires_at',
-                    'upgrade_requested_by',
-                    'updated_at',
+                    "linked_user",
+                    "upgrade_status",
+                    "pending_invite_email",
+                    "upgrade_token",
+                    "upgrade_token_expires_at",
+                    "upgrade_requested_by",
+                    "updated_at",
                 ]
             )
 
             child.log_upgrade_event(
                 ChildUpgradeEventType.UPGRADE_COMPLETED,
                 performed_by=user,
-                metadata={'email': email, 'user_id': user.id},
+                metadata={"email": email, "user_id": user.id},
             )
 
         return success_response(
             {
-                'user': UserSerializer(user).data,
-                'tokens': get_tokens_for_user(user),
+                "user": UserSerializer(user).data,
+                "tokens": get_tokens_for_user(user),
             },
-            messages=[create_message('notifications.child.account_created')],
-            status_code=status.HTTP_201_CREATED
+            messages=[create_message("notifications.child.account_created")],
+            status_code=status.HTTP_201_CREATED,
         )

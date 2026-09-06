@@ -1,4 +1,5 @@
 """Shared serializer primitives used across domains."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -11,7 +12,7 @@ class CircleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Circle
-        fields = ['id', 'name', 'slug', 'member_count']
+        fields = ["id", "name", "slug", "member_count"]
 
     def get_member_count(self, obj):
         return obj.memberships.count()
@@ -24,20 +25,25 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id',
-            'email',
-            'first_name',
-            'last_name',
-            'display_name',
-            'role',
-            'email_verified',
-            'date_joined',
-            'language',
-            'circle_onboarding_status',
-            'circle_onboarding_updated_at',
-            'needs_circle_onboarding',
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "display_name",
+            "role",
+            "email_verified",
+            "date_joined",
+            "language",
+            "circle_onboarding_status",
+            "circle_onboarding_updated_at",
+            "needs_circle_onboarding",
         ]
-        read_only_fields = ['circle_onboarding_status', 'circle_onboarding_updated_at', 'needs_circle_onboarding', 'display_name']
+        read_only_fields = [
+            "circle_onboarding_status",
+            "circle_onboarding_updated_at",
+            "needs_circle_onboarding",
+            "display_name",
+        ]
 
     def get_needs_circle_onboarding(self, obj) -> bool:
         return obj.needs_circle_onboarding
@@ -55,14 +61,14 @@ class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id',
-            'email',
-            'email_verified',
-            'first_name',
-            'last_name',
-            'display_name',
-            'needs_circle_onboarding',
-            'circle_onboarding_status',
+            "id",
+            "email",
+            "email_verified",
+            "first_name",
+            "last_name",
+            "display_name",
+            "needs_circle_onboarding",
+            "circle_onboarding_status",
         ]
         read_only_fields = fields
 
@@ -73,4 +79,4 @@ class PublicUserSerializer(serializers.ModelSerializer):
         return obj.display_name
 
 
-__all__ = ['CircleSerializer', 'UserSerializer', 'PublicUserSerializer']
+__all__ = ["CircleSerializer", "UserSerializer", "PublicUserSerializer"]

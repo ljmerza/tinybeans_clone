@@ -9,16 +9,17 @@ The views have been split into specialized modules in the google_oauth/ subdirec
 
 All views are imported from their respective modules below.
 """
+
 from mysite.auth.views.google_oauth import (
-    GoogleOAuthInitiateView,
     GoogleOAuthCallbackView,
+    GoogleOAuthInitiateView,
     GoogleOAuthLinkView,
     GoogleOAuthUnlinkView,
 )
 
 __all__ = [
-    'GoogleOAuthInitiateView',
-    'GoogleOAuthCallbackView',
-    'GoogleOAuthLinkView',
-    'GoogleOAuthUnlinkView',
+    "GoogleOAuthInitiateView",
+    "GoogleOAuthCallbackView",
+    "GoogleOAuthLinkView",
+    "GoogleOAuthUnlinkView",
 ]

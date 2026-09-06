@@ -1,13 +1,15 @@
 """Celery tasks for media upload and processing."""
+
 import os
 from datetime import timedelta
 from io import BytesIO
-from PIL import Image, ImageOps
+
+from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.management import call_command
 from django.utils import timezone
-from celery import shared_task
-from celery.utils.log import get_task_logger
+from PIL import Image, ImageOps
 
 from mysite import project_logging
 
@@ -20,46 +22,44 @@ logger = get_task_logger(__name__)
 @shared_task(bind=True, max_retries=3)
 def process_media_upload(self, upload_id: str):
     """Process a media upload asynchronously."""
-    with project_logging.log_context(task='keeps.process_media_upload', upload_id=upload_id):
+    with project_logging.log_context(task="keeps.process_media_upload", upload_id=upload_id):
         try:
             upload = MediaUpload.objects.get(id=upload_id)
         except MediaUpload.DoesNotExist:
             logger.warning(
-                'Media upload not found for processing',
-                extra={'event': 'keeps.media.upload_missing', 'extra': {'upload_id': upload_id}},
+                "Media upload not found for processing",
+                extra={"event": "keeps.media.upload_missing", "extra": {"upload_id": upload_id}},
             )
             return False
 
         with project_logging.log_context(keep_id=upload.keep_id, media_type=upload.media_type):
             try:
                 upload.status = MediaUploadStatus.PROCESSING
-                upload.save(update_fields=['status'])
+                upload.save(update_fields=["status"])
 
                 logger.info(
-                    'Processing media upload',
+                    "Processing media upload",
                     extra={
-                        'event': 'keeps.media.process_start',
-                        'extra': {
-                            'upload_id': upload_id,
-                            'keep_id': upload.keep_id,
-                            'media_type': upload.media_type,
-                            'content_type': upload.content_type,
+                        "event": "keeps.media.process_start",
+                        "extra": {
+                            "upload_id": upload_id,
+                            "keep_id": upload.keep_id,
+                            "media_type": upload.media_type,
+                            "content_type": upload.content_type,
                         },
                     },
                 )
 
-                with open(upload.temp_file_path, 'rb') as file_handle:
+                with open(upload.temp_file_path, "rb") as file_handle:
                     file_content = file_handle.read()
 
                 storage = get_storage_backend()
                 storage_key_original = storage.save(
-                    file_content=file_content,
-                    filename=upload.original_filename,
-                    content_type=upload.content_type
+                    file_content=file_content, filename=upload.original_filename, content_type=upload.content_type
                 )
 
                 metadata = storage.get_metadata(storage_key_original)
-                file_size = metadata.get('size', len(file_content))
+                file_size = metadata.get("size", len(file_content))
 
                 media = KeepMedia.objects.create(
                     keep=upload.keep,
@@ -69,68 +69,68 @@ def process_media_upload(self, upload_id: str):
                     storage_key_original=storage_key_original,
                     file_size=file_size,
                     original_filename=upload.original_filename,
-                    content_type=upload.content_type
+                    content_type=upload.content_type,
                 )
 
-                if upload.media_type == 'photo':
+                if upload.media_type == "photo":
                     generate_image_sizes.delay(media.id)
                     logger.info(
-                        'Queued image resize task',
+                        "Queued image resize task",
                         extra={
-                            'event': 'keeps.media.image_resize_queued',
-                            'extra': {'media_id': media.id},
+                            "event": "keeps.media.image_resize_queued",
+                            "extra": {"media_id": media.id},
                         },
                     )
 
                 upload.status = MediaUploadStatus.COMPLETED
                 upload.media_file = media
-                upload.error_message = ''
-                upload.save(update_fields=['status', 'media_file', 'error_message'])
+                upload.error_message = ""
+                upload.save(update_fields=["status", "media_file", "error_message"])
 
                 if os.path.exists(upload.temp_file_path):
                     os.remove(upload.temp_file_path)
 
                 logger.info(
-                    'Successfully processed media upload',
+                    "Successfully processed media upload",
                     extra={
-                        'event': 'keeps.media.process_success',
-                        'extra': {
-                            'upload_id': upload_id,
-                            'media_id': media.id,
-                            'keep_id': upload.keep_id,
+                        "event": "keeps.media.process_success",
+                        "extra": {
+                            "upload_id": upload_id,
+                            "media_id": media.id,
+                            "keep_id": upload.keep_id,
                         },
                     },
                 )
                 return True
             except Exception as exc:  # noqa: BLE001 - ensure we capture and persist failure details
                 logger.exception(
-                    'Failed to process media upload',
+                    "Failed to process media upload",
                     extra={
-                        'event': 'keeps.media.process_failure',
-                        'extra': {'upload_id': upload_id},
+                        "event": "keeps.media.process_failure",
+                        "extra": {"upload_id": upload_id},
                     },
                 )
 
                 try:
                     upload.status = MediaUploadStatus.FAILED
                     upload.error_message = str(exc)
-                    upload.save(update_fields=['status', 'error_message'])
+                    upload.save(update_fields=["status", "error_message"])
                 except MediaUpload.DoesNotExist:
                     logger.warning(
-                        'Media upload missing during failure handling',
-                        extra={'event': 'keeps.media.upload_missing_on_failure'},
+                        "Media upload missing during failure handling",
+                        extra={"event": "keeps.media.upload_missing_on_failure"},
                     )
 
                 if self.request.retries < self.max_retries:
                     attempt = self.request.retries + 1
                     logger.info(
-                        'Retrying media upload processing',
+                        "Retrying media upload processing",
                         extra={
-                            'event': 'keeps.media.retry_scheduled',
-                            'extra': {'upload_id': upload_id, 'attempt': attempt},
+                            "event": "keeps.media.retry_scheduled",
+                            "extra": {"upload_id": upload_id, "attempt": attempt},
                         },
                     )
-                    raise self.retry(countdown=60 * (2 ** self.request.retries))
+                    raise self.retry(countdown=60 * (2**self.request.retries))
 
                 raise
 
@@ -141,17 +141,15 @@ def _to_rgb(image: Image.Image) -> Image.Image:
     JPEG cannot store alpha, so RGBA/LA/transparent-palette images are
     flattened onto a white background; any other non-RGB mode is converted.
     """
-    if image.mode == 'RGB':
+    if image.mode == "RGB":
         return image
-    has_alpha = image.mode in ('RGBA', 'LA') or (
-        image.mode == 'P' and 'transparency' in image.info
-    )
+    has_alpha = image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info)
     if has_alpha:
-        rgba = image.convert('RGBA')
-        background = Image.new('RGB', rgba.size, (255, 255, 255))
-        background.paste(rgba, mask=rgba.getchannel('A'))
+        rgba = image.convert("RGBA")
+        background = Image.new("RGB", rgba.size, (255, 255, 255))
+        background.paste(rgba, mask=rgba.getchannel("A"))
         return background
-    return image.convert('RGB')
+    return image.convert("RGB")
 
 
 # Bounding boxes for the derived renditions. 300px keeps calendar tiles crisp on
@@ -167,8 +165,9 @@ def _delete_quietly(storage, storage_key: str, media_id: int, what: str) -> None
         storage.delete(storage_key)
     except Exception:
         logger.warning(
-            'Could not delete superseded %s', what,
-            extra={'event': 'keeps.media.cleanup_failed', 'extra': {'media_id': media_id, 'storage_key': storage_key}},
+            "Could not delete superseded %s",
+            what,
+            extra={"event": "keeps.media.cleanup_failed", "extra": {"media_id": media_id, "storage_key": storage_key}},
         )
 
 
@@ -180,23 +179,23 @@ def generate_image_sizes(self, media_id: int, source_key: str | None = None):
     from (a video's poster frame). It is treated as temporary and deleted once
     the renditions exist. Without it only photo media is processed.
     """
-    with project_logging.log_context(task='keeps.generate_image_sizes', media_id=media_id):
+    with project_logging.log_context(task="keeps.generate_image_sizes", media_id=media_id):
         try:
             media = KeepMedia.objects.get(id=media_id)
         except KeepMedia.DoesNotExist:
             logger.warning(
-                'Media record not found for image sizing',
-                extra={'event': 'keeps.media.image_sizes_missing', 'extra': {'media_id': media_id}},
+                "Media record not found for image sizing",
+                extra={"event": "keeps.media.image_sizes_missing", "extra": {"media_id": media_id}},
             )
             return False
 
         with project_logging.log_context(keep_id=media.keep_id, media_type=media.media_type):
-            if media.media_type != 'photo' and not source_key:
+            if media.media_type != "photo" and not source_key:
                 logger.info(
-                    'Skipping image processing for non-photo media',
+                    "Skipping image processing for non-photo media",
                     extra={
-                        'event': 'keeps.media.image_sizes_skipped',
-                        'extra': {'media_id': media_id, 'media_type': media.media_type},
+                        "event": "keeps.media.image_sizes_skipped",
+                        "extra": {"media_id": media_id, "media_type": media.media_type},
                     },
                 )
                 return False
@@ -215,158 +214,155 @@ def generate_image_sizes(self, media_id: int, source_key: str | None = None):
                 thumbnail_image = image.copy()
                 thumbnail_image.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
                 thumbnail_io = BytesIO()
-                thumbnail_image.save(thumbnail_io, format='JPEG', quality=85, optimize=True)
+                thumbnail_image.save(thumbnail_io, format="JPEG", quality=85, optimize=True)
                 thumbnail_data = thumbnail_io.getvalue()
                 media.storage_key_thumbnail = storage.save(
-                    file_content=thumbnail_data,
-                    filename='thumbnail.jpg',
-                    content_type='image/jpeg'
+                    file_content=thumbnail_data, filename="thumbnail.jpg", content_type="image/jpeg"
                 )
 
                 gallery_image = image.copy()
                 gallery_image.thumbnail(GALLERY_SIZE, Image.Resampling.LANCZOS)
                 gallery_io = BytesIO()
-                gallery_image.save(gallery_io, format='JPEG', quality=90, optimize=True)
+                gallery_image.save(gallery_io, format="JPEG", quality=90, optimize=True)
                 gallery_data = gallery_io.getvalue()
                 media.storage_key_gallery = storage.save(
-                    file_content=gallery_data,
-                    filename='gallery.jpg',
-                    content_type='image/jpeg'
+                    file_content=gallery_data, filename="gallery.jpg", content_type="image/jpeg"
                 )
 
                 media.thumbnails_generated = True
-                media.save(update_fields=[
-                    'width',
-                    'height',
-                    'storage_key_thumbnail',
-                    'storage_key_gallery',
-                    'thumbnails_generated',
-                ])
+                media.save(
+                    update_fields=[
+                        "width",
+                        "height",
+                        "storage_key_thumbnail",
+                        "storage_key_gallery",
+                        "thumbnails_generated",
+                    ]
+                )
 
                 # Renditions were regenerated: drop the superseded objects, and
                 # the temporary source image if one was supplied.
                 for key in previous_keys:
                     if key not in (media.storage_key_thumbnail, media.storage_key_gallery):
-                        _delete_quietly(storage, key, media_id, 'rendition')
+                        _delete_quietly(storage, key, media_id, "rendition")
                 if source_key and source_key != media.storage_key_original:
-                    _delete_quietly(storage, source_key, media_id, 'source image')
+                    _delete_quietly(storage, source_key, media_id, "source image")
 
                 logger.info(
-                    'Successfully generated image sizes',
+                    "Successfully generated image sizes",
                     extra={
-                        'event': 'keeps.media.image_sizes_success',
-                        'extra': {
-                            'media_id': media_id,
-                            'keep_id': media.keep_id,
-                            'width': media.width,
-                            'height': media.height,
+                        "event": "keeps.media.image_sizes_success",
+                        "extra": {
+                            "media_id": media_id,
+                            "keep_id": media.keep_id,
+                            "width": media.width,
+                            "height": media.height,
                         },
                     },
                 )
                 return True
             except Exception:
                 logger.exception(
-                    'Failed to generate image sizes',
+                    "Failed to generate image sizes",
                     extra={
-                        'event': 'keeps.media.image_sizes_failure',
-                        'extra': {'media_id': media_id},
+                        "event": "keeps.media.image_sizes_failure",
+                        "extra": {"media_id": media_id},
                     },
                 )
 
                 if self.request.retries < self.max_retries:
                     attempt = self.request.retries + 1
                     logger.info(
-                        'Retrying image processing',
+                        "Retrying image processing",
                         extra={
-                            'event': 'keeps.media.image_sizes_retry',
-                            'extra': {'media_id': media_id, 'attempt': attempt},
+                            "event": "keeps.media.image_sizes_retry",
+                            "extra": {"media_id": media_id, "attempt": attempt},
                         },
                     )
-                    raise self.retry(countdown=60 * (2 ** self.request.retries))
+                    raise self.retry(countdown=60 * (2**self.request.retries))
 
                 raise
+
 
 @shared_task
 def cleanup_failed_uploads():
     """Clean up failed upload temporary files."""
     from datetime import timedelta
+
     from django.utils import timezone
 
-    with project_logging.log_context(task='keeps.cleanup_failed_uploads'):
+    with project_logging.log_context(task="keeps.cleanup_failed_uploads"):
         cutoff = timezone.now() - timedelta(hours=1)
-        failed_uploads = MediaUpload.objects.filter(
-            status=MediaUploadStatus.FAILED,
-            created_at__lt=cutoff
-        )
+        failed_uploads = MediaUpload.objects.filter(status=MediaUploadStatus.FAILED, created_at__lt=cutoff)
 
         removed_count = 0
         for upload in failed_uploads:
             context_extra = {
-                'upload_id': upload.id,
-                'keep_id': upload.keep_id,
-                'temp_file_path': upload.temp_file_path,
+                "upload_id": upload.id,
+                "keep_id": upload.keep_id,
+                "temp_file_path": upload.temp_file_path,
             }
             if upload.temp_file_path and os.path.exists(upload.temp_file_path):
                 try:
                     os.remove(upload.temp_file_path)
                     logger.info(
-                        'Removed temporary file for failed upload',
-                        extra={'event': 'keeps.media.cleanup_file_removed', 'extra': context_extra},
+                        "Removed temporary file for failed upload",
+                        extra={"event": "keeps.media.cleanup_file_removed", "extra": context_extra},
                     )
                 except OSError:
                     logger.exception(
-                        'Failed to remove temporary file for failed upload',
-                        extra={'event': 'keeps.media.cleanup_file_failed', 'extra': context_extra},
+                        "Failed to remove temporary file for failed upload",
+                        extra={"event": "keeps.media.cleanup_file_failed", "extra": context_extra},
                     )
 
             upload.delete()
             removed_count += 1
 
         logger.info(
-            'Completed cleanup of failed uploads',
-            extra={'event': 'keeps.media.cleanup_summary', 'extra': {'removed_count': removed_count}},
+            "Completed cleanup of failed uploads",
+            extra={"event": "keeps.media.cleanup_summary", "extra": {"removed_count": removed_count}},
         )
 
 
 @shared_task
 def validate_media_file(upload_id: str):
     """Validate uploaded media file."""
-    with project_logging.log_context(task='keeps.validate_media_file', upload_id=upload_id):
+    with project_logging.log_context(task="keeps.validate_media_file", upload_id=upload_id):
         try:
             upload = MediaUpload.objects.get(id=upload_id)
         except MediaUpload.DoesNotExist:
             logger.warning(
-                'Media upload missing during validation',
-                extra={'event': 'keeps.media.validation_missing_upload', 'extra': {'upload_id': upload_id}},
+                "Media upload missing during validation",
+                extra={"event": "keeps.media.validation_missing_upload", "extra": {"upload_id": upload_id}},
             )
             return False
 
         with project_logging.log_context(keep_id=upload.keep_id, media_type=upload.media_type):
             try:
                 if not os.path.exists(upload.temp_file_path):
-                    raise ValueError('Temporary file not found')
+                    raise ValueError("Temporary file not found")
 
                 file_size = os.path.getsize(upload.temp_file_path)
                 max_size = settings.MAX_UPLOAD_SIZE
                 if file_size > max_size:
-                    raise ValueError(f'File size {file_size} exceeds maximum allowed size {max_size}')
+                    raise ValueError(f"File size {file_size} exceeds maximum allowed size {max_size}")
 
-                if upload.media_type == 'photo':
+                if upload.media_type == "photo":
                     try:
                         with Image.open(upload.temp_file_path) as image:
                             image.verify()
                     except Exception as exc:
-                        raise ValueError('Invalid image file') from exc
+                        raise ValueError("Invalid image file") from exc
 
                 logger.info(
-                    'Media file validation passed',
+                    "Media file validation passed",
                     extra={
-                        'event': 'keeps.media.validation_success',
-                        'extra': {
-                            'upload_id': upload_id,
-                            'keep_id': upload.keep_id,
-                            'file_size': file_size,
-                            'media_type': upload.media_type,
+                        "event": "keeps.media.validation_success",
+                        "extra": {
+                            "upload_id": upload_id,
+                            "keep_id": upload.keep_id,
+                            "file_size": file_size,
+                            "media_type": upload.media_type,
                         },
                     },
                 )
@@ -375,21 +371,21 @@ def validate_media_file(upload_id: str):
                 return True
             except Exception as exc:  # noqa: BLE001 - surface specific validation causes
                 logger.exception(
-                    'Media file validation failed',
+                    "Media file validation failed",
                     extra={
-                        'event': 'keeps.media.validation_failure',
-                        'extra': {'upload_id': upload_id},
+                        "event": "keeps.media.validation_failure",
+                        "extra": {"upload_id": upload_id},
                     },
                 )
 
                 try:
                     upload.status = MediaUploadStatus.FAILED
-                    upload.error_message = f'Validation failed: {exc}'
-                    upload.save(update_fields=['status', 'error_message'])
+                    upload.error_message = f"Validation failed: {exc}"
+                    upload.save(update_fields=["status", "error_message"])
                 except MediaUpload.DoesNotExist:
                     logger.warning(
-                        'Media upload missing when recording validation failure',
-                        extra={'event': 'keeps.media.validation_missing_on_failure'},
+                        "Media upload missing when recording validation failure",
+                        extra={"event": "keeps.media.validation_missing_on_failure"},
                     )
 
                 raise
@@ -407,10 +403,10 @@ def sync_tinybeans_incremental():
     configured or when another sync is in progress. The command records its
     own run row, so a failed run never advances the incremental cutoff.
     """
-    if not (os.environ.get('TINYBEANS_EMAIL') and os.environ.get('TINYBEANS_PASSWORD')):
+    if not (os.environ.get("TINYBEANS_EMAIL") and os.environ.get("TINYBEANS_PASSWORD")):
         logger.info(
-            'Tinybeans credentials not configured; skipping scheduled sync',
-            extra={'event': 'keeps.tinybeans_sync.skipped', 'extra': {'reason': 'no_credentials'}},
+            "Tinybeans credentials not configured; skipping scheduled sync",
+            extra={"event": "keeps.tinybeans_sync.skipped", "extra": {"reason": "no_credentials"}},
         )
         return False
 
@@ -420,10 +416,10 @@ def sync_tinybeans_incremental():
     ).exists()
     if in_progress:
         logger.info(
-            'A Tinybeans sync is already running; skipping scheduled sync',
-            extra={'event': 'keeps.tinybeans_sync.skipped', 'extra': {'reason': 'in_progress'}},
+            "A Tinybeans sync is already running; skipping scheduled sync",
+            extra={"event": "keeps.tinybeans_sync.skipped", "extra": {"reason": "in_progress"}},
         )
         return False
 
-    call_command('sync_tinybeans', since_last_run=True)
+    call_command("sync_tinybeans", since_last_run=True)
     return True

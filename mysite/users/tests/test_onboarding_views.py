@@ -1,9 +1,10 @@
 """Tests for circle onboarding API views."""
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from mysite.circles.models import Circle, CircleMembership
+from mysite.circles.models import Circle
 from mysite.users.models import CircleOnboardingStatus, User
 
 
@@ -25,7 +26,7 @@ class CircleOnboardingStatusViewTests(APITestCase):
         self.assertEqual(payload["memberships_count"], 0)
 
     def test_updates_when_membership_created(self):
-        circle = Circle.objects.create(name="Family", created_by=self.user)
+        Circle.objects.create(name="Family", created_by=self.user)
         # Membership for user is auto-created by the post_save signal on Circle
         self.user.refresh_from_db()
 
@@ -55,7 +56,7 @@ class CircleOnboardingSkipViewTests(APITestCase):
         self.assertTrue(payload["needs_circle_onboarding"])
 
     def test_skip_noop_when_completed(self):
-        circle = Circle.objects.create(name="Family", created_by=self.user)
+        Circle.objects.create(name="Family", created_by=self.user)
         # Membership for user is auto-created by the post_save signal on Circle
         self.user.refresh_from_db()
         response = self.client.post(reverse("circle-onboarding-skip"))

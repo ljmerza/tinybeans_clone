@@ -15,12 +15,12 @@ class CircleMembership(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='circle_memberships',
+        related_name="circle_memberships",
     )
     circle = models.ForeignKey(
         Circle,
         on_delete=models.CASCADE,
-        related_name='memberships',
+        related_name="memberships",
     )
     role = models.CharField(
         max_length=20,
@@ -32,7 +32,7 @@ class CircleMembership(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='memberships_invited',
+        related_name="memberships_invited",
     )
     is_owner = models.BooleanField(
         default=False,
@@ -41,15 +41,11 @@ class CircleMembership(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        app_label = 'users'
-        unique_together = ('user', 'circle')
-        ordering = ['circle__name', 'user__email']
+        app_label = "users"
+        unique_together = ("user", "circle")
+        ordering = ["circle__name", "user__email"]
         constraints = [
-            models.UniqueConstraint(
-                fields=['circle'],
-                condition=models.Q(is_owner=True),
-                name='one_owner_per_circle'
-            )
+            models.UniqueConstraint(fields=["circle"], condition=models.Q(is_owner=True), name="one_owner_per_circle")
         ]
 
     def __str__(self) -> str:
@@ -57,4 +53,4 @@ class CircleMembership(models.Model):
         return f"{self.user} in {self.circle} ({self.role}){owner_str}"
 
 
-__all__ = ['CircleMembership']
+__all__ = ["CircleMembership"]

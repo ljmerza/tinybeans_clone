@@ -1,10 +1,12 @@
 """Serializers for pet profile management."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
 
 from mysite.notification_utils import create_message
-from ..models import PetProfile, PetType
+
+from ..models import PetProfile
 
 
 class PetProfileSerializer(serializers.ModelSerializer):
@@ -12,26 +14,26 @@ class PetProfileSerializer(serializers.ModelSerializer):
 
     age_in_days = serializers.ReadOnlyField()
     display_age = serializers.ReadOnlyField()
-    pet_type_display = serializers.CharField(source='get_pet_type_display', read_only=True)
+    pet_type_display = serializers.CharField(source="get_pet_type_display", read_only=True)
 
     class Meta:
         model = PetProfile
         fields = [
-            'id',
-            'name',
-            'pet_type',
-            'pet_type_display',
-            'breed',
-            'birthdate',
-            'avatar_url',
-            'bio',
-            'is_active',
-            'age_in_days',
-            'display_age',
-            'created_at',
-            'updated_at',
+            "id",
+            "name",
+            "pet_type",
+            "pet_type_display",
+            "breed",
+            "birthdate",
+            "avatar_url",
+            "bio",
+            "is_active",
+            "age_in_days",
+            "display_age",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class PetProfileCreateSerializer(serializers.ModelSerializer):
@@ -42,29 +44,29 @@ class PetProfileCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PetProfile
         fields = [
-            'name',
-            'pet_type',
-            'breed',
-            'birthdate',
-            'avatar_url',
-            'bio',
-            'is_active',
+            "name",
+            "pet_type",
+            "breed",
+            "birthdate",
+            "avatar_url",
+            "bio",
+            "is_active",
         ]
 
     def validate_name(self, value):
         """Ensure pet name is not empty after stripping whitespace."""
         stripped_name = value.strip() if value else ""
         if not stripped_name:
-            raise serializers.ValidationError(create_message('errors.pet_name_required'))
+            raise serializers.ValidationError(create_message("errors.pet_name_required"))
         return stripped_name
 
     def create(self, validated_data):
         """Create pet profile with circle from context."""
-        circle = self.context['circle']
+        circle = self.context["circle"]
         return PetProfile.objects.create(circle=circle, **validated_data)
 
 
 __all__ = [
-    'PetProfileSerializer',
-    'PetProfileCreateSerializer',
+    "PetProfileSerializer",
+    "PetProfileCreateSerializer",
 ]

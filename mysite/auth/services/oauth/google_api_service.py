@@ -5,14 +5,14 @@ This service handles:
 - Token exchange with Google
 - ID token verification
 """
+
 import logging
 from typing import Dict
 from urllib.parse import urlencode
 
 from django.conf import settings
-
-from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 
 from mysite.auth.log_utils import mask_email, mask_id
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class OAuthError(Exception):
     """Base exception for OAuth errors."""
+
     pass
 
 
@@ -37,13 +38,7 @@ class GoogleAPIService:
         if not self.client_id or not self.client_secret:
             raise ValueError("Google OAuth credentials not configured")
 
-    def build_auth_url(
-        self,
-        redirect_uri: str,
-        state_token: str,
-        code_challenge: str,
-        nonce: str
-    ) -> str:
+    def build_auth_url(self, redirect_uri: str, state_token: str, code_challenge: str, nonce: str) -> str:
         """Build Google OAuth authorization URL.
 
         Args:
@@ -56,29 +51,26 @@ class GoogleAPIService:
             Complete Google OAuth URL
         """
         auth_params = {
-            'client_id': self.client_id,
-            'redirect_uri': redirect_uri,
-            'response_type': 'code',
-            'scope': ' '.join(self.scopes),
-            'state': state_token,
-            'code_challenge': code_challenge,
-            'code_challenge_method': 'S256',
+            "client_id": self.client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": " ".join(self.scopes),
+            "state": state_token,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
             # Sign-in only (ADR-015): request online access so Google does not
             # issue a refresh token we would only discard, and do not force the
             # consent screen on every login. Switch back to
             # 'access_type': 'offline' (and store the refresh token encrypted)
             # only if we ever need to call Google APIs on the user's behalf.
-            'access_type': 'online',
-            'nonce': nonce,
+            "access_type": "online",
+            "nonce": nonce,
         }
 
         return f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(auth_params)}"
 
     def exchange_code_for_token(
-        self,
-        authorization_code: str,
-        oauth_state: GoogleOAuthState,
-        code_verifier: str
+        self, authorization_code: str, oauth_state: GoogleOAuthState, code_verifier: str
     ) -> Dict[str, any]:
         """Exchange authorization code for access token using PKCE.
 
@@ -104,7 +96,7 @@ class GoogleAPIService:
                     }
                 },
                 scopes=self.scopes,
-                redirect_uri=oauth_state.redirect_uri
+                redirect_uri=oauth_state.redirect_uri,
             )
 
             # Set code verifier for PKCE
@@ -117,34 +109,19 @@ class GoogleAPIService:
             credentials = flow.credentials
 
             # Verify ID token
-            id_info = id_token.verify_oauth2_token(
-                credentials.id_token,
-                google_requests.Request(),
-                self.client_id
-            )
+            id_info = id_token.verify_oauth2_token(credentials.id_token, google_requests.Request(), self.client_id)
 
             # Verify nonce
-            if id_info.get('nonce') != oauth_state.nonce:
+            if id_info.get("nonce") != oauth_state.nonce:
                 raise OAuthError("Nonce mismatch")
 
             logger.info(
                 "OAuth token exchange successful",
-                extra={
-                    'google_id': mask_id(id_info.get('sub')),
-                    'email': mask_email(id_info.get('email'))
-                }
+                extra={"google_id": mask_id(id_info.get("sub")), "email": mask_email(id_info.get("email"))},
             )
 
-            return {
-                'access_token': credentials.token,
-                'id_token': credentials.id_token,
-                'user_info': id_info
-            }
+            return {"access_token": credentials.token, "id_token": credentials.id_token, "user_info": id_info}
 
         except Exception as e:
-            logger.error(
-                f"OAuth token exchange failed: {str(e)}",
-                extra={'error': str(e)},
-                exc_info=True
-            )
+            logger.error(f"OAuth token exchange failed: {str(e)}", extra={"error": str(e)}, exc_info=True)
             raise OAuthError(f"Token exchange failed: {str(e)}")

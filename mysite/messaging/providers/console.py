@@ -1,5 +1,7 @@
 """Console SMS provider for development"""
+
 import logging
+
 from .base import BaseSMSProvider
 
 logger = logging.getLogger(__name__)

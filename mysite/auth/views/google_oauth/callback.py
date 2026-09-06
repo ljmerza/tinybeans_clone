@@ -2,35 +2,32 @@
 
 This module handles the OAuth callback from Google.
 """
+
 import logging
 
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema
 
+from mysite.auth.log_utils import mask_email
+from mysite.auth.serializers import (
+    OAuthCallbackRequestSerializer,
+    OAuthCallbackResponseSerializer,
+    OAuthErrorSerializer,
+)
 from mysite.auth.services.google_oauth_service import (
     GoogleOAuthService,
     InvalidStateError,
     OAuthError,
     UnverifiedAccountError,
 )
-from mysite.auth.serializers import (
-    OAuthCallbackRequestSerializer,
-    OAuthCallbackResponseSerializer,
-    OAuthErrorSerializer,
-)
-from mysite.auth.log_utils import mask_email
 from mysite.auth.token_utils import get_tokens_for_user, set_refresh_cookie
+from mysite.auth.views.google_oauth.helpers import check_rate_limit, get_client_ip, handle_validation_errors
+from mysite.notification_utils import create_message, error_response, success_response
 from mysite.users.serializers import UserSerializer
-from mysite.notification_utils import error_response, success_response, create_message
-from mysite.auth.views.google_oauth.helpers import (
-    get_client_ip,
-    check_rate_limit,
-    handle_validation_errors
-)
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +38,7 @@ class GoogleOAuthCallbackView(APIView):
     Exchanges authorization code for tokens, creates or links user account,
     and issues JWT tokens.
     """
+
     permission_classes = [permissions.AllowAny]
 
     @extend_schema(
@@ -59,13 +57,13 @@ class GoogleOAuthCallbackView(APIView):
         - Blocks if unverified account exists
         - Logs in if Google ID already linked
         """,
-        tags=['OAuth']
+        tags=["OAuth"],
     )
-    @method_decorator(ratelimit(
-        key='ip',
-        rate=f'{settings.OAUTH_RATE_LIMIT_MAX_ATTEMPTS}/{settings.OAUTH_RATE_LIMIT_WINDOW}s',
-        block=True
-    ))
+    @method_decorator(
+        ratelimit(
+            key="ip", rate=f"{settings.OAUTH_RATE_LIMIT_MAX_ATTEMPTS}/{settings.OAUTH_RATE_LIMIT_WINDOW}s", block=True
+        )
+    )
     def post(self, request):
         """POST /api/auth/google/callback/"""
         # Check rate limit
@@ -78,8 +76,8 @@ class GoogleOAuthCallbackView(APIView):
         if not serializer.is_valid():
             return handle_validation_errors(serializer)
 
-        authorization_code = serializer.validated_data['code']
-        state_token = serializer.validated_data['state']
+        authorization_code = serializer.validated_data["code"]
+        state_token = serializer.validated_data["state"]
         ip_address = get_client_ip(request)
 
         try:
@@ -96,26 +94,19 @@ class GoogleOAuthCallbackView(APIView):
                 raise InvalidStateError("State token already used")
 
             # Exchange code for token
-            token_result = oauth_service.exchange_code_for_token(
-                authorization_code,
-                oauth_state
-            )
+            token_result = oauth_service.exchange_code_for_token(authorization_code, oauth_state)
 
             # Get or create user
-            user, account_action = oauth_service.get_or_create_user(
-                token_result['user_info']
-            )
+            user, account_action = oauth_service.get_or_create_user(token_result["user_info"])
 
             # Generate JWT tokens
             tokens = get_tokens_for_user(user)
 
             # Prepare response
             response_data = {
-                'user': UserSerializer(user).data,
-                'tokens': {
-                    'access': str(tokens['access'])
-                },
-                'account_action': account_action
+                "user": UserSerializer(user).data,
+                "tokens": {"access": str(tokens["access"])},
+                "account_action": account_action,
             }
 
             response_serializer = OAuthCallbackResponseSerializer(data=response_data)
@@ -123,53 +114,43 @@ class GoogleOAuthCallbackView(APIView):
 
             # Create response with refresh token cookie
             response = success_response(response_serializer.data)
-            set_refresh_cookie(response, tokens['refresh'])
+            set_refresh_cookie(response, tokens["refresh"])
 
             logger.info(
                 f"OAuth callback successful - {account_action}",
-                extra={
-                    'user_id': user.id,
-                    'action': account_action,
-                    'ip': ip_address
-                }
+                extra={"user_id": user.id, "action": account_action, "ip": ip_address},
             )
 
             return response
 
         except InvalidStateError as e:
-            logger.warning(f"Invalid OAuth state: {str(e)}", extra={'ip': ip_address})
+            logger.warning(f"Invalid OAuth state: {str(e)}", extra={"ip": ip_address})
             return error_response(
-                'invalid_state_token',
-                [create_message('errors.oauth.invalid_state', {})],
-                status.HTTP_400_BAD_REQUEST
+                "invalid_state_token", [create_message("errors.oauth.invalid_state", {})], status.HTTP_400_BAD_REQUEST
             )
 
         except UnverifiedAccountError as e:
-            logger.warning(
-                "OAuth blocked - unverified account",
-                extra={'email': mask_email(e.email), 'ip': ip_address}
-            )
+            logger.warning("OAuth blocked - unverified account", extra={"email": mask_email(e.email), "ip": ip_address})
             return error_response(
-                'unverified_account_exists',
-                [create_message('errors.oauth.unverified_account_exists', {
-                    'email': e.email,
-                    'help_url': '/help/verify-email'
-                })],
-                status.HTTP_403_FORBIDDEN
+                "unverified_account_exists",
+                [
+                    create_message(
+                        "errors.oauth.unverified_account_exists", {"email": e.email, "help_url": "/help/verify-email"}
+                    )
+                ],
+                status.HTTP_403_FORBIDDEN,
             )
 
         except OAuthError as e:
             logger.error(f"OAuth error: {str(e)}", exc_info=True)
             return error_response(
-                'oauth_error',
-                [create_message('errors.oauth.authentication_failed', {})],
-                status.HTTP_400_BAD_REQUEST
+                "oauth_error", [create_message("errors.oauth.authentication_failed", {})], status.HTTP_400_BAD_REQUEST
             )
 
         except Exception as e:
             logger.error(f"OAuth callback failed: {str(e)}", exc_info=True)
             return error_response(
-                'oauth_callback_failed',
-                [create_message('errors.oauth.callback_failed', {})],
-                status.HTTP_500_INTERNAL_SERVER_ERROR
+                "oauth_callback_failed",
+                [create_message("errors.oauth.callback_failed", {})],
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

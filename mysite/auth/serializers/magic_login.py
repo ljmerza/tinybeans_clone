@@ -1,4 +1,5 @@
 """Magic login serializers."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -10,9 +11,9 @@ class MagicLoginRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate(self, attrs):
-        email = attrs['email']
+        email = attrs["email"]
         user = User.objects.filter(email__iexact=email).first()
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
@@ -21,6 +22,6 @@ class MagicLoginVerifySerializer(serializers.Serializer):
 
 
 __all__ = [
-    'MagicLoginRequestSerializer',
-    'MagicLoginVerifySerializer',
+    "MagicLoginRequestSerializer",
+    "MagicLoginVerifySerializer",
 ]
