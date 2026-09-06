@@ -1,8 +1,7 @@
 """Tests for media storage backend."""
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
-from django.conf import settings
+from unittest.mock import Mock, patch
+from datetime import datetime
 from django.test import override_settings
 from mysite.keeps.storage import (
     MediaStorageBackend,
@@ -11,21 +10,40 @@ from mysite.keeps.storage import (
 )
 
 
+class _StubBackend(MediaStorageBackend):
+    """Minimal concrete backend so the base-class helpers can be exercised."""
+
+    def save(self, file_content, filename, content_type=None):
+        return self.generate_storage_key(filename)
+
+    def delete(self, storage_key):
+        return True
+
+    def get_url(self, storage_key, expires_in=3600):
+        return storage_key
+
+    def exists(self, storage_key):
+        return False
+
+    def get_metadata(self, storage_key):
+        return {}
+
+
 class TestMediaStorageBackend:
-    """Test abstract MediaStorageBackend base class."""
+    """Test the helpers on the abstract MediaStorageBackend base class."""
     
     def test_generate_storage_key_with_uuid(self):
         """Test storage key generation with UUID."""
-        backend = MediaStorageBackend()
+        backend = _StubBackend()
         key = backend.generate_storage_key('test.jpg')
         
         assert key.startswith('keeps/')
         assert key.endswith('.jpg')
-        assert len(key.split('/')) == 4  # keeps/year/month/day/filename
+        assert len(key.split('/')) == 5  # keeps/year/month/day/filename
     
     def test_generate_storage_key_with_hash(self):
         """Test storage key generation with content hash."""
-        backend = MediaStorageBackend()
+        backend = _StubBackend()
         content_hash = 'a' * 64  # SHA-256 hash length
         
         key = backend.generate_storage_key('test.jpg', content_hash)
@@ -36,7 +54,7 @@ class TestMediaStorageBackend:
     
     def test_generate_storage_key_preserves_extension(self):
         """Test that file extension is preserved."""
-        backend = MediaStorageBackend()
+        backend = _StubBackend()
         
         for ext in ['.jpg', '.png', '.mp4', '.PDF']:
             key = backend.generate_storage_key(f'test{ext}')
@@ -44,7 +62,7 @@ class TestMediaStorageBackend:
     
     def test_calculate_content_hash(self):
         """Test content hash calculation."""
-        backend = MediaStorageBackend()
+        backend = _StubBackend()
         content = b'test content'
         
         hash1 = backend.calculate_content_hash(content)
@@ -63,7 +81,7 @@ class TestMediaStorageBackend:
 class TestMinIOStorageBackend:
     """Test MinIOStorageBackend."""
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_initialization(self, mock_minio_class):
         """Test MinIO backend initialization."""
         mock_client = Mock()
@@ -83,7 +101,7 @@ class TestMinIOStorageBackend:
             assert backend.bucket_name == 'test-bucket'
             mock_client.bucket_exists.assert_called_once()
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_ensure_bucket_exists(self, mock_minio_class):
         """Test bucket creation if it doesn't exist."""
         mock_client = Mock()
@@ -96,11 +114,11 @@ class TestMinIOStorageBackend:
             MINIO_SECRET_KEY='test',
             MINIO_BUCKET_NAME='test-bucket'
         ):
-            backend = MinIOStorageBackend()
+            MinIOStorageBackend()
             
             mock_client.make_bucket.assert_called_once_with('test-bucket')
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_save_file(self, mock_minio_class):
         """Test saving file to MinIO."""
         mock_client = Mock()
@@ -127,7 +145,7 @@ class TestMinIOStorageBackend:
             assert call_args['length'] == len(file_content)
             assert call_args['content_type'] == 'image/jpeg'
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_delete_file(self, mock_minio_class):
         """Test deleting file from MinIO."""
         mock_client = Mock()
@@ -149,7 +167,7 @@ class TestMinIOStorageBackend:
                 'keeps/2024/01/01/test.jpg'
             )
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_get_url(self, mock_minio_class):
         """Test getting presigned URL."""
         mock_client = Mock()
@@ -169,7 +187,7 @@ class TestMinIOStorageBackend:
             assert url == 'http://presigned-url.com/file.jpg'
             mock_client.presigned_get_object.assert_called_once()
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_exists(self, mock_minio_class):
         """Test checking file existence."""
         mock_client = Mock()
@@ -200,7 +218,7 @@ class TestMinIOStorageBackend:
             )
             assert backend.exists('keeps/2024/01/01/nonexistent.jpg') is False
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_get_metadata(self, mock_minio_class):
         """Test getting file metadata."""
         mock_client = Mock()
@@ -227,7 +245,7 @@ class TestMinIOStorageBackend:
             assert metadata['etag'] == 'abc123'
             assert metadata['storage_backend'] == 'minio'
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_get_file_content(self, mock_minio_class):
         """Test retrieving file content."""
         mock_client = Mock()
@@ -250,7 +268,7 @@ class TestMinIOStorageBackend:
             mock_client.get_object.assert_called_once()
             mock_response.close.assert_called_once()
     
-    @patch('mysite.keeps.storage.Minio')
+    @patch('minio.Minio')
     def test_get_file_content_not_found(self, mock_minio_class):
         """Test retrieving non-existent file."""
         from minio.error import S3Error

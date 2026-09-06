@@ -1,7 +1,6 @@
 """Tests for Keep API views."""
 import pytest
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from mysite.circles.models import Circle, CircleMembership
@@ -84,13 +83,13 @@ class TestKeepListCreateView:
         response = api_client.get('/api/keeps/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]['id'] == str(keep.id)
+        assert len(response.data['results']) == 1
+        assert response.data['results'][0]['id'] == str(keep.id)
     
     def test_list_keeps_excludes_other_circles(self, api_client, user, circle, keep, other_user, other_circle):
         """Test that keeps from other circles are not visible."""
         # Create a keep in another circle
-        other_keep = Keep.objects.create(
+        Keep.objects.create(
             circle=other_circle,
             created_by=other_user,
             keep_type=KeepType.NOTE,
@@ -101,8 +100,8 @@ class TestKeepListCreateView:
         response = api_client.get('/api/keeps/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]['id'] == str(keep.id)
+        assert len(response.data['results']) == 1
+        assert response.data['results'][0]['id'] == str(keep.id)
     
     def test_create_keep(self, api_client, user, circle):
         """Test creating a new keep."""
@@ -120,10 +119,9 @@ class TestKeepListCreateView:
         
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['title'] == 'New Memory'
-        assert response.data['created_by_display_name'] == user.display_name
         
-        # Verify keep was created
-        keep = Keep.objects.get(id=response.data['id'])
+        # The create serializer echoes the submitted fields; verify via the DB
+        keep = Keep.objects.get(title='New Memory', circle=circle)
         assert keep.title == 'New Memory'
         assert keep.created_by == user
     
@@ -138,18 +136,25 @@ class TestKeepListCreateView:
         }
         
         response = api_client.post('/api/keeps/', data, format='json')
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        # Membership is enforced by serializer validation (documented as 400)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data['error'] == 'validation_failed'
+        assert any(
+            m.get('context', {}).get('field') == 'circle'
+            and m['i18n_key'] == 'errors.circle_membership_required'
+            for m in response.data['messages']
+        )
     
     def test_filter_by_keep_type(self, api_client, user, circle):
         """Test filtering keeps by type."""
         # Create keeps of different types
-        note_keep = Keep.objects.create(
+        Keep.objects.create(
             circle=circle,
             created_by=user,
             keep_type=KeepType.NOTE,
             title='Note'
         )
-        media_keep = Keep.objects.create(
+        Keep.objects.create(
             circle=circle,
             created_by=user,
             keep_type=KeepType.MEDIA,
@@ -161,19 +166,19 @@ class TestKeepListCreateView:
         # Filter for notes
         response = api_client.get(f'/api/keeps/?keep_type={KeepType.NOTE}')
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]['keep_type'] == KeepType.NOTE
+        assert len(response.data['results']) == 1
+        assert response.data['results'][0]['keep_type'] == KeepType.NOTE
     
     def test_filter_by_tag(self, api_client, user, circle):
         """Test filtering keeps by tag."""
-        keep1 = Keep.objects.create(
+        Keep.objects.create(
             circle=circle,
             created_by=user,
             keep_type=KeepType.NOTE,
             title='Summer',
             tags='summer,vacation'
         )
-        keep2 = Keep.objects.create(
+        Keep.objects.create(
             circle=circle,
             created_by=user,
             keep_type=KeepType.NOTE,
@@ -185,8 +190,8 @@ class TestKeepListCreateView:
         
         response = api_client.get('/api/keeps/?tag=summer')
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert 'summer' in response.data[0]['tags']
+        assert len(response.data['results']) == 1
+        assert 'summer' in response.data['results'][0]['tags']
 
 
 @pytest.mark.django_db
@@ -286,8 +291,8 @@ class TestReactionViews:
         """Test adding a reaction to a keep."""
         api_client.force_authenticate(user=user)
         
-        data = {'reaction_type': 'like'}
-        response = api_client.post(f'/api/keeps/{keep.id}/reactions/', data, format='json')
+        data = {'keep': str(keep.id), 'reaction_type': 'like'}
+        response = api_client.post('/api/keeps/reactions/', data, format='json')
         
         assert response.status_code == status.HTTP_201_CREATED
         assert KeepReaction.objects.filter(keep=keep, user=user, reaction_type='like').exists()
@@ -298,17 +303,17 @@ class TestReactionViews:
         KeepReaction.objects.create(keep=keep, user=user, reaction_type='like')
         
         api_client.force_authenticate(user=user)
-        response = api_client.get(f'/api/keeps/{keep.id}/reactions/')
+        response = api_client.get('/api/keeps/reactions/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
+        assert len(response.data['results']) == 1
     
     def test_remove_reaction(self, api_client, user, keep):
         """Test removing a reaction."""
         reaction = KeepReaction.objects.create(keep=keep, user=user, reaction_type='like')
         
         api_client.force_authenticate(user=user)
-        response = api_client.delete(f'/api/keeps/{keep.id}/reactions/{reaction.id}/')
+        response = api_client.delete(f'/api/keeps/reactions/{reaction.id}/')
         
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not KeepReaction.objects.filter(id=reaction.id).exists()
@@ -322,8 +327,8 @@ class TestCommentViews:
         """Test adding a comment to a keep."""
         api_client.force_authenticate(user=user)
         
-        data = {'comment': 'Great memory!'}
-        response = api_client.post(f'/api/keeps/{keep.id}/comments/', data, format='json')
+        data = {'keep': str(keep.id), 'comment': 'Great memory!'}
+        response = api_client.post('/api/keeps/comments/', data, format='json')
         
         assert response.status_code == status.HTTP_201_CREATED
         assert KeepComment.objects.filter(keep=keep, user=user).exists()
@@ -334,10 +339,10 @@ class TestCommentViews:
         KeepComment.objects.create(keep=keep, user=user, comment='Nice!')
         
         api_client.force_authenticate(user=user)
-        response = api_client.get(f'/api/keeps/{keep.id}/comments/')
+        response = api_client.get('/api/keeps/comments/')
         
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
+        assert len(response.data['results']) == 1
     
     def test_update_own_comment(self, api_client, user, keep):
         """Test updating own comment."""
@@ -345,7 +350,7 @@ class TestCommentViews:
         
         api_client.force_authenticate(user=user)
         data = {'comment': 'Updated'}
-        response = api_client.patch(f'/api/keeps/{keep.id}/comments/{comment.id}/', data, format='json')
+        response = api_client.patch(f'/api/keeps/comments/{comment.id}/', data, format='json')
         
         assert response.status_code == status.HTTP_200_OK
         comment.refresh_from_db()
@@ -356,7 +361,7 @@ class TestCommentViews:
         comment = KeepComment.objects.create(keep=keep, user=user, comment='Delete me')
         
         api_client.force_authenticate(user=user)
-        response = api_client.delete(f'/api/keeps/{keep.id}/comments/{comment.id}/')
+        response = api_client.delete(f'/api/keeps/comments/{comment.id}/')
         
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not KeepComment.objects.filter(id=comment.id).exists()

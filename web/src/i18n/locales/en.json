@@ -727,6 +727,7 @@
 		"milestone_required": "Milestone data is required for milestone keeps.",
 		"milestone_not_allowed": "Milestone data should only be provided for milestone keeps.",
 		"media_files_required": "Media keeps should include media files.",
+		"reaction_exists": "You have already reacted to this keep.",
 		"keep_update_forbidden": "You can only update keeps you created or as a circle admin.",
 		"validation_error": "{{field}}: {{message}}",
 		"general_validation_error": "{{message}}",
