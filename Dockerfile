@@ -8,9 +8,7 @@ COPY web/package*.json ./
 RUN npm ci --no-audit --no-fund
 
 COPY web/ ./
-# `npm run build` is `vite build && tsc`; the tsc pass currently fails on
-# pre-existing type errors, so bundle directly to keep the image buildable.
-RUN npx vite build
+RUN npm run build
 
 # =============================================================================
 # Stage 2: Runtime base
