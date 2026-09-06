@@ -65,6 +65,9 @@ BLOB_PREFERENCE = ('p', 'o2', 'o', 'xl', 'l', 'm', 's2', 's', 't')
 # Filenames of originals that were downloaded from a lesser rendition.
 LESSER_RENDITION_RE = re.compile(r'-(o2|o|xl|l|m|s2|s|t)\.[A-Za-z0-9]+$')
 MAX_REPLY_DEPTH = 3
+# Static images Tinybeans serves instead of a real rendition (e.g. the
+# "processing video" card for a video whose poster was never generated).
+PLACEHOLDER_IMAGE_PREFIX = 'https://public.tinybeans.com/images/'
 # --since-last-run looks this far behind the previous successful run's start.
 INCREMENTAL_MARGIN = timedelta(hours=1)
 # Tinybeans emotion labels -> KeepReaction types. Unknown labels fall back to 'like'.
@@ -551,6 +554,15 @@ class Command(BaseCommand):
         self._sync_emotions(entry, keep, circle, ts)
 
     @staticmethod
+    def _best_blob_url(entry):
+        """Best real image rendition for an entry, or None for placeholders."""
+        blobs = entry.get('blobs') or {}
+        url = next((blobs[k] for k in BLOB_PREFERENCE if blobs.get(k)), None)
+        if url and url.startswith(PLACEHOLDER_IMAGE_PREFIX):
+            return None
+        return url
+
+    @staticmethod
     def _memory_datetime(entry):
         """The date the memory belongs to, as Tinybeans shows it.
 
@@ -573,8 +585,7 @@ class Command(BaseCommand):
             raise _LimitReached()
 
         is_video = entry.get('attachmentType') == 'VIDEO' and entry.get('attachmentUrl_mp4')
-        blobs = entry.get('blobs') or {}
-        blob_url = next((blobs[k] for k in BLOB_PREFERENCE if blobs.get(k)), None)
+        blob_url = self._best_blob_url(entry)
         has_media = bool(is_video or blob_url)
 
         if self.dry:
@@ -643,7 +654,7 @@ class Command(BaseCommand):
         regenerated; videos without renditions get them from the poster frame.
         """
         blobs = entry.get('blobs') or {}
-        best_url = next((blobs[k] for k in BLOB_PREFERENCE if blobs.get(k)), None)
+        best_url = self._best_blob_url(entry)
         if not best_url:
             return
         entry_id = entry.get('id') or entry.get('uuid')

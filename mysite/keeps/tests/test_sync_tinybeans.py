@@ -251,6 +251,21 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertEqual(media.original_filename, 'clip-mp4.mp4')
         self.assertEqual(self.thumbnail_calls, [(media.id, 'keeps/test/poster-p.jpg')])
 
+    def test_placeholder_poster_is_ignored(self):
+        # Tinybeans serves a static "processing" card when a video has no poster.
+        pending = dict(VIDEO_ENTRY, blobs={
+            'p': 'https://public.tinybeans.com/images/processingVideo-p.jpg',
+            'o2': 'https://public.tinybeans.com/images/processingVideo-o2.jpg',
+        })
+        self.run_sync(entries=[pending])
+
+        media = KeepMedia.objects.get()
+        self.assertEqual(media.media_type, 'video')
+        self.assertEqual(self.thumbnail_calls, [])
+
+        self.run_sync(entries=[pending])  # no retry storm on re-runs either
+        self.assertEqual(self.thumbnail_calls, [])
+
     def test_rerun_adds_poster_for_video_without_renditions(self):
         self.run_sync(entries=[VIDEO_ENTRY])
         self.thumbnail_calls.clear()
