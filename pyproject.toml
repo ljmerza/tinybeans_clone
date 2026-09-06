@@ -32,10 +32,6 @@ dependencies = [
     "google-auth-httplib2==0.1.1",
     "user-agents==2.2.0",
     "tzdata==2025.2",
-    # Not imported by mysite/ today; carried over from requirements.txt so the
-    # uv migration does not silently drop a runtime dependency.
-    "anthropic==0.69.0",
-    "boto3==1.40.40",
 ]
 
 [dependency-groups]
@@ -55,7 +51,11 @@ line-length = 120
 exclude = ["mysite/*/migrations/*.py", "web", "docs", "_docs", "volumes"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "B", "SIM", "DJ"]
+# DJ001 is deferred: dropping `null=True` from those 9 string columns means
+# removing NULL from live columns plus a data migration to backfill existing
+# NULLs, which is a schema change and out of scope here.
+ignore = ["DJ001"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["mysite"]
