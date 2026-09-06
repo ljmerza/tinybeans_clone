@@ -43,6 +43,7 @@ export function EmailVerificationHandler({
 		};
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: must run once per token; adding navigate/session would re-trigger verification
 	useEffect(() => {
 		if (!token) {
 			setStatus("error");
