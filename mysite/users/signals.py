@@ -2,5 +2,4 @@
 
 from mysite.circles.signals import mark_circle_onboarding_complete  # noqa: F401
 
-__all__ = ['mark_circle_onboarding_complete']
-
+__all__ = ["mark_circle_onboarding_complete"]

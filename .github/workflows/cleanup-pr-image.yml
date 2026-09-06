@@ -1,0 +1,12 @@
+name: Cleanup PR Image
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    uses: ljmerza/misc-actions/.github/workflows/cleanup-pr-image.yml@v2
+    with:
+      package-name: tinybeans
+    secrets: inherit

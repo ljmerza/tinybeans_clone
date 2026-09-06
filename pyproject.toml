@@ -1,0 +1,82 @@
+[project]
+name = "tinybeans"
+version = "0.1.0"
+description = "Family memory keeping app: Django REST backend with a React frontend"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "Django==5.2.6",
+    "djangorestframework==3.16.1",
+    "djangorestframework-simplejwt==5.5.1",
+    "django-cors-headers==4.9.0",
+    "django-filter==25.1",
+    "django-health-check==3.18.2",
+    "django-ratelimit==4.1.0",
+    "django-redis==6.0.0",
+    "drf-spectacular==0.28.0",
+    "celery==5.4.0",
+    "flower==2.0.1",
+    "redis==5.3.1",
+    "psycopg[binary]==3.1.18",
+    "gunicorn==23.0.0",
+    "minio==7.2.18",
+    "pillow==11.3.0",
+    "argon2-cffi==25.1.0",
+    "cryptography==46.0.2",
+    "pyotp==2.9.0",
+    "qrcode==7.4.2",
+    "reportlab==4.0.7",
+    "requests==2.32.5",
+    "twilio==8.10.0",
+    "google-auth==2.23.4",
+    "google-auth-oauthlib==1.1.0",
+    "google-auth-httplib2==0.1.1",
+    "user-agents==2.2.0",
+    "tzdata==2025.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.5",
+    "pytest-django==4.11.1",
+    "pytest-cov>=5.0",
+    "ruff>=0.15",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = ["mysite/*/migrations/*.py", "web", "docs", "_docs", "volumes"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "SIM", "DJ"]
+# DJ001 is deferred: dropping `null=True` from those 9 string columns means
+# removing NULL from live columns plus a data migration to backfill existing
+# NULLs, which is a schema change and out of scope here.
+ignore = ["DJ001"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mysite"]
+
+[tool.ruff.lint.per-file-ignores]
+# Settings modules seed os.environ before importing base, and pull in modules
+# for their registration side effects.
+"mysite/config/settings/*.py" = ["E402", "F403", "F405"]
+"mysite/test_settings.py" = ["F403", "F405"]
+
+[tool.coverage.run]
+source = ["mysite"]
+branch = true
+omit = ["*/migrations/*", "*/tests/*", "mysite/config/settings/*"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

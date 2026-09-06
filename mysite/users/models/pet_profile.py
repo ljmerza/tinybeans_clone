@@ -3,7 +3,9 @@
 This module defines models for managing pet profiles within circles.
 Unlike child profiles, pet profiles can never be upgraded to user accounts.
 """
+
 import uuid
+
 from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils import timezone
@@ -13,27 +15,28 @@ from .circle import Circle
 
 class PetType(models.TextChoices):
     """Types of pets supported in the system.
-    
+
     Common pet types with room for expansion.
     """
-    DOG = 'dog', 'Dog'
-    CAT = 'cat', 'Cat' 
-    BIRD = 'bird', 'Bird'
-    FISH = 'fish', 'Fish'
-    RABBIT = 'rabbit', 'Rabbit'
-    HAMSTER = 'hamster', 'Hamster'
-    GUINEA_PIG = 'guinea_pig', 'Guinea Pig'
-    REPTILE = 'reptile', 'Reptile'
-    HORSE = 'horse', 'Horse'
-    OTHER = 'other', 'Other'
+
+    DOG = "dog", "Dog"
+    CAT = "cat", "Cat"
+    BIRD = "bird", "Bird"
+    FISH = "fish", "Fish"
+    RABBIT = "rabbit", "Rabbit"
+    HAMSTER = "hamster", "Hamster"
+    GUINEA_PIG = "guinea_pig", "Guinea Pig"
+    REPTILE = "reptile", "Reptile"
+    HORSE = "horse", "Horse"
+    OTHER = "other", "Other"
 
 
 class PetProfile(models.Model):
     """Profile for a family pet within a circle.
-    
+
     Represents a pet's profile with basic information. Pets cannot be
     upgraded to user accounts and are permanently linked to their circle.
-    
+
     Attributes:
         id: UUID primary key for secure identification
         circle: The family circle this pet belongs to
@@ -47,8 +50,9 @@ class PetProfile(models.Model):
         created_at: When the profile was created
         updated_at: When the profile was last modified
     """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    circle = models.ForeignKey(Circle, on_delete=models.CASCADE, related_name='pets')
+    circle = models.ForeignKey(Circle, on_delete=models.CASCADE, related_name="pets")
     name = models.CharField(max_length=150, validators=[MinLengthValidator(1)])
     pet_type = models.CharField(max_length=20, choices=PetType.choices)
     breed = models.CharField(max_length=100, blank=True)
@@ -60,7 +64,7 @@ class PetProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return f"{self.name} ({self.get_pet_type_display()})"
@@ -77,14 +81,14 @@ class PetProfile(models.Model):
         """Get a human-readable age string."""
         if not self.birthdate:
             return None
-        
+
         age_days = self.age_in_days
         if age_days is None:
             return None
-        
+
         years = age_days // 365
         months = (age_days % 365) // 30
-        
+
         if years > 0:
             if months > 0:
                 return f"{years} year{'s' if years != 1 else ''}, {months} month{'s' if months != 1 else ''}"

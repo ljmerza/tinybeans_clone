@@ -15,14 +15,17 @@ class Circle(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='circles_created',
+        related_name="circles_created",
     )
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         # Keep legacy ownership under the users app until migrations relocate.
-        app_label = 'users'
-        ordering = ['name']
+        app_label = "users"
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
 
     def save(self, *args, **kwargs):
         """Persist the circle, auto-generating the slug when missing."""
@@ -36,7 +39,6 @@ class Circle(models.Model):
         Returns:
             CircleMembership or None if owner hasn't joined yet
         """
-        from .membership import CircleMembership
         return self.memberships.filter(is_owner=True).first()
 
     def is_owner(self, user) -> bool:
@@ -48,7 +50,7 @@ class Circle(models.Model):
         Returns:
             True if user is the owner, False otherwise
         """
-        user_id = user.id if hasattr(user, 'id') else user
+        user_id = user.id if hasattr(user, "id") else user
         return self.created_by_id == user_id
 
     def get_owner_user(self):
@@ -59,8 +61,5 @@ class Circle(models.Model):
         """
         return self.created_by
 
-    def __str__(self) -> str:
-        return self.name
 
-
-__all__ = ['Circle']
+__all__ = ["Circle"]

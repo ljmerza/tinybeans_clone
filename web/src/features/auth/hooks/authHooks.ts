@@ -141,7 +141,10 @@ export function useLogin(options?: { redirect?: string }) {
 			}
 
 			// Only redirect to verify email if NO invitation (invitations auto-verify)
-			if (!payload.email_verified && !invitationRedirect) {
+			if (
+				!("email_verified" in payload && payload.email_verified) &&
+				!invitationRedirect
+			) {
 				navigate({ to: "/verify-email-required" });
 				return;
 			}

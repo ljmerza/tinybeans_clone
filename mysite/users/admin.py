@@ -6,6 +6,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from mysite.auth.token_utils import DEFAULT_TOKEN_TTL_SECONDS, delete_token, store_token
+from mysite.emails.tasks import send_email_task
+from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
+
 from .models import (
     ChildGuardianConsent,
     ChildProfile,
@@ -15,53 +18,50 @@ from .models import (
     User,
     UserNotificationPreferences,
 )
-from mysite.emails.tasks import send_email_task
-from mysite.emails.templates import CHILD_UPGRADE_TEMPLATE
 
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
-    ordering = ('email',)
+    ordering = ("email",)
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name')}),
+        (None, {"fields": ("email", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name")}),
         (
-            _('Permissions'),
+            _("Permissions"),
             {
-                'fields': (
-                    'role',
-                    'email_verified',
-                    'is_active',
-                    'is_staff',
-                    'is_superuser',
-                    'groups',
-                    'user_permissions',
+                "fields": (
+                    "role",
+                    "email_verified",
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
                 )
             },
         ),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
         (
             None,
             {
-                'classes': ('wide',),
-                'fields': (
-                    'email',
-                    'first_name',
-                    'last_name',
-                    'password1',
-                    'password2',
-                    'role',
-                    'email_verified',
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "first_name",
+                    "last_name",
+                    "password1",
+                    "password2",
+                    "role",
+                    "email_verified",
                 ),
             },
         ),
     )
-    list_display = ('email', 'first_name', 'last_name', 'role', 'is_active', 'email_verified')
-    list_filter = ('role', 'is_active', 'email_verified', 'is_staff', 'is_superuser')
-    search_fields = ('email', 'first_name', 'last_name')
-
+    list_display = ("email", "first_name", "last_name", "role", "is_active", "email_verified")
+    list_filter = ("role", "is_active", "email_verified", "is_staff", "is_superuser")
+    search_fields = ("email", "first_name", "last_name")
 
 
 class ChildGuardianConsentInline(admin.TabularInline):
@@ -69,65 +69,63 @@ class ChildGuardianConsentInline(admin.TabularInline):
     extra = 0
     can_delete = False
     readonly_fields = (
-        'guardian_name',
-        'guardian_relationship',
-        'agreement_reference',
-        'consent_method',
-        'consent_metadata',
-        'signed_at',
-        'captured_by',
-        'created_at',
+        "guardian_name",
+        "guardian_relationship",
+        "agreement_reference",
+        "consent_method",
+        "consent_metadata",
+        "signed_at",
+        "captured_by",
+        "created_at",
     )
-    ordering = ('-created_at',)
+    ordering = ("-created_at",)
 
 
 class ChildUpgradeAuditLogInline(admin.TabularInline):
     model = ChildUpgradeAuditLog
     extra = 0
     can_delete = False
-    readonly_fields = ('event_type', 'performed_by', 'metadata', 'created_at')
-    ordering = ('-created_at',)
+    readonly_fields = ("event_type", "performed_by", "metadata", "created_at")
+    ordering = ("-created_at",)
 
 
 @admin.register(ChildProfile)
 class ChildProfileAdmin(admin.ModelAdmin):
     list_display = (
-        'display_name',
-        'circle',
-        'upgrade_status',
-        'pending_invite_email',
-        'upgrade_token_expires_at',
-        'linked_user',
+        "display_name",
+        "circle",
+        "upgrade_status",
+        "pending_invite_email",
+        "upgrade_token_expires_at",
+        "linked_user",
     )
-    list_filter = ('upgrade_status', 'circle')
-    search_fields = ('display_name',)
+    list_filter = ("upgrade_status", "circle")
+    search_fields = ("display_name",)
     inlines = [ChildGuardianConsentInline, ChildUpgradeAuditLogInline]
-    actions = ['resend_upgrade_invite', 'revoke_upgrade_invite']
+    actions = ["resend_upgrade_invite", "revoke_upgrade_invite"]
 
-    @admin.action(description=_('Resend upgrade invitation to selected child profiles'))
+    @admin.action(description=_("Resend upgrade invitation to selected child profiles"))
     def resend_upgrade_invite(self, request, queryset):
         successes = 0
         skipped = 0
-        for child in queryset.select_related('circle'):
+        for child in queryset.select_related("circle"):
             if child.upgrade_status != ChildProfileUpgradeStatus.PENDING or not child.pending_invite_email:
                 skipped += 1
                 continue
 
             if child.upgrade_token:
-                delete_token('child-upgrade', child.upgrade_token)
+                delete_token("child-upgrade", child.upgrade_token)
 
             expires_at = (
-                timezone.now() + timedelta(seconds=DEFAULT_TOKEN_TTL_SECONDS)
-                if DEFAULT_TOKEN_TTL_SECONDS
-                else None
+                timezone.now() + timedelta(seconds=DEFAULT_TOKEN_TTL_SECONDS) if DEFAULT_TOKEN_TTL_SECONDS else None
             )
             token = store_token(
-                'child-upgrade',
+                "child-upgrade",
                 {
-                    'child_id': str(child.id),
-                    'circle_id': child.circle_id,
-                    'email': child.pending_invite_email,
-                    'issued_at': timezone.now().isoformat(),
+                    "child_id": str(child.id),
+                    "circle_id": child.circle_id,
+                    "email": child.pending_invite_email,
+                    "issued_at": timezone.now().isoformat(),
                 },
             )
             child.upgrade_token = token
@@ -135,10 +133,10 @@ class ChildProfileAdmin(admin.ModelAdmin):
             child.upgrade_status = ChildProfileUpgradeStatus.PENDING
             child.save(
                 update_fields=[
-                    'upgrade_token',
-                    'upgrade_token_expires_at',
-                    'upgrade_status',
-                    'updated_at',
+                    "upgrade_token",
+                    "upgrade_token_expires_at",
+                    "upgrade_status",
+                    "updated_at",
                 ]
             )
 
@@ -146,21 +144,21 @@ class ChildProfileAdmin(admin.ModelAdmin):
                 to_email=child.pending_invite_email,
                 template_id=CHILD_UPGRADE_TEMPLATE,
                 context={
-                    'token': token,
-                    'email': child.pending_invite_email,
-                    'child_name': child.display_name,
-                    'circle_name': child.circle.name,
+                    "token": token,
+                    "email": child.pending_invite_email,
+                    "child_name": child.display_name,
+                    "circle_name": child.circle.name,
                 },
             )
 
-            consent = child.guardian_consents.order_by('-created_at').first()
+            consent = child.guardian_consents.order_by("-created_at").first()
             child.log_upgrade_event(
                 ChildUpgradeEventType.TOKEN_REISSUED,
                 performed_by=request.user,
                 metadata={
-                    'token': token,
-                    'admin_action': 'resend',
-                    'consent_id': str(consent.id) if consent else None,
+                    "token": token,
+                    "admin_action": "resend",
+                    "consent_id": str(consent.id) if consent else None,
                 },
             )
             successes += 1
@@ -168,29 +166,29 @@ class ChildProfileAdmin(admin.ModelAdmin):
         if successes:
             self.message_user(
                 request,
-                _('%(count)s upgrade invitation%(plural)s resent.')
-                % {'count': successes, 'plural': '' if successes == 1 else 's'},
+                _("%(count)s upgrade invitation%(plural)s resent.")
+                % {"count": successes, "plural": "" if successes == 1 else "s"},
                 level=messages.SUCCESS,
             )
         if skipped:
             self.message_user(
                 request,
-                _('%(count)s profile%(plural)s skipped (not pending or missing email).')
-                % {'count': skipped, 'plural': '' if skipped == 1 else 's'},
+                _("%(count)s profile%(plural)s skipped (not pending or missing email).")
+                % {"count": skipped, "plural": "" if skipped == 1 else "s"},
                 level=messages.WARNING,
             )
 
-    @admin.action(description=_('Revoke pending upgrade invitations'))
+    @admin.action(description=_("Revoke pending upgrade invitations"))
     def revoke_upgrade_invite(self, request, queryset):
         revoked = 0
         skipped = 0
-        for child in queryset.select_related('circle'):
+        for child in queryset.select_related("circle"):
             if not child.upgrade_token and not child.pending_invite_email:
                 skipped += 1
                 continue
 
             if child.upgrade_token:
-                delete_token('child-upgrade', child.upgrade_token)
+                delete_token("child-upgrade", child.upgrade_token)
 
             child.pending_invite_email = None
             child.upgrade_token = None
@@ -199,34 +197,34 @@ class ChildProfileAdmin(admin.ModelAdmin):
             child.upgrade_status = ChildProfileUpgradeStatus.UNLINKED
             child.save(
                 update_fields=[
-                    'pending_invite_email',
-                    'upgrade_token',
-                    'upgrade_token_expires_at',
-                    'upgrade_requested_by',
-                    'upgrade_status',
-                    'updated_at',
+                    "pending_invite_email",
+                    "upgrade_token",
+                    "upgrade_token_expires_at",
+                    "upgrade_requested_by",
+                    "upgrade_status",
+                    "updated_at",
                 ]
             )
 
             child.log_upgrade_event(
                 ChildUpgradeEventType.TOKEN_REVOKED,
                 performed_by=request.user,
-                metadata={'admin_action': 'revoke'},
+                metadata={"admin_action": "revoke"},
             )
             revoked += 1
 
         if revoked:
             self.message_user(
                 request,
-                _('%(count)s invitation%(plural)s revoked.')
-                % {'count': revoked, 'plural': '' if revoked == 1 else 's'},
+                _("%(count)s invitation%(plural)s revoked.")
+                % {"count": revoked, "plural": "" if revoked == 1 else "s"},
                 level=messages.SUCCESS,
             )
         if skipped:
             self.message_user(
                 request,
-                _('%(count)s profile%(plural)s skipped (no active invitation).')
-                % {'count': skipped, 'plural': '' if skipped == 1 else 's'},
+                _("%(count)s profile%(plural)s skipped (no active invitation).")
+                % {"count": skipped, "plural": "" if skipped == 1 else "s"},
                 level=messages.WARNING,
             )
 
@@ -234,21 +232,26 @@ class ChildProfileAdmin(admin.ModelAdmin):
 @admin.register(UserNotificationPreferences)
 class UserNotificationPreferencesAdmin(admin.ModelAdmin):
     list_display = (
-        'user',
-        'circle',
-        'notify_new_media',
-        'notify_weekly_digest',
-        'digest_frequency',
-        'push_enabled',
-        'channel',
+        "user",
+        "circle",
+        "notify_new_media",
+        "notify_weekly_digest",
+        "digest_frequency",
+        "push_enabled",
+        "channel",
     )
-    list_filter = ('channel', 'notify_new_media', 'notify_weekly_digest', 'digest_frequency', 'push_enabled')
+    list_filter = ("channel", "notify_new_media", "notify_weekly_digest", "digest_frequency", "push_enabled")
 
 
 @admin.register(ChildUpgradeAuditLog)
 class ChildUpgradeAuditLogAdmin(admin.ModelAdmin):
-    list_display = ('child', 'event_type', 'performed_by', 'created_at')
-    list_filter = ('event_type', 'created_at')
-    search_fields = ('child__display_name', 'performed_by__email', 'performed_by__first_name', 'performed_by__last_name')
-    readonly_fields = ('child', 'event_type', 'performed_by', 'metadata', 'created_at')
-    ordering = ('-created_at',)
+    list_display = ("child", "event_type", "performed_by", "created_at")
+    list_filter = ("event_type", "created_at")
+    search_fields = (
+        "child__display_name",
+        "performed_by__email",
+        "performed_by__first_name",
+        "performed_by__last_name",
+    )
+    readonly_fields = ("child", "event_type", "performed_by", "metadata", "created_at")
+    ordering = ("-created_at",)

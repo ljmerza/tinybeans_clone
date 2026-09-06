@@ -25,21 +25,22 @@ def _env_flag(name: str, default: bool = False) -> bool:
     value = os.environ.get(name)
     if value is None:
         return default
-    return value.lower() in {'1', 'true', 'yes', 'on'}
+    return value.lower() in {"1", "true", "yes", "on"}
 
 
 def _env_list(name: str, default=None):
     value = os.environ.get(name)
     if not value:
         return list(default or [])
-    return [item.strip() for item in value.split(',') if item.strip()]
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 def _env_int(name: str, default: int) -> int:
     value = os.environ.get(name)
-    if value is None or value == '':
+    if value is None or value == "":
         return default
     return int(value)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -49,112 +50,112 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-_default_debug = os.environ.get('DJANGO_SECRET_KEY') is None
-DEBUG = _env_flag('DJANGO_DEBUG', default=_default_debug)
+_default_debug = os.environ.get("DJANGO_SECRET_KEY") is None
+DEBUG = _env_flag("DJANGO_DEBUG", default=_default_debug)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = 'django-insecure-i@gm65z6a6396b+n+h+3q)*@cmf$^q-3@bq0&y8!d=gn^%i^fj'
+        SECRET_KEY = "django-insecure-i@gm65z6a6396b+n+h+3q)*@cmf$^q-3@bq0&y8!d=gn^%i^fj"
     else:
-        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is False')
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DEBUG is False")
 
 _default_allowed_hosts = "localhost,127.0.0.1,[::1],web"
-allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', _default_allowed_hosts)
-ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+allowed_hosts_env = os.environ.get("DJANGO_ALLOWED_HOSTS", _default_allowed_hosts)
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
 
-if not DEBUG and ('*' in ALLOWED_HOSTS or not ALLOWED_HOSTS):
-    raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS must be defined without wildcards when DEBUG is False')
+if not DEBUG and ("*" in ALLOWED_HOSTS or not ALLOWED_HOSTS):
+    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must be defined without wildcards when DEBUG is False")
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'corsheaders',
-    'mysite.emails.apps.EmailingConfig',
-    'mysite.messaging.apps.MessagingConfig',
-    'drf_spectacular',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'django_filters',
-    'health_check',
-    'health_check.db',
-    'health_check.cache',
-    'health_check.storage',
-    'health_check.contrib.redis',
-    'mysite.auth.apps.AuthConfig',
-    'mysite.users.apps.UsersConfig',
-    'mysite.circles.apps.CirclesConfig',
-    'mysite.keeps.apps.KeepsConfig',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "corsheaders",
+    "mysite.emails.apps.EmailingConfig",
+    "mysite.messaging.apps.MessagingConfig",
+    "drf_spectacular",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "django_filters",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "health_check.contrib.redis",
+    "mysite.auth.apps.AuthConfig",
+    "mysite.users.apps.UsersConfig",
+    "mysite.circles.apps.CirclesConfig",
+    "mysite.keeps.apps.KeepsConfig",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'mysite.middleware.RequestContextMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "mysite.middleware.RequestContextMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'mysite.urls'
+ROOT_URLCONF = "mysite.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'mysite.wsgi.application'
+WSGI_APPLICATION = "mysite.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
-POSTGRES_CONN_MAX_AGE = _env_int('POSTGRES_CONN_MAX_AGE', 60)
-POSTGRES_SSL_MODE = os.environ.get('POSTGRES_SSL_MODE', 'require')
+POSTGRES_CONN_MAX_AGE = _env_int("POSTGRES_CONN_MAX_AGE", 60)
+POSTGRES_SSL_MODE = os.environ.get("POSTGRES_SSL_MODE", "require")
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'tinybeans'),
-        'USER': os.environ.get('POSTGRES_USER', 'tinybeans'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'tinybeans'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-        'CONN_MAX_AGE': POSTGRES_CONN_MAX_AGE,
-        'OPTIONS': {
-            'sslmode': POSTGRES_SSL_MODE or 'require',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "tinybeans"),
+        "USER": os.environ.get("POSTGRES_USER", "tinybeans"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "tinybeans"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "CONN_MAX_AGE": POSTGRES_CONN_MAX_AGE,
+        "OPTIONS": {
+            "sslmode": POSTGRES_SSL_MODE or "require",
         },
     }
 }
 
-if os.environ.get('USE_SQLITE_FALLBACK'):
+if os.environ.get("USE_SQLITE_FALLBACK"):
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 
@@ -164,16 +165,16 @@ if os.environ.get('USE_SQLITE_FALLBACK'):
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -181,9 +182,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -193,32 +194,32 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 STORAGES = {
-    'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
-    'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 # Legacy setting retained until third-party packages adopt Django's STORAGES API explicitly.
-DEFAULT_FILE_STORAGE = STORAGES['default']['BACKEND']
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGGING = get_logging_config(
-    environment=os.environ.get('DJANGO_ENVIRONMENT', 'local'),
-    service_name=os.environ.get('SERVICE_NAME', 'mysite-backend'),
+    environment=os.environ.get("DJANGO_ENVIRONMENT", "local"),
+    service_name=os.environ.get("SERVICE_NAME", "mysite-backend"),
 )
 
 # Import settings from modular configuration files
@@ -286,6 +287,7 @@ from .drf import (  # noqa
     SPECTACULAR_SETTINGS,
     _get_rest_framework_config,
 )
+
 REST_FRAMEWORK = _get_rest_framework_config(DEBUG)
 
 # Security Configuration (CORS, CSRF, SSL/HTTPS, Cookies)
@@ -305,34 +307,34 @@ from .security import (  # noqa
 
 # Apply DEBUG-dependent CORS settings
 _cors_config = _get_cors_config(DEBUG)
-CORS_ALLOWED_ORIGINS = _cors_config['CORS_ALLOWED_ORIGINS']
-CORS_ALLOW_CREDENTIALS = _cors_config.get('CORS_ALLOW_CREDENTIALS', False)
-if 'CORS_ALLOW_HEADERS' in _cors_config:
-    CORS_ALLOW_HEADERS = _cors_config['CORS_ALLOW_HEADERS']
+CORS_ALLOWED_ORIGINS = _cors_config["CORS_ALLOWED_ORIGINS"]
+CORS_ALLOW_CREDENTIALS = _cors_config.get("CORS_ALLOW_CREDENTIALS", False)
+if "CORS_ALLOW_HEADERS" in _cors_config:
+    CORS_ALLOW_HEADERS = _cors_config["CORS_ALLOW_HEADERS"]
 
 # Apply DEBUG-dependent CSRF settings
 _csrf_config = _get_csrf_config(DEBUG)
-CSRF_TRUSTED_ORIGINS = _csrf_config['CSRF_TRUSTED_ORIGINS']
-CSRF_COOKIE_SECURE = _csrf_config['CSRF_COOKIE_SECURE']
-CSRF_COOKIE_HTTPONLY = _csrf_config['CSRF_COOKIE_HTTPONLY']
-CSRF_COOKIE_SAMESITE = _csrf_config['CSRF_COOKIE_SAMESITE']
+CSRF_TRUSTED_ORIGINS = _csrf_config["CSRF_TRUSTED_ORIGINS"]
+CSRF_COOKIE_SECURE = _csrf_config["CSRF_COOKIE_SECURE"]
+CSRF_COOKIE_HTTPONLY = _csrf_config["CSRF_COOKIE_HTTPONLY"]
+CSRF_COOKIE_SAMESITE = _csrf_config["CSRF_COOKIE_SAMESITE"]
 
 # Apply DEBUG-dependent SSL/HTTPS settings
 SECURE_SSL_REDIRECT = _get_ssl_redirect(DEBUG)
 _hsts_config = _get_hsts_config(DEBUG)
-SECURE_HSTS_SECONDS = _hsts_config['SECURE_HSTS_SECONDS']
-SECURE_HSTS_INCLUDE_SUBDOMAINS = _hsts_config['SECURE_HSTS_INCLUDE_SUBDOMAINS']
-SECURE_HSTS_PRELOAD = _hsts_config['SECURE_HSTS_PRELOAD']
+SECURE_HSTS_SECONDS = _hsts_config["SECURE_HSTS_SECONDS"]
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _hsts_config["SECURE_HSTS_INCLUDE_SUBDOMAINS"]
+SECURE_HSTS_PRELOAD = _hsts_config["SECURE_HSTS_PRELOAD"]
 
 # Apply DEBUG-dependent session cookie settings
 _session_cookie_config = _get_session_cookie_config(DEBUG)
-SESSION_COOKIE_SECURE = _session_cookie_config['SESSION_COOKIE_SECURE']
-SESSION_COOKIE_SAMESITE = _session_cookie_config['SESSION_COOKIE_SAMESITE']
+SESSION_COOKIE_SECURE = _session_cookie_config["SESSION_COOKIE_SECURE"]
+SESSION_COOKIE_SAMESITE = _session_cookie_config["SESSION_COOKIE_SAMESITE"]
 
 # Apply proxy/IP trust configuration
 _ip_trust_config = _get_ip_trust_config(DEBUG)
-TRUST_FORWARDED_FOR = _ip_trust_config['TRUST_FORWARDED_FOR']
-TRUSTED_PROXY_IPS = _ip_trust_config['TRUSTED_PROXY_IPS']
+TRUST_FORWARDED_FOR = _ip_trust_config["TRUST_FORWARDED_FOR"]
+TRUSTED_PROXY_IPS = _ip_trust_config["TRUSTED_PROXY_IPS"]
 
 # Apply DEBUG-dependent auth settings
 TWOFA_ENCRYPTION_KEY = _get_twofa_encryption_key(DEBUG, SECRET_KEY)
@@ -356,6 +358,7 @@ from .celery import (  # noqa
     _get_celery_broker_url,
     _get_celery_result_backend,
 )
+
 CELERY_BROKER_URL = _get_celery_broker_url(REDIS_URL)
 CELERY_RESULT_BACKEND = _get_celery_result_backend(REDIS_URL)
 CELERY_TIMEZONE = TIME_ZONE

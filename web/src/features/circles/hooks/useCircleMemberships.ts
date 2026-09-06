@@ -11,11 +11,9 @@ import type {
 
 function extractMemberships(
 	response: ApiResponseWithMessages<{ circles: CircleMembershipSummary[] }>,
-) {
-	if ("data" in response && response.data) {
-		return response.data.circles;
-	}
-	return response.circles;
+): CircleMembershipSummary[] {
+	const payload = response.data ?? response;
+	return (payload as { circles?: CircleMembershipSummary[] }).circles ?? [];
 }
 
 export function useCircleMemberships() {

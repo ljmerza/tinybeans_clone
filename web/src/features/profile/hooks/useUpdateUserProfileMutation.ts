@@ -1,5 +1,5 @@
 import { authKeys } from "@/features/auth/api/queryKeys";
-import type { AuthRequestOptions } from "@/features/auth/api/authClient";
+import type { RequestOptions } from "@/features/auth/api/authClient";
 import type { ApiError, ApiResponseWithMessages } from "@/types";
 import {
 	type UseMutationResult,
@@ -17,7 +17,7 @@ type UpdateUserProfileVariables = UpdateUserProfileRequest;
 type UpdateUserProfileResult = ApiResponseWithMessages<UserProfileResponse>;
 
 export function useUpdateUserProfileMutation(
-	defaultRequestOptions?: AuthRequestOptions,
+	defaultRequestOptions?: RequestOptions,
 ): UseMutationResult<
 	UpdateUserProfileResult,
 	ApiError,

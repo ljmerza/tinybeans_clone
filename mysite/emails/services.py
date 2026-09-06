@@ -1,4 +1,5 @@
 """Service responsible for orchestrating email delivery."""
+
 from __future__ import annotations
 
 import logging
@@ -8,8 +9,8 @@ from typing import Any, Optional
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
 
-from mysite.emails.models import EmailTemplate, RenderedEmail, TemplateRenderer
 from mysite.emails.mailers import MailerConfigurationError, MailerSendError, send_via_mailjet
+from mysite.emails.models import EmailTemplate, RenderedEmail, TemplateRenderer
 from mysite.emails.repository import EmailTemplateRepository, InMemoryEmailTemplateRepository
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ class EmailTransport:
 
     def send(self, *, to_email: str, template_id: str, content: RenderedEmail) -> None:
         try:
-            if getattr(settings, 'MAILJET_ENABLED', False):
+            if getattr(settings, "MAILJET_ENABLED", False):
                 try:
                     send_via_mailjet(
                         to_email=to_email,
@@ -57,7 +58,7 @@ class EmailTransport:
                     html_body=content.html_body,
                 )
         except Exception as exc:
-            logger.warning('Email send failed for %s (%s): %s', template_id, to_email, exc)
+            logger.warning("Email send failed for %s (%s): %s", template_id, to_email, exc)
             raise
 
 
@@ -69,7 +70,7 @@ def _send_via_django_backend(*, to_email: str, subject: str, text_body: str, htm
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[to_email],
         )
-        message.attach_alternative(html_body, 'text/html')
+        message.attach_alternative(html_body, "text/html")
         message.send(fail_silently=False)
         return
 
@@ -107,19 +108,19 @@ class EmailDispatchService:
         return self._templates.get(template_id)
 
     def list_template_ids(self) -> list[str]:
-        if hasattr(self._templates, 'list_ids'):
+        if hasattr(self._templates, "list_ids"):
             return self._templates.list_ids()  # type: ignore[attr-defined]
-        raise NotImplementedError('Template repository does not support listing templates')
+        raise NotImplementedError("Template repository does not support listing templates")
 
     def send_email(self, *, to_email: str, template_id: str, context: dict[str, Any]) -> bool:
         template = self._templates.get(template_id)
         if template is None:
-            self._logger.error('Unknown email template %s; dropping email', template_id)
+            self._logger.error("Unknown email template %s; dropping email", template_id)
             return False
 
         content = template.render(context)
         self._transport.send(to_email=to_email, template_id=template_id, content=content)
-        self._logger.info('Dispatched %s email to %s', template_id, to_email)
+        self._logger.info("Dispatched %s email to %s", template_id, to_email)
         return True
 
 

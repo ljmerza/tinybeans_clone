@@ -1,4 +1,5 @@
 """Auth app model exports."""
+
 from .google import GoogleOAuthState
 from .magic_login import MagicLoginToken
 from .two_factor import (
@@ -10,11 +11,11 @@ from .two_factor import (
 )
 
 __all__ = [
-    'GoogleOAuthState',
-    'MagicLoginToken',
-    'RecoveryCode',
-    'TrustedDevice',
-    'TwoFactorAuditLog',
-    'TwoFactorCode',
-    'TwoFactorSettings',
+    "GoogleOAuthState",
+    "MagicLoginToken",
+    "RecoveryCode",
+    "TrustedDevice",
+    "TwoFactorAuditLog",
+    "TwoFactorCode",
+    "TwoFactorSettings",
 ]

@@ -1,6 +1,7 @@
 export type {
 	AuthTokens,
 	AuthUser,
+	CircleOnboardingStatus,
 	LoginRequest,
 	LoginResponse,
 	SignupRequest,

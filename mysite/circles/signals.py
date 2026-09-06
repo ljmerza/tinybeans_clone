@@ -41,8 +41,8 @@ def create_owner_membership(sender, instance: Circle, created: bool, **kwargs) -
         user=instance.created_by,
         circle=instance,
         defaults={
-            'role': UserRole.CIRCLE_ADMIN,
-            'is_owner': True,
-            'invited_by': None,  # Owner wasn't invited, they created it
-        }
+            "role": UserRole.CIRCLE_ADMIN,
+            "is_owner": True,
+            "invited_by": None,  # Owner wasn't invited, they created it
+        },
     )

@@ -1,4 +1,5 @@
 """Two-Factor Authentication Serializers."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -8,42 +9,26 @@ from ..models import RecoveryCode, TrustedDevice, TwoFactorSettings
 
 class TwoFactorSetupSerializer(serializers.Serializer):
     """Serializer for initiating 2FA setup."""
-    method = serializers.ChoiceField(
-        choices=['totp', 'email', 'sms'],
-        required=True,
-        help_text="2FA method to set up"
-    )
+
+    method = serializers.ChoiceField(choices=["totp", "email", "sms"], required=True, help_text="2FA method to set up")
     phone_number = serializers.CharField(
-        max_length=20,
-        required=False,
-        allow_blank=True,
-        help_text="Phone number in E.164 format (required for SMS)"
+        max_length=20, required=False, allow_blank=True, help_text="Phone number in E.164 format (required for SMS)"
     )
 
 
 class TwoFactorVerifySetupSerializer(serializers.Serializer):
     """Serializer for verifying 2FA setup."""
-    code = serializers.CharField(
-        min_length=6,
-        max_length=6,
-        required=True,
-        help_text="6-digit verification code"
-    )
+
+    code = serializers.CharField(min_length=6, max_length=6, required=True, help_text="6-digit verification code")
 
 
 class TwoFactorVerifySerializer(serializers.Serializer):
     """Serializer for verifying 2FA code during login."""
+
     code = serializers.CharField(
-        min_length=6,
-        max_length=6,
-        required=True,
-        help_text="6-digit verification code or recovery code"
+        min_length=6, max_length=6, required=True, help_text="6-digit verification code or recovery code"
     )
-    remember_me = serializers.BooleanField(
-        default=False,
-        required=False,
-        help_text="Trust this device for 30 days"
-    )
+    remember_me = serializers.BooleanField(default=False, required=False, help_text="Trust this device for 30 days")
 
 
 class TwoFactorStatusSerializer(serializers.ModelSerializer):
@@ -58,22 +43,22 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = TwoFactorSettings
         fields = [
-            'is_enabled',
-            'preferred_method',
-            'phone_number',
-            'backup_email',
-            'email_address',
-            'created_at',
-            'updated_at',
-            'has_totp',
-            'has_sms',
-            'has_email',
-            'sms_verified',
+            "is_enabled",
+            "preferred_method",
+            "phone_number",
+            "backup_email",
+            "email_address",
+            "created_at",
+            "updated_at",
+            "has_totp",
+            "has_sms",
+            "has_email",
+            "sms_verified",
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ["created_at", "updated_at"]
 
     def get_has_totp(self, obj):
-        return bool(getattr(obj, '_totp_secret_encrypted', None)) and bool(obj.totp_verified)
+        return bool(getattr(obj, "_totp_secret_encrypted", None)) and bool(obj.totp_verified)
 
     def get_has_sms(self, obj):
         return bool(obj.phone_number) and bool(obj.sms_verified)
@@ -82,11 +67,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
         return bool(obj.email_verified)
 
     def get_preferred_method(self, obj):
-        has_any_method = (
-            self.get_has_totp(obj) or
-            self.get_has_sms(obj) or
-            self.get_has_email(obj)
-        )
+        has_any_method = self.get_has_totp(obj) or self.get_has_sms(obj) or self.get_has_email(obj)
         if not has_any_method:
             return None
         return obj.preferred_method
@@ -94,7 +75,7 @@ class TwoFactorStatusSerializer(serializers.ModelSerializer):
     def get_email_address(self, obj):
         if obj.backup_email:
             return obj.backup_email
-        return getattr(obj.user, 'email', None)
+        return getattr(obj.user, "email", None)
 
 
 class RecoveryCodeSerializer(serializers.ModelSerializer):
@@ -102,8 +83,8 @@ class RecoveryCodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecoveryCode
-        fields = ['code', 'is_used', 'created_at']
-        read_only_fields = ['code', 'is_used', 'created_at']
+        fields = ["code", "is_used", "created_at"]
+        read_only_fields = ["code", "is_used", "created_at"]
 
 
 class TrustedDeviceSerializer(serializers.ModelSerializer):
@@ -111,49 +92,31 @@ class TrustedDeviceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TrustedDevice
-        fields = [
-            'device_id',
-            'device_name',
-            'ip_address',
-            'last_used_at',
-            'expires_at',
-            'created_at'
-        ]
+        fields = ["device_id", "device_name", "ip_address", "last_used_at", "expires_at", "created_at"]
         read_only_fields = fields
 
 
 class TwoFactorDisableSerializer(serializers.Serializer):
     """Serializer for disabling 2FA."""
+
     code = serializers.CharField(
-        min_length=6,
-        max_length=6,
-        required=True,
-        help_text="Current 2FA code to confirm disable"
+        required=True, help_text="6-digit verification code or recovery code (XXXX-XXXX-XXXX) to confirm disable"
     )
 
 
 class TwoFactorVerifyLoginSerializer(serializers.Serializer):
     """Serializer for verifying 2FA during login."""
-    code = serializers.CharField(
-        required=True,
-        help_text="6-digit verification code or recovery code (XXXX-XXXX-XXXX)"
-    )
-    partial_token = serializers.CharField(
-        required=True,
-        help_text="Partial token received from login"
-    )
-    remember_me = serializers.BooleanField(
-        default=False,
-        required=False,
-        help_text="Trust this device for 30 days"
-    )
+
+    code = serializers.CharField(required=True, help_text="6-digit verification code or recovery code (XXXX-XXXX-XXXX)")
+    partial_token = serializers.CharField(required=True, help_text="Partial token received from login")
+    remember_me = serializers.BooleanField(default=False, required=False, help_text="Trust this device for 30 days")
 
 
 class TwoFactorPreferredMethodSerializer(serializers.Serializer):
     """Serializer for updating the preferred 2FA method."""
 
     method = serializers.ChoiceField(
-        choices=['totp', 'email', 'sms'],
+        choices=["totp", "email", "sms"],
         required=True,
         help_text="Method to make the default for future verifications",
     )
@@ -163,21 +126,21 @@ class TwoFactorMethodRemoveSerializer(serializers.Serializer):
     """Serializer for validating removable 2FA method names."""
 
     method = serializers.ChoiceField(
-        choices=['totp', 'sms', 'email'],
+        choices=["totp", "sms", "email"],
         required=True,
         help_text="2FA method to remove",
     )
 
 
 __all__ = [
-    'RecoveryCodeSerializer',
-    'TrustedDeviceSerializer',
-    'TwoFactorDisableSerializer',
-    'TwoFactorMethodRemoveSerializer',
-    'TwoFactorPreferredMethodSerializer',
-    'TwoFactorSetupSerializer',
-    'TwoFactorStatusSerializer',
-    'TwoFactorVerifyLoginSerializer',
-    'TwoFactorVerifySerializer',
-    'TwoFactorVerifySetupSerializer',
+    "RecoveryCodeSerializer",
+    "TrustedDeviceSerializer",
+    "TwoFactorDisableSerializer",
+    "TwoFactorMethodRemoveSerializer",
+    "TwoFactorPreferredMethodSerializer",
+    "TwoFactorSetupSerializer",
+    "TwoFactorStatusSerializer",
+    "TwoFactorVerifyLoginSerializer",
+    "TwoFactorVerifySerializer",
+    "TwoFactorVerifySetupSerializer",
 ]

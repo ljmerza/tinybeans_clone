@@ -61,9 +61,7 @@ vi.mock("react-i18next", async () => {
 });
 
 describe("useInvitationAcceptance", () => {
-	const navigateMock = vi.fn((options: NavigateOptions) =>
-		Promise.resolve(options),
-	);
+	const navigateMock = vi.fn((_options: NavigateOptions) => Promise.resolve());
 	const baseParams = {
 		token: "abc",
 		currentPath: "/invitations/accept?token=abc",

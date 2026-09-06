@@ -22,10 +22,10 @@ export function useCircleRemoveSelfMutation() {
 		mutationFn: async ({ circleId }) => {
 			const userId = session.user?.id;
 			if (!userId) {
-				throw {
-					status: 400,
-					messages: [],
-				} satisfies ApiError;
+				throw Object.assign(
+					new Error("Cannot leave a circle without a signed-in user"),
+					{ status: 400, messages: [] },
+				);
 			}
 			return circleServices.removeMember(circleId, userId);
 		},

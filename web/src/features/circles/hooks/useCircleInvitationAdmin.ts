@@ -21,11 +21,9 @@ interface CreateInvitationVariables {
 
 function extractInvitationList(
 	response: ApiResponseWithMessages<{ invitations: CircleInvitationSummary[] }>,
-) {
-	if ("data" in response && response.data) {
-		return response.data.invitations;
-	}
-	return response.invitations;
+): CircleInvitationSummary[] {
+	const payload = response.data ?? response;
+	return (payload as { invitations?: CircleInvitationSummary[] }).invitations ?? [];
 }
 
 export function useCircleInvitationsQuery(
@@ -67,14 +65,15 @@ export function useCreateCircleInvitation(
 				| { invitation?: CircleInvitationSummary }
 				| undefined;
 			if (payload?.invitation) {
+				const invitation = payload.invitation;
 				queryClient.setQueryData<CircleInvitationSummary[]>(
 					circleKeys.invitations(circleId),
 					(previous) => {
 						const list = previous ?? [];
 						const filtered = list.filter(
-							(invite) => invite.id !== payload.invitation?.id,
+							(invite) => invite.id !== invitation.id,
 						);
-						return [payload.invitation, ...filtered];
+						return [invitation, ...filtered];
 					},
 				);
 			}

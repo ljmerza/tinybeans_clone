@@ -3,6 +3,7 @@
 Transforms validation errors into standardized notification payloads that
 the frontend can translate using i18n keys.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
@@ -28,20 +29,20 @@ def _flatten_validation_detail(detail: Any, field: str | None = None) -> list[di
 
     if isinstance(detail, Mapping):
         # Direct message payload from serializers (already in notification format)
-        if 'i18n_key' in detail:
-            context = dict(detail.get('context') or {})
-            if field and 'field' not in context:
-                context['field'] = field
-            messages.append(create_message(str(detail['i18n_key']), context or None))
+        if "i18n_key" in detail:
+            context = dict(detail.get("context") or {})
+            if field and "field" not in context:
+                context["field"] = field
+            messages.append(create_message(str(detail["i18n_key"]), context or None))
             return messages
 
         for key, value in detail.items():
-            if key == 'messages':
+            if key == "messages":
                 messages.extend(_flatten_validation_detail(value, field))
                 continue
 
             next_field = field
-            if key not in {'non_field_errors', 'messages'}:
+            if key not in {"non_field_errors", "messages"}:
                 next_field = key
             messages.extend(_flatten_validation_detail(value, next_field))
         return messages
@@ -52,10 +53,10 @@ def _flatten_validation_detail(detail: Any, field: str | None = None) -> list[di
         return messages
 
     # Primitive value - fall back to generic validation error template
-    context: dict[str, Any] = {'message': _coerce_to_str(detail)}
+    context: dict[str, Any] = {"message": _coerce_to_str(detail)}
     if field:
-        context['field'] = field
-    messages.append(create_message('errors.validation_error' if field else 'errors.general_validation_error', context))
+        context["field"] = field
+    messages.append(create_message("errors.validation_error" if field else "errors.general_validation_error", context))
     return messages
 
 
@@ -64,30 +65,30 @@ def custom_exception_handler(exc, context):
     if isinstance(exc, ValidationError):
         messages = _flatten_validation_detail(exc.detail)
         if not messages:
-            messages = [create_message('errors.validation_failed')]
-        return error_response('validation_failed', messages, status.HTTP_400_BAD_REQUEST)
+            messages = [create_message("errors.validation_failed")]
+        return error_response("validation_failed", messages, status.HTTP_400_BAD_REQUEST)
 
     if isinstance(exc, PermissionDenied):
         detail = exc.detail
         redirect_to = None
         if isinstance(detail, Mapping):
-            error_code = detail.get('error', 'permission_denied')
-            redirect_to = detail.get('redirect_to')
-            messages = detail.get('messages')
+            error_code = detail.get("error", "permission_denied")
+            redirect_to = detail.get("redirect_to")
+            messages = detail.get("messages")
             if not messages:
-                message_key = detail.get('message_key', 'errors.forbidden')
-                context_payload = detail.get('context')
+                message_key = detail.get("message_key", "errors.forbidden")
+                context_payload = detail.get("context")
                 messages = [create_message(message_key, context_payload)]
         else:
-            error_code = 'permission_denied'
-            messages = [create_message('errors.forbidden', {'message': _coerce_to_str(detail)})]
+            error_code = "permission_denied"
+            messages = [create_message("errors.forbidden", {"message": _coerce_to_str(detail)})]
 
         response = error_response(error_code, messages, status.HTTP_403_FORBIDDEN)
         if redirect_to:
-            response.data['redirect_to'] = redirect_to
+            response.data["redirect_to"] = redirect_to
         return response
 
     return drf_exception_handler(exc, context)
 
 
-__all__ = ['custom_exception_handler']
+__all__ = ["custom_exception_handler"]

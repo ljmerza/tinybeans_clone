@@ -14,11 +14,11 @@ from .circle import Circle
 class CircleInvitationStatus(models.TextChoices):
     """Status options for circle invitations."""
 
-    PENDING = 'pending', 'Pending'
-    ACCEPTED = 'accepted', 'Accepted'
-    DECLINED = 'declined', 'Declined'
-    CANCELLED = 'cancelled', 'Cancelled'
-    EXPIRED = 'expired', 'Expired'
+    PENDING = "pending", "Pending"
+    ACCEPTED = "accepted", "Accepted"
+    DECLINED = "declined", "Declined"
+    CANCELLED = "cancelled", "Cancelled"
+    EXPIRED = "expired", "Expired"
 
 
 class CircleInvitation(models.Model):
@@ -28,20 +28,20 @@ class CircleInvitation(models.Model):
     circle = models.ForeignKey(
         Circle,
         on_delete=models.CASCADE,
-        related_name='invitations',
+        related_name="invitations",
     )
     email = models.EmailField()
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='circle_invitations_sent',
+        related_name="circle_invitations_sent",
     )
     invited_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='circle_invitations_received',
+        related_name="circle_invitations_received",
     )
     role = models.CharField(
         max_length=20,
@@ -61,12 +61,12 @@ class CircleInvitation(models.Model):
     archived_reason = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        app_label = 'users'
-        ordering = ['-created_at']
+        app_label = "users"
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['circle', 'email']),
-            models.Index(fields=['circle', 'invited_user']),
-            models.Index(fields=['status', 'reminder_sent_at']),
+            models.Index(fields=["circle", "email"]),
+            models.Index(fields=["circle", "invited_user"]),
+            models.Index(fields=["status", "reminder_sent_at"]),
             models.Index(fields=["circle", "archived_at"]),
         ]
 
@@ -75,4 +75,4 @@ class CircleInvitation(models.Model):
         return f"Invite {identifier} to {self.circle} ({self.status})"
 
 
-__all__ = ['CircleInvitation', 'CircleInvitationStatus']
+__all__ = ["CircleInvitation", "CircleInvitationStatus"]

@@ -75,6 +75,7 @@ const baseInvitations: CircleInvitationSummary[] = [
 
 const memberFixture: CircleMemberSummary = {
 	membership_id: 101,
+	is_owner: false,
 	user: {
 		id: 42,
 		email: "new@example.com",
@@ -162,9 +163,16 @@ describe("useCircleInvitationListController", () => {
 			useCircleInvitationListController("circle-1"),
 		);
 
+		let triggerPromise: Promise<void> | undefined;
 		await act(async () => {
-			const triggerPromise = result.current.resend.trigger("invite-new");
-			expect(result.current.resend.targetId).toBe("invite-new");
+			triggerPromise = result.current.resend.trigger("invite-new");
+		});
+
+		// trigger() sets the target synchronously, but result.current only
+		// reflects it once act() has flushed the re-render.
+		expect(result.current.resend.targetId).toBe("invite-new");
+
+		await act(async () => {
 			resolveMutation?.();
 			await triggerPromise;
 		});
@@ -196,8 +204,15 @@ describe("useCircleInvitationListController", () => {
 			useCircleInvitationListController("circle-1"),
 		);
 
+		// The invitation must not carry a member id, otherwise openRemoveDialog
+		// resolves it inline and never falls back to refetch.
+		const uncachedInvitation: CircleInvitationSummary = {
+			...baseInvitations[1],
+			invited_user: null,
+		};
+
 		await act(async () => {
-			result.current.removal.open(baseInvitations[1]);
+			result.current.removal.open(uncachedInvitation);
 		});
 
 		await waitFor(() =>

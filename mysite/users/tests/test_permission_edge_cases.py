@@ -1,4 +1,5 @@
 """Test permission and access control edge cases across the application."""
+
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -18,32 +19,22 @@ class PermissionAndAccessTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin = User.objects.create_user(
-            email='admin@example.com',
-            password='password123',
-            role=UserRole.CIRCLE_ADMIN
+            email="admin@example.com", password="password123", role=UserRole.CIRCLE_ADMIN
         )
         self.member = User.objects.create_user(
-            email='member@example.com',
-            password='password123',
-            role=UserRole.CIRCLE_MEMBER
+            email="member@example.com", password="password123", role=UserRole.CIRCLE_MEMBER
         )
         self.outsider = User.objects.create_user(
-            email='outsider@example.com',
-            password='password123',
-            role=UserRole.CIRCLE_MEMBER
+            email="outsider@example.com", password="password123", role=UserRole.CIRCLE_MEMBER
         )
-        self.circle = Circle.objects.create(name='Private Circle', created_by=self.admin)
+        self.circle = Circle.objects.create(name="Private Circle", created_by=self.admin)
         # Membership for admin is auto-created by the post_save signal on Circle
-        CircleMembership.objects.create(
-            user=self.member,
-            circle=self.circle,
-            role=UserRole.CIRCLE_MEMBER
-        )
+        CircleMembership.objects.create(user=self.member, circle=self.circle, role=UserRole.CIRCLE_MEMBER)
 
     def test_outsider_cannot_view_circle_members(self):
         """Test that non-members cannot view circle members."""
         self.client.force_authenticate(user=self.outsider)
-        response = self.client.get(reverse('circle-member-list', args=[self.circle.id]))
+        response = self.client.get(reverse("circle-member-list", args=[self.circle.id]))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -51,32 +42,31 @@ class PermissionAndAccessTests(TestCase):
         """Test that regular members cannot add other members."""
         self.client.force_authenticate(user=self.member)
         response = self.client.post(
-            reverse('circle-invitation-create', args=[self.circle.id]),
-            {'email': self.outsider.email},
-            format='json'
+            reverse("circle-invitation-create", args=[self.circle.id]), {"email": self.outsider.email}, format="json"
         )
 
         # Member might not be able to invite others
-        self.assertIn(response.status_code, [
-            status.HTTP_403_FORBIDDEN,
-            status.HTTP_202_ACCEPTED  # Some apps allow members to invite
-        ])
+        self.assertIn(
+            response.status_code,
+            [
+                status.HTTP_403_FORBIDDEN,
+                status.HTTP_202_ACCEPTED,  # Some apps allow members to invite
+            ],
+        )
 
     def test_member_cannot_remove_other_members(self):
         """Test that regular members cannot remove other members."""
         self.client.force_authenticate(user=self.member)
-        response = self.client.delete(
-            reverse('circle-member-remove', args=[self.circle.id, self.admin.id])
-        )
+        response = self.client.delete(reverse("circle-member-remove", args=[self.circle.id, self.admin.id]))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_access_blocked(self):
         """Test that unauthenticated requests are blocked."""
         endpoints = [
-            ('user-circle-list',),
-            ('circle-member-list', self.circle.id),
-            ('user-profile',),
+            ("user-circle-list",),
+            ("circle-member-list", self.circle.id),
+            ("user-profile",),
         ]
 
         for endpoint_args in endpoints:
@@ -86,23 +76,17 @@ class PermissionAndAccessTests(TestCase):
                 url = reverse(endpoint_args[0], args=endpoint_args[1:])
 
             response = self.client.get(url)
-            self.assertIn(response.status_code, [
-                status.HTTP_401_UNAUTHORIZED,
-                status.HTTP_403_FORBIDDEN
-            ])
+            self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
 
     def test_cross_circle_data_isolation(self):
         """Test that users cannot access data from circles they don't belong to."""
         # Create another circle with different admin
-        other_admin = User.objects.create_user(
-            email='other@example.com',
-            password='password123'
-        )
-        other_circle = Circle.objects.create(name='Other Circle', created_by=other_admin)
+        other_admin = User.objects.create_user(email="other@example.com", password="password123")
+        other_circle = Circle.objects.create(name="Other Circle", created_by=other_admin)
         # Membership for other_admin is auto-created by the post_save signal on Circle
 
         # Member from first circle should not access second circle
         self.client.force_authenticate(user=self.member)
-        response = self.client.get(reverse('circle-member-list', args=[other_circle.id]))
+        response = self.client.get(reverse("circle-member-list", args=[other_circle.id]))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

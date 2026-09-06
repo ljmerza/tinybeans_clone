@@ -3,8 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/verify-email")({
 	component: VerifyEmailRoute,
-	validateSearch: (search: Record<string, unknown>) => ({
-		token: (search.token as string) || undefined,
+	validateSearch: (search: Record<string, unknown>): { token?: string } => ({
+		token: typeof search.token === "string" ? search.token : undefined,
 	}),
 });
 
