@@ -357,7 +357,8 @@
   border-radius: 4px;
   font-weight: 600;
   color: #fff;
-  background: var(--calendar-color-overflow-bg);
+  /* Same translucency as the day number so the two badges read as a pair */
+  background: var(--calendar-color-day-label-bg);
 }
 
 @media (max-width: 600px) {
