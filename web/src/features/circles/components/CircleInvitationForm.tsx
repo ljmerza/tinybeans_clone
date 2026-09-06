@@ -55,11 +55,11 @@ export function CircleInvitationForm({ circleId }: CircleInvitationFormProps) {
 	const [emailError, setEmailError] = useState<string>("");
 	const [generalError, setGeneralError] = useState<string>("");
 
-	const form = useForm<InvitationFormValues>({
+	const form = useForm({
 		defaultValues: {
 			email: "",
 			role: "member",
-		},
+		} as InvitationFormValues,
 		onSubmit: async ({ value, formApi }) => {
 			setEmailError("");
 			setGeneralError("");
@@ -131,8 +131,8 @@ export function CircleInvitationForm({ circleId }: CircleInvitationFormProps) {
 											setEmailError("");
 											fieldApi.handleChange(event.target.value);
 										}}
-										onBlur={(event) => {
-											fieldApi.handleBlur(event);
+										onBlur={() => {
+											fieldApi.handleBlur();
 										}}
 										autoComplete="email"
 										disabled={isSubmitting}

@@ -1,9 +1,7 @@
 import { StatusMessage, Layout } from "@/components";
-import { Button } from "@/components/ui/button";
 import { useAuthSession, setAccessToken } from "@/features/auth";
 import { useApiMessages } from "@/i18n";
 import { showToast } from "@/lib/toast";
-import type { ApiResponseWithMessages } from "@/types";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -134,10 +132,8 @@ export function EmailVerificationHandler({
 					message={message}
 					actionLabel={t("auth.email_verification.close_tab_error")}
 					onAction={() => {
-						const closed = window.close();
-						if (!closed) {
-							navigate({ to: "/login" });
-						}
+						window.close();
+						navigate({ to: "/login" });
 					}}
 				/>
 			)}

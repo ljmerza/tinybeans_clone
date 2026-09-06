@@ -4,6 +4,13 @@ import { type VariantProps, cva } from "class-variance-authority";
 import type { ComponentPropsWithoutRef } from "react";
 import * as React from "react";
 
+type AsChildElementProps = {
+	children?: React.ReactNode;
+	className?: string;
+	tabIndex?: number;
+	[key: string]: unknown;
+};
+
 const buttonVariants = cva(
 	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:border-ring aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
 	{
@@ -91,7 +98,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 				return null;
 			}
 
-			const child = React.Children.only(children) as React.ReactElement & {
+			const child = React.Children.only(
+				children,
+			) as React.ReactElement<AsChildElementProps> & {
 				ref?: React.Ref<unknown>;
 			};
 			const originalChildren = child.props?.children;
@@ -107,7 +116,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 						{originalChildren}
 					</>
 				);
-			const childTabIndex = (child.props as { tabIndex?: number }).tabIndex;
+			const childTabIndex = child.props.tabIndex;
 
 			return React.cloneElement(child, {
 				ref: ref as React.Ref<HTMLElement>,

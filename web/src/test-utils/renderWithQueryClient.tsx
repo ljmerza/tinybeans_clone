@@ -8,7 +8,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { type RenderOptions, render } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 
-interface RenderWithQueryClientOptions extends RenderOptions {
+interface RenderWithQueryClientOptions extends Omit<RenderOptions, "wrapper"> {
 	queryClient?: QueryClient;
 	wrapper?: (children: ReactNode) => ReactNode;
 }

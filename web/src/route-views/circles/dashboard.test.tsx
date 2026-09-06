@@ -1,6 +1,6 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { screen } from "@testing-library/react";
+import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The dashboard renders <Link>, which needs a RouterProvider this suite has no
@@ -25,7 +25,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 vi.mock("@/features/circles", async (importOriginal) => {
-	const mod = await importOriginal();
+	const mod = await importOriginal<typeof import("@/features/circles")>();
 	return {
 		...mod,
 		useCircleMembers: vi.fn(),
@@ -38,11 +38,11 @@ import { CircleDashboard } from "./dashboard";
 
 describe("CircleDashboard", () => {
 	beforeEach(() => {
-		(useCircleMembers as unknown as vi.Mock).mockReset();
+		(useCircleMembers as unknown as Mock).mockReset();
 	});
 
 	it("renders without hook errors", () => {
-		(useCircleMembers as unknown as vi.Mock)
+		(useCircleMembers as unknown as Mock)
 			.mockReturnValueOnce({
 				data: undefined,
 				isLoading: true,

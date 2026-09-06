@@ -75,6 +75,7 @@ const baseInvitations: CircleInvitationSummary[] = [
 
 const memberFixture: CircleMemberSummary = {
 	membership_id: 101,
+	is_owner: false,
 	user: {
 		id: 42,
 		email: "new@example.com",

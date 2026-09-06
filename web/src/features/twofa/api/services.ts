@@ -24,6 +24,13 @@ function isTwoFactorStatusResponse(
 	);
 }
 
+const isTrustedDevicesResponse = (
+	value: unknown,
+): value is TrustedDevicesResponse =>
+	typeof value === "object" &&
+	value !== null &&
+	Array.isArray((value as { devices?: unknown }).devices);
+
 export const twoFactorServices = {
 	initializeSetup(method: TwoFactorMethod, phoneNumber?: string) {
 		return authApi.post<TwoFactorSetupResponse>("/auth/2fa/setup/", {
@@ -132,15 +139,15 @@ export const twoFactorServices = {
 		window.URL.revokeObjectURL(downloadUrl);
 	},
 
-	async getTrustedDevices() {
+	async getTrustedDevices(): Promise<TrustedDevicesResponse> {
 		const response = await authApi.get<
 			ApiResponseWithMessages<TrustedDevicesResponse>
 		>("/auth/2fa/trusted-devices/");
 		const payload = response?.data ?? response;
-		if (payload && Array.isArray(payload.devices)) {
+		if (isTrustedDevicesResponse(payload)) {
 			return payload;
 		}
-		return { devices: [] } as TrustedDevicesResponse;
+		return { devices: [] };
 	},
 
 	removeTrustedDevice(deviceId: string) {

@@ -13,8 +13,6 @@ import {
 	useRemoveTrustedDevice,
 	useTrustedDevices,
 } from "@/features/twofa";
-import type { TrustedDevicesResponse } from "@/features/twofa";
-import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -213,7 +211,7 @@ export const Route = createFileRoute("/profile/2fa/trusted-devices")({
 		await requireCircleOnboardingComplete(args);
 	},
 	loader: ({ context }) => {
-		const { queryClient } = context as { queryClient: QueryClient };
+		const { queryClient } = context;
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.trustedDevices(),
 			queryFn: () => twoFactorServices.getTrustedDevices(),

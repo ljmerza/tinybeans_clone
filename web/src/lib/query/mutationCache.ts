@@ -161,12 +161,12 @@ export function createMutationCache(
 ): MutationCache {
 	return new MutationCache({
 		...config,
-		onSuccess: (data, variables, context, mutation) => {
-			config.onSuccess?.(data, variables, context, mutation);
+		onSuccess: (data, variables, onMutateResult, mutation, context) => {
+			config.onSuccess?.(data, variables, onMutateResult, mutation, context);
 			handleSuccessToast(mutation, data);
 		},
-		onError: (error, variables, context, mutation) => {
-			config.onError?.(error, variables, context, mutation);
+		onError: (error, variables, onMutateResult, mutation, context) => {
+			config.onError?.(error, variables, onMutateResult, mutation, context);
 			handleErrorToast(mutation, error);
 		},
 	});
