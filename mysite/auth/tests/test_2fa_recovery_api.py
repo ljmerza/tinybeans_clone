@@ -54,7 +54,7 @@ class TestRecoveryCodeAPI:
         # Create recovery codes - these will be sent in the request body
         codes = [f"CODE-{i:04d}-TEST" for i in range(5)]
         for code in codes:
-            RecoveryCode.objects.create(user=self.user, code=code)
+            RecoveryCode.create_recovery_code(self.user, code)
 
         response = self.client.post(
             "/api/auth/2fa/recovery-codes/download/", {"format": "txt", "codes": codes}, content_type="application/json"
@@ -63,6 +63,9 @@ class TestRecoveryCodeAPI:
         assert response.status_code == status.HTTP_200_OK
         assert response["Content-Type"] == "text/plain"
         assert "tinybeans-recovery-codes.txt" in response["Content-Disposition"]
+        body = response.content.decode()
+        for code in codes:
+            assert code in body
 
     @patch("mysite.auth.services.recovery_code_service.RecoveryCodeService.export_as_pdf")
     def test_download_recovery_codes_pdf(self, mock_pdf):
@@ -72,7 +75,7 @@ class TestRecoveryCodeAPI:
         # Create recovery codes - these will be sent in the request body
         codes = [f"CODE-{i:04d}-TEST" for i in range(5)]
         for code in codes:
-            RecoveryCode.objects.create(user=self.user, code=code)
+            RecoveryCode.create_recovery_code(self.user, code)
 
         mock_pdf.return_value = b"fake-pdf-content"
 

@@ -75,7 +75,7 @@ class TestVerificationFailures:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "partial token" in response.data["error"].lower()
+        assert response.data["error"] == "partial_token_invalid"
 
     @patch("mysite.auth.services.twofa_service.TwoFactorService.verify_totp")
     def test_verify_login_with_expired_partial_token(self, mock_verify):

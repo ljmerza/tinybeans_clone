@@ -11,6 +11,8 @@ from mysite.auth.models import TrustedDevice, TwoFactorSettings
 from mysite.auth.services.trusted_device_service import TrustedDeviceToken
 from mysite.auth.token_utils import generate_partial_token
 
+from .helpers import response_payload
+
 User = get_user_model()
 
 
@@ -37,9 +39,10 @@ class TestLoginWithTrustedDevice:
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert "tokens" in response.data
-        assert response.data.get("trusted_device") is True
-        assert "requires_2fa" not in response.data
+        payload = response_payload(response)
+        assert "tokens" in payload
+        assert payload.get("trusted_device") is True
+        assert "requires_2fa" not in payload
 
     @patch("mysite.auth.services.trusted_device_service.TrustedDeviceService.is_trusted_device")
     @patch("mysite.auth.services.trusted_device_service.TrustedDeviceService.get_device_id_from_request")
@@ -53,7 +56,7 @@ class TestLoginWithTrustedDevice:
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["requires_2fa"] is True
+        assert response_payload(response)["requires_2fa"] is True
 
 
 @pytest.mark.django_db
@@ -83,7 +86,7 @@ class TestRememberMeFeature:
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["trusted_device"] is True
+        assert response_payload(response)["trusted_device"] is True
         mock_add_device.assert_called_once()
 
         # Check device_id cookie is set
@@ -100,7 +103,7 @@ class TestRememberMeFeature:
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["trusted_device"] is False
+        assert response_payload(response)["trusted_device"] is False
 
         # No trusted devices should be created
         assert TrustedDevice.objects.filter(user=self.user).count() == 0

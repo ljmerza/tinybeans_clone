@@ -5,12 +5,14 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from mysite.auth.models import RecoveryCode, TwoFactorAuditLog, TwoFactorCode, TwoFactorSettings
 from mysite.auth.services.trusted_device_service import TrustedDeviceService
+
+from .helpers import response_payload
 
 User = get_user_model()
 
@@ -53,24 +55,26 @@ class TestCompleteTOTPFlow:
         setup_response = self.client.post("/api/auth/2fa/setup/", {"method": "totp"})
 
         assert setup_response.status_code == status.HTTP_200_OK
-        assert "qr_code" in setup_response.data
+        assert "qr_code" in response_payload(setup_response)
 
         # Step 2: Check status (should be disabled)
         status_response = self.client.get("/api/auth/2fa/status/")
-        assert status_response.data["is_enabled"] is False
+        assert response_payload(status_response)["is_enabled"] is False
 
         # Step 3: Verify setup with code
         mock_verify.return_value = True
         verify_response = self.client.post("/api/auth/2fa/verify-setup/", {"code": "123456"})
 
         assert verify_response.status_code == status.HTTP_200_OK
-        assert verify_response.data["enabled"] is True
-        assert "recovery_codes" in verify_response.data
+        verify_payload = response_payload(verify_response)
+        assert verify_payload["enabled"] is True
+        assert "recovery_codes" in verify_payload
 
         # Step 4: Check status again (should be enabled)
         status_response2 = self.client.get("/api/auth/2fa/status/")
-        assert status_response2.data["is_enabled"] is True
-        assert status_response2.data["preferred_method"] == "totp"
+        status_payload = response_payload(status_response2)
+        assert status_payload["is_enabled"] is True
+        assert status_payload["preferred_method"] == "totp"
 
         # Verify audit log entries
         audit_logs = TwoFactorAuditLog.objects.filter(user=self.user)
@@ -109,7 +113,7 @@ class TestCompleteEmailFlow:
         verify_response = self.client.post("/api/auth/2fa/verify-setup/", {"code": "654321"})
 
         assert verify_response.status_code == status.HTTP_200_OK
-        assert verify_response.data["enabled"] is True
+        assert response_payload(verify_response)["enabled"] is True
 
         # Verify settings
         settings = TwoFactorSettings.objects.get(user=self.user)
@@ -136,10 +140,10 @@ class TestRecoveryCodeFlow:
         gen_response = self.client.post("/api/auth/2fa/recovery-codes/generate/")
 
         assert gen_response.status_code == status.HTTP_200_OK
-        assert len(gen_response.data["recovery_codes"]) == 10
+        recovery_codes = response_payload(gen_response)["recovery_codes"]
+        assert len(recovery_codes) == 10
 
         # Get recovery codes
-        recovery_codes = gen_response.data["recovery_codes"]
         first_code = recovery_codes[0]
 
         # Step 2: Download recovery codes (TXT) - using POST with codes in body
@@ -174,11 +178,11 @@ class TestRecoveryCodeFlow:
         """Test regenerating recovery codes invalidates old ones"""
         # Generate first batch
         gen_response1 = self.client.post("/api/auth/2fa/recovery-codes/generate/")
-        old_codes = gen_response1.data["recovery_codes"]
+        old_codes = response_payload(gen_response1)["recovery_codes"]
 
         # Generate second batch
         gen_response2 = self.client.post("/api/auth/2fa/recovery-codes/generate/")
-        new_codes = gen_response2.data["recovery_codes"]
+        new_codes = response_payload(gen_response2)["recovery_codes"]
 
         # Old codes should not exist
         for old_code in old_codes:
@@ -213,17 +217,18 @@ class TestTrustedDeviceFlow:
         list_response = self.client.get("/api/auth/2fa/trusted-devices/")
 
         assert list_response.status_code == status.HTTP_200_OK
-        assert len(list_response.data["devices"]) == 3
+        devices = response_payload(list_response)["devices"]
+        assert len(devices) == 3
 
         # Step 3: Remove one device
-        device_id = list_response.data["devices"][0]["device_id"]
+        device_id = devices[0]["device_id"]
         remove_response = self.client.delete("/api/auth/2fa/trusted-devices/", {"device_id": device_id})
 
         assert remove_response.status_code == status.HTTP_200_OK
 
         # Step 4: List devices again (should have 2)
         list_response2 = self.client.get("/api/auth/2fa/trusted-devices/")
-        assert len(list_response2.data["devices"]) == 2
+        assert len(response_payload(list_response2)["devices"]) == 2
 
         # Verify audit log
         log = TwoFactorAuditLog.objects.filter(user=self.user, action="trusted_device_removed").first()
@@ -251,18 +256,18 @@ class TestDisableFlow:
 
         # Verify status
         status_response = self.client.get("/api/auth/2fa/status/")
-        assert status_response.data["is_enabled"] is True
+        assert response_payload(status_response)["is_enabled"] is True
 
         # Disable with code
         mock_verify.return_value = True
         disable_response = self.client.post("/api/auth/2fa/disable/", {"code": "123456"})
 
         assert disable_response.status_code == status.HTTP_200_OK
-        assert disable_response.data["enabled"] is False
+        assert response_payload(disable_response)["enabled"] is False
 
         # Verify status again
         status_response2 = self.client.get("/api/auth/2fa/status/")
-        assert status_response2.data["is_enabled"] is False
+        assert response_payload(status_response2)["is_enabled"] is False
 
         # Verify audit log
         log = TwoFactorAuditLog.objects.filter(user=self.user, action="2fa_disabled").first()
@@ -302,6 +307,9 @@ class TestRateLimitingFlow:
         self.user = create_user(email="test@example.com", password="testpass")
         self.client.force_authenticate(user=self.user)
 
+    # Test settings switch rate limiting off globally (TWOFA_RATE_LIMIT_WINDOW/MAX = 0),
+    # so this test has to opt back in to exercise the limiter at all.
+    @override_settings(TWOFA_RATE_LIMIT_WINDOW=900, TWOFA_RATE_LIMIT_MAX=3)
     @patch("mysite.emails.mailers.TwoFactorMailer.send_2fa_code")
     def test_rate_limiting_enforced(self, mock_send):
         """Test rate limiting prevents excessive requests"""

@@ -36,7 +36,13 @@ class TestTwoFactorStatusAPI:
 
     def test_status_configured_disabled(self):
         """Test status when 2FA configured but disabled"""
-        TwoFactorSettings.objects.create(user=self.user, is_enabled=False, preferred_method="totp")
+        TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=False,
+            preferred_method="totp",
+            totp_secret="JBSWY3DPEHPK3PXP",
+            totp_verified=True,
+        )
 
         response = self.client.get("/api/auth/2fa/status/")
 
@@ -47,7 +53,12 @@ class TestTwoFactorStatusAPI:
 
     def test_status_configured_enabled(self):
         """Test status when 2FA enabled"""
-        TwoFactorSettings.objects.create(user=self.user, is_enabled=True, preferred_method="email")
+        TwoFactorSettings.objects.create(
+            user=self.user,
+            is_enabled=True,
+            preferred_method="email",
+            email_verified=True,
+        )
 
         response = self.client.get("/api/auth/2fa/status/")
 
@@ -181,6 +192,7 @@ class TestTwoFactorMethodRemovalAPI:
             is_enabled=True,
             preferred_method="sms",
             totp_secret="JBSWY3DPEHPK3PXP",
+            totp_verified=True,
             phone_number="+1234567890",
             sms_verified=True,
         )
@@ -232,7 +244,7 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete("/api/auth/2fa/methods/totp/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "not configured" in response.data["error"].lower()
+        assert response.data["error"] == "method_not_configured"
 
     def test_remove_sms_not_configured(self):
         TwoFactorSettings.objects.create(
@@ -245,7 +257,7 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete("/api/auth/2fa/methods/sms/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "not configured" in response.data["error"].lower()
+        assert response.data["error"] == "method_not_configured"
 
     def test_remove_method_without_settings(self):
         self.client.force_authenticate(user=None)
@@ -258,7 +270,7 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete("/api/auth/2fa/methods/totp/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "not configured" in response.data["error"].lower()
+        assert response.data["error"] == "not_configured"
 
     def test_remove_email_not_supported(self):
         TwoFactorSettings.objects.create(
@@ -270,4 +282,4 @@ class TestTwoFactorMethodRemovalAPI:
         response = self.client.delete("/api/auth/2fa/methods/email/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "cannot be removed" in response.data["error"].lower()
+        assert response.data["error"] == "method_not_configured"

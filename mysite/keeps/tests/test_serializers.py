@@ -1,5 +1,7 @@
 """Tests for Keep serializers."""
 
+from unittest.mock import Mock, patch
+
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIRequestFactory
@@ -225,11 +227,22 @@ class TestKeepDetailSerializer:
             content_type="image/jpeg",
         )
 
-        serializer = KeepDetailSerializer(instance=keep)
-        data = serializer.data
+        # Serializing media resolves signed URLs through the storage backend;
+        # stub that boundary so the test needs no live MinIO.
+        storage = Mock()
+        storage.get_url.side_effect = lambda key, expires_in: f"https://media.test/{key}?expires={expires_in}"
+
+        with patch("mysite.keeps.storage.get_storage_backend", return_value=storage):
+            serializer = KeepDetailSerializer(instance=keep)
+            data = serializer.data
 
         assert "media_files" in data
         assert len(data["media_files"]) == 1
+
+        media = data["media_files"][0]
+        assert media["media_type"] == "photo"
+        assert media["original_filename"] == "test.jpg"
+        assert media["urls"] == {"original": "https://media.test/test.jpg?expires=3600"}
 
     def test_includes_milestone_data(self, user, circle):
         """Test that milestone data is included for milestone keeps."""

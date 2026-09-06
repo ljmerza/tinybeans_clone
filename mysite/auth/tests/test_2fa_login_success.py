@@ -10,6 +10,8 @@ from rest_framework.test import APIClient
 from mysite.auth.models import TwoFactorAuditLog, TwoFactorSettings
 from mysite.auth.token_utils import generate_partial_token
 
+from .helpers import response_payload
+
 User = get_user_model()
 
 
@@ -30,10 +32,11 @@ class TestLoginWithout2FA:
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert "user" in response.data
-        assert "tokens" in response.data
-        assert "access" in response.data["tokens"]
-        assert "requires_2fa" not in response.data
+        payload = response_payload(response)
+        assert payload["email"] == "test@example.com"
+        assert "tokens" in payload
+        assert "access" in payload["tokens"]
+        assert "requires_2fa" not in payload
 
     def test_normal_login_2fa_disabled(self):
         """Test normal login when 2FA is configured but disabled"""
@@ -42,8 +45,9 @@ class TestLoginWithout2FA:
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert "user" in response.data
-        assert "tokens" in response.data
+        payload = response_payload(response)
+        assert payload["email"] == "test@example.com"
+        assert "tokens" in payload
 
 
 @pytest.mark.django_db
@@ -69,10 +73,11 @@ class TestLoginWith2FA:
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["requires_2fa"] is True
-        assert response.data["method"] == "totp"
-        assert "partial_token" in response.data
-        assert "tokens" not in response.data
+        payload = response_payload(response)
+        assert payload["requires_2fa"] is True
+        assert payload["method"] == "totp"
+        assert "partial_token" in payload
+        assert "tokens" not in payload
 
     @patch("mysite.auth.services.twofa_service.TwoFactorService.send_otp")
     @patch("mysite.auth.services.twofa_service.TwoFactorService.is_rate_limited")
@@ -85,7 +90,8 @@ class TestLoginWith2FA:
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["requires_2fa"] is True
+        payload = response_payload(response)
+        assert payload["requires_2fa"] is True
         mock_send.assert_called_once()
 
 
@@ -112,9 +118,10 @@ class TestTwoFactorVerifyLogin:
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert "user" in response.data
-        assert "tokens" in response.data
-        assert "access" in response.data["tokens"]
+        payload = response_payload(response)
+        assert "user" in payload
+        assert "tokens" in payload
+        assert "access" in payload["tokens"]
 
         # Check audit log
         log = TwoFactorAuditLog.objects.filter(user=self.user, action="2fa_login_success").first()
@@ -135,7 +142,7 @@ class TestTwoFactorVerifyLogin:
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert "tokens" in response.data
+        assert "tokens" in response_payload(response)
 
     @patch("mysite.auth.services.twofa_service.TwoFactorService.verify_totp")
     @patch("mysite.auth.services.twofa_service.TwoFactorService.verify_recovery_code")
@@ -152,7 +159,7 @@ class TestTwoFactorVerifyLogin:
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert "tokens" in response.data
+        assert "tokens" in response_payload(response)
 
         # Check audit log shows recovery code usage
         log = TwoFactorAuditLog.objects.filter(user=self.user, action="2fa_login_success").first()
@@ -184,8 +191,9 @@ class TestCompleteLoginFlow:
         login_response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert login_response.status_code == status.HTTP_200_OK
-        assert login_response.data["requires_2fa"] is True
-        partial_token = login_response.data["partial_token"]
+        login_payload = response_payload(login_response)
+        assert login_payload["requires_2fa"] is True
+        partial_token = login_payload["partial_token"]
 
         # Step 2: Verify 2FA
         mock_verify.return_value = True
@@ -195,14 +203,16 @@ class TestCompleteLoginFlow:
         )
 
         assert verify_response.status_code == status.HTTP_200_OK
-        assert "tokens" in verify_response.data
-        assert "user" in verify_response.data
+        verify_payload = response_payload(verify_response)
+        assert "tokens" in verify_payload
+        assert "user" in verify_payload
 
     def test_login_without_2fa_is_unchanged(self):
         """Test that login without 2FA still works as before"""
         response = self.client.post("/api/auth/login/", {"email": "test@example.com", "password": "testpass"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert "tokens" in response.data
-        assert "user" in response.data
-        assert "requires_2fa" not in response.data
+        payload = response_payload(response)
+        assert "tokens" in payload
+        assert payload["email"] == "test@example.com"
+        assert "requires_2fa" not in payload
