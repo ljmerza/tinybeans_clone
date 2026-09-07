@@ -25,6 +25,11 @@ vi.mock("@tanstack/react-router", async () => {
 
 const navigateMock = vi.fn();
 
+// The route module below is mocked, but routeTree.gen.ts imports it for real and
+// calls Route.update(). Stubbing @/router keeps the route tree out of this suite;
+// it is reached transitively via Layout -> auth context -> authClient.
+vi.mock("@/router", () => ({ router: {} }));
+
 vi.mock("@/routes/invitations.accept", () => ({
 	Route: {
 		useNavigate: () => navigateMock,

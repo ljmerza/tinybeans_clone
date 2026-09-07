@@ -5,7 +5,9 @@ import { SignupCard } from "@/features/auth";
 
 export const Route = createFileRoute("/signup")({
 	beforeLoad: requireGuest,
-	validateSearch: (search: Record<string, unknown>) => ({
+	validateSearch: (
+		search: Record<string, unknown>,
+	): { redirect?: string; email?: string } => ({
 		redirect: typeof search.redirect === "string" ? search.redirect : undefined,
 		email: typeof search.email === "string" ? search.email : undefined,
 	}),

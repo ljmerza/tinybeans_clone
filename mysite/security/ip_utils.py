@@ -1,4 +1,5 @@
 """Utilities for safely resolving client IP addresses."""
+
 from __future__ import annotations
 
 import ipaddress
@@ -10,7 +11,7 @@ from django.conf import settings
 def _parse_ip_list(header_value: str | None) -> List[str]:
     if not header_value:
         return []
-    return [part.strip() for part in header_value.split(',') if part.strip()]
+    return [part.strip() for part in header_value.split(",") if part.strip()]
 
 
 def _normalize_ip(ip: str | None) -> str | None:
@@ -34,12 +35,12 @@ def get_client_ip(request) -> str | None:
     X-Forwarded-For. In local development a permissive fallback keeps the
     previous behaviour to reduce setup friction.
     """
-    remote_addr = request.META.get('REMOTE_ADDR')
-    forwarded_for = _parse_ip_list(request.META.get('HTTP_X_FORWARDED_FOR'))
-    real_ip = request.META.get('HTTP_X_REAL_IP')
+    remote_addr = request.META.get("REMOTE_ADDR")
+    forwarded_for = _parse_ip_list(request.META.get("HTTP_X_FORWARDED_FOR"))
+    real_ip = request.META.get("HTTP_X_REAL_IP")
 
-    trust_forwarded = getattr(settings, 'TRUST_FORWARDED_FOR', settings.DEBUG)
-    trusted_proxies = getattr(settings, 'TRUSTED_PROXY_IPS', []) or []
+    trust_forwarded = getattr(settings, "TRUST_FORWARDED_FOR", settings.DEBUG)
+    trusted_proxies = getattr(settings, "TRUSTED_PROXY_IPS", []) or []
 
     # Local/dev environments stay permissive by default.
     if trust_forwarded and (settings.DEBUG or not trusted_proxies):
@@ -74,4 +75,4 @@ def get_client_ip(request) -> str | None:
     return _normalize_ip(remote_addr)
 
 
-__all__ = ['get_client_ip']
+__all__ = ["get_client_ip"]

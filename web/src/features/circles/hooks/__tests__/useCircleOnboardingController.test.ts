@@ -42,7 +42,7 @@ const statusFixture: CircleOnboardingPayload = {
 	email: "user@example.com",
 	email_verified: true,
 	needs_circle_onboarding: true,
-	status: "email_required",
+	status: "pending",
 	memberships_count: 0,
 	updated_at: null,
 };
@@ -61,8 +61,12 @@ describe("useCircleOnboardingController", () => {
 		navigateHomeMock.mockReset();
 		circleCreatedMock.mockReset();
 
-		useCreateCircleMutationMock.mockReturnValue(createMutationMock);
-		useSkipCircleOnboardingMock.mockReturnValue(skipMutationMock);
+		useCreateCircleMutationMock.mockReturnValue(
+			createMutationMock as unknown as ReturnType<typeof useCreateCircleMutation>,
+		);
+		useSkipCircleOnboardingMock.mockReturnValue(
+			skipMutationMock as unknown as ReturnType<typeof useSkipCircleOnboarding>,
+		);
 	});
 
 	it("navigates home after skipping onboarding", async () => {

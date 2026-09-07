@@ -1,4 +1,5 @@
 """Domain-level models for the email system."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

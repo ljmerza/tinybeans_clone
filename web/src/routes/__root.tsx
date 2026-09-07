@@ -1,7 +1,13 @@
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAuthSession } from "@/features/auth";
 import { loadInvitation } from "@/features/circles/utils/invitationStorage";
-import { Outlet, createRootRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import {
+	Outlet,
+	createRootRouteWithContext,
+	useNavigate,
+	useRouterState,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
@@ -72,6 +78,8 @@ function RootComponent() {
 	);
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+	queryClient: QueryClient;
+}>()({
 	component: RootComponent,
 });

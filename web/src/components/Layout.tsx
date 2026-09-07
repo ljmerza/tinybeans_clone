@@ -1,5 +1,5 @@
 import { useAuthSession } from "@/features/auth/context/AuthSessionProvider";
-import type { ReactElement, ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Header } from "./Header";
 import { LoadingState } from "./LoadingState";
 import { StandardError } from "./StandardError";
@@ -38,7 +38,9 @@ interface LayoutLoadingProps extends Omit<LayoutProps, "children"> {
 	message?: ReactNode;
 	description?: ReactNode;
 	icon?: ReactNode;
+	layout?: ComponentProps<typeof LoadingState>["layout"];
 	spinnerSize?: "sm" | "md" | "lg";
+	className?: string;
 }
 
 function LayoutLoading({
@@ -46,16 +48,19 @@ function LayoutLoading({
 	message,
 	description,
 	icon,
+	layout = "section",
 	spinnerSize,
+	className,
 }: LayoutLoadingProps) {
 	return (
 		<LayoutBase showHeader={showHeader}>
 			<LoadingState
-				layout="section"
+				layout={layout}
 				message={message}
 				description={description}
 				icon={icon}
 				spinnerSize={spinnerSize}
+				className={className}
 			/>
 		</LayoutBase>
 	);

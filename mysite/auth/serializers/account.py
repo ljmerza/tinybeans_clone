@@ -1,4 +1,5 @@
 """Account and password lifecycle serializers."""
+
 from __future__ import annotations
 
 from django.contrib.auth import authenticate
@@ -15,10 +16,10 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'first_name', 'last_name']
+        fields = ["email", "password", "first_name", "last_name"]
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = validated_data.pop("password")
         user = User.objects.create_user(password=password, **validated_data)
         return user
 
@@ -28,12 +29,12 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        user = authenticate(username=attrs['email'], password=attrs['password'])
+        user = authenticate(username=attrs["email"], password=attrs["password"])
         if not user:
-            raise serializers.ValidationError(create_message('errors.invalid_credentials'))
+            raise serializers.ValidationError(create_message("errors.invalid_credentials"))
         if not user.is_active:
-            raise serializers.ValidationError(create_message('errors.account_inactive'))
-        attrs['user'] = user
+            raise serializers.ValidationError(create_message("errors.account_inactive"))
+        attrs["user"] = user
         return attrs
 
 
@@ -41,11 +42,11 @@ class EmailVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate(self, attrs):
-        email = attrs['email']
+        email = attrs["email"]
         user = User.objects.filter(email__iexact=email).first()
         if not user:
-            raise serializers.ValidationError(create_message('errors.user_not_found'))
-        attrs['user'] = user
+            raise serializers.ValidationError(create_message("errors.user_not_found"))
+        attrs["user"] = user
         return attrs
 
 
@@ -57,9 +58,9 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate(self, attrs):
-        email = attrs['email']
+        email = attrs["email"]
         user = User.objects.filter(email__iexact=email).first()
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
@@ -69,8 +70,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     password_confirm = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
+        if attrs["password"] != attrs["password_confirm"]:
+            raise serializers.ValidationError({"password_confirm": create_message("errors.password_mismatch")})
         return attrs
 
 
@@ -80,20 +81,20 @@ class PasswordChangeSerializer(serializers.Serializer):
     password_confirm = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, attrs):
-        user = self.context['request'].user
-        if not user.check_password(attrs['current_password']):
-            raise serializers.ValidationError({'current_password': create_message('errors.auth.invalid_password')})
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm': create_message('errors.password_mismatch')})
+        user = self.context["request"].user
+        if not user.check_password(attrs["current_password"]):
+            raise serializers.ValidationError({"current_password": create_message("errors.auth.invalid_password")})
+        if attrs["password"] != attrs["password_confirm"]:
+            raise serializers.ValidationError({"password_confirm": create_message("errors.password_mismatch")})
         return attrs
 
 
 __all__ = [
-    'SignupSerializer',
-    'LoginSerializer',
-    'EmailVerificationSerializer',
-    'EmailVerificationConfirmSerializer',
-    'PasswordResetRequestSerializer',
-    'PasswordResetConfirmSerializer',
-    'PasswordChangeSerializer',
+    "SignupSerializer",
+    "LoginSerializer",
+    "EmailVerificationSerializer",
+    "EmailVerificationConfirmSerializer",
+    "PasswordResetRequestSerializer",
+    "PasswordResetConfirmSerializer",
+    "PasswordChangeSerializer",
 ]

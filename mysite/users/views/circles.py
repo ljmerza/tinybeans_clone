@@ -20,17 +20,16 @@ from mysite.circles.views.memberships import (  # noqa: F401
 )
 
 __all__ = [
-    'UserCircleListView',
-    'CircleDetailView',
-    'CircleActivityView',
-    'CircleInvitationCreateView',
-    'CircleInvitationCancelView',
-    'CircleInvitationResendView',
-    'CircleInvitationListView',
-    'CircleInvitationRespondView',
-    'CircleInvitationAcceptView',
-    'CircleInvitationFinalizeView',
-    'CircleMemberListView',
-    'CircleMemberRemoveView',
+    "UserCircleListView",
+    "CircleDetailView",
+    "CircleActivityView",
+    "CircleInvitationCreateView",
+    "CircleInvitationCancelView",
+    "CircleInvitationResendView",
+    "CircleInvitationListView",
+    "CircleInvitationRespondView",
+    "CircleInvitationAcceptView",
+    "CircleInvitationFinalizeView",
+    "CircleMemberListView",
+    "CircleMemberRemoveView",
 ]
-

@@ -5,12 +5,13 @@ This service handles:
 - OAuth state token generation and validation
 - Redirect URI validation
 """
+
 import base64
-import logging
 import hashlib
+import logging
 import secrets
 from datetime import timedelta
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 from django.conf import settings
 from django.core.cache import cache
@@ -23,11 +24,13 @@ logger = logging.getLogger(__name__)
 
 class InvalidStateError(Exception):
     """OAuth state token is invalid or expired."""
+
     pass
 
 
 class InvalidRedirectURIError(Exception):
     """Redirect URI is not in the whitelist."""
+
     pass
 
 
@@ -46,19 +49,19 @@ class PKCEStateService:
             Tuple of (code_verifier, code_challenge)
         """
         # Generate code verifier (43-128 characters)
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8')
-        code_verifier = code_verifier.rstrip('=')  # Remove padding
+        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8")
+        code_verifier = code_verifier.rstrip("=")  # Remove padding
 
         # Generate code challenge using S256
-        code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
-        code_challenge = code_challenge.rstrip('=')  # Remove padding
+        code_challenge = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+        code_challenge = base64.urlsafe_b64encode(code_challenge).decode("utf-8")
+        code_challenge = code_challenge.rstrip("=")  # Remove padding
 
         return code_verifier, code_challenge
 
     @staticmethod
     def _code_hash(value: str) -> str:
-        return hashlib.sha256(value.encode('utf-8')).hexdigest()
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     @staticmethod
     def _cache_key(state_token: str) -> str:
@@ -92,18 +95,11 @@ class PKCEStateService:
             InvalidRedirectURIError: If URI is not in whitelist
         """
         if redirect_uri not in self.allowed_redirect_uris:
-            logger.warning(
-                f"Invalid redirect URI attempted: {redirect_uri}",
-                extra={'redirect_uri': redirect_uri}
-            )
+            logger.warning(f"Invalid redirect URI attempted: {redirect_uri}", extra={"redirect_uri": redirect_uri})
             raise InvalidRedirectURIError(f"Redirect URI not in whitelist: {redirect_uri}")
 
     def create_state(
-        self,
-        code_verifier: str,
-        redirect_uri: str,
-        ip_address: str,
-        user_agent: str
+        self, code_verifier: str, redirect_uri: str, ip_address: str, user_agent: str
     ) -> Tuple[GoogleOAuthState, str]:
         """Create and store OAuth state.
 
@@ -131,26 +127,18 @@ class PKCEStateService:
             nonce=nonce,
             ip_address=ip_address,
             user_agent=user_agent,
-            expires_at=expires_at
+            expires_at=expires_at,
         )
         self._store_code_verifier(state_token, code_verifier)
 
         logger.info(
             "OAuth state created",
-            extra={
-                'state': state_token[:8] + '...',
-                'ip': ip_address,
-                'redirect_uri': redirect_uri
-            }
+            extra={"state": state_token[:8] + "...", "ip": ip_address, "redirect_uri": redirect_uri},
         )
 
         return oauth_state, nonce
 
-    def validate_state_token(
-        self,
-        state_token: str,
-        ip_address: Optional[str] = None
-    ) -> GoogleOAuthState:
+    def validate_state_token(self, state_token: str, ip_address: Optional[str] = None) -> GoogleOAuthState:
         """Validate OAuth state token.
 
         Args:
@@ -166,26 +154,19 @@ class PKCEStateService:
         try:
             oauth_state = GoogleOAuthState.objects.get(state_token=state_token)
         except GoogleOAuthState.DoesNotExist:
-            logger.warning(
-                "Invalid OAuth state token",
-                extra={'state': state_token[:8] + '...', 'ip': ip_address}
-            )
-            raise InvalidStateError("State token not found")
+            logger.warning("Invalid OAuth state token", extra={"state": state_token[:8] + "...", "ip": ip_address})
+            raise InvalidStateError("State token not found") from None
 
         # Check if already used
         if oauth_state.used_at:
             logger.warning(
-                "OAuth state token replay attempted",
-                extra={'state': state_token[:8] + '...', 'ip': ip_address}
+                "OAuth state token replay attempted", extra={"state": state_token[:8] + "...", "ip": ip_address}
             )
             raise InvalidStateError("State token already used")
 
         # Check expiration
         if not oauth_state.is_valid():
-            logger.warning(
-                "Expired OAuth state token",
-                extra={'state': state_token[:8] + '...', 'ip': ip_address}
-            )
+            logger.warning("Expired OAuth state token", extra={"state": state_token[:8] + "...", "ip": ip_address})
             raise InvalidStateError("State token expired")
 
         # Optional: Verify IP address matches
@@ -193,10 +174,10 @@ class PKCEStateService:
             logger.warning(
                 "OAuth state IP mismatch",
                 extra={
-                    'state': state_token[:8] + '...',
-                    'original_ip': oauth_state.ip_address,
-                    'current_ip': ip_address
-                }
+                    "state": state_token[:8] + "...",
+                    "original_ip": oauth_state.ip_address,
+                    "current_ip": ip_address,
+                },
             )
             # Don't fail on IP mismatch (mobile users may change IPs)
             # but log it for security monitoring

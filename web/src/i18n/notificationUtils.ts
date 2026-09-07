@@ -3,6 +3,7 @@
  *
  * Utilities for handling standardized API messages with i18n support.
  */
+import type { ApiMessage, ApiResponse } from "@/types/api";
 import type { TFunction } from "i18next";
 
 // Re-export types for backward compatibility

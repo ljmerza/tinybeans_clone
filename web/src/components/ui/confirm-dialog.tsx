@@ -174,16 +174,6 @@ export function ConfirmDialog({
 						event.preventDefault();
 					}
 				}}
-				onPointerDownOutside={(event) => {
-					if (isLoading) {
-						event.preventDefault();
-					}
-				}}
-				onInteractOutside={(event) => {
-					if (isLoading) {
-						event.preventDefault();
-					}
-				}}
 			>
 				<AlertDialogHeader>
 					<AlertDialogTitle

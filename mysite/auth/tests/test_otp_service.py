@@ -1,11 +1,14 @@
 """Unit tests for OTP generation and validation"""
-import pytest
+
 from datetime import timedelta
+
+import pytest
 from django.utils import timezone
 
-from mysite.auth.models import TwoFactorSettings, TwoFactorCode
+from mysite.auth.models import TwoFactorCode, TwoFactorSettings
 from mysite.auth.services.twofa_service import TwoFactorService
-from .conftest import create_user, create_code
+
+from .conftest import create_code, create_user
 
 
 @pytest.mark.django_db
@@ -27,12 +30,12 @@ class TestTwoFactorServiceOTP:
 
     def test_verify_otp_valid_code(self):
         """Test OTP verification with valid code"""
-        user = create_user(local_part='testuser', password='testpass')
+        user = create_user(local_part="testuser", password="testpass")
 
         # Create valid code
-        code_obj = create_code(user, code='123456')
+        code_obj = create_code(user, code="123456")
 
-        result = TwoFactorService.verify_otp(user, '123456', purpose='login')
+        result = TwoFactorService.verify_otp(user, "123456", purpose="login")
 
         assert result is True
         code_obj.refresh_from_db()
@@ -41,72 +44,58 @@ class TestTwoFactorServiceOTP:
 
     def test_verify_otp_invalid_code(self):
         """Test OTP verification with wrong code"""
-        user = create_user(local_part='testuser', password='testpass')
+        user = create_user(local_part="testuser", password="testpass")
 
-        result = TwoFactorService.verify_otp(user, '999999', purpose='login')
+        result = TwoFactorService.verify_otp(user, "999999", purpose="login")
         assert result is False
 
     def test_verify_otp_expired_code(self):
         """Test OTP verification with expired code"""
-        user = create_user(local_part='testuser', password='testpass')
+        user = create_user(local_part="testuser", password="testpass")
 
         # Create expired code
-        create_code(
-            user,
-            code='123456',
-            expires_at=timezone.now() - timedelta(minutes=1)
-        )
+        create_code(user, code="123456", expires_at=timezone.now() - timedelta(minutes=1))
 
-        result = TwoFactorService.verify_otp(user, '123456', purpose='login')
+        result = TwoFactorService.verify_otp(user, "123456", purpose="login")
         assert result is False
 
     def test_verify_otp_max_attempts_exceeded(self):
         """Test OTP verification fails after max attempts"""
-        user = create_user(local_part='testuser', password='testpass')
+        user = create_user(local_part="testuser", password="testpass")
 
         # Create code with max attempts reached
-        create_code(
-            user,
-            code='123456',
-            attempts=5,
-            max_attempts=5
-        )
+        create_code(user, code="123456", attempts=5, max_attempts=5)
 
-        result = TwoFactorService.verify_otp(user, '123456', purpose='login')
+        result = TwoFactorService.verify_otp(user, "123456", purpose="login")
         assert result is False
 
     def test_verify_otp_already_used(self):
         """Test OTP verification fails for already used code"""
-        user = create_user(local_part='testuser', password='testpass')
+        user = create_user(local_part="testuser", password="testpass")
 
         # Create used code
-        create_code(
-            user,
-            code='123456',
-            is_used=True,
-            attempts=1
-        )
+        create_code(user, code="123456", is_used=True, attempts=1)
 
-        result = TwoFactorService.verify_otp(user, '123456', purpose='login')
+        result = TwoFactorService.verify_otp(user, "123456", purpose="login")
         assert result is False
 
     def test_send_otp_invalidates_previous_unused_codes(self):
         """Requesting a new OTP should invalidate previous unused codes for same purpose/method"""
-        user = create_user(local_part='user1', password='x')
-        TwoFactorSettings.objects.create(user=user, preferred_method='email', is_enabled=True)
+        user = create_user(local_part="user1", password="x")
+        TwoFactorSettings.objects.create(user=user, preferred_method="email", is_enabled=True)
 
         # Create an existing, unused code
         old_code = create_code(
             user,
-            code='111111',
-            purpose='setup',
-            method='email',
+            code="111111",
+            purpose="setup",
+            method="email",
             is_used=False,
             expires_at=timezone.now() + timedelta(minutes=10),
         )
 
         # Send a new OTP for same method/purpose
-        TwoFactorService.send_otp(user, method='email', purpose='setup')
+        TwoFactorService.send_otp(user, method="email", purpose="setup")
 
         # Old code should be invalidated (marked used and expired)
         old_code.refresh_from_db()
@@ -116,8 +105,8 @@ class TestTwoFactorServiceOTP:
         # New code should be the only valid one remaining
         valid_count = TwoFactorCode.objects.filter(
             user=user,
-            method='email',
-            purpose='setup',
+            method="email",
+            purpose="setup",
             is_used=False,
             expires_at__gt=timezone.now(),
         ).count()

@@ -1,13 +1,14 @@
 """Views for first-circle onboarding workflows."""
+
 from __future__ import annotations
 
 from django.utils import timezone
-from rest_framework import permissions, status
-from rest_framework.views import APIView
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
+from rest_framework import permissions
+from rest_framework.views import APIView
 
-from mysite.notification_utils import create_message, success_response
 from mysite.auth.permissions import IsEmailVerified
+from mysite.notification_utils import create_message, success_response
 
 from ..models import CircleMembership, CircleOnboardingStatus
 

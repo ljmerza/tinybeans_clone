@@ -4,8 +4,10 @@ from typing import Any
 
 from celery import shared_task
 
-from mysite.emails.models import TemplateRenderer
-from mysite.emails.services import email_dispatch_service, register_email_template
+from mysite.emails.services import (
+    email_dispatch_service,
+    register_email_template,  # noqa: F401  re-exported; imported from this module elsewhere
+)
 
 
 @shared_task(
@@ -13,8 +15,8 @@ from mysite.emails.services import email_dispatch_service, register_email_templa
     autoretry_for=(Exception,),
     retry_backoff=True,
     retry_jitter=True,
-    retry_kwargs={'max_retries': 5},
-    queue='email',
+    retry_kwargs={"max_retries": 5},
+    queue="email",
 )
 def send_email_task(self, *, to_email: str, template_id: str, context: dict[str, Any]) -> None:
     dispatched = email_dispatch_service.send_email(

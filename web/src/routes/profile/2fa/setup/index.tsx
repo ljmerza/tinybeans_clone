@@ -17,7 +17,6 @@ import {
 	useRemoveTwoFactorMethod,
 } from "@/features/twofa";
 import type { TwoFactorMethod } from "@/features/twofa";
-import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -213,7 +212,7 @@ export const Route = createFileRoute("/profile/2fa/setup/")({
 		await requireCircleOnboardingComplete(args);
 	},
 	loader: ({ context }) => {
-		const { queryClient } = context as { queryClient: QueryClient };
+		const { queryClient } = context;
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
 			queryFn: () => twoFactorServices.getStatus(),

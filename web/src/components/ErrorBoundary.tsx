@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/Layout";
 import { Component, type ReactNode } from "react";
 import { withTranslation } from "react-i18next";

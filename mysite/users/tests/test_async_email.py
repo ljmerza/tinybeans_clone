@@ -4,14 +4,6 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from mysite.users.models import (
-    ChildProfile,
-    Circle,
-    CircleMembership,
-    User,
-    UserRole,
-    ChildUpgradeEventType,
-)
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import (
     CHILD_UPGRADE_TEMPLATE,
@@ -19,169 +11,177 @@ from mysite.emails.templates import (
     EMAIL_VERIFICATION_TEMPLATE,
     PASSWORD_RESET_TEMPLATE,
 )
+from mysite.users.models import (
+    ChildProfile,
+    ChildUpgradeEventType,
+    Circle,
+    CircleMembership,
+    User,
+    UserRole,
+)
 
 
 class AsyncEmailTaskTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    @patch('mysite.auth.views.send_email_task.delay')
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_signup_enqueues_verification_email(self, mock_delay):
         payload = {
-            'email': 'newuser@example.com',
-            'password': 'supersecret',
-            'first_name': 'New',
-            'last_name': 'User',
+            "email": "newuser@example.com",
+            "password": "supersecret",
+            "first_name": "New",
+            "last_name": "User",
         }
 
-        response = self.client.post(reverse('auth-signup'), payload, format='json')
+        response = self.client.post(reverse("auth-signup"), payload, format="json")
 
         self.assertEqual(response.status_code, 201)
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
-        self.assertEqual(kwargs['template_id'], EMAIL_VERIFICATION_TEMPLATE)
-        self.assertEqual(kwargs['to_email'], payload['email'])
-        self.assertIn('token', kwargs['context'])
+        self.assertEqual(kwargs["template_id"], EMAIL_VERIFICATION_TEMPLATE)
+        self.assertEqual(kwargs["to_email"], payload["email"])
+        self.assertIn("token", kwargs["context"])
         body = response.json()
-        self.assertEqual(set(body['data']['tokens'].keys()), {'access'})
+        self.assertEqual(set(body["data"]["tokens"].keys()), {"access"})
         # No circle is created during signup in the current implementation
-        self.assertNotIn('circle', body['data'])
-        self.assertNotIn('pending_circle_setup', body['data'])
+        self.assertNotIn("circle", body["data"])
+        self.assertNotIn("pending_circle_setup", body["data"])
         # Verify no circle was created
-        self.assertIsNone(Circle.objects.filter(created_by__email='newuser@example.com').first())
+        self.assertIsNone(Circle.objects.filter(created_by__email="newuser@example.com").first())
 
-    @patch('mysite.auth.views.send_email_task.delay')
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_signup_can_defer_circle_creation(self, mock_delay):
         payload = {
-            'email': 'later@example.com',
-            'password': 'supersecret',
-            'first_name': 'Later',
-            'last_name': 'Circle',
-            'create_circle': False,
+            "email": "later@example.com",
+            "password": "supersecret",
+            "first_name": "Later",
+            "last_name": "Circle",
+            "create_circle": False,
         }
 
-        response = self.client.post(reverse('auth-signup'), payload, format='json')
+        response = self.client.post(reverse("auth-signup"), payload, format="json")
 
         self.assertEqual(response.status_code, 201)
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
-        self.assertEqual(kwargs['template_id'], EMAIL_VERIFICATION_TEMPLATE)
-        self.assertEqual(kwargs['to_email'], payload['email'])
+        self.assertEqual(kwargs["template_id"], EMAIL_VERIFICATION_TEMPLATE)
+        self.assertEqual(kwargs["to_email"], payload["email"])
         body = response.json()
-        self.assertEqual(set(body['data']['tokens'].keys()), {'access'})
+        self.assertEqual(set(body["data"]["tokens"].keys()), {"access"})
         # No circle functionality implemented during signup
-        self.assertNotIn('circle', body['data'])
-        self.assertNotIn('pending_circle_setup', body['data'])
+        self.assertNotIn("circle", body["data"])
+        self.assertNotIn("pending_circle_setup", body["data"])
 
-        user = User.objects.get(email='later@example.com')
+        user = User.objects.get(email="later@example.com")
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)
         self.assertFalse(Circle.objects.filter(created_by=user).exists())
         self.assertFalse(CircleMembership.objects.filter(user=user).exists())
 
-    @patch('mysite.auth.views.send_email_task.delay')
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_password_reset_request_enqueues_email(self, mock_delay):
-        user = User.objects.create_user(email='existing@example.com', password='password123')
+        user = User.objects.create_user(email="existing@example.com", password="password123")
 
         response = self.client.post(
-            reverse('auth-password-reset-request'),
-            {'email': user.email},
-            format='json',
+            reverse("auth-password-reset-request"),
+            {"email": user.email},
+            format="json",
         )
 
         self.assertEqual(response.status_code, 202)
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
-        self.assertEqual(kwargs['template_id'], PASSWORD_RESET_TEMPLATE)
-        self.assertEqual(kwargs['to_email'], user.email)
-        self.assertIn('token', kwargs['context'])
+        self.assertEqual(kwargs["template_id"], PASSWORD_RESET_TEMPLATE)
+        self.assertEqual(kwargs["to_email"], user.email)
+        self.assertIn("token", kwargs["context"])
 
-    @override_settings(MAILJET_ENABLED=True, MAILJET_API_KEY='key', MAILJET_API_SECRET='secret')
-    @patch('mysite.emails.services.send_via_mailjet')
+    @override_settings(MAILJET_ENABLED=True, MAILJET_API_KEY="key", MAILJET_API_SECRET="secret")
+    @patch("mysite.emails.services.send_via_mailjet")
     def test_send_email_task_uses_mailjet_when_enabled(self, mock_mailjet):
         mock_mailjet.return_value = None
-        
+
         # Register a test template since the real ones might not be loaded
         from mysite.emails.tasks import register_email_template
+
         def test_renderer(context):
             return f"Subject: {context.get('token', 'test')}", f"Body: {context.get('full_name', 'test')}"
+
         register_email_template(EMAIL_VERIFICATION_TEMPLATE, test_renderer)
 
         send_email_task.run(
-            to_email='mailjet@example.com',
+            to_email="mailjet@example.com",
             template_id=EMAIL_VERIFICATION_TEMPLATE,
-            context={'token': '12345', 'full_name': 'Mj'},
+            context={"token": "12345", "full_name": "Mj"},
         )
 
         mock_mailjet.assert_called_once()
 
-    @patch('mysite.circles.services.invitation_service.send_email_task.delay')
+    @patch("mysite.circles.services.invitation_service.send_email_task.delay")
     def test_circle_invitation_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
-            email='circleadmin@example.com',
-            password='password123',
+            email="circleadmin@example.com",
+            password="password123",
             role=UserRole.CIRCLE_ADMIN,
-            first_name='Circle',
-            last_name='Admin',
+            first_name="Circle",
+            last_name="Admin",
         )
-        circle = Circle.objects.create(name='Family', created_by=admin)
+        circle = Circle.objects.create(name="Family", created_by=admin)
         # Membership for admin is auto-created by the post_save signal on Circle
 
         self.client.force_authenticate(user=admin)
         response = self.client.post(
-            reverse('circle-invitation-create', args=[circle.id]),
-            {'email': 'invitee@example.com'},
-            format='json',
+            reverse("circle-invitation-create", args=[circle.id]),
+            {"email": "invitee@example.com"},
+            format="json",
         )
 
         self.assertEqual(response.status_code, 202)
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
-        self.assertEqual(kwargs['template_id'], CIRCLE_INVITATION_TEMPLATE)
-        self.assertEqual(kwargs['to_email'], 'invitee@example.com')
-        self.assertIn('token', kwargs['context'])
+        self.assertEqual(kwargs["template_id"], CIRCLE_INVITATION_TEMPLATE)
+        self.assertEqual(kwargs["to_email"], "invitee@example.com")
+        self.assertIn("token", kwargs["context"])
 
-    @patch('mysite.users.views.children.send_email_task.delay')
+    @patch("mysite.users.views.children.send_email_task.delay")
     def test_child_upgrade_request_enqueues_email(self, mock_delay):
         admin = User.objects.create_user(
-            email='guardian@example.com',
-            password='password123',
+            email="guardian@example.com",
+            password="password123",
             role=UserRole.CIRCLE_ADMIN,
-            first_name='Guardian',
-            last_name='Admin',
+            first_name="Guardian",
+            last_name="Admin",
         )
-        circle = Circle.objects.create(name='Family 2', created_by=admin)
+        circle = Circle.objects.create(name="Family 2", created_by=admin)
         # Membership for admin is auto-created by the post_save signal on Circle
-        child = ChildProfile.objects.create(circle=circle, display_name='Kiddo')
+        child = ChildProfile.objects.create(circle=circle, display_name="Kiddo")
 
         self.client.force_authenticate(user=admin)
         payload = {
-            'email': 'parent@example.com',
-            'guardian_name': 'Primary Guardian',
-            'guardian_relationship': 'Mother',
-            'consent_method': 'digital_signature',
-            'agreement_reference': 'AGREEMENT-123',
-            'consent_metadata': {'ip': '127.0.0.1'},
+            "email": "parent@example.com",
+            "guardian_name": "Primary Guardian",
+            "guardian_relationship": "Mother",
+            "consent_method": "digital_signature",
+            "agreement_reference": "AGREEMENT-123",
+            "consent_metadata": {"ip": "127.0.0.1"},
         }
 
         response = self.client.post(
-            reverse('child-upgrade-request', args=[child.id]),
+            reverse("child-upgrade-request", args=[child.id]),
             payload,
-            format='json',
+            format="json",
         )
 
         self.assertEqual(response.status_code, 202)
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
-        self.assertEqual(kwargs['template_id'], CHILD_UPGRADE_TEMPLATE)
-        self.assertEqual(kwargs['to_email'], payload['email'])
-        self.assertIn('token', kwargs['context'])
+        self.assertEqual(kwargs["template_id"], CHILD_UPGRADE_TEMPLATE)
+        self.assertEqual(kwargs["to_email"], payload["email"])
+        self.assertIn("token", kwargs["context"])
         child.refresh_from_db()
-        self.assertEqual(child.pending_invite_email, payload['email'])
+        self.assertEqual(child.pending_invite_email, payload["email"])
         self.assertIsNotNone(child.upgrade_token)
         self.assertTrue(child.guardian_consents.exists())
         consent = child.guardian_consents.first()
-        self.assertEqual(consent.guardian_name, payload['guardian_name'])
-        self.assertEqual(consent.guardian_relationship, payload['guardian_relationship'])
-        self.assertTrue(
-            child.upgrade_audit_logs.filter(event_type=ChildUpgradeEventType.REQUEST_INITIATED).exists()
-        )
+        self.assertEqual(consent.guardian_name, payload["guardian_name"])
+        self.assertEqual(consent.guardian_relationship, payload["guardian_relationship"])
+        self.assertTrue(child.upgrade_audit_logs.filter(event_type=ChildUpgradeEventType.REQUEST_INITIATED).exists())

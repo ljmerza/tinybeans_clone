@@ -1,16 +1,15 @@
 from unittest.mock import patch
-import unittest
 
 from django.conf import settings
 from django.core.cache import cache
 from django.test import TestCase, override_settings
-from django.utils import timezone
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from mysite.auth.token_utils import REFRESH_COOKIE_NAME, store_token
 from mysite.users.models import User
-from mysite.auth.token_utils import store_token, REFRESH_COOKIE_NAME
 
 
 class AuthViewSecurityTests(TestCase):
@@ -18,155 +17,158 @@ class AuthViewSecurityTests(TestCase):
         cache.clear()
         self.client = APIClient()
 
-    @patch('mysite.auth.views.send_email_task.delay')
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_signup_does_not_expose_verification_token(self, mock_delay):
         response = self.client.post(
-            reverse('auth-signup'),
+            reverse("auth-signup"),
             {
-                'email': 'secure@example.com',
-                'password': 'StrongPass123',
-                'first_name': 'Secure',
-                'last_name': 'User',
+                "email": "secure@example.com",
+                "password": "StrongPass123",
+                "first_name": "Secure",
+                "last_name": "User",
             },
-            format='json',
+            format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         body = response.json()
-        self.assertNotIn('verification_token', body)
-        self.assertNotIn('verification_token', body.get('data', {}))
-        self.assertIn('tokens', body['data'])
+        self.assertNotIn("verification_token", body)
+        self.assertNotIn("verification_token", body.get("data", {}))
+        self.assertIn("tokens", body["data"])
         mock_delay.assert_called_once()
 
-    @patch('mysite.auth.views.send_email_task.delay')
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_verification_resend_does_not_expose_token(self, mock_delay):
-        user = User.objects.create_user(email='existing@example.com', password='pw123456')
+        user = User.objects.create_user(email="existing@example.com", password="pw123456")
 
         self.client.force_authenticate(user=user)
         response = self.client.post(
-            reverse('auth-verify-resend'),
+            reverse("auth-verify-resend"),
             {},
-            format='json',
+            format="json",
         )
         self.client.force_authenticate(user=None)
 
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         body = response.json()
-        self.assertNotIn('token', body)
+        self.assertNotIn("token", body)
         mock_delay.assert_called_once()
 
     def test_login_rate_limit_blocks_after_threshold(self):
         # Skip when rate limiting disabled in test settings
-        if not getattr(settings, 'RATELIMIT_ENABLE', True):
-            self.skipTest('Rate limiting disabled in test settings')
-        user = User.objects.create_user(email='ratelimit@example.com', password='SuperSecret123')
+        if not getattr(settings, "RATELIMIT_ENABLE", True):
+            self.skipTest("Rate limiting disabled in test settings")
+        user = User.objects.create_user(email="ratelimit@example.com", password="SuperSecret123")
 
-        login_payload = {'email': user.email, 'password': 'SuperSecret123'}
+        login_payload = {"email": user.email, "password": "SuperSecret123"}
 
         # First five attempts should succeed
         for _ in range(5):
-            success_response = self.client.post(reverse('auth-login'), login_payload, format='json')
+            success_response = self.client.post(reverse("auth-login"), login_payload, format="json")
             self.assertEqual(success_response.status_code, status.HTTP_200_OK)
 
-        blocked_response = self.client.post(reverse('auth-login'), login_payload, format='json')
+        blocked_response = self.client.post(reverse("auth-login"), login_payload, format="json")
         self.assertIn(blocked_response.status_code, {status.HTTP_403_FORBIDDEN, status.HTTP_429_TOO_MANY_REQUESTS})
 
-    @patch('mysite.auth.views.send_email_task.delay')
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_password_reset_request_does_not_expose_token(self, mock_delay):
-        User.objects.create_user(email='reset@example.com', password='pw123456')
+        User.objects.create_user(email="reset@example.com", password="pw123456")
 
         response = self.client.post(
-            reverse('auth-password-reset-request'),
-            {'email': 'reset@example.com'},
-            format='json',
+            reverse("auth-password-reset-request"),
+            {"email": "reset@example.com"},
+            format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         body = response.json()
-        self.assertEqual(body, {'data': {}, 'messages': [{'i18n_key': 'notifications.auth.password_reset'}]})
+        self.assertEqual(body, {"data": {}, "messages": [{"i18n_key": "notifications.auth.password_reset"}]})
         mock_delay.assert_called_once()
         _, kwargs = mock_delay.call_args
-        context = kwargs['context']
+        context = kwargs["context"]
         from django.conf import settings
-        expected_base = (getattr(settings, 'ACCOUNT_FRONTEND_BASE_URL', 'http://localhost:3000') or 'http://localhost:3000').rstrip('/')
-        self.assertIn('reset_link', context)
-        self.assertIn('token', context)
-        self.assertIn(context['token'], context['reset_link'])
-        self.assertTrue(context['reset_link'].startswith(f'{expected_base}/password/reset/confirm?'))
-        self.assertGreaterEqual(context.get('expires_in_minutes', 0), 1)
 
-    @override_settings(RATELIMIT_ENABLE=True, PASSWORD_RESET_RATELIMIT='2/m')
-    @patch('mysite.auth.views.send_email_task.delay')
+        expected_base = (
+            getattr(settings, "ACCOUNT_FRONTEND_BASE_URL", "http://localhost:3000") or "http://localhost:3000"
+        ).rstrip("/")
+        self.assertIn("reset_link", context)
+        self.assertIn("token", context)
+        self.assertIn(context["token"], context["reset_link"])
+        self.assertTrue(context["reset_link"].startswith(f"{expected_base}/password/reset/confirm?"))
+        self.assertGreaterEqual(context.get("expires_in_minutes", 0), 1)
+
+    @override_settings(RATELIMIT_ENABLE=True, PASSWORD_RESET_RATELIMIT="2/m")
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_password_reset_request_rate_limit(self, mock_delay):
-        user = User.objects.create_user(email='limited-reset@example.com', password='pw123456')
+        user = User.objects.create_user(email="limited-reset@example.com", password="pw123456")
 
-        payload = {'email': user.email}
+        payload = {"email": user.email}
         for _ in range(2):
             response = self.client.post(
-                reverse('auth-password-reset-request'),
+                reverse("auth-password-reset-request"),
                 payload,
-                format='json',
+                format="json",
             )
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
         limited = self.client.post(
-            reverse('auth-password-reset-request'),
+            reverse("auth-password-reset-request"),
             payload,
-            format='json',
+            format="json",
         )
         self.assertEqual(limited.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         body = limited.json()
-        self.assertEqual(body['error'], 'rate_limit_exceeded')
-        self.assertEqual(body['messages'][0]['i18n_key'], 'errors.rate_limit')
+        self.assertEqual(body["error"], "rate_limit_exceeded")
+        self.assertEqual(body["messages"][0]["i18n_key"], "errors.rate_limit")
         self.assertEqual(mock_delay.call_count, 2)
 
-    @override_settings(RATELIMIT_ENABLE=True, EMAIL_VERIFICATION_RESEND_RATELIMIT='2/m')
-    @patch('mysite.auth.views.send_email_task.delay')
+    @override_settings(RATELIMIT_ENABLE=True, EMAIL_VERIFICATION_RESEND_RATELIMIT="2/m")
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_email_verification_resend_rate_limit(self, mock_delay):
-        user = User.objects.create_user(email='limited-verify@example.com', password='pw123456')
+        user = User.objects.create_user(email="limited-verify@example.com", password="pw123456")
         self.client.force_authenticate(user=user)
         payload = {}
         for _ in range(2):
             response = self.client.post(
-                reverse('auth-verify-resend'),
+                reverse("auth-verify-resend"),
                 payload,
-                format='json',
+                format="json",
             )
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
         limited = self.client.post(
-            reverse('auth-verify-resend'),
+            reverse("auth-verify-resend"),
             payload,
-            format='json',
+            format="json",
         )
         self.client.force_authenticate(user=None)
         self.assertEqual(limited.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         body = limited.json()
-        self.assertEqual(body['error'], 'rate_limit_exceeded')
-        self.assertEqual(body['messages'][0]['i18n_key'], 'errors.rate_limit')
+        self.assertEqual(body["error"], "rate_limit_exceeded")
+        self.assertEqual(body["messages"][0]["i18n_key"], "errors.rate_limit")
         self.assertEqual(mock_delay.call_count, 2)
 
     def test_email_verification_confirm_returns_tokens_and_cookie(self):
-        user = User.objects.create_user(email='verify@example.com', password='pw123456')
+        user = User.objects.create_user(email="verify@example.com", password="pw123456")
         token = store_token(
-            'verify-email',
-            {'user_id': user.id, 'issued_at': timezone.now().isoformat()},
+            "verify-email",
+            {"user_id": user.id, "issued_at": timezone.now().isoformat()},
         )
 
         response = self.client.post(
-            reverse('auth-verify-confirm'),
-            {'token': token},
-            format='json',
+            reverse("auth-verify-confirm"),
+            {"token": token},
+            format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         body = response.json()
-        self.assertIn('data', body)
-        payload = body['data']
-        self.assertIn('access_token', payload)
-        self.assertIn('user', payload)
-        self.assertEqual(payload['user']['email'], 'verify@example.com')
-        self.assertEqual(payload['redirect_url'], '/circles/onboarding')
+        self.assertIn("data", body)
+        payload = body["data"]
+        self.assertIn("access_token", payload)
+        self.assertIn("user", payload)
+        self.assertEqual(payload["user"]["email"], "verify@example.com")
+        self.assertEqual(payload["redirect_url"], "/circles/onboarding")
         self.assertIn(REFRESH_COOKIE_NAME, response.cookies)
         user.refresh_from_db()
         self.assertTrue(user.email_verified)

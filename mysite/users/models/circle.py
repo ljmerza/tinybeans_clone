@@ -12,9 +12,8 @@ from mysite.circles.models import (  # noqa: F401
 )
 
 __all__ = [
-    'Circle',
-    'CircleMembership',
-    'CircleInvitation',
-    'CircleInvitationStatus',
+    "Circle",
+    "CircleMembership",
+    "CircleInvitation",
+    "CircleInvitationStatus",
 ]
-

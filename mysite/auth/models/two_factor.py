@@ -1,4 +1,5 @@
 """Two-factor authentication related models."""
+
 from __future__ import annotations
 
 import hashlib
@@ -16,28 +17,15 @@ class TwoFactorSettings(models.Model):
     """User's 2FA preferences and configuration."""
 
     METHOD_CHOICES = [
-        ('totp', 'Authenticator App'),
-        ('email', 'Email'),
-        ('sms', 'SMS'),
+        ("totp", "Authenticator App"),
+        ("email", "Email"),
+        ("sms", "SMS"),
     ]
 
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='twofa_settings'
-    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="twofa_settings")
     is_enabled = models.BooleanField(default=False)
-    preferred_method = models.CharField(
-        max_length=20,
-        choices=METHOD_CHOICES,
-        default='totp'
-    )
-    _totp_secret_encrypted = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        db_column='totp_secret'
-    )
+    preferred_method = models.CharField(max_length=20, choices=METHOD_CHOICES, default="totp")
+    _totp_secret_encrypted = models.CharField(max_length=255, blank=True, null=True, db_column="totp_secret")
     totp_verified = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     sms_verified = models.BooleanField(default=False)
@@ -50,8 +38,8 @@ class TwoFactorSettings(models.Model):
     locked_until = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Two-Factor Settings'
-        verbose_name_plural = 'Two-Factor Settings'
+        verbose_name = "Two-Factor Settings"
+        verbose_name_plural = "Two-Factor Settings"
 
     def __str__(self):
         return f"{self.user.email} - 2FA: {'Enabled' if self.is_enabled else 'Disabled'}"
@@ -84,7 +72,7 @@ class TwoFactorSettings(models.Model):
             return True
         self.locked_until = None
         self.failed_attempts = 0
-        self.save(update_fields=['locked_until', 'failed_attempts'])
+        self.save(update_fields=["locked_until", "failed_attempts"])
         return False
 
     def increment_failed_attempts(self):
@@ -93,33 +81,33 @@ class TwoFactorSettings(models.Model):
 
         self.failed_attempts += 1
 
-        lockout_threshold = getattr(settings, 'TWOFA_LOCKOUT_THRESHOLD', 5)
-        lockout_duration = getattr(settings, 'TWOFA_LOCKOUT_DURATION_MINUTES', 30)
+        lockout_threshold = getattr(settings, "TWOFA_LOCKOUT_THRESHOLD", 5)
+        lockout_duration = getattr(settings, "TWOFA_LOCKOUT_DURATION_MINUTES", 30)
 
         if self.failed_attempts >= lockout_threshold:
             self.locked_until = timezone.now() + timedelta(minutes=lockout_duration)
 
-        self.save(update_fields=['failed_attempts', 'locked_until'])
+        self.save(update_fields=["failed_attempts", "locked_until"])
 
     def reset_failed_attempts(self):
         """Reset failed attempts counter."""
         self.failed_attempts = 0
         self.locked_until = None
-        self.save(update_fields=['failed_attempts', 'locked_until'])
+        self.save(update_fields=["failed_attempts", "locked_until"])
 
 
 class TwoFactorCode(models.Model):
     """Temporary OTP codes for verification."""
 
     PURPOSE_CHOICES = [
-        ('login', 'Login Verification'),
-        ('setup', 'Setup Verification'),
-        ('disable', 'Disable 2FA'),
+        ("login", "Login Verification"),
+        ("setup", "Setup Verification"),
+        ("disable", "Disable 2FA"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code_hash = models.CharField(max_length=64, default='')
-    code_preview = models.CharField(max_length=6, blank=True, default='')
+    code_hash = models.CharField(max_length=64, default="")
+    code_preview = models.CharField(max_length=6, blank=True, default="")
     method = models.CharField(max_length=20)
     purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
     is_used = models.BooleanField(default=False)
@@ -130,14 +118,14 @@ class TwoFactorCode(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['user', 'code_hash', 'is_used']),
-            models.Index(fields=['expires_at']),
+            models.Index(fields=["user", "code_hash", "is_used"]),
+            models.Index(fields=["expires_at"]),
         ]
-        verbose_name = 'Two-Factor Code'
-        verbose_name_plural = 'Two-Factor Codes'
+        verbose_name = "Two-Factor Code"
+        verbose_name_plural = "Two-Factor Codes"
 
     def __str__(self):
-        preview = self.code_preview or '******'
+        preview = self.code_preview or "******"
         return f"{self.user.email} - {preview} ({self.purpose})"
 
     def is_valid(self):
@@ -148,15 +136,15 @@ class TwoFactorCode(models.Model):
 class RecoveryCode(models.Model):
     """Recovery codes for account access when 2FA is unavailable."""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recovery_codes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recovery_codes")
     code_hash = models.CharField(max_length=64, unique=True)
     is_used = models.BooleanField(default=False)
     used_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Recovery Code'
-        verbose_name_plural = 'Recovery Codes'
+        verbose_name = "Recovery Code"
+        verbose_name_plural = "Recovery Codes"
 
     def __str__(self):
         return f"{self.user.email} - Recovery Code ({'Used' if self.is_used else 'Available'})"
@@ -172,11 +160,7 @@ class RecoveryCode(models.Model):
         """Verify recovery code and mark as used."""
         code_hash = hashlib.sha256(plain_code.upper().encode()).hexdigest()
         try:
-            recovery_code = cls.objects.get(
-                user=user,
-                code_hash=code_hash,
-                is_used=False
-            )
+            recovery_code = cls.objects.get(user=user, code_hash=code_hash, is_used=False)
             recovery_code.is_used = True
             recovery_code.used_at = timezone.now()
             recovery_code.save()
@@ -188,25 +172,25 @@ class RecoveryCode(models.Model):
 class TrustedDevice(models.Model):
     """Trusted devices for 2FA skip (Remember Me feature)."""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='trusted_devices')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trusted_devices")
     device_id = models.CharField(max_length=64, unique=True)
     device_name = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()
     user_agent = models.TextField()
-    ip_hash = models.CharField(max_length=64, blank=True, default='')
-    ua_hash = models.CharField(max_length=64, blank=True, default='')
+    ip_hash = models.CharField(max_length=64, blank=True, default="")
+    ua_hash = models.CharField(max_length=64, blank=True, default="")
     last_used_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
-            models.Index(fields=['user', 'device_id']),
-            models.Index(fields=['expires_at']),
+            models.Index(fields=["user", "device_id"]),
+            models.Index(fields=["expires_at"]),
         ]
-        unique_together = [['user', 'device_id']]
-        verbose_name = 'Trusted Device'
-        verbose_name_plural = 'Trusted Devices'
+        unique_together = [["user", "device_id"]]
+        verbose_name = "Trusted Device"
+        verbose_name_plural = "Trusted Devices"
 
     def __str__(self):
         return f"{self.user.email} - {self.device_name}"
@@ -229,9 +213,9 @@ class TwoFactorAuditLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Two-Factor Audit Log'
-        verbose_name_plural = 'Two-Factor Audit Logs'
-        ordering = ['-created_at']
+        verbose_name = "Two-Factor Audit Log"
+        verbose_name_plural = "Two-Factor Audit Logs"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.user.email} - {self.action} - {'Success' if self.success else 'Failed'}"

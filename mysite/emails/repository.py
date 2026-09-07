@@ -1,4 +1,5 @@
 """Repository layer for email templates."""
+
 from __future__ import annotations
 
 from typing import Dict, Optional, Protocol
@@ -9,14 +10,11 @@ from mysite.emails.models import EmailTemplate
 class EmailTemplateRepository(Protocol):
     """Interface for storing and retrieving email templates."""
 
-    def save(self, template: EmailTemplate) -> None:
-        ...
+    def save(self, template: EmailTemplate) -> None: ...
 
-    def get(self, template_id: str) -> Optional[EmailTemplate]:
-        ...
+    def get(self, template_id: str) -> Optional[EmailTemplate]: ...
 
-    def clear(self) -> None:
-        ...
+    def clear(self) -> None: ...
 
 
 class InMemoryEmailTemplateRepository:

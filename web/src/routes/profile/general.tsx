@@ -6,7 +6,6 @@ import {
 	profileKeys,
 	profileServices,
 } from "@/features/profile";
-import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -27,7 +26,7 @@ export const Route = createFileRoute("/profile/general")({
 		await requireCircleOnboardingComplete(args);
 	},
 	loader: async ({ context }) => {
-		const { queryClient } = context as { queryClient: QueryClient };
+		const { queryClient } = context;
 		return queryClient.ensureQueryData({
 			queryKey: profileKeys.profile(),
 			queryFn: async () => {

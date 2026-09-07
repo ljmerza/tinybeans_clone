@@ -118,7 +118,12 @@ describe("CircleInvitationList", () => {
 	});
 
 	it("shows remove action and confirms removal for accepted invitations", async () => {
-		mockUseCircleInvitationListController.mockReturnValue({
+		// ConfirmDialog is driven by removal.dialog. While it is open the list
+		// behind it is aria-hidden, so the trigger has to be clicked in a
+		// dialog-closed state first.
+		const controllerState = (
+			dialog: { invitation: (typeof invitations)[number]; memberId: string } | null,
+		) => ({
 			invitations,
 			query: {
 				isFetching: false,
@@ -140,10 +145,7 @@ describe("CircleInvitationList", () => {
 				isPending: false,
 			},
 			removal: {
-				dialog: {
-					invitation: invitations[1],
-					memberId: "24",
-				},
+				dialog,
 				open: openRemoveSpy,
 				close: removalCloseSpy,
 				cancel: removalCancelSpy,
@@ -154,7 +156,13 @@ describe("CircleInvitationList", () => {
 			},
 		});
 
-		renderWithQueryClient(<CircleInvitationList circleId="42" />);
+		mockUseCircleInvitationListController.mockReturnValue(
+			controllerState(null),
+		);
+
+		const { rerender } = renderWithQueryClient(
+			<CircleInvitationList circleId="42" />,
+		);
 
 		const removeButton = screen.getByRole("button", {
 			name: "Remove from circle",
@@ -162,6 +170,14 @@ describe("CircleInvitationList", () => {
 		fireEvent.click(removeButton);
 
 		expect(openRemoveSpy).toHaveBeenCalledWith(invitations[1]);
+
+		// The controller is mocked, so opening the dialog is not reflected in
+		// state automatically; feed the opened state back in.
+		mockUseCircleInvitationListController.mockReturnValue(
+			controllerState({ invitation: invitations[1], memberId: "24" }),
+		);
+		rerender(<CircleInvitationList circleId="42" />);
+
 		expect(
 			screen.getByText("Remove sarah@example.com from this circle?"),
 		).toBeInTheDocument();

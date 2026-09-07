@@ -16,7 +16,6 @@ import {
 	twoFactorServices,
 	useTwoFactorSettings,
 } from "@/features/twofa";
-import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -97,7 +96,7 @@ export const Route = createFileRoute(twoFactorSettingsPath)({
 		await requireCircleOnboardingComplete(args);
 	},
 	loader: async ({ context }) => {
-		const { queryClient } = context as { queryClient: QueryClient };
+		const { queryClient } = context;
 		return queryClient.ensureQueryData({
 			queryKey: twoFaKeys.status(),
 			queryFn: () => twoFactorServices.getStatus(),

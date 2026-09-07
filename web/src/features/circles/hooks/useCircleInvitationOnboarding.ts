@@ -83,9 +83,13 @@ export function useFinalizeCircleInvitation(): UseMutationResult<
 			}
 			queryClient.invalidateQueries({ queryKey: circleKeys.onboarding() });
 			queryClient.invalidateQueries({ queryKey: authKeys.session() });
+			const finalized = (response.data ?? response) as {
+				circle?: { id?: number };
+				membership?: { role?: string };
+			};
 			trackCircleInviteEvent("invitation_onboarding_finalized", {
-				circleId: response.data?.circle?.id ?? response.circle?.id,
-				role: response.data?.membership?.role ?? response.membership?.role,
+				circleId: finalized.circle?.id,
+				role: finalized.membership?.role,
 			});
 		},
 		onError: (error) => {

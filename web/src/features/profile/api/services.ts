@@ -1,4 +1,4 @@
-import type { AuthRequestOptions } from "@/features/auth/api/authClient";
+import type { RequestOptions } from "@/features/auth/api/authClient";
 import { apiClient as authApi } from "@/features/auth/api/authClient";
 import type { AuthUser } from "@/features/auth/types";
 import type { ApiResponseWithMessages } from "@/types";
@@ -18,7 +18,7 @@ export const profileServices = {
 		);
 	},
 
-	updateProfile(body: UpdateUserProfileRequest, options?: AuthRequestOptions) {
+	updateProfile(body: UpdateUserProfileRequest, options?: RequestOptions) {
 		return authApi.patch<ApiResponseWithMessages<UserProfileResponse>>(
 			"/users/me/",
 			body,

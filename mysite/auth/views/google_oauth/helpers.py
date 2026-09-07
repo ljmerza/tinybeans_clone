@@ -5,13 +5,9 @@ This module provides shared utilities used across OAuth views:
 - Validation error handling
 - Rate limit checking
 """
-from rest_framework.response import Response
-from mysite.notification_utils import (
-    validation_error_response,
-    rate_limit_response,
-    create_message
-)
-from mysite.security.ip_utils import get_client_ip
+
+from mysite.notification_utils import create_message, rate_limit_response, validation_error_response
+from mysite.security.ip_utils import get_client_ip  # noqa: F401  re-exported to the OAuth views
 
 
 def check_rate_limit(request):
@@ -23,9 +19,9 @@ def check_rate_limit(request):
     Returns:
         Response if rate limited, None otherwise
     """
-    was_limited = getattr(request, 'limited', False)
+    was_limited = getattr(request, "limited", False)
     if was_limited:
-        return rate_limit_response('errors.rate_limit')
+        return rate_limit_response("errors.rate_limit")
     return None
 
 
@@ -41,8 +37,5 @@ def handle_validation_errors(serializer):
     errors = []
     for field, field_errors in serializer.errors.items():
         for error_msg in field_errors:
-            errors.append(create_message('errors.validation_error', {
-                'field': field,
-                'message': str(error_msg)
-            }))
+            errors.append(create_message("errors.validation_error", {"field": field, "message": str(error_msg)}))
     return validation_error_response(errors)

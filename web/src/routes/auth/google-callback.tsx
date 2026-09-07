@@ -1,5 +1,4 @@
-import { LoadingState } from "@/components/LoadingState";
-import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/Layout";
 import {
 	getOAuthState,
 	useGoogleOAuth,

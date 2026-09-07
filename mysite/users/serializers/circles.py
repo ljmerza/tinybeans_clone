@@ -13,14 +13,13 @@ from mysite.circles.serializers import (  # noqa: F401
 )
 
 __all__ = [
-    'CircleMembershipSerializer',
-    'CircleMemberSerializer',
-    'CircleCreateSerializer',
-    'CircleMemberAddSerializer',
-    'CircleInvitationSerializer',
-    'CircleInvitationCreateSerializer',
-    'CircleInvitationResponseSerializer',
-    'CircleInvitationOnboardingStartSerializer',
-    'CircleInvitationFinalizeSerializer',
+    "CircleMembershipSerializer",
+    "CircleMemberSerializer",
+    "CircleCreateSerializer",
+    "CircleMemberAddSerializer",
+    "CircleInvitationSerializer",
+    "CircleInvitationCreateSerializer",
+    "CircleInvitationResponseSerializer",
+    "CircleInvitationOnboardingStartSerializer",
+    "CircleInvitationFinalizeSerializer",
 ]
-

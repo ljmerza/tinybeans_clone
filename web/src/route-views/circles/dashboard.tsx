@@ -1,4 +1,4 @@
-import { EmptyState, Layout } from "@/components";
+import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
 import { CircleInvitationManager, CircleMemberList, useCircleMembers } from "@/features/circles";

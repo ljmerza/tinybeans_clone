@@ -49,6 +49,7 @@ export default function VerifyEmailRequiredRoute() {
 				</h1>
 				<p
 					className="text-base text-muted-foreground"
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: translation carries inline markup; i18next escapes the interpolated email
 					dangerouslySetInnerHTML={{
 						__html: t("auth.verify_email_required.message", { email }),
 					}}

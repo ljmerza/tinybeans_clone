@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { StatusMessage, Layout } from "@/components";
-import { Button } from "@/components/ui/button";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
 import { useNavigate } from "@tanstack/react-router";
