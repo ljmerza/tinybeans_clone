@@ -9,7 +9,8 @@ import {
 import type { CircleMembershipSummary } from "@/features/circles";
 import { useCircleMemberships } from "@/features/circles";
 import { currentMonthKey, useCalendarMonth } from "@/features/keeps";
-import { PhotoCalendar } from "@/vendor/photo-calendar";
+import { PhotoCalendar } from "react-photo-calendar";
+import "react-photo-calendar/styles.css";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
