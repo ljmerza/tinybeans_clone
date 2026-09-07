@@ -9,6 +9,7 @@
   --calendar-color-chip-bg: rgba(0, 0, 0, 0.08);
   --calendar-color-chip-active-bg: rgba(0, 123, 255, 0.12);
   --calendar-color-chip-active-text: #0051a8;
+  --calendar-color-cell-bg: var(--calendar-color-surface-muted);
   --calendar-color-day-label-bg: rgba(0, 0, 0, 0.4);
   --calendar-color-overflow-bg: rgba(0, 0, 0, 0.7);
   --calendar-radius-day: 8px;
@@ -288,6 +289,7 @@
 
 .calendar-cell {
   aspect-ratio: 1 / 1;
+  background: var(--calendar-color-cell-bg);
   border-radius: var(--calendar-radius-day);
   display: flex;
   justify-content: center;
