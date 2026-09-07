@@ -157,16 +157,18 @@ export function PhotoCalendarScrollView({
 
   // External monthKey changes
   useEffect(() => {
-    if (!hasAlignedInitialRef.current) return;
     if (lastScrollSyncRef.current === monthKey) {
       lastScrollSyncRef.current = null;
       return;
     }
-    ensureMonthInWindow(monthKey);
+    // The active month follows the controlled prop, so sync it before the
+    // alignment gate below: the label must not wait on a rendered frame.
     if (activeMonthKeyRef.current !== monthKey) {
       activeMonthKeyRef.current = monthKey;
       setActiveMonthKey(monthKey);
     }
+    if (!hasAlignedInitialRef.current) return;
+    ensureMonthInWindow(monthKey);
     isProgrammaticScrollRef.current = true;
     scrollToMonthKey(monthKey);
     requestAnimationFrame(() => {
