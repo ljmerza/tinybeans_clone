@@ -1,15 +1,23 @@
 """Home-screen photo feed across all of the user's circles."""
 
+import re
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
+
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import CursorPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from ..models import Keep, KeepComment, KeepMedia, KeepReaction
 from ..serializers.feed import KeepFeedSerializer
 
 RECENT_COMMENT_COUNT = 2
+DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class KeepFeedPagination(CursorPagination):
@@ -56,6 +64,38 @@ def feed_queryset(user):
     )
 
 
+def parse_day(value):
+    """UTC [start, end) bounds for a `YYYY-MM-DD` day, matching the calendar's UTC days."""
+    try:
+        if not DAY_RE.match(value):
+            raise ValueError(value)
+        start = datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=dt_timezone.utc)
+    except ValueError:
+        raise ValidationError({"date": "Use YYYY-MM-DD."}) from None
+    return start, start + timedelta(days=1)
+
+
+def filter_by_circle(queryset, circle_slug):
+    """Restrict to one circle; the queryset is already limited to the user's circles."""
+    return queryset.filter(circle__slug=circle_slug) if circle_slug else queryset
+
+
+DAY_PARAMETERS = [
+    OpenApiParameter(
+        name="date",
+        type=OpenApiTypes.DATE,
+        location=OpenApiParameter.QUERY,
+        description="Only keeps whose memory falls on this UTC day (YYYY-MM-DD)",
+    ),
+    OpenApiParameter(
+        name="circle_slug",
+        type=OpenApiTypes.STR,
+        location=OpenApiParameter.QUERY,
+        description="Only keeps from this circle",
+    ),
+]
+
+
 class KeepFeedView(generics.ListAPIView):
     """Newest-first photo feed across every circle the user belongs to."""
 
@@ -66,7 +106,12 @@ class KeepFeedView(generics.ListAPIView):
         # Avoid queryset evaluation during schema generation
         if getattr(self, "swagger_fake_view", False):
             return Keep.objects.none()
-        return feed_queryset(self.request.user)
+        queryset = feed_queryset(self.request.user)
+        day = self.request.query_params.get("date")
+        if day:
+            start, end = parse_day(day)
+            queryset = queryset.filter(date_of_memory__gte=start, date_of_memory__lt=end)
+        return filter_by_circle(queryset, self.request.query_params.get("circle_slug"))
 
     @extend_schema(
         summary="Photo feed",
@@ -79,11 +124,51 @@ class KeepFeedView(generics.ListAPIView):
                 location=OpenApiParameter.QUERY,
                 description="Posts per page (default 10, max 30)",
             ),
+            *DAY_PARAMETERS,
         ],
-        responses={200: OpenApiResponse(response=KeepFeedSerializer(many=True), description="A page of feed posts")},
+        responses={
+            200: OpenApiResponse(response=KeepFeedSerializer(many=True), description="A page of feed posts"),
+            400: OpenApiResponse(description="Invalid date"),
+        },
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class KeepFeedAdjacentDaysView(APIView):
+    """The nearest earlier and later days that have feed posts, for day-to-day paging."""
+
+    @extend_schema(
+        summary="Adjacent photo days",
+        description="For a UTC day, the closest earlier and later days (YYYY-MM-DD, or null) that have "
+        "posts in the feed, optionally within one circle.",
+        parameters=[
+            OpenApiParameter(
+                name="date",
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="The current UTC day (YYYY-MM-DD)",
+                required=True,
+            ),
+            DAY_PARAMETERS[1],
+        ],
+        responses={
+            200: OpenApiResponse(description="`{date, previous, next}`"),
+            400: OpenApiResponse(description="Missing or invalid date"),
+        },
+    )
+    def get(self, request):
+        day = request.query_params.get("date", "")
+        start, end = parse_day(day)
+        keeps = filter_by_circle(feed_queryset(request.user), request.query_params.get("circle_slug"))
+        dates = keeps.values_list("date_of_memory", flat=True)
+        previous = dates.filter(date_of_memory__lt=start).order_by("-date_of_memory").first()
+        following = dates.filter(date_of_memory__gte=end).order_by("date_of_memory").first()
+
+        def as_day(moment):
+            return moment.astimezone(dt_timezone.utc).date().isoformat() if moment else None
+
+        return Response({"date": day, "previous": as_day(previous), "next": as_day(following)})
 
 
 class KeepFeedItemView(generics.RetrieveAPIView):

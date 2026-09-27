@@ -77,8 +77,8 @@ describe("HomeFeedView", () => {
 		expect(
 			await screen.findByRole("heading", { name: "Memory 2" }),
 		).toBeInTheDocument();
-		expect(getFeed).toHaveBeenNthCalledWith(1, undefined);
-		expect(getFeed).toHaveBeenNthCalledWith(2, "abc");
+		expect(getFeed).toHaveBeenNthCalledWith(1, undefined, {});
+		expect(getFeed).toHaveBeenNthCalledWith(2, "abc", {});
 		expect(
 			await screen.findByText("You're all caught up."),
 		).toBeInTheDocument();

@@ -12,6 +12,7 @@ import { currentMonthKey, useCalendarMonth } from "@/features/keeps";
 import { PhotoCalendar } from "react-photo-calendar";
 import "react-photo-calendar/styles.css";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const route = getRouteApi("/calendar");
@@ -30,6 +31,17 @@ export function CalendarRouteView() {
 		circleSlug,
 	);
 	const { data: memberships } = useCircleMemberships();
+
+	// UTC days (yyyy-mm-dd) that have photos; only those open a day feed.
+	const daysWithPhotos = useMemo(
+		() =>
+			new Set(
+				(data?.entries ?? []).map((entry) =>
+					new Date(entry.datetime).toISOString().slice(0, 10),
+				),
+			),
+		[data],
+	);
 
 	if (isLoading && !data) {
 		return (
@@ -114,6 +126,14 @@ export function CalendarRouteView() {
 							search: { month: nextMonthKey, circle: circleSlug },
 						})
 					}
+					onDaySelect={({ isoDate }) => {
+						if (!daysWithPhotos.has(isoDate)) return;
+						navigate({
+							to: "/calendar/$date",
+							params: { date: isoDate },
+							search: { circle: circleSlug },
+						});
+					}}
 					entries={data?.entries ?? []}
 					timeZone="UTC"
 				/>

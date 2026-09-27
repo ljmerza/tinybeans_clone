@@ -16,6 +16,7 @@ from mysite.keeps.models import Keep, KeepComment, KeepMedia, KeepReaction, Keep
 User = get_user_model()
 
 FEED_URL = "/api/keeps/feed/"
+ADJACENT_DAYS_URL = "/api/keeps/feed/adjacent-days/"
 COMMENTS_URL = "/api/keeps/comments/"
 BASE_TIME = datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc)
 
@@ -200,6 +201,123 @@ class TestKeepFeedView:
             api_client.get(FEED_URL)
 
         assert len(large) == len(small)
+
+
+@pytest.mark.django_db
+class TestKeepFeedDayFilter:
+    def test_filters_to_one_utc_day(self, api_client, user, circle):
+        start_of_day = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
+        morning = make_keep(circle, user, start_of_day)
+        evening = make_keep(circle, user, start_of_day + timedelta(hours=23, minutes=59))
+        make_keep(circle, user, start_of_day - timedelta(seconds=1))  # June 30
+        make_keep(circle, user, start_of_day + timedelta(days=1))  # July 2
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(FEED_URL, {"date": "2026-07-01"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert feed_ids(response) == [str(evening.id), str(morning.id)]
+
+    def test_day_filter_keeps_membership_and_media_rules(self, api_client, user, other_user, circle, other_circle):
+        visible = make_keep(circle, user, BASE_TIME)
+        make_keep(other_circle, other_user, BASE_TIME)  # not a member
+        make_keep(circle, user, BASE_TIME, media=())  # text-only note
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(FEED_URL, {"date": "2026-07-01"})
+
+        assert feed_ids(response) == [str(visible.id)]
+
+    def test_filters_to_one_circle(self, api_client, user, other_user, circle):
+        second_circle = Circle.objects.create(name="Grandparents", created_by=other_user)
+        CircleMembership.objects.create(user=user, circle=second_circle)
+        mine = make_keep(circle, user, BASE_TIME)
+        make_keep(second_circle, other_user, BASE_TIME)
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(FEED_URL, {"date": "2026-07-01", "circle_slug": circle.slug})
+
+        assert feed_ids(response) == [str(mine.id)]
+
+    def test_circle_filter_cannot_reach_other_circles(self, api_client, user, other_user, other_circle):
+        make_keep(other_circle, other_user, BASE_TIME)
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(FEED_URL, {"circle_slug": other_circle.slug})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert feed_ids(response) == []
+
+    def test_pagination_keeps_the_day_filter(self, api_client, user, circle):
+        on_day = [make_keep(circle, user, BASE_TIME) for _ in range(4)]
+        make_keep(circle, user, BASE_TIME - timedelta(days=1))
+
+        api_client.force_authenticate(user=user)
+        seen = []
+        response = api_client.get(FEED_URL, {"date": "2026-07-01", "page_size": 3})
+        seen.extend(feed_ids(response))
+        response = api_client.get(response.data["next"])
+        seen.extend(feed_ids(response))
+
+        assert sorted(seen) == sorted(str(k.id) for k in on_day)
+        assert response.data["next"] is None
+
+    @pytest.mark.parametrize("value", ["2026-7-1", "2026-02-30", "yesterday"])
+    def test_invalid_date_is_rejected(self, api_client, user, value):
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(FEED_URL, {"date": value})
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestKeepFeedAdjacentDaysView:
+    def test_requires_authentication(self, api_client):
+        response = api_client.get(ADJACENT_DAYS_URL, {"date": "2026-07-01"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_nearest_days_with_posts_across_months(self, api_client, user, other_user, circle, other_circle):
+        make_keep(circle, user, datetime(2026, 5, 20, 12, 0, tzinfo=timezone.utc))
+        make_keep(circle, user, datetime(2026, 6, 2, 23, 59, tzinfo=timezone.utc))
+        make_keep(circle, user, BASE_TIME)  # the current day itself
+        make_keep(circle, user, BASE_TIME + timedelta(days=3), media=())  # text-only, skipped
+        make_keep(other_circle, other_user, BASE_TIME + timedelta(days=4))  # not a member, skipped
+        make_keep(circle, user, datetime(2026, 8, 9, 0, 0, tzinfo=timezone.utc))
+        make_keep(circle, user, datetime(2026, 9, 1, 0, 0, tzinfo=timezone.utc))
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(ADJACENT_DAYS_URL, {"date": "2026-07-01"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == {"date": "2026-07-01", "previous": "2026-06-02", "next": "2026-08-09"}
+
+    def test_null_at_either_end(self, api_client, user, circle):
+        make_keep(circle, user, BASE_TIME)
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(ADJACENT_DAYS_URL, {"date": "2026-07-01"})
+
+        assert response.data == {"date": "2026-07-01", "previous": None, "next": None}
+
+    def test_respects_circle_filter(self, api_client, user, other_user, circle):
+        second_circle = Circle.objects.create(name="Grandparents", created_by=other_user)
+        CircleMembership.objects.create(user=user, circle=second_circle)
+        make_keep(second_circle, other_user, BASE_TIME + timedelta(days=1))
+        make_keep(circle, user, BASE_TIME + timedelta(days=5))
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(ADJACENT_DAYS_URL, {"date": "2026-07-01", "circle_slug": circle.slug})
+
+        assert response.data["next"] == "2026-07-06"
+
+    @pytest.mark.parametrize("params", [{}, {"date": "07/01/2026"}])
+    def test_missing_or_invalid_date_is_rejected(self, api_client, user, params):
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(ADJACENT_DAYS_URL, params)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db

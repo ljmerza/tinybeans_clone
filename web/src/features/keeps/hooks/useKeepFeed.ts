@@ -11,6 +11,7 @@ import { keepKeys } from "../api/queryKeys";
 import { keepServices } from "../api/services";
 import type {
 	FeedComment,
+	FeedFilters,
 	FeedKeep,
 	FeedPage,
 	KeepCommentRecord,
@@ -27,15 +28,27 @@ export function cursorFromNextUrl(next: string | null): string | undefined {
 }
 
 /**
- * Newest-first photo feed across every circle the user belongs to.
+ * Newest-first photo feed across every circle the user belongs to, or one
+ * day's posts when `filters.date` is set.
  * Not persisted to localStorage: presigned media URLs expire after a day.
  */
-export function useKeepFeed() {
+export function useKeepFeed(filters: FeedFilters = {}) {
+	const { date, circleSlug } = filters;
 	return useInfiniteQuery({
-		queryKey: keepKeys.feed(),
-		queryFn: ({ pageParam }) => keepServices.getFeed(pageParam),
+		queryKey: date ? keepKeys.feedDay(date, circleSlug) : keepKeys.feed(),
+		queryFn: ({ pageParam }) => keepServices.getFeed(pageParam, filters),
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: (lastPage: FeedPage) => cursorFromNextUrl(lastPage.next),
+	});
+}
+
+/**
+ * The nearest earlier/later days with posts, for the day view's arrows.
+ */
+export function useAdjacentFeedDays(date: string, circleSlug?: string) {
+	return useQuery({
+		queryKey: keepKeys.adjacentFeedDays(date, circleSlug),
+		queryFn: () => keepServices.getAdjacentFeedDays(date, circleSlug),
 	});
 }
 
@@ -58,26 +71,28 @@ export function useKeepComments(keepId: string, enabled: boolean) {
 }
 
 /**
- * Apply `update` to a keep wherever it is cached: any loaded feed page and
- * its single-keep query.
+ * Apply `update` to a keep wherever it is cached: any loaded page of the home
+ * or day feeds, and its single-keep query.
  */
 function patchCachedKeep(
 	queryClient: QueryClient,
 	keepId: string,
 	update: (keep: FeedKeep) => FeedKeep,
 ) {
-	queryClient.setQueryData<InfiniteData<FeedPage>>(keepKeys.feed(), (data) =>
-		data
-			? {
-					...data,
-					pages: data.pages.map((page) => ({
-						...page,
-						results: page.results.map((keep) =>
-							keep.id === keepId ? update(keep) : keep,
-						),
-					})),
-				}
-			: data,
+	queryClient.setQueriesData<InfiniteData<FeedPage>>(
+		{ queryKey: keepKeys.feed() },
+		(data) =>
+			data
+				? {
+						...data,
+						pages: data.pages.map((page) => ({
+							...page,
+							results: page.results.map((keep) =>
+								keep.id === keepId ? update(keep) : keep,
+							),
+						})),
+					}
+				: data,
 	);
 	queryClient.setQueryData<FeedKeep>(keepKeys.feedKeep(keepId), (keep) =>
 		keep ? update(keep) : keep,
