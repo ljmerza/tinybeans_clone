@@ -4,6 +4,7 @@ This module provides MinIO-based storage for media files with support
 for thumbnails, gallery images, and full-size originals.
 """
 
+import functools
 import hashlib
 import os
 import uuid
@@ -181,6 +182,12 @@ class MinIOStorageBackend(MediaStorageBackend):
             return {}
 
 
+@functools.cache
 def get_storage_backend() -> MediaStorageBackend:
-    """Get the MinIO storage backend instance."""
+    """Get the MinIO storage backend instance, built once per process.
+
+    Construction checks the bucket over the network, while presigning is local
+    math, so a fresh backend per URL made every signed URL pay a MinIO round
+    trip. Created lazily, so forked workers (Celery) each build their own.
+    """
     return MinIOStorageBackend()

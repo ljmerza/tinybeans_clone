@@ -348,11 +348,29 @@ class TestMinIOStorageBackend:
 
 def test_get_storage_backend():
     """Test get_storage_backend function."""
-    with patch("mysite.keeps.storage.MinIOStorageBackend") as mock_backend_class:
-        mock_instance = Mock()
-        mock_backend_class.return_value = mock_instance
+    get_storage_backend.cache_clear()
+    try:
+        with patch("mysite.keeps.storage.MinIOStorageBackend") as mock_backend_class:
+            mock_instance = Mock()
+            mock_backend_class.return_value = mock_instance
 
-        backend = get_storage_backend()
+            backend = get_storage_backend()
 
-        assert backend == mock_instance
-        mock_backend_class.assert_called_once()
+            assert backend == mock_instance
+            mock_backend_class.assert_called_once()
+    finally:
+        get_storage_backend.cache_clear()
+
+
+def test_get_storage_backend_reuses_one_instance():
+    """Signing many URLs must not rebuild the backend (and re-check the bucket) each time."""
+    get_storage_backend.cache_clear()
+    try:
+        with patch("mysite.keeps.storage.MinIOStorageBackend") as mock_backend_class:
+            first = get_storage_backend()
+            second = get_storage_backend()
+
+            assert first is second
+            mock_backend_class.assert_called_once()
+    finally:
+        get_storage_backend.cache_clear()
