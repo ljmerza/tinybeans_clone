@@ -43,29 +43,31 @@ export function CircleMemberListItem({
 	return (
 		<li className="border border-border rounded-md px-4 py-3 flex flex-col gap-3 transition-colors bg-card/60">
 			<div className="flex flex-wrap items-center justify-between gap-2">
-				<div className="flex items-center gap-3">
-					<div className="font-medium text-sm text-foreground">
-						{member.user.display_name || member.user.email}
+				<div className="flex min-w-0 flex-col gap-1">
+					<div className="flex flex-wrap items-center gap-2">
+						<div className="font-medium text-sm text-foreground">
+							{member.user.display_name || member.user.email}
+						</div>
+						{isOwner && (
+							<Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+								{t("pages.circles.members.role.owner")}
+							</Badge>
+						)}
+						{member.role === "admin" && !isOwner && (
+							<Badge variant="default">
+								{t("pages.circles.members.role.admin")}
+							</Badge>
+						)}
+						{isCurrentUser && (
+							<Badge variant="accent">
+								{t("pages.circles.members.you")}
+							</Badge>
+						)}
 					</div>
 					{member.user.display_name && (
-						<span className="text-xs text-muted-foreground">
+						<span className="break-all text-xs text-muted-foreground">
 							{member.user.email}
 						</span>
-					)}
-					{isOwner && (
-						<Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
-							{t("pages.circles.members.role.owner")}
-						</Badge>
-					)}
-					{member.role === "admin" && !isOwner && (
-						<Badge variant="default">
-							{t("pages.circles.members.role.admin")}
-						</Badge>
-					)}
-					{isCurrentUser && (
-						<Badge variant="accent">
-							{t("pages.circles.members.you")}
-						</Badge>
 					)}
 				</div>
 				<div className="flex items-center gap-2">
