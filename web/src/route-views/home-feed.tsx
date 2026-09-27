@@ -65,7 +65,8 @@ export function HomeFeedView() {
 
 	return (
 		<Layout>
-			<div className="container-page space-y-6">
+			{/* Layout's <main> already applies container-page padding. */}
+			<div className="space-y-6">
 				<header className="mx-auto max-w-[var(--rsf-post-max-width)] space-y-2">
 					<h1 className="heading-2">{t("pages.feed.title")}</h1>
 					<p className="text-subtitle">{t("pages.feed.subtitle")}</p>
