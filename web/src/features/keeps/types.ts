@@ -73,6 +73,24 @@ export interface FeedPage {
 	results: FeedKeep[];
 }
 
+/**
+ * Narrows the feed to one UTC day (`YYYY-MM-DD`) and/or one circle.
+ */
+export interface FeedFilters {
+	date?: string;
+	circleSlug?: string;
+}
+
+/**
+ * GET /keeps/feed/adjacent-days/: the closest days with posts either side of
+ * `date`, or null when there are none.
+ */
+export interface AdjacentFeedDays {
+	date: string;
+	previous: string | null;
+	next: string | null;
+}
+
 export interface KeepReactionRecord {
 	id: number;
 	keep: string;

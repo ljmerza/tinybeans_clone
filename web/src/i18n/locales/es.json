@@ -548,6 +548,16 @@
 			"all_circles": "Todos los círculos",
 			"select_circle": "Elige un círculo"
 		},
+		"calendar_day": {
+			"loading": "Cargando las fotos de este día…",
+			"error_title": "No se pudo cargar este día",
+			"empty_title": "No hay fotos en este día",
+			"empty_message": "Elige otro día en el calendario.",
+			"aria_label": "Fotos del {{date}}",
+			"previous_day": "Día anterior con fotos",
+			"next_day": "Siguiente día con fotos",
+			"back_to_month": "Volver a {{month}}"
+		},
 		"error": {
 			"something_wrong": "Algo salió mal",
 			"unexpected_error": "Ocurrió un error inesperado",

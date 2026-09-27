@@ -8,6 +8,11 @@ export const keepKeys = {
 	calendarMonth: (month: string, circleSlug?: string) =>
 		keepKeysFactory.tag("calendar", circleSlug ?? "all", month),
 	feed: () => keepKeysFactory.tag("feed"),
+	/** Nested under `feed` so cache patches reach every feed variant. */
+	feedDay: (date: string, circleSlug?: string) =>
+		keepKeysFactory.tag("feed", "day", circleSlug ?? "all", date),
+	adjacentFeedDays: (date: string, circleSlug?: string) =>
+		keepKeysFactory.tag("adjacent-feed-days", circleSlug ?? "all", date),
 	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),
 	comments: (keepId: string) => keepKeysFactory.tag("comments", keepId),
 };

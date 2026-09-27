@@ -1,7 +1,9 @@
 import { apiClient as authApi } from "@/features/auth/api/authClient";
 import type { ApiResponseWithMessages } from "@/types";
 import type {
+	AdjacentFeedDays,
 	CalendarMonthPayload,
+	FeedFilters,
 	FeedKeep,
 	FeedPage,
 	KeepCommentRecord,
@@ -25,9 +27,21 @@ export const keepServices = {
 		);
 	},
 
-	getFeed(cursor?: string) {
-		const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
+	getFeed(cursor?: string, { date, circleSlug }: FeedFilters = {}) {
+		const params = new URLSearchParams();
+		if (cursor) params.set("cursor", cursor);
+		if (date) params.set("date", date);
+		if (circleSlug) params.set("circle_slug", circleSlug);
+		const query = params.toString() ? `?${params}` : "";
 		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/${query}`);
+	},
+
+	getAdjacentFeedDays(date: string, circleSlug?: string) {
+		const params = new URLSearchParams({ date });
+		if (circleSlug) params.set("circle_slug", circleSlug);
+		return authApi.get<AdjacentFeedDays>(
+			`${KEEPS_BASE}/feed/adjacent-days/?${params}`,
+		);
 	},
 
 	getFeedKeep(keepId: string) {
