@@ -1,6 +1,8 @@
 """Views for Keep comments."""
 
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+import uuid
+
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import generics, permissions
 
 from mysite.circles.models import Circle
@@ -27,7 +29,17 @@ class KeepCommentListCreateView(generics.ListCreateAPIView):
 
         user_circles = Circle.objects.filter(memberships__user=self.request.user)
 
-        return KeepComment.objects.filter(keep__circle__in=user_circles).select_related("user", "keep")
+        queryset = KeepComment.objects.filter(keep__circle__in=user_circles).select_related("user", "keep")
+
+        # Filter to one keep's thread if specified
+        keep_id = self.request.query_params.get("keep")
+        if keep_id:
+            try:
+                queryset = queryset.filter(keep_id=uuid.UUID(keep_id))
+            except ValueError:
+                return KeepComment.objects.none()
+
+        return queryset
 
     def perform_create(self, serializer):
         """Set the user when creating a comment."""
@@ -36,6 +48,14 @@ class KeepCommentListCreateView(generics.ListCreateAPIView):
     @extend_schema(
         summary="List keep comments",
         description="List all comments on keeps that the user can access in their circles.",
+        parameters=[
+            OpenApiParameter(
+                name="keep",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.QUERY,
+                description="Only return comments on this keep",
+            ),
+        ],
         responses={
             200: OpenApiResponse(response=KeepCommentSerializer(many=True), description="List of comments on keeps")
         },

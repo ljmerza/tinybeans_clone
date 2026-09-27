@@ -7,6 +7,10 @@ from .comments import (
     KeepCommentDetailView,
     KeepCommentListCreateView,
 )
+from .feed import (
+    KeepFeedItemView,
+    KeepFeedView,
+)
 from .keeps import (
     KeepByCircleView,
     KeepByTypeView,
@@ -36,6 +40,8 @@ __all__ = [
     "KeepCalendarView",
     "KeepCommentDetailView",
     "KeepCommentListCreateView",
+    "KeepFeedItemView",
+    "KeepFeedView",
     "KeepByCircleView",
     "KeepByTypeView",
     "KeepDetailView",
