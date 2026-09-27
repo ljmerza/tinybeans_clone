@@ -45,6 +45,7 @@ Copy `.env.example` into `.env` for backend settings and `web/.env.local` for fr
 - `docs/features/oauth/GOOGLE_OAUTH_IMPLEMENTATION.md` — Google OAuth flow details, error codes, and security notes.
 - `docs/features/media-storage/MEDIA_STORAGE_IMPLEMENTATION_SUMMARY.md` — async media pipeline and storage backends.
 - `docs/guides/planning/TINYBEANS_KEEPS_COMPLETE_SUMMARY.md` — keeps domain overview and API surface.
+- `docs/tinybeans-sync.md` — accounts/families YAML for the nightly Tinybeans import and its schedule.
 - `DEVELOPMENT.md` — local setup, seeded accounts, OAuth configuration, and testing commands.
 
 ### Dev Environment Notes

@@ -22,6 +22,11 @@ Examples:
 
 Credentials can also come from the TINYBEANS_EMAIL / TINYBEANS_PASSWORD
 (or TINYBEANS_ACCESS_TOKEN) environment variables.
+
+The nightly Celery task drives this command once per account listed in the
+YAML file named by TINYBEANS_ACCOUNTS_FILE, passing that account's families as
+--journal and its identity as --account-key so each account keeps its own
+--since-last-run cursor. See docs/tinybeans-sync.md.
 """
 
 import contextlib
@@ -261,6 +266,12 @@ class Command(BaseCommand):
             help="Generate photo thumbnails inline instead of queueing Celery tasks",
         )
         parser.add_argument(
+            "--account-key",
+            default="",
+            help="Bookkeeping key for this account's sync runs (defaults to --email, then --owner). "
+            "Keeps --since-last-run cursors separate when several accounts are synced.",
+        )
+        parser.add_argument(
             "--since-last-run",
             action="store_true",
             help="Only walk entries updated since the last successful run "
@@ -291,10 +302,14 @@ class Command(BaseCommand):
             "reactions_removed": 0,
             "errors": 0,
         }
+        self.account_key = (options.get("account_key") or options.get("email") or options.get("owner") or "").strip()
         self.updated_since_ms = self._incremental_cutoff_ms(options)
         run = None
         if not self.dry:
-            run = TinybeansSyncRun.objects.create(incremental=self.updated_since_ms is not None)
+            run = TinybeansSyncRun.objects.create(
+                incremental=self.updated_since_ms is not None,
+                account_key=self.account_key,
+            )
         try:
             self._execute(options)
         except BaseException as exc:
@@ -307,7 +322,7 @@ class Command(BaseCommand):
     def _incremental_cutoff_ms(self, options):
         if not options.get("since_last_run"):
             return None
-        last = TinybeansSyncRun.last_successful()
+        last = TinybeansSyncRun.last_successful(self.account_key)
         if last is None:
             self.stdout.write(self.style.WARNING("No successful sync recorded yet; walking the whole journal."))
             return None

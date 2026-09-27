@@ -361,4 +361,7 @@ from .celery import (  # noqa
 
 CELERY_BROKER_URL = _get_celery_broker_url(REDIS_URL)
 CELERY_RESULT_BACKEND = _get_celery_result_backend(REDIS_URL)
-CELERY_TIMEZONE = TIME_ZONE
+# Beat schedules are read in this zone. Kept separate from TIME_ZONE so the
+# nightly sync can run at local midnight without changing how Django stores or
+# renders datetimes.
+CELERY_TIMEZONE = os.environ.get("CELERY_TIMEZONE") or TIME_ZONE

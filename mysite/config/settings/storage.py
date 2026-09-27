@@ -21,6 +21,15 @@ MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "tinybeans-media")
 MINIO_USE_SSL = _env_flag("MINIO_USE_SSL", default=False)
+# Base URL browsers use to load media (e.g. an HTTPS reverse proxy in front of
+# MinIO, such as https://media.example.com). Presigned URLs are signed against
+# this host. Empty means browsers use MINIO_ENDPOINT directly.
+MINIO_PUBLIC_ENDPOINT = os.environ.get("MINIO_PUBLIC_ENDPOINT", "").rstrip("/")
+# Region used to sign public URLs without a network lookup; MinIO's default.
+MINIO_REGION = os.environ.get("MINIO_REGION", "us-east-1")
+
+if MINIO_PUBLIC_ENDPOINT and not MINIO_PUBLIC_ENDPOINT.startswith(("http://", "https://")):
+    raise ImproperlyConfigured("MINIO_PUBLIC_ENDPOINT must start with http:// or https://")
 
 # Media Upload Settings
 MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE", 100 * 1024 * 1024))  # 100MB

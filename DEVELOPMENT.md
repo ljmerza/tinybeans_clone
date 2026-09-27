@@ -4,6 +4,7 @@
 
 - Python 3.12 (use the provided `.venv` by running `pip install -r requirements.txt`)
 - Docker + Docker Compose for local services (`redis`, `postgres`, Celery workers, Flower)
+- Copy the dev settings template: `cp .env.development.example .env.development`
 
 Start the full stack with:
 
@@ -11,7 +12,7 @@ Start the full stack with:
 docker compose up --build
 ```
 
-The primary API is served at http://localhost:8000/ and Flower (Celery monitoring) at http://localhost:5556/flower.
+The primary API is served at http://localhost:8100/ and Flower (Celery monitoring) at http://localhost:5656/flower/.
 
 > **Note**: The `web` service automatically runs database migrations and seeds demo data on startup. If you need to reseed manually, run `python manage.py seed_demo_data` after containers are up.
 
@@ -25,22 +26,61 @@ Follow these steps to exercise Google sign-up and sign-in flows against the loca
    - Under **APIs & Services → Credentials**, create an **OAuth client ID** of type *Web application*.
    - Add `http://localhost:3053` to **Authorized JavaScript origins** and `http://localhost:3053/auth/google/callback` to **Authorized redirect URIs** (swap in your host IP if different).
    - Download or copy the generated **Client ID** and **Client secret**.
+   - The backend also only accepts redirect URIs listed in `OAUTH_ALLOWED_REDIRECT_URIS` (`mysite/config/settings/auth.py`), which currently includes `http://localhost:3000/auth/google/callback` but not the `:3053` one. Add yours there too.
 
 2. **Populate local environment variables**
-   - Update `.env.development` with the values from Google Cloud (Compose loads this file automatically).
+   - Put the values from Google Cloud in `.env` at the repo root (gitignored). `.env.development` doesn't work for these: `docker-compose.yml` sets them in the `web` service's `environment:` block, which overrides `env_file:`.
 
      ```dotenv
      GOOGLE_OAUTH_CLIENT_ID=your-real-client-id.apps.googleusercontent.com
      GOOGLE_OAUTH_CLIENT_SECRET=your-real-secret
-     GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3053/auth/google/callback
      ```
 
-   - If you use a standalone frontend (outside Docker), mirror the redirect URI (and host IP) in `web/.env.local`.
+   - There's no redirect URI to configure: the frontend always sends `<browser origin>/auth/google/callback`, so it matches whatever URL you open the app at.
 
-3. **Restart the containers**
-   - Run `docker compose up --build` (or `docker compose restart web web-frontend`) so the Django API picks up the new environment variables.
+3. **Recreate the container**
+   - Run `docker compose up -d web` so the Django API picks up the new environment variables. `docker compose restart` keeps the old environment.
 
 Once configured, the login and signup pages will render the Google OAuth button and you can complete the flow end-to-end against your local stack.
+
+## Serving the Stack on Your Own Domain
+
+By default everything is reached at `http://localhost:<port>`. To put the app behind your own hostname (e.g. an HTTPS reverse proxy at `https://app.example.com`), set the URL-related variables in a **`.env` file at the repo root**. It's gitignored, so each machine keeps its own URLs.
+
+> **Why `.env` and not `.env.development`?** The variables below are set in the `environment:` block of `docker-compose.yml` (`${VAR:-default}`), and `environment:` wins over `env_file:`. So values for these keys in `.env.development` are ignored. Compose reads `.env` automatically to fill in those `${VAR}` placeholders.
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `ACCOUNT_FRONTEND_BASE_URL` | Base URL used in links inside emails (password reset, magic login, email verification, circle invites). | `http://localhost:3053` |
+| `DJANGO_ALLOWED_HOSTS` | Hostnames Django accepts. Include your domain and any LAN IP you browse by. | `localhost,127.0.0.1,[::1],web,localhost` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Origins (with scheme) allowed to make CSRF-protected requests. | `http://localhost:3053,http://localhost:3053,http://127.0.0.1:3053` |
+| `MINIO_PUBLIC_ENDPOINT` | Base URL browsers load photos/videos from. Presigned media URLs are signed for this host. The backend itself talks to MinIO via `MINIO_ENDPOINT` (`http://minio:9000`). | `http://localhost:9220` |
+| `DASHY_CONFIG` | Path to the Dashy config to mount, so you can keep a copy with your own links. | `./dashy-config.yml` |
+
+Example `.env`:
+
+```dotenv
+ACCOUNT_FRONTEND_BASE_URL=https://app.example.com
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,[::1],web,192.168.1.10,app.example.com
+DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:3053,http://127.0.0.1:3053,https://app.example.com
+MINIO_PUBLIC_ENDPOINT=https://media.example.com
+# cp dashy-config.yml volumes/dashy/conf.yml, then edit the links there (volumes/ is gitignored)
+DASHY_CONFIG=./volumes/dashy/conf.yml
+```
+
+**Media needs its own HTTPS hostname.** MinIO only speaks plain HTTP, and browsers (iOS Safari in particular) won't load `http://` images on an `https://` page, so photos show up blank. Put MinIO (host port `9220`) behind your reverse proxy on a separate hostname and point `MINIO_PUBLIC_ENDPOINT` at it. The proxy **must pass the `Host` header through unchanged**, because it's part of the presigned-URL signature. Browsers only need `GET`/`HEAD`, since uploads go from the backend to MinIO directly.
+
+**Reverse-proxy routing for the app hostname:** send `/api/`, `/admin/`, `/static/`, `/media/` and `/health/` to Django (host port `8100`). Send everything else, including the Vite HMR websocket, to the Vite dev server (host port `3053`).
+
+**Not yet configurable through env vars:**
+- `web/vite.config.ts` → `server.allowedHosts`: add your hostname there, or Vite rejects the request.
+- `mysite/config/settings/auth.py` → `OAUTH_ALLOWED_REDIRECT_URIS`: Google sign-in only accepts the redirect URIs hardcoded in that list. The redirect URI is built from the browser's origin (`<origin>/auth/google/callback`), and `GOOGLE_OAUTH_REDIRECT_URI` is not used for it.
+
+**Apply changes** by recreating the containers. `docker compose restart` keeps the old environment, so use:
+
+```bash
+docker compose up -d web celery-worker-1 celery-beat   # add `dashy` if you changed DASHY_CONFIG
+```
 
 ## Seeding Demo Data
 
@@ -95,7 +135,7 @@ The test settings (`mysite/test_settings.py`) override the production settings t
 
 ## Circle Invitation Configuration
 
-Circle invitation flows rely on a handful of environment variables to control rate limiting, onboarding TTLs, and reminder cadences. The defaults live in `.env.example`, but for local debugging you can adjust the following values inside `.env.development` before restarting Docker:
+Circle invitation flows rely on a handful of environment variables to control rate limiting, onboarding TTLs, and reminder cadences. The defaults are defined in `mysite/config/settings/auth.py`, but for local debugging you can adjust the following values inside `.env.development` before restarting Docker:
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
@@ -108,6 +148,6 @@ Circle invitation flows rely on a handful of environment variables to control ra
 | `CIRCLE_INVITE_REMINDER_BATCH_SIZE` | Batch size for the reminder Celery task. | `100` |
 | `CIRCLE_INVITE_ONBOARDING_TTL_MINUTES` | TTL for onboarding tokens issued to invitees. | `60` |
 
-After updating these values run `docker compose restart web` so the API and Celery tasks pick up the new settings.
+After updating these values run `docker compose up -d web celery-worker-1 celery-beat` so the API and Celery tasks pick up the new settings. A plain `docker compose restart` doesn't reload `.env.development`.
 
 Feel free to extend the demo data to cover new features—just update the seeding command and this document accordingly.

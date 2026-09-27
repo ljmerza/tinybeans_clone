@@ -1,6 +1,9 @@
 """Tests for the sync_tinybeans management command (API + storage mocked)."""
 
+import shutil
+import tempfile
 from datetime import timedelta
+from pathlib import Path
 from unittest import mock
 
 from django.core.management import call_command
@@ -563,31 +566,125 @@ class TinybeansClientPagingTests(SimpleTestCase):
 
 
 class SyncTinybeansIncrementalTaskTests(TestCase):
-    """The scheduled task only runs with credentials and no run in progress."""
+    """The scheduled task fans out over every configured account, one cursor each."""
 
-    CREDS = {"TINYBEANS_EMAIL": "parent@example.com", "TINYBEANS_PASSWORD": "pw"}
+    # Explicit empties so an accounts file configured in the developer's own
+    # environment cannot leak into the env-fallback tests.
+    CREDS = {
+        "TINYBEANS_ACCOUNTS_FILE": "",
+        "TINYBEANS_EMAIL": "parent@example.com",
+        "TINYBEANS_PASSWORD": "pw",
+        "TINYBEANS_ACCESS_TOKEN": "",
+        "TINYBEANS_OWNER": "",
+    }
+
+    def _accounts_file(self, body):
+        path = Path(tempfile.mkdtemp()) / "accounts.yml"
+        path.write_text(body)
+        self.addCleanup(shutil.rmtree, path.parent)
+        return {"TINYBEANS_ACCOUNTS_FILE": str(path)}
 
     def test_skips_without_credentials(self):
         with mock.patch.dict("os.environ", {}, clear=True), mock.patch("mysite.keeps.tasks.call_command") as call:
-            self.assertFalse(sync_tinybeans_incremental())
+            self.assertEqual(sync_tinybeans_incremental(), 0)
         call.assert_not_called()
 
-    def test_runs_incremental_sync_with_credentials(self):
+    def test_runs_incremental_sync_from_env_credentials(self):
         with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
-            self.assertTrue(sync_tinybeans_incremental())
-        call.assert_called_once_with("sync_tinybeans", since_last_run=True)
+            self.assertEqual(sync_tinybeans_incremental(), 1)
+        call.assert_called_once_with(
+            "sync_tinybeans",
+            since_last_run=True,
+            account_key="parent@example.com",
+            email="parent@example.com",
+            password="pw",
+            token=None,
+            owner=None,
+            journal=None,
+        )
 
-    def test_skips_while_another_run_is_in_progress(self):
-        TinybeansSyncRun.objects.create(status=TinybeansSyncStatus.RUNNING)
+    def test_skips_while_the_same_account_is_in_progress(self):
+        TinybeansSyncRun.objects.create(status=TinybeansSyncStatus.RUNNING, account_key="parent@example.com")
         with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
-            self.assertFalse(sync_tinybeans_incremental())
+            self.assertEqual(sync_tinybeans_incremental(), 0)
         call.assert_not_called()
+
+    def test_another_accounts_run_does_not_block_this_one(self):
+        TinybeansSyncRun.objects.create(status=TinybeansSyncStatus.RUNNING, account_key="someone-else@example.com")
+        with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertEqual(sync_tinybeans_incremental(), 1)
+        call.assert_called_once()
 
     def test_ignores_stale_running_rows(self):
         TinybeansSyncRun.objects.create(
             status=TinybeansSyncStatus.RUNNING,
+            account_key="parent@example.com",
             started_at=timezone.now() - timedelta(hours=7),
         )
         with mock.patch.dict("os.environ", self.CREDS), mock.patch("mysite.keeps.tasks.call_command") as call:
-            self.assertTrue(sync_tinybeans_incremental())
+            self.assertEqual(sync_tinybeans_incremental(), 1)
         call.assert_called_once()
+
+    def test_syncs_every_account_in_the_file_with_its_own_families(self):
+        env = self._accounts_file(
+            """
+            accounts:
+              - email: one@example.com
+                password: pw1
+                families:
+                  - id: 100
+                    name: Merza
+                  - 200
+              - email: two@example.com
+                password: pw2
+                owner: local@example.com
+            """
+        )
+        with mock.patch.dict("os.environ", env), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertEqual(sync_tinybeans_incremental(), 2)
+
+        self.assertEqual(
+            [c.kwargs["account_key"] for c in call.call_args_list],
+            ["one@example.com", "two@example.com"],
+        )
+        self.assertEqual(call.call_args_list[0].kwargs["journal"], ["100", "200"])
+        self.assertIsNone(call.call_args_list[1].kwargs["journal"])
+        self.assertEqual(call.call_args_list[1].kwargs["owner"], "local@example.com")
+
+    def test_disabled_accounts_are_skipped(self):
+        env = self._accounts_file(
+            """
+            accounts:
+              - email: off@example.com
+                password: pw
+                enabled: false
+              - email: on@example.com
+                password: pw
+            """
+        )
+        with mock.patch.dict("os.environ", env), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertEqual(sync_tinybeans_incremental(), 1)
+        self.assertEqual(call.call_args.kwargs["account_key"], "on@example.com")
+
+    def test_one_failing_account_does_not_stop_the_others(self):
+        env = self._accounts_file(
+            """
+            accounts:
+              - email: broken@example.com
+                password: pw
+              - email: fine@example.com
+                password: pw
+            """
+        )
+        with (
+            mock.patch.dict("os.environ", env),
+            mock.patch("mysite.keeps.tasks.call_command", side_effect=[CommandError("login failed"), None]) as call,
+        ):
+            self.assertEqual(sync_tinybeans_incremental(), 1)
+        self.assertEqual(call.call_count, 2)
+
+    def test_unusable_accounts_file_is_skipped_without_raising(self):
+        env = {"TINYBEANS_ACCOUNTS_FILE": "/nonexistent/accounts.yml"}
+        with mock.patch.dict("os.environ", env), mock.patch("mysite.keeps.tasks.call_command") as call:
+            self.assertEqual(sync_tinybeans_incremental(), 0)
+        call.assert_not_called()

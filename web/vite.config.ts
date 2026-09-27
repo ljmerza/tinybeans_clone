@@ -14,6 +14,10 @@ export default defineConfig({
 	server: {
 		host: "0.0.0.0",
 		port: 3000,
+		// Vite 5.4.12+/6+/7 reject requests whose Host header is not listed here.
+		// Needed so the dev server can be served through nginx at
+		// https://circles.lmerza.com (localhost / bare IPs are always allowed).
+		allowedHosts: ["circles.lmerza.com"],
 		watch: {
 			usePolling: true,
 		},

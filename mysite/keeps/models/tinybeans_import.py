@@ -107,6 +107,12 @@ class TinybeansSyncRun(models.Model):
     that fails part-way never advances the cutoff.
     """
 
+    account_key = models.CharField(
+        max_length=254,
+        blank=True,
+        default="",
+        help_text="Which configured Tinybeans account this run belongs to (its email, normally).",
+    )
     started_at = models.DateTimeField(default=timezone.now)
     finished_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
@@ -120,13 +126,22 @@ class TinybeansSyncRun(models.Model):
 
     class Meta:
         ordering = ["-started_at"]
+        indexes = [
+            models.Index(fields=["account_key", "status", "-started_at"], name="keeps_tinyb_sync_acct_idx"),
+        ]
 
     def __str__(self):
-        return f"tinybeans sync {self.started_at:%Y-%m-%d %H:%M} ({self.status})"
+        label = self.account_key or "default"
+        return f"tinybeans sync {label} {self.started_at:%Y-%m-%d %H:%M} ({self.status})"
 
     @classmethod
-    def last_successful(cls):
-        return cls.objects.filter(status=TinybeansSyncStatus.SUCCESS).order_by("-started_at").first()
+    def last_successful(cls, account_key: str = ""):
+        """Latest successful run for one account; cursors never cross accounts."""
+        return (
+            cls.objects.filter(status=TinybeansSyncStatus.SUCCESS, account_key=account_key)
+            .order_by("-started_at")
+            .first()
+        )
 
     def finish(self, status, counts=None, error=""):
         self.status = status
