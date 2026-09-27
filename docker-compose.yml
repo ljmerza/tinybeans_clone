@@ -29,11 +29,14 @@ x-common-env: &django-common-env
   EMAIL_USE_TLS: ${EMAIL_USE_TLS:-0}
   EMAIL_USE_SSL: ${EMAIL_USE_SSL:-0}
   ACCOUNT_FRONTEND_BASE_URL: ${ACCOUNT_FRONTEND_BASE_URL:-http://localhost:3053}
-  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://192.168.1.76:9220}
+  # How the backend reaches MinIO (compose network); browsers use MINIO_PUBLIC_ENDPOINT.
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
   MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-tinybeans-media}
   MINIO_USE_SSL: ${MINIO_USE_SSL:-0}
+  # Base URL browsers load media from (defaults to MinIO's published port; e.g. an HTTPS proxy in front of MinIO).
+  MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9220}
   MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-104857600}
   TWOFA_RATE_LIMIT_MAX: ${TWOFA_RATE_LIMIT_MAX:-0}
   TWOFA_RATE_LIMIT_WINDOW: ${TWOFA_RATE_LIMIT_WINDOW:-0}
@@ -62,7 +65,9 @@ services:
     volumes:
       - ./:/app
     env_file:
-      - ./.env.development
+      # Local dev defaults (gitignored); optional so a fresh clone still starts
+      - path: ./.env.development
+        required: false
       # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
       - path: ./env/tinybeans.env
         required: false
@@ -103,7 +108,9 @@ services:
     volumes:
       - ./:/app
     env_file:
-      - ./.env.development
+      # Local dev defaults (gitignored); optional so a fresh clone still starts
+      - path: ./.env.development
+        required: false
       # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
       - path: ./env/tinybeans.env
         required: false
@@ -122,7 +129,9 @@ services:
     volumes:
       - ./:/app
     env_file:
-      - ./.env.development
+      # Local dev defaults (gitignored); optional so a fresh clone still starts
+      - path: ./.env.development
+        required: false
       # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
       - path: ./env/tinybeans.env
         required: false
@@ -142,7 +151,9 @@ services:
       - ./:/app
       - flower_data:/data
     env_file:
-      - ./.env.development
+      # Local dev defaults (gitignored); optional so a fresh clone still starts
+      - path: ./.env.development
+        required: false
     environment:
       <<: *django-common-env
     depends_on:
@@ -229,7 +240,7 @@ services:
     ports:
       - "4100:8080"
     volumes:
-      - ./dashy-config.yml:/app/user-data/conf.yml
+      - ${DASHY_CONFIG:-./dashy-config.yml}:/app/user-data/conf.yml
     environment:
       - NODE_ENV=production
     restart: unless-stopped

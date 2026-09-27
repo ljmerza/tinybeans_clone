@@ -184,6 +184,58 @@ class TestMinIOStorageBackend:
             mock_client.presigned_get_object.assert_called_once()
 
     @patch("minio.Minio")
+    def test_get_url_uses_public_endpoint(self, mock_minio_class):
+        """Presigned URLs are signed by a client pointed at MINIO_PUBLIC_ENDPOINT."""
+        internal_client = Mock()
+        public_client = Mock()
+        public_client.presigned_get_object.return_value = "https://media.example.com/test-bucket/file.jpg"
+        mock_minio_class.side_effect = [internal_client, public_client]
+
+        with override_settings(
+            MINIO_ENDPOINT="http://minio:9000",
+            MINIO_ACCESS_KEY="test",
+            MINIO_SECRET_KEY="test",
+            MINIO_BUCKET_NAME="test-bucket",
+            MINIO_USE_SSL=False,
+            MINIO_PUBLIC_ENDPOINT="https://media.example.com",
+            MINIO_REGION="us-east-1",
+        ):
+            backend = MinIOStorageBackend()
+
+            url = backend.get_url("keeps/2024/01/01/test.jpg")
+
+            assert url == "https://media.example.com/test-bucket/file.jpg"
+            mock_minio_class.assert_called_with(
+                "media.example.com", access_key="test", secret_key="test", secure=True, region="us-east-1"
+            )
+            public_client.presigned_get_object.assert_called_once()
+            internal_client.presigned_get_object.assert_not_called()
+            # Bucket management still goes through the internal endpoint.
+            internal_client.bucket_exists.assert_called_once_with("test-bucket")
+            public_client.bucket_exists.assert_not_called()
+
+    @patch("minio.Minio")
+    def test_get_url_without_public_endpoint_uses_internal_client(self, mock_minio_class):
+        """Without MINIO_PUBLIC_ENDPOINT, presigning uses the MINIO_ENDPOINT client."""
+        mock_client = Mock()
+        mock_minio_class.return_value = mock_client
+
+        with override_settings(
+            MINIO_ENDPOINT="http://localhost:9000",
+            MINIO_ACCESS_KEY="test",
+            MINIO_SECRET_KEY="test",
+            MINIO_BUCKET_NAME="test-bucket",
+            MINIO_PUBLIC_ENDPOINT="",
+        ):
+            backend = MinIOStorageBackend()
+
+            backend.get_url("keeps/2024/01/01/test.jpg")
+
+            assert backend.url_client is backend.client
+            assert mock_minio_class.call_count == 1
+            mock_client.presigned_get_object.assert_called_once()
+
+    @patch("minio.Minio")
     def test_exists(self, mock_minio_class):
         """Test checking file existence."""
         mock_client = Mock()
