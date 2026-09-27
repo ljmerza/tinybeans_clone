@@ -129,6 +129,20 @@ class TinybeansClient:
         response = self._request("GET", "followings", params={"clientId": CLIENT_ID})
         return response.json().get("followings") or []
 
+    def followers(self, journal_id) -> list:
+        """Everyone following a journal. Each ``user`` carries names but no email."""
+        response = self._request("GET", f"journals/{journal_id}/followers", params={"clientId": CLIENT_ID})
+        return response.json().get("followers") or []
+
+    def follower_user(self, journal_id, follower_id) -> dict:
+        """The full user behind one follower, including ``emailAddress``."""
+        response = self._request(
+            "GET",
+            f"journals/{journal_id}/followers/{follower_id}",
+            params={"clientId": CLIENT_ID},
+        )
+        return (response.json().get("follower") or {}).get("user") or {}
+
     def comment_replies(self, journal_id, entry_id, comment_id) -> list:
         """Replies to a comment (the entries feed only carries ``repliesCount``)."""
         response = self._request(
@@ -286,6 +300,7 @@ class Command(BaseCommand):
             "circles": 0,
             "children": 0,
             "users": 0,
+            "users_updated": 0,
             "entries": 0,
             "media": 0,
             "comments": 0,
@@ -362,7 +377,8 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"Done. Circles {verb}: {c['circles']}, children: {c['children']}, "
-                f"users: {c['users']}, entries: {c['entries']} (media files: {c['media']}), "
+                f"users: {c['users']} (updated: {c['users_updated']}), "
+                f"entries: {c['entries']} (media files: {c['media']}), "
                 f"comments: {c['comments']} (of which replies: {c['replies']}), reactions: {c['reactions']}. "
                 f"Entries already synced: {c['entries_skipped']} (dates corrected: {c['entries_redated']}, "
                 f"originals upgraded: {c['media_upgraded']}, video posters: {c['video_posters']}, "
@@ -476,6 +492,7 @@ class Command(BaseCommand):
         circle = self._ensure_circle(journal, title)
         for child in journal.get("children") or []:
             self._ensure_child(child, circle)
+        self._sync_followers(journal, circle)
 
         processed = 0
         for entry in self.client.iter_entries(
@@ -554,14 +571,82 @@ class Command(BaseCommand):
             payload={"firstName": child.get("firstName"), "dob": child.get("dob")},
         )
 
+    def _sync_followers(self, journal, circle):
+        """Import everyone following the journal, with real names and emails.
+
+        Comments carry names but never emails and reactions carry only a user
+        id, so without this step most people arrive as nameless placeholders.
+        Runs before the entry walk so every author already has an identity.
+        """
+        try:
+            followers = self.client.followers(journal["id"])
+        except (requests.RequestException, TinybeansApiError) as exc:
+            self.stderr.write(self.style.WARNING(f"  Could not list followers of journal {journal['id']}: {exc}"))
+            return
+        for follower in followers:
+            remote_user = follower.get("user") or {}
+            if remote_user.get("id") is None:
+                continue
+            # One extra request per person, so only while the local user is incomplete.
+            if follower.get("id") is not None and self._needs_follower_detail(remote_user["id"]):
+                try:
+                    remote_user = {**remote_user, **self.client.follower_user(journal["id"], follower["id"])}
+                except (requests.RequestException, TinybeansApiError) as exc:
+                    self.stderr.write(self.style.WARNING(f"  Could not fetch follower {follower['id']}: {exc}"))
+            self._ensure_user(remote_user, circle)
+
+    def _needs_follower_detail(self, remote_id):
+        record = self._record(TinybeansObjectType.USER, remote_id)
+        user = record.user if record else None
+        return user is None or user.email.endswith(f"@{PLACEHOLDER_EMAIL_DOMAIN}") or not user.first_name
+
+    def _backfill_user(self, record, remote_user):
+        """Fill in what an earlier, thinner sighting of this user left blank.
+
+        Only blank names and placeholder emails are replaced, so nothing set
+        locally is overwritten. A placeholder whose real email already belongs
+        to another local account is left alone: merging accounts is a manual job.
+        """
+        user = record.user
+        if user is None:
+            return
+        changed = []
+        for field, key in (("first_name", "firstName"), ("last_name", "lastName")):
+            value = (remote_user.get(key) or "").strip()
+            if value and not getattr(user, field):
+                setattr(user, field, value)
+                changed.append(field)
+        email = (remote_user.get("emailAddress") or "").strip().lower()
+        if email and user.email.endswith(f"@{PLACEHOLDER_EMAIL_DOMAIN}"):
+            other = User.objects.filter(email__iexact=email).exclude(pk=user.pk).first()
+            if other:
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"  Tinybeans user {record.tinybeans_id} is {email}, which already belongs to local "
+                        f"user #{other.pk}; placeholder user #{user.pk} left as is (merge them by hand)."
+                    )
+                )
+            else:
+                user.email = email
+                changed.append("email")
+        if not changed:
+            return
+        user.save(update_fields=changed)
+        self.counts["users_updated"] += 1
+        remote = {k: remote_user.get(k) for k in ("emailAddress", "firstName", "lastName", "username")}
+        record.payload = {**record.payload, **{k: v for k, v in remote.items() if v}}
+        record.save(update_fields=["payload", "updated_at"])
+
     def _ensure_user(self, remote_user, circle):
-        """Map a Tinybeans user (from a comment/emotion) to a local user."""
+        """Map a Tinybeans user (from a follower/comment/emotion) to a local user."""
         remote_id = remote_user.get("id")
         if remote_id is None:
             return self.owner
         record = self._record(TinybeansObjectType.USER, remote_id)
         if record:
             user = record.user
+            if not self.dry:
+                self._backfill_user(record, remote_user)
         else:
             email = (
                 remote_user.get("emailAddress") or ""
@@ -580,12 +665,13 @@ class Command(BaseCommand):
                 user.set_unusable_password()
                 user.save()
             if not self.dry:
-                self._save_record(
+                record = self._save_record(
                     TinybeansObjectType.USER,
                     remote_id,
                     user=user,
                     payload={k: remote_user.get(k) for k in ("emailAddress", "firstName", "lastName", "username")},
                 )
+                self._backfill_user(record, remote_user)  # an existing account matched by email may lack names
         if circle is not None and not self.dry:
             CircleMembership.objects.get_or_create(
                 user=user,
