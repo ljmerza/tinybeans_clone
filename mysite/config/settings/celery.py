@@ -87,6 +87,8 @@ CELERY_BEAT_SCHEDULE = {
     },
     "sync-tinybeans-incremental": {
         "task": "mysite.keeps.tasks.sync_tinybeans_incremental",
-        "schedule": crontab(hour=4, minute=0),  # Nightly at 4 AM; no-op without credentials
+        # Nightly at midnight in CELERY_TIMEZONE (not UTC like the cleanups
+        # above); no-op when no Tinybeans account is configured.
+        "schedule": crontab(hour=0, minute=0),
     },
 }

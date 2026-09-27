@@ -17,6 +17,7 @@ dependencies = [
     "flower==2.0.1",
     "redis==5.3.1",
     "psycopg[binary]==3.1.18",
+    "pyyaml==6.0.3",
     "gunicorn==23.0.0",
     "minio==7.2.18",
     "pillow==11.3.0",
