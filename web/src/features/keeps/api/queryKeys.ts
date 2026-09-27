@@ -7,4 +7,7 @@ export const keepKeys = {
 	calendar: () => keepKeysFactory.tag("calendar"),
 	calendarMonth: (month: string, circleSlug?: string) =>
 		keepKeysFactory.tag("calendar", circleSlug ?? "all", month),
+	feed: () => keepKeysFactory.tag("feed"),
+	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),
+	comments: (keepId: string) => keepKeysFactory.tag("comments", keepId),
 };

@@ -9,6 +9,8 @@ from .views import (
     KeepCommentDetailView,
     KeepCommentListCreateView,
     KeepDetailView,
+    KeepFeedItemView,
+    KeepFeedView,
     KeepListCreateView,
     KeepMediaDetailView,
     KeepMediaListCreateView,
@@ -24,6 +26,8 @@ urlpatterns = [
     # Keep endpoints
     path("", KeepListCreateView.as_view(), name="keep-list-create"),
     path("calendar/", KeepCalendarView.as_view(), name="keep-calendar"),
+    path("feed/", KeepFeedView.as_view(), name="keep-feed"),
+    path("feed/<uuid:keep_id>/", KeepFeedItemView.as_view(), name="keep-feed-item"),
     path("<uuid:keep_id>/", KeepDetailView.as_view(), name="keep-detail"),
     path("by-circle/<str:circle_slug>/", KeepByCircleView.as_view(), name="keep-by-circle"),
     path("by-type/", KeepByTypeView.as_view(), name="keep-by-type"),

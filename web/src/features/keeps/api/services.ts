@@ -1,8 +1,18 @@
 import { apiClient as authApi } from "@/features/auth/api/authClient";
 import type { ApiResponseWithMessages } from "@/types";
-import type { CalendarMonthPayload } from "../types";
+import type {
+	CalendarMonthPayload,
+	FeedKeep,
+	FeedPage,
+	KeepCommentRecord,
+	KeepReactionRecord,
+	PaginatedList,
+} from "../types";
 
 const KEEPS_BASE = "/keeps";
+
+/** Upper bound for one keep's full comment thread in a single request. */
+const COMMENT_THREAD_LIMIT = 200;
 
 export const keepServices = {
 	getCalendarMonth(month: string, circleSlug?: string) {
@@ -13,5 +23,42 @@ export const keepServices = {
 		return authApi.get<ApiResponseWithMessages<CalendarMonthPayload>>(
 			`${KEEPS_BASE}/calendar/?${params.toString()}`,
 		);
+	},
+
+	getFeed(cursor?: string) {
+		const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
+		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/${query}`);
+	},
+
+	getFeedKeep(keepId: string) {
+		return authApi.get<FeedKeep>(`${KEEPS_BASE}/feed/${keepId}/`);
+	},
+
+	getKeepComments(keepId: string) {
+		const params = new URLSearchParams({
+			keep: keepId,
+			limit: String(COMMENT_THREAD_LIMIT),
+		});
+		return authApi.get<PaginatedList<KeepCommentRecord>>(
+			`${KEEPS_BASE}/comments/?${params}`,
+		);
+	},
+
+	addReaction(keepId: string, reactionType = "like") {
+		return authApi.post<KeepReactionRecord>(`${KEEPS_BASE}/reactions/`, {
+			keep: keepId,
+			reaction_type: reactionType,
+		});
+	},
+
+	removeReaction(reactionId: number) {
+		return authApi.delete<unknown>(`${KEEPS_BASE}/reactions/${reactionId}/`);
+	},
+
+	addComment(keepId: string, comment: string) {
+		return authApi.post<KeepCommentRecord>(`${KEEPS_BASE}/comments/`, {
+			keep: keepId,
+			comment,
+		});
 	},
 };
