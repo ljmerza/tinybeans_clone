@@ -12,7 +12,7 @@ from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
 from mysite.circles.models import Circle
-from mysite.keeps.management.commands.sync_tinybeans import TinybeansClient
+from mysite.keeps.management.commands.sync_tinybeans import TinybeansApiError, TinybeansClient
 from mysite.keeps.models import (
     Keep,
     KeepComment,
@@ -85,15 +85,22 @@ NOTE_ENTRY = {
     "emotions": [],
 }
 
+AUNT_FOLLOWER = {
+    "id": 70,
+    "user": {"id": 3, "firstName": "Annie", "lastName": "Aunt", "emailAddress": "aunt@example.com"},
+}
+
 
 class FakeClient:
     """Stands in for TinybeansClient; serves the fixture journal/entries."""
 
     last_updated_since = None  # cutoff passed to iter_entries on the most recent run
+    follower_detail_calls = []  # follower ids fetched via follower_user
 
-    def __init__(self, entries=None, replies=None):
+    def __init__(self, entries=None, replies=None, followers=None):
         self.entries = entries if entries is not None else [PHOTO_ENTRY, NOTE_ENTRY]
         self.replies = replies or {}
+        self.follower_list = followers or []
 
     def comment_replies(self, journal_id, entry_id, comment_id):
         return list(self.replies.get(comment_id, []))
@@ -106,6 +113,17 @@ class FakeClient:
 
     def followings(self):
         return [{"journal": dict(JOURNAL)}]
+
+    def followers(self, journal_id):
+        # The list only carries names; emails come from follower_user.
+        return [
+            {"id": f["id"], "user": {k: v for k, v in f["user"].items() if k != "emailAddress"}}
+            for f in self.follower_list
+        ]
+
+    def follower_user(self, journal_id, follower_id):
+        FakeClient.follower_detail_calls.append(follower_id)
+        return dict(next(f["user"] for f in self.follower_list if f["id"] == follower_id))
 
     def iter_entries(self, journal_id, start_ms=None, end_ms=None, updated_since_ms=None):
         FakeClient.last_updated_since = updated_since_ms
@@ -131,14 +149,15 @@ class SyncTinybeansCommandTests(TestCase):
     def setUp(self):
         DELETED_KEYS.clear()
         FakeClient.last_updated_since = None
+        FakeClient.follower_detail_calls = []
         self.thumbnail_calls = []
 
-    def run_sync(self, *args, entries=None, replies=None):
+    def run_sync(self, *args, entries=None, replies=None, followers=None):
         calls = self.thumbnail_calls
         patches = [
             mock.patch(
                 "mysite.keeps.management.commands.sync_tinybeans.TinybeansClient",
-                lambda: FakeClient(entries=entries, replies=replies),
+                lambda: FakeClient(entries=entries, replies=replies, followers=followers),
             ),
             mock.patch(
                 "mysite.keeps.management.commands.sync_tinybeans.get_storage_backend",
@@ -477,6 +496,76 @@ class SyncTinybeansCommandTests(TestCase):
 
         self.assertEqual(Keep.objects.count(), 1)
         self.assertFalse(TinybeansImportRecord.objects.filter(object_type="entry", tinybeans_id="111").exists())
+
+    def test_followers_are_imported_with_real_email_and_names(self):
+        # User 3 only ever reacts, so the entries alone would leave them a nameless placeholder.
+        entry = dict(PHOTO_ENTRY, emotions=[{"id": 602, "entryId": 111, "userId": 3, "type": {"label": "Love"}}])
+        self.run_sync(entries=[entry], followers=[AUNT_FOLLOWER])
+
+        aunt = TinybeansImportRecord.objects.get(object_type="user", tinybeans_id="3").user
+        self.assertEqual((aunt.email, aunt.first_name, aunt.last_name), ("aunt@example.com", "Annie", "Aunt"))
+        self.assertEqual(KeepReaction.objects.get().user, aunt)
+        self.assertTrue(aunt.circle_memberships.filter(circle=Circle.objects.get()).exists())
+
+    def test_rerun_backfills_placeholder_user_from_followers(self):
+        entry = dict(PHOTO_ENTRY, emotions=[{"id": 602, "entryId": 111, "userId": 3, "type": {"label": "Love"}}])
+        self.run_sync(entries=[entry])
+        placeholder = TinybeansImportRecord.objects.get(object_type="user", tinybeans_id="3").user
+        self.assertTrue(placeholder.email.endswith("@tinybeans-import.invalid"))
+        self.assertEqual(placeholder.first_name, "")
+
+        self.run_sync(entries=[entry], followers=[AUNT_FOLLOWER])
+
+        placeholder.refresh_from_db()
+        self.assertEqual(
+            (placeholder.email, placeholder.first_name, placeholder.last_name), ("aunt@example.com", "Annie", "Aunt")
+        )
+        self.assertEqual(TinybeansSyncRun.objects.latest("started_at").counts["users_updated"], 1)
+
+    def test_backfill_never_overwrites_local_names_or_real_emails(self):
+        self.run_sync(followers=[AUNT_FOLLOWER])
+        aunt = User.objects.get(email="aunt@example.com")
+        aunt.first_name = "Auntie"
+        aunt.save()
+
+        renamed = {"id": 70, "user": dict(AUNT_FOLLOWER["user"], firstName="Other", emailAddress="new@example.com")}
+        self.run_sync(followers=[renamed])
+
+        aunt.refresh_from_db()
+        self.assertEqual((aunt.email, aunt.first_name), ("aunt@example.com", "Auntie"))
+
+    def test_placeholder_is_not_merged_into_existing_account(self):
+        entry = dict(PHOTO_ENTRY, emotions=[{"id": 602, "entryId": 111, "userId": 3, "type": {"label": "Love"}}])
+        self.run_sync(entries=[entry])
+        existing = User.objects.create_user(email="aunt@example.com", password="pw")
+
+        self.run_sync(entries=[entry], followers=[AUNT_FOLLOWER])
+
+        record = TinybeansImportRecord.objects.get(object_type="user", tinybeans_id="3")
+        self.assertNotEqual(record.user, existing)
+        self.assertTrue(record.user.email.endswith("@tinybeans-import.invalid"))
+        self.assertEqual(record.user.first_name, "Annie")  # names are still filled in
+
+    def test_new_follower_matching_existing_account_is_linked_and_named(self):
+        existing = User.objects.create_user(email="aunt@example.com", password="pw")
+
+        self.run_sync(followers=[AUNT_FOLLOWER])
+
+        existing.refresh_from_db()
+        self.assertEqual(TinybeansImportRecord.objects.get(object_type="user", tinybeans_id="3").user, existing)
+        self.assertEqual((existing.first_name, existing.last_name), ("Annie", "Aunt"))
+
+    def test_follower_detail_is_only_fetched_while_user_is_incomplete(self):
+        self.run_sync(followers=[AUNT_FOLLOWER])
+        self.assertEqual(FakeClient.follower_detail_calls, [70])
+
+        self.run_sync(followers=[AUNT_FOLLOWER])
+        self.assertEqual(FakeClient.follower_detail_calls, [70])
+
+    def test_follower_listing_failure_does_not_stop_the_sync(self):
+        with mock.patch.object(FakeClient, "followers", side_effect=TinybeansApiError("403")):
+            self.run_sync()
+        self.assertEqual(Keep.objects.count(), 2)
 
 
 class TinybeansClientPagingTests(SimpleTestCase):
