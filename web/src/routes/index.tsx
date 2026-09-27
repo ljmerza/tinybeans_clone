@@ -1,11 +1,16 @@
 import { Layout } from "@/components/Layout";
 import { useAuthSession } from "@/features/auth";
+import { HomeFeedView } from "@/route-views/home-feed";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 function IndexPage() {
 	const session = useAuthSession();
 	const { t } = useTranslation();
+
+	if (session.isAuthenticated) {
+		return <HomeFeedView />;
+	}
 
 	return (
 		<Layout>
