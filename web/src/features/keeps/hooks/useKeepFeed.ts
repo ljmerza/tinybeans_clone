@@ -158,8 +158,15 @@ export function useAddKeepComment() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ keepId, text }: { keepId: string; text: string }) =>
-			keepServices.addComment(keepId, text),
+		mutationFn: ({
+			keepId,
+			text,
+			parentId,
+		}: {
+			keepId: string;
+			text: string;
+			parentId?: number;
+		}) => keepServices.addComment(keepId, text, parentId),
 		meta: {
 			toast: { error: { key: "pages.feed.comment_failed" } },
 		},

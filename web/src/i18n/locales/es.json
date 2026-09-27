@@ -529,6 +529,9 @@
 			"comment_placeholder": "Añade un comentario…",
 			"comment_label": "Añade un comentario",
 			"post_comment": "Publicar",
+			"reply": "Responder",
+			"replying_to": "Respondiendo a {{name}}",
+			"cancel_reply": "Cancelar",
 			"comment_failed": "No se pudo publicar tu comentario. Inténtalo de nuevo."
 		},
 		"keep": {

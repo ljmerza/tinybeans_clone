@@ -69,10 +69,12 @@ export const keepServices = {
 		return authApi.delete<unknown>(`${KEEPS_BASE}/reactions/${reactionId}/`);
 	},
 
-	addComment(keepId: string, comment: string) {
+	/** `parent` is the comment being replied to; omit it for a top-level comment. */
+	addComment(keepId: string, comment: string, parent?: number) {
 		return authApi.post<KeepCommentRecord>(`${KEEPS_BASE}/comments/`, {
 			keep: keepId,
 			comment,
+			...(parent !== undefined && { parent }),
 		});
 	},
 };

@@ -221,8 +221,41 @@ describe("KeepFeedPost", () => {
 			fireEvent.click(screen.getByRole("button", { name: "Post" })),
 		);
 
-		expect(addComment).toHaveBeenCalledWith(makeKeep().id, "Love it");
+		expect(addComment).toHaveBeenCalledWith(
+			makeKeep().id,
+			"Love it",
+			undefined,
+		);
 		expect(await screen.findByText("Love it")).toBeInTheDocument();
+	});
+
+	it("replies to a comment by tagging its author and nests the reply", async () => {
+		const addComment = vi
+			.spyOn(keepServices, "addComment")
+			.mockResolvedValue(
+				commentRecord({ id: 100, parent: 5, comment: "@Grandma thank you" }),
+			);
+		await renderCachedPost(makeKeep());
+
+		fireEvent.click(screen.getByRole("button", { name: "Reply" }));
+		const input = screen.getByRole("textbox", { name: "Add a comment" });
+		expect(input).toHaveValue("@Grandma ");
+		expect(screen.getByText("Replying to Grandma")).toBeInTheDocument();
+
+		fireEvent.change(input, { target: { value: "@Grandma thank you" } });
+		await act(async () =>
+			fireEvent.click(screen.getByRole("button", { name: "Post" })),
+		);
+
+		expect(addComment).toHaveBeenCalledWith(
+			makeKeep().id,
+			"@Grandma thank you",
+			5,
+		);
+		const reply = await screen.findByText("@Grandma thank you");
+		expect(
+			screen.getByText("So sweet").closest("li")?.querySelector("ul"),
+		).toContainElement(reply);
 	});
 
 	it("loads the full thread when comments are expanded", async () => {

@@ -428,6 +428,9 @@
 			"comment_placeholder": "Add a comment…",
 			"comment_label": "Add a comment",
 			"post_comment": "Post",
+			"reply": "Reply",
+			"replying_to": "Replying to {{name}}",
+			"cancel_reply": "Cancel",
 			"comment_failed": "Couldn't post your comment. Please try again."
 		},
 		"keep": {

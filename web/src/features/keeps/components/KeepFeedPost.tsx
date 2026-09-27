@@ -77,8 +77,12 @@ export function KeepFeedPost({
 			post={post}
 			defaultCommentsExpanded={defaultCommentsExpanded}
 			onLikeChange={(liked) => setLiked.mutateAsync({ keep, liked })}
-			onCommentSubmit={(text) =>
-				addComment.mutateAsync({ keepId: keep.id, text })
+			onCommentSubmit={(text, _post, { parentId }) =>
+				addComment.mutateAsync({
+					keepId: keep.id,
+					text,
+					parentId: parentId === undefined ? undefined : Number(parentId),
+				})
 			}
 			onCommentsExpandedChange={setShowAllComments}
 		>
@@ -116,11 +120,14 @@ export function KeepFeedPost({
 							t("pages.feed.view_all_comments", { count })
 						}
 						hideLabel={t("pages.feed.hide_comments")}
+						replyLabel={t("pages.feed.reply")}
 					/>
 					<PostCommentForm
 						placeholder={t("pages.feed.comment_placeholder")}
 						inputLabel={t("pages.feed.comment_label")}
 						submitLabel={t("pages.feed.post_comment")}
+						replyingToLabel={(name) => t("pages.feed.replying_to", { name })}
+						cancelReplyLabel={t("pages.feed.cancel_reply")}
 					/>
 				</div>
 			</div>

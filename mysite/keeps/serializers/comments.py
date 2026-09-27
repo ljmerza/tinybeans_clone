@@ -45,4 +45,9 @@ class KeepCommentSerializer(serializers.ModelSerializer):
         keep = attrs.get("keep") or getattr(self.instance, "keep", None)
         if parent is not None and keep is not None and parent.keep_id != keep.id:
             raise serializers.ValidationError({"parent": "Reply must be on the same keep as its parent."})
+        if parent is not None:
+            # Threads are one level deep: a reply to a reply joins its top-level comment.
+            while parent.parent_id is not None:
+                parent = parent.parent
+            attrs["parent"] = parent
         return attrs
