@@ -118,6 +118,8 @@ export function KeepFeedPost({
 						</span>
 					</div>
 				</PostHeader>
+				{/* Title above the photo, aligned with the header's padding. */}
+				<PostTitle className="-mt-1.5 px-[var(--rsf-spacing)] pb-2.5" />
 				<PostMedia>
 					<PostMediaPrevButton aria-label={t("pages.feed.previous_photo")} />
 					<PostMediaNextButton aria-label={t("pages.feed.next_photo")} />
@@ -134,7 +136,6 @@ export function KeepFeedPost({
 						<PostActionSpacer />
 						<PostShareButton aria-label={t("pages.feed.share")} />
 					</PostActions>
-					<PostTitle />
 					<PostCaption />
 					<div className="rsf-post__discussion">
 						<PostComments
