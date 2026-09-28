@@ -127,9 +127,16 @@ export function useCreatePost() {
 					mediaType === "video"
 						? ((await captureVideoPoster(file)) ?? undefined)
 						: undefined;
+				// Re-render per whole percent, not per progress event (many a second).
+				let shownPercent = -1;
 				const upload = await uploadMedia(
 					{ keepId, mediaType, file, poster, uploadOrder: 0 },
-					(progress) => setFileState(index, { progress }),
+					(progress) => {
+						const percent = Math.floor(progress * 100);
+						if (percent === shownPercent) return;
+						shownPercent = percent;
+						setFileState(index, { progress: percent / 100 });
+					},
 					signal,
 				);
 				setFileState(index, { status: "processing", progress: 1 });

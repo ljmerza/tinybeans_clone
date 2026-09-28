@@ -29,6 +29,7 @@ import {
 	useCreatePost,
 } from "../hooks/useCreatePost";
 import { readExifDate } from "../utils/exifDate";
+import { makeThumbnail } from "../utils/imageThumbnail";
 import {
 	PHOTO_TYPES,
 	VIDEO_TYPES,
@@ -86,9 +87,19 @@ function FilePreview({ file }: { file: File }) {
 	// mount, which would revoke a memoized URL the <img> still points at.
 	useEffect(() => {
 		if (!isPhoto) return;
-		const objectUrl = URL.createObjectURL(file);
-		setUrl(objectUrl);
-		return () => URL.revokeObjectURL(objectUrl);
+		let cancelled = false;
+		let objectUrl: string | null = null;
+		// A small copy, not the full-size photo: decoding and rescaling a few
+		// 12 MP originals on every paint makes the dialog sluggish.
+		void makeThumbnail(file).then((thumbnail) => {
+			if (cancelled) return;
+			objectUrl = URL.createObjectURL(thumbnail ?? file);
+			setUrl(objectUrl);
+		});
+		return () => {
+			cancelled = true;
+			if (objectUrl) URL.revokeObjectURL(objectUrl);
+		};
 	}, [file, isPhoto]);
 
 	if (!isPhoto) {
@@ -102,7 +113,12 @@ function FilePreview({ file }: { file: File }) {
 		return <div className="size-20 shrink-0 rounded bg-muted" />;
 	}
 	return (
-		<img src={url} alt="" className="size-20 shrink-0 rounded object-cover" />
+		<img
+			src={url}
+			alt=""
+			decoding="async"
+			className="size-20 shrink-0 rounded object-cover"
+		/>
 	);
 }
 
