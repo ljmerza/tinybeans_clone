@@ -1,6 +1,12 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { keepServices } from "./api/services";
@@ -39,6 +45,7 @@ const makeKeep = (overrides: Partial<FeedKeep> = {}): FeedKeep => ({
 			user_display_name: "Grandma",
 			parent: null,
 			comment: "So sweet",
+			can_delete: false,
 			created_at: "2026-07-05T11:00:00Z",
 		},
 	],
@@ -54,6 +61,7 @@ const commentRecord = (
 	user_display_name: "Leo",
 	parent: null,
 	comment: "Love it",
+	can_delete: true,
 	created_at: "2026-07-06T09:00:00Z",
 	updated_at: "2026-07-06T09:00:00Z",
 	...overrides,
@@ -221,8 +229,79 @@ describe("KeepFeedPost", () => {
 			fireEvent.click(screen.getByRole("button", { name: "Post" })),
 		);
 
-		expect(addComment).toHaveBeenCalledWith(makeKeep().id, "Love it");
+		expect(addComment).toHaveBeenCalledWith(
+			makeKeep().id,
+			"Love it",
+			undefined,
+		);
 		expect(await screen.findByText("Love it")).toBeInTheDocument();
+	});
+
+	it("replies to a comment by tagging its author and nests the reply", async () => {
+		const addComment = vi
+			.spyOn(keepServices, "addComment")
+			.mockResolvedValue(
+				commentRecord({ id: 100, parent: 5, comment: "@Grandma thank you" }),
+			);
+		await renderCachedPost(makeKeep());
+
+		fireEvent.click(screen.getByRole("button", { name: "Reply" }));
+		const input = screen.getByRole("textbox", { name: "Add a comment" });
+		expect(input).toHaveValue("@Grandma ");
+		expect(screen.getByText("Replying to Grandma")).toBeInTheDocument();
+
+		fireEvent.change(input, { target: { value: "@Grandma thank you" } });
+		await act(async () =>
+			fireEvent.click(screen.getByRole("button", { name: "Post" })),
+		);
+
+		expect(addComment).toHaveBeenCalledWith(
+			makeKeep().id,
+			"@Grandma thank you",
+			5,
+		);
+		const reply = await screen.findByText("@Grandma thank you");
+		expect(
+			screen.getByText("So sweet").closest("li")?.querySelector("ul"),
+		).toContainElement(reply);
+	});
+
+	it("deletes a comment only after confirming", async () => {
+		const deleteComment = vi
+			.spyOn(keepServices, "deleteComment")
+			.mockResolvedValue(undefined);
+		const mine = commentRecord({ id: 6, comment: "Oops" });
+		const keep = makeKeep({
+			comment_count: 2,
+			recent_comments: [...makeKeep().recent_comments, mine],
+		});
+		await renderCachedPost(keep);
+		// The refetch after deleting.
+		vi.spyOn(keepServices, "getFeedKeep").mockResolvedValue(makeKeep());
+
+		// Only the viewer's own comment is deletable here.
+		const deleteButtons = screen.getAllByRole("button", {
+			name: "Delete comment",
+		});
+		expect(deleteButtons).toHaveLength(1);
+
+		fireEvent.click(deleteButtons[0]);
+		expect(
+			await screen.findByText(
+				"This can't be undone. Any replies to it will be deleted too.",
+			),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(deleteComment).not.toHaveBeenCalled();
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete comment" }));
+		await act(async () =>
+			fireEvent.click(await screen.findByRole("button", { name: "Delete" })),
+		);
+
+		expect(deleteComment).toHaveBeenCalledWith(6);
+		await waitFor(() => expect(screen.queryByText("Oops")).toBeNull());
+		expect(screen.getByText("So sweet")).toBeInTheDocument();
 	});
 
 	it("loads the full thread when comments are expanded", async () => {
@@ -246,10 +325,152 @@ describe("KeepFeedPost", () => {
 
 		expect(getKeepComments).not.toHaveBeenCalled();
 		fireEvent.click(
-			screen.getByRole("button", { name: "View all 3 comments" }),
+			screen.getByRole("button", { name: "View more comments (2)" }),
 		);
 
 		expect(await screen.findByText("First!")).toBeInTheDocument();
 		expect(getKeepComments).toHaveBeenCalledWith(makeKeep().id);
+	});
+
+	it("shows every comment when opened expanded, as on a keep's own page", async () => {
+		const thread = Array.from({ length: 12 }, (_, n) =>
+			commentRecord({ id: n + 1, comment: `comment ${n + 1}` }),
+		);
+		vi.spyOn(keepServices, "getKeepComments").mockResolvedValue({
+			count: 12,
+			next: null,
+			previous: null,
+			results: thread,
+		});
+		renderWithQueryClient(
+			<KeepFeedPost
+				keep={makeKeep({ comment_count: 12 })}
+				defaultCommentsExpanded
+			/>,
+		);
+
+		await waitFor(() =>
+			expect(screen.queryAllByText(/^comment \d+$/)).toHaveLength(12),
+		);
+		expect(
+			screen.queryByRole("button", { name: /^View more/ }),
+		).not.toBeInTheDocument();
+	});
+
+	it("shows three comments, then five more per click", async () => {
+		const thread = Array.from({ length: 12 }, (_, n) =>
+			commentRecord({ id: n + 1, comment: `comment ${n + 1}` }),
+		);
+		let resolveThread: (value: {
+			count: number;
+			next: null;
+			previous: null;
+			results: KeepCommentRecord[];
+		}) => void = () => {};
+		const getKeepComments = vi
+			.spyOn(keepServices, "getKeepComments")
+			.mockReturnValue(
+				new Promise((resolve) => {
+					resolveThread = resolve;
+				}),
+			);
+		await renderCachedPost(
+			makeKeep({
+				comment_count: 12,
+				recent_comments: thread.slice(-3).map((record) => ({
+					id: record.id,
+					user: record.user,
+					user_display_name: record.user_display_name,
+					parent: record.parent,
+					comment: record.comment,
+					can_delete: record.can_delete,
+					created_at: record.created_at,
+				})),
+			}),
+		);
+		const shown = () => screen.queryAllByText(/^comment \d+$/);
+
+		expect(shown()).toHaveLength(3);
+		fireEvent.click(
+			screen.getByRole("button", { name: "View more comments (9)" }),
+		);
+		expect(getKeepComments).toHaveBeenCalledOnce();
+		expect(screen.getByRole("status")).toHaveTextContent("Loading comments…");
+
+		resolveThread({ count: 12, next: null, previous: null, results: thread });
+		await waitFor(() => expect(shown()).toHaveLength(8));
+		expect(screen.queryByText("comment 4")).toBeNull();
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "View more comments (4)" }),
+		);
+		expect(shown()).toHaveLength(12);
+		expect(
+			screen.queryByRole("button", { name: /^View / }),
+		).not.toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Hide comments" }));
+		expect(shown()).toHaveLength(3);
+		expect(getKeepComments).toHaveBeenCalledOnce();
+	});
+
+	it("long-pressing like opens who liked it without toggling the like", async () => {
+		const addReaction = vi.spyOn(keepServices, "addReaction");
+		const getKeepLikers = vi
+			.spyOn(keepServices, "getKeepLikers")
+			.mockResolvedValue({
+				count: 3,
+				next: "http://web:8000/api/keeps/feed/x/likers/?limit=2&offset=2",
+				previous: null,
+				results: [
+					{
+						id: 11,
+						user: 8,
+						user_display_name: "Grandma",
+						reaction_type: "love",
+						created_at: "2026-07-06T09:00:00Z",
+					},
+					{
+						id: 10,
+						user: 9,
+						user_display_name: "Uncle Sam",
+						reaction_type: "like",
+						created_at: "2026-07-05T09:00:00Z",
+					},
+				],
+			});
+		await renderCachedPost(makeKeep());
+		expect(getKeepLikers).not.toHaveBeenCalled();
+
+		const button = likeButton();
+		fireEvent.pointerDown(button, { clientX: 5, clientY: 5, button: 0 });
+		await act(() => new Promise((resolve) => setTimeout(resolve, 550)));
+		fireEvent.pointerUp(button, { clientX: 5, clientY: 5 });
+		fireEvent.click(button);
+
+		const dialog = await screen.findByRole("dialog", { name: "Liked by" });
+		expect(await within(dialog).findByText("Grandma")).toBeInTheDocument();
+		expect(within(dialog).getByText("Uncle Sam")).toBeInTheDocument();
+		expect(within(dialog).getByText("And 1 more")).toBeInTheDocument();
+		expect(getKeepLikers).toHaveBeenCalledWith(makeKeep().id);
+		expect(addReaction).not.toHaveBeenCalled();
+		// The open dialog hides the post from queries by role.
+		expect(button).toHaveAttribute("aria-pressed", "false");
+	});
+
+	it("opens who liked it from the keyboard too", async () => {
+		vi.spyOn(keepServices, "getKeepLikers").mockResolvedValue({
+			count: 0,
+			next: null,
+			previous: null,
+			results: [],
+		});
+		await renderCachedPost(makeKeep());
+
+		expect(likeButton()).toHaveAttribute("aria-keyshortcuts", "Shift+Enter");
+		fireEvent.keyDown(likeButton(), { key: "Enter", shiftKey: true });
+
+		const dialog = await screen.findByRole("dialog", { name: "Liked by" });
+		expect(await within(dialog).findByText("No likes yet")).toBeInTheDocument();
 	});
 });

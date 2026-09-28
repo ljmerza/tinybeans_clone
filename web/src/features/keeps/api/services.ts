@@ -7,6 +7,7 @@ import type {
 	FeedKeep,
 	FeedPage,
 	KeepCommentRecord,
+	KeepLiker,
 	KeepReactionRecord,
 	PaginatedList,
 } from "../types";
@@ -15,6 +16,9 @@ const KEEPS_BASE = "/keeps";
 
 /** Upper bound for one keep's full comment thread in a single request. */
 const COMMENT_THREAD_LIMIT = 200;
+
+/** How many likers the "liked by" list loads. */
+const LIKERS_LIMIT = 100;
 
 export const keepServices = {
 	getCalendarMonth(month: string, circleSlug?: string) {
@@ -58,6 +62,14 @@ export const keepServices = {
 		);
 	},
 
+	/** Newest first; `count` is the total when it exceeds the limit. */
+	getKeepLikers(keepId: string) {
+		const params = new URLSearchParams({ limit: String(LIKERS_LIMIT) });
+		return authApi.get<PaginatedList<KeepLiker>>(
+			`${KEEPS_BASE}/feed/${keepId}/likers/?${params}`,
+		);
+	},
+
 	addReaction(keepId: string, reactionType = "like") {
 		return authApi.post<KeepReactionRecord>(`${KEEPS_BASE}/reactions/`, {
 			keep: keepId,
@@ -69,10 +81,17 @@ export const keepServices = {
 		return authApi.delete<unknown>(`${KEEPS_BASE}/reactions/${reactionId}/`);
 	},
 
-	addComment(keepId: string, comment: string) {
+	/** `parent` is the comment being replied to; omit it for a top-level comment. */
+	addComment(keepId: string, comment: string, parent?: number) {
 		return authApi.post<KeepCommentRecord>(`${KEEPS_BASE}/comments/`, {
 			keep: keepId,
 			comment,
+			...(parent !== undefined && { parent }),
 		});
+	},
+
+	/** Deleting a top-level comment also deletes its replies. */
+	deleteComment(commentId: number) {
+		return authApi.delete<unknown>(`${KEEPS_BASE}/comments/${commentId}/`);
 	},
 };

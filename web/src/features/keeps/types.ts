@@ -40,6 +40,8 @@ export interface FeedComment {
 	user_display_name: string;
 	parent: number | null;
 	comment: string;
+	/** The viewer wrote it or admins its circle. */
+	can_delete: boolean;
 	created_at: string;
 }
 
@@ -94,6 +96,18 @@ export interface AdjacentFeedDays {
 export interface KeepReactionRecord {
 	id: number;
 	keep: string;
+	user: number;
+	user_display_name: string;
+	reaction_type: string;
+	created_at: string;
+}
+
+/**
+ * GET /keeps/feed/<id>/likers/: someone who reacted to a keep (any reaction
+ * counts as a like), newest first.
+ */
+export interface KeepLiker {
+	id: number;
 	user: number;
 	user_display_name: string;
 	reaction_type: string;

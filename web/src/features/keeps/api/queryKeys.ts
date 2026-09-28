@@ -15,4 +15,5 @@ export const keepKeys = {
 		keepKeysFactory.tag("adjacent-feed-days", circleSlug ?? "all", date),
 	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),
 	comments: (keepId: string) => keepKeysFactory.tag("comments", keepId),
+	likers: (keepId: string) => keepKeysFactory.tag("likers", keepId),
 };

@@ -10,7 +10,8 @@ each keep has.
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from ..models import Keep, KeepComment
+from ..models import Keep, KeepComment, KeepReaction
+from .comments import can_delete_comment
 
 # Presign for a day (instead of the 1h default). The virtualized feed remounts
 # images as they scroll back into view, so short-lived URLs would break on a
@@ -27,10 +28,25 @@ class FeedCommentSerializer(serializers.ModelSerializer):
     """A comment in a feed item's preview."""
 
     user_display_name = serializers.CharField(source="user.display_name", read_only=True)
+    can_delete = serializers.SerializerMethodField()
 
     class Meta:
         model = KeepComment
-        fields = ["id", "user", "user_display_name", "parent", "comment", "created_at"]
+        fields = ["id", "user", "user_display_name", "parent", "comment", "can_delete", "created_at"]
+        read_only_fields = fields
+
+    def get_can_delete(self, obj) -> bool:
+        return can_delete_comment(obj, self.context)
+
+
+class FeedLikerSerializer(serializers.ModelSerializer):
+    """Someone who reacted to a keep; any reaction type counts as a like."""
+
+    user_display_name = serializers.CharField(source="user.display_name", read_only=True)
+
+    class Meta:
+        model = KeepReaction
+        fields = ["id", "user", "user_display_name", "reaction_type", "created_at"]
         read_only_fields = fields
 
 
@@ -136,4 +152,4 @@ class KeepFeedSerializer(serializers.ModelSerializer):
         # Prefetched newest-first so the slice keeps the latest ones; show them
         # in reading order.
         newest_first = getattr(obj, "recent_comments_desc", [])
-        return FeedCommentSerializer(list(reversed(newest_first)), many=True).data
+        return FeedCommentSerializer(list(reversed(newest_first)), many=True, context=self.context).data

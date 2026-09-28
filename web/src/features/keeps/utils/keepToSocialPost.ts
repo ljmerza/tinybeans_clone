@@ -45,6 +45,8 @@ export function keepToSocialPost(
 			author: { name: comment.user_display_name },
 			text: comment.comment,
 			createdAt: comment.created_at,
+			parentId: comment.parent === null ? undefined : String(comment.parent),
+			canDelete: comment.can_delete,
 		})),
 		shareUrl: `${origin}${keepSharePath(keep.id)}`,
 	};
