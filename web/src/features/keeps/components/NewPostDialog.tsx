@@ -16,22 +16,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import type { CircleMembershipSummary } from "@/features/circles";
 import { useCircleMemberships } from "@/features/circles";
 import { showToast } from "@/lib/toast";
 import { Film, ImagePlus, X } from "lucide-react";
-import {
-	useCallback,
-	useEffect,
-	useId,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { type PostFileState, useCreatePost } from "../hooks/useCreatePost";
+import {
+	type PostFileState,
+	type PostItem,
+	useCreatePost,
+} from "../hooks/useCreatePost";
+import { readExifDate } from "../utils/exifDate";
 import {
 	PHOTO_TYPES,
 	VIDEO_TYPES,
@@ -41,12 +38,34 @@ import {
 
 const ACCEPT = [...PHOTO_TYPES, ...VIDEO_TYPES].join(",");
 
-/** Today as `YYYY-MM-DD` in the viewer's own timezone. */
-function localToday() {
-	const now = new Date();
-	const month = String(now.getMonth() + 1).padStart(2, "0");
-	const day = String(now.getDate()).padStart(2, "0");
-	return `${now.getFullYear()}-${month}-${day}`;
+/** `YYYY-MM-DD` for a moment in the viewer's own timezone. */
+function localDate(moment: Date) {
+	const month = String(moment.getMonth() + 1).padStart(2, "0");
+	const day = String(moment.getDate()).padStart(2, "0");
+	return `${moment.getFullYear()}-${month}-${day}`;
+}
+
+/** Never later than today (camera clocks can be wrong). */
+function notAfterToday(date: string) {
+	const today = localDate(new Date());
+	return date > today ? today : date;
+}
+
+/**
+ * A file's date until its EXIF date (if any) is read: when it was last
+ * modified. Phones may report when the file was picked rather than taken.
+ */
+function defaultDate(file: File) {
+	return notAfterToday(
+		file.lastModified
+			? localDate(new Date(file.lastModified))
+			: localDate(new Date()),
+	);
+}
+
+/** A file in the composer; `dateEdited` stops the EXIF date overwriting a picked one. */
+interface DraftItem extends PostItem {
+	dateEdited: boolean;
 }
 
 function fileKey(file: File) {
@@ -61,26 +80,29 @@ function formatSize(bytes: number) {
 }
 
 function FilePreview({ file }: { file: File }) {
-	const url = useMemo(
-		() => (mediaTypeOf(file) === "photo" ? URL.createObjectURL(file) : null),
-		[file],
-	);
-	useEffect(
-		() => () => {
-			if (url) URL.revokeObjectURL(url);
-		},
-		[url],
-	);
+	const isPhoto = mediaTypeOf(file) === "photo";
+	const [url, setUrl] = useState<string | null>(null);
+	// Created in the effect, not a memo: StrictMode runs the cleanup once on
+	// mount, which would revoke a memoized URL the <img> still points at.
+	useEffect(() => {
+		if (!isPhoto) return;
+		const objectUrl = URL.createObjectURL(file);
+		setUrl(objectUrl);
+		return () => URL.revokeObjectURL(objectUrl);
+	}, [file, isPhoto]);
 
-	if (!url) {
+	if (!isPhoto) {
 		return (
-			<div className="flex size-12 shrink-0 items-center justify-center rounded bg-muted">
+			<div className="flex size-20 shrink-0 items-center justify-center rounded bg-muted">
 				<Film className="size-5 text-muted-foreground" aria-hidden="true" />
 			</div>
 		);
 	}
+	if (!url) {
+		return <div className="size-20 shrink-0 rounded bg-muted" />;
+	}
 	return (
-		<img src={url} alt="" className="size-12 shrink-0 rounded object-cover" />
+		<img src={url} alt="" className="size-20 shrink-0 rounded object-cover" />
 	);
 }
 
@@ -121,7 +143,8 @@ export interface NewPostDialogProps {
 }
 
 /**
- * Compose a post for one of the viewer's circles: text, photos and videos.
+ * Post photos and videos to one of the viewer's circles. Each file becomes
+ * its own post with its own title and date.
  */
 export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const { t } = useTranslation();
@@ -134,38 +157,36 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const post = useCreatePost();
 
 	const [circleId, setCircleId] = useState<number | null>(null);
-	const [title, setTitle] = useState("");
-	const [text, setText] = useState("");
-	const [date, setDate] = useState(localToday);
-	const [files, setFiles] = useState<File[]>([]);
+	const [items, setItems] = useState<DraftItem[]>([]);
 	const [rejected, setRejected] = useState<string[]>([]);
-	const [error, setError] = useState("");
 
 	const selectedCircleId = circleId ?? circles[0]?.id ?? null;
 	const busy = post.phase === "posting";
 	const locked = post.phase !== "idle";
 	const canPost =
 		selectedCircleId !== null &&
-		date !== "" &&
-		(text.trim() !== "" || files.length > 0);
+		items.length > 0 &&
+		items.every((item) => item.date !== "");
 
 	const { phase, reset } = post;
+	const postedCount = post.fileStates.filter(
+		(state) => state.status === "done",
+	).length;
 	const clear = useCallback(() => {
-		setTitle("");
-		setText("");
-		setDate(localToday());
-		setFiles([]);
+		setItems([]);
 		setRejected([]);
-		setError("");
 		reset();
 	}, [reset]);
 
 	useEffect(() => {
 		if (phase !== "done") return;
-		showToast({ message: t("pages.feed.new_post.posted"), level: "success" });
+		showToast({
+			message: t("pages.feed.new_post.posted", { count: postedCount }),
+			level: "success",
+		});
 		clear();
 		onOpenChange(false);
-	}, [phase, clear, onOpenChange, t]);
+	}, [phase, postedCount, clear, onOpenChange, t]);
 
 	const addFiles = (list: FileList | null) => {
 		const picked = Array.from(list ?? []);
@@ -176,47 +197,57 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 				: [];
 		});
 		setRejected(problems);
-		setFiles((current) => {
+		const accepted = picked.filter((file) => fileProblem(file) === null);
+		setItems((current) => {
 			// Picking the same file twice adds it once.
-			const chosen = new Set(current.map(fileKey));
+			const chosen = new Set(current.map((item) => fileKey(item.file)));
 			return [
 				...current,
-				...picked.filter(
-					(file) => fileProblem(file) === null && !chosen.has(fileKey(file)),
-				),
+				...accepted
+					.filter((file) => !chosen.has(fileKey(file)))
+					.map((file) => ({
+						file,
+						title: "",
+						date: defaultDate(file),
+						dateEdited: false,
+					})),
 			];
 		});
+		// Swap in the day each photo was taken, unless it's been changed already.
+		for (const file of accepted) {
+			if (mediaTypeOf(file) !== "photo") continue;
+			void readExifDate(file).then((taken) => {
+				if (!taken) return;
+				setItems((current) =>
+					current.map((item) =>
+						item.file === file && !item.dateEdited
+							? { ...item, date: notAfterToday(taken) }
+							: item,
+					),
+				);
+			});
+		}
 	};
 
-	const handleSubmit = async (event: React.FormEvent) => {
+	const updateItem = (index: number, patch: Partial<DraftItem>) =>
+		setItems((current) =>
+			current.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+		);
+
+	const handleSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
 		if (!canPost || selectedCircleId === null || locked) return;
-		setError("");
-		try {
-			await post.submit({
-				circleId: selectedCircleId,
-				title,
-				text,
-				date,
-				files,
-			});
-		} catch {
-			setError(t("pages.feed.new_post.create_failed"));
-		}
+		void post.submit(selectedCircleId, items);
 	};
 
-	const handleDiscard = async () => {
-		try {
-			await post.discard();
-		} catch {
-			// The post may linger unseen (a media post with no media never shows).
-		}
+	const handleCancel = async () => {
+		await post.cancel();
 		clear();
 		onOpenChange(false);
 	};
 
 	const handleOpenChange = (next: boolean) => {
-		// Leaving mid-post would orphan the upload; use the explicit buttons.
+		// Leaving mid-post would orphan the uploads; use the explicit buttons.
 		if (!next && locked) return;
 		if (!next) clear();
 		onOpenChange(next);
@@ -265,47 +296,6 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 						</div>
 					)}
 
-					<div className="space-y-1.5">
-						<Label htmlFor={`${ids}-title`}>
-							{t("pages.feed.new_post.title_label")}
-						</Label>
-						<Input
-							id={`${ids}-title`}
-							value={title}
-							maxLength={255}
-							onChange={(event) => setTitle(event.target.value)}
-							disabled={locked}
-						/>
-					</div>
-
-					<div className="space-y-1.5">
-						<Label htmlFor={`${ids}-text`}>
-							{t("pages.feed.new_post.text_label")}
-						</Label>
-						<Textarea
-							id={`${ids}-text`}
-							value={text}
-							placeholder={t("pages.feed.new_post.text_placeholder")}
-							onChange={(event) => setText(event.target.value)}
-							disabled={locked}
-							rows={3}
-						/>
-					</div>
-
-					<div className="space-y-1.5">
-						<Label htmlFor={`${ids}-date`}>
-							{t("pages.feed.new_post.date_label")}
-						</Label>
-						<Input
-							id={`${ids}-date`}
-							type="date"
-							value={date}
-							max={localToday()}
-							onChange={(event) => setDate(event.target.value)}
-							disabled={locked}
-						/>
-					</div>
-
 					<div className="space-y-2">
 						<input
 							ref={fileInputRef}
@@ -336,45 +326,90 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 								{message}
 							</p>
 						))}
-						{files.length > 0 && (
-							<ul className="space-y-2">
-								{files.map((file, index) => (
-									<li key={fileKey(file)} className="flex items-center gap-3">
-										<FilePreview file={file} />
-										<div className="min-w-0 flex-1">
-											<p className="truncate text-sm">{file.name}</p>
-											{post.fileStates[index] ? (
-												<FileStatus state={post.fileStates[index]} />
-											) : (
-												<p className="text-xs text-muted-foreground">
-													{formatSize(file.size)}
-												</p>
-											)}
-										</div>
-										{!locked && (
-											<Button
-												type="button"
-												variant="ghost"
-												size="icon"
-												aria-label={t("pages.feed.new_post.remove_file", {
-													name: file.name,
-												})}
-												onClick={() =>
-													setFiles((current) =>
-														current.filter((_, i) => i !== index),
-													)
-												}
-											>
-												<X aria-hidden="true" />
-											</Button>
-										)}
-									</li>
-								))}
-							</ul>
-						)}
 					</div>
 
-					{error && <p className="text-sm text-destructive">{error}</p>}
+					{items.length > 0 && (
+						<ul className="space-y-3">
+							{items.map((item, index) => {
+								const fieldId = `${ids}-${index}`;
+								const state = post.fileStates[index];
+								return (
+									<li
+										key={fileKey(item.file)}
+										className="flex gap-3 rounded-md border p-3"
+									>
+										<FilePreview file={item.file} />
+										<div className="min-w-0 flex-1 space-y-2">
+											<div className="flex items-start gap-2">
+												<p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+													{item.file.name} · {formatSize(item.file.size)}
+												</p>
+												{!locked && (
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														className="-mr-2 -mt-2 size-7"
+														aria-label={t("pages.feed.new_post.remove_file", {
+															name: item.file.name,
+														})}
+														onClick={() =>
+															setItems((current) =>
+																current.filter((_, i) => i !== index),
+															)
+														}
+													>
+														<X aria-hidden="true" />
+													</Button>
+												)}
+											</div>
+											<div className="space-y-1">
+												<Label htmlFor={`${fieldId}-title`} className="sr-only">
+													{t("pages.feed.new_post.item_title_label", {
+														name: item.file.name,
+													})}
+												</Label>
+												<Input
+													id={`${fieldId}-title`}
+													value={item.title}
+													maxLength={255}
+													placeholder={t(
+														"pages.feed.new_post.item_title_placeholder",
+													)}
+													onChange={(event) =>
+														updateItem(index, { title: event.target.value })
+													}
+													disabled={locked}
+												/>
+											</div>
+											<div className="space-y-1">
+												<Label htmlFor={`${fieldId}-date`} className="sr-only">
+													{t("pages.feed.new_post.item_date_label", {
+														name: item.file.name,
+													})}
+												</Label>
+												<Input
+													id={`${fieldId}-date`}
+													type="date"
+													value={item.date}
+													max={localDate(new Date())}
+													onChange={(event) =>
+														updateItem(index, {
+															date: event.target.value,
+															dateEdited: true,
+														})
+													}
+													disabled={locked}
+												/>
+											</div>
+											<FileStatus state={state} />
+										</div>
+									</li>
+								);
+							})}
+						</ul>
+					)}
+
 					{post.phase === "failed" && (
 						<p className="text-sm text-destructive">
 							{t("pages.feed.new_post.upload_failed")}
@@ -384,18 +419,20 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 					<DialogFooter className="gap-2">
 						{post.phase === "failed" ? (
 							<>
-								<Button type="button" variant="ghost" onClick={handleDiscard}>
-									{t("pages.feed.new_post.discard")}
+								<Button
+									type="button"
+									variant="outline"
+									// With nothing posted, skipping the failures is a discard.
+									onClick={
+										post.hasUploaded
+											? () => void post.skipFailed()
+											: handleCancel
+									}
+								>
+									{post.hasUploaded
+										? t("pages.feed.new_post.skip_failed")
+										: t("pages.feed.new_post.discard")}
 								</Button>
-								{post.hasUploaded && (
-									<Button
-										type="button"
-										variant="outline"
-										onClick={() => void post.finishWithUploaded()}
-									>
-										{t("pages.feed.new_post.post_uploaded")}
-									</Button>
-								)}
 								<Button type="button" onClick={() => void post.retryFailed()}>
 									{t("pages.feed.new_post.retry_failed")}
 								</Button>
@@ -405,14 +442,17 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 								<Button
 									type="button"
 									variant="ghost"
-									onClick={busy ? handleDiscard : () => handleOpenChange(false)}
+									onClick={busy ? handleCancel : () => handleOpenChange(false)}
 								>
 									{t("common.cancel")}
 								</Button>
 								<Button type="submit" disabled={!canPost || busy}>
 									{busy
 										? t("pages.feed.new_post.posting")
-										: t("pages.feed.new_post.submit")}
+										: t("pages.feed.new_post.submit", {
+												// Plain "Post" until there are several files.
+												count: Math.max(1, items.length),
+											})}
 								</Button>
 							</>
 						)}

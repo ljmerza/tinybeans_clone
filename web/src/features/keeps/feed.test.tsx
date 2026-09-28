@@ -176,6 +176,16 @@ describe("KeepFeedPost", () => {
 		expect(screen.getByText("So sweet")).toBeInTheDocument();
 	});
 
+	it("shows the title above the photo", async () => {
+		await renderCachedPost(makeKeep());
+
+		const title = screen.getByRole("heading", { name: "Beach day" });
+		const photo = screen.getByRole("img", { name: "Beach day" });
+		expect(
+			title.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+	});
+
 	it("likes through the reactions API and keeps the server's reaction id", async () => {
 		const addReaction = vi
 			.spyOn(keepServices, "addReaction")

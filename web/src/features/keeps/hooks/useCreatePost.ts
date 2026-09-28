@@ -24,13 +24,12 @@ export function memoryTimestamp(date: string, now = new Date()) {
 	return `${date}T${now.toISOString().slice(11)}`;
 }
 
-export interface PostDraft {
-	circleId: number;
+/** One photo or video; each becomes its own post. */
+export interface PostItem {
+	file: File;
 	title: string;
-	text: string;
 	/** `YYYY-MM-DD` */
 	date: string;
-	files: File[];
 }
 
 export type PostFileStatus =
@@ -44,11 +43,13 @@ export interface PostFileState {
 	status: PostFileStatus;
 	/** Upload progress, 0–1. */
 	progress: number;
+	/** The item's post, once created. */
+	keepId?: string;
 }
 
 /**
- * idle → posting → done, or → failed when any file didn't make it (retry,
- * finish with what worked, or discard).
+ * idle → posting → done, or → failed when any file didn't make it (retry
+ * them, or skip them and keep what posted).
  */
 export type PostPhase = "idle" | "posting" | "failed" | "done";
 
@@ -71,16 +72,17 @@ function sleep(ms: number, signal: AbortSignal) {
 }
 
 /**
- * Create a post: make the keep, upload each file with progress, wait for the
- * server to process them, then wait until the post is visible in the feed
- * before refreshing it (a media post stays hidden until a file is ready).
+ * Post photos and videos, one post per file (each with its own title and
+ * date): create the post, upload the file with progress, wait for the server
+ * to process it, then wait until the posts are visible in the feed before
+ * refreshing it (a media post stays hidden until its file is ready).
  */
 export function useCreatePost() {
 	const queryClient = useQueryClient();
 	const [phase, setPhase] = useState<PostPhase>("idle");
 	const [fileStates, setFileStates] = useState<PostFileState[]>([]);
-	const keepIdRef = useRef<string | null>(null);
-	const filesRef = useRef<File[]>([]);
+	const circleIdRef = useRef<number | null>(null);
+	const itemsRef = useRef<PostItem[]>([]);
 	const statesRef = useRef<PostFileState[]>([]);
 	const abortRef = useRef(new AbortController());
 
@@ -101,19 +103,32 @@ export function useCreatePost() {
 		[],
 	);
 
-	const uploadOne = useCallback(
-		async (keepId: string, index: number) => {
+	const postOne = useCallback(
+		async (index: number) => {
 			const signal = abortRef.current.signal;
-			const file = filesRef.current[index];
+			const { file, title, date } = itemsRef.current[index];
 			const mediaType = mediaTypeOf(file) ?? "photo";
 			setFileState(index, { status: "uploading", progress: 0 });
 			try {
+				// A retry reuses the post created on the first attempt.
+				let keepId = statesRef.current[index].keepId;
+				if (!keepId) {
+					const keep = await keepServices.createKeep({
+						circle: circleIdRef.current as number,
+						keep_type: "media",
+						title: title.trim(),
+						description: "",
+						date_of_memory: memoryTimestamp(date),
+					});
+					keepId = keep.id;
+					setFileState(index, { keepId });
+				}
 				const poster =
 					mediaType === "video"
 						? ((await captureVideoPoster(file)) ?? undefined)
 						: undefined;
 				const upload = await uploadMedia(
-					{ keepId, mediaType, file, poster, uploadOrder: index },
+					{ keepId, mediaType, file, poster, uploadOrder: 0 },
 					(progress) => setFileState(index, { progress }),
 					signal,
 				);
@@ -138,22 +153,39 @@ export function useCreatePost() {
 		[setFileState],
 	);
 
-	const waitUntilVisible = useCallback(async (keepId: string) => {
+	const waitUntilVisible = useCallback(async (keepIds: string[]) => {
 		const signal = abortRef.current.signal;
-		for (let attempt = 0; attempt < VISIBLE_POLL_ATTEMPTS; attempt++) {
-			try {
-				await keepServices.getFeedKeep(keepId);
-				return;
-			} catch {
-				// 404 until a photo or video poster is ready.
+		const pending = new Set(keepIds);
+		for (
+			let attempt = 0;
+			attempt < VISIBLE_POLL_ATTEMPTS && pending.size > 0;
+			attempt++
+		) {
+			for (const keepId of [...pending]) {
+				try {
+					await keepServices.getFeedKeep(keepId);
+					pending.delete(keepId);
+				} catch {
+					// 404 until the photo or video poster is ready.
+				}
 			}
-			await sleep(VISIBLE_POLL_MS, signal);
+			if (pending.size > 0) await sleep(VISIBLE_POLL_MS, signal);
 		}
 	}, []);
 
-	/** Upload the given files, then settle the phase. */
+	/** Wait for the posted files to show, then refresh the feed. */
+	const finish = useCallback(async () => {
+		const posted = statesRef.current.flatMap((state) =>
+			state.status === "done" && state.keepId ? [state.keepId] : [],
+		);
+		await waitUntilVisible(posted);
+		await queryClient.invalidateQueries({ queryKey: keepKeys.all() });
+		setPhase("done");
+	}, [queryClient, waitUntilVisible]);
+
+	/** Post the given files, then settle the phase. */
 	const run = useCallback(
-		async (keepId: string, indices: number[]) => {
+		async (indices: number[]) => {
 			setPhase("posting");
 			const queue = [...indices];
 			const worker = async () => {
@@ -162,7 +194,7 @@ export function useCreatePost() {
 					index !== undefined;
 					index = queue.shift()
 				) {
-					await uploadOne(keepId, index);
+					await postOne(index);
 				}
 			};
 			await Promise.all(
@@ -176,87 +208,75 @@ export function useCreatePost() {
 				setPhase("failed");
 				return;
 			}
-			await waitUntilVisible(keepId);
-			await queryClient.invalidateQueries({ queryKey: keepKeys.all() });
-			setPhase("done");
+			await finish();
 		},
-		[queryClient, uploadOne, waitUntilVisible],
+		[finish, postOne],
 	);
+
+	/** Ignore aborts (cancelled or unmounted); anything else is a real error. */
+	const quietly = useCallback(async (work: () => Promise<void>) => {
+		try {
+			await work();
+		} catch (error) {
+			if (!isAbort(error)) throw error;
+		}
+	}, []);
 
 	const submit = useCallback(
-		async ({ circleId, title, text, date, files }: PostDraft) => {
-			filesRef.current = files;
-			statesRef.current = files.map(() => ({ status: "queued", progress: 0 }));
+		(circleId: number, items: PostItem[]) => {
+			circleIdRef.current = circleId;
+			itemsRef.current = items;
+			statesRef.current = items.map(() => ({ status: "queued", progress: 0 }));
 			setFileStates(statesRef.current);
-			setPhase("posting");
-			try {
-				const keep = await keepServices.createKeep({
-					circle: circleId,
-					keep_type: files.length > 0 ? "media" : "note",
-					title: title.trim(),
-					description: text.trim(),
-					date_of_memory: memoryTimestamp(date),
-				});
-				keepIdRef.current = keep.id;
-				await run(
-					keep.id,
-					files.map((_, index) => index),
-				);
-			} catch (error) {
-				// Cancelled or unmounted: nothing to report.
-				if (isAbort(error)) return;
-				setPhase("idle");
-				throw error;
-			}
+			return quietly(() => run(items.map((_, index) => index)));
 		},
-		[run],
+		[quietly, run],
 	);
 
-	const retryFailed = useCallback(async () => {
-		const keepId = keepIdRef.current;
-		if (!keepId) return;
+	const retryFailed = useCallback(() => {
 		const failed = statesRef.current.flatMap((state, index) =>
 			state.status === "failed" ? [index] : [],
 		);
-		try {
-			await run(keepId, failed);
-		} catch (error) {
-			if (!isAbort(error)) throw error;
-		}
-	}, [run]);
-
-	/** Keep whatever uploaded and show the post. */
-	const finishWithUploaded = useCallback(async () => {
-		const keepId = keepIdRef.current;
-		if (!keepId) return;
-		setPhase("posting");
-		try {
-			await waitUntilVisible(keepId);
-			await queryClient.invalidateQueries({ queryKey: keepKeys.all() });
-			setPhase("done");
-		} catch (error) {
-			if (!isAbort(error)) throw error;
-		}
-	}, [queryClient, waitUntilVisible]);
+		return quietly(() => run(failed));
+	}, [quietly, run]);
 
 	/**
-	 * Stop any uploads and delete the half-made post, e.g. when nothing
-	 * uploaded (a media post without media never shows).
+	 * Delete the posts of files that never finished uploading; they have no
+	 * media, so they'd never show. Files already processing are left to finish.
 	 */
-	const discard = useCallback(async () => {
+	const deleteUnfinished = useCallback(async () => {
+		const unfinished = statesRef.current.flatMap((state) =>
+			state.keepId && state.status !== "done" && state.status !== "processing"
+				? [state.keepId]
+				: [],
+		);
+		await Promise.allSettled(
+			unfinished.map((keepId) => keepServices.deleteKeep(keepId)),
+		);
+	}, []);
+
+	/** Give up on the failed files and keep what posted. */
+	const skipFailed = useCallback(async () => {
+		setPhase("posting");
+		await deleteUnfinished();
+		await quietly(finish);
+	}, [deleteUnfinished, finish, quietly]);
+
+	/** Stop uploading; files that already posted stay posted. */
+	const cancel = useCallback(async () => {
 		abortRef.current.abort();
 		abortRef.current = new AbortController();
-		const keepId = keepIdRef.current;
-		keepIdRef.current = null;
-		setPhase("idle");
-		if (keepId) await keepServices.deleteKeep(keepId);
-	}, []);
+		await deleteUnfinished();
+		if (statesRef.current.some((state) => state.status !== "queued")) {
+			await queryClient.invalidateQueries({ queryKey: keepKeys.all() });
+		}
+	}, [deleteUnfinished, queryClient]);
 
 	const reset = useCallback(() => {
 		abortRef.current.abort();
 		abortRef.current = new AbortController();
-		keepIdRef.current = null;
-		filesRef.current = [];
+		circleIdRef.current = null;
+		itemsRef.current = [];
 		statesRef.current = [];
 		setFileStates([]);
 		setPhase("idle");
@@ -267,10 +287,10 @@ export function useCreatePost() {
 		fileStates,
 		submit,
 		retryFailed,
-		finishWithUploaded,
-		discard,
+		skipFailed,
+		cancel,
 		reset,
-		/** At least one file made it, so finishing shows a post. */
+		/** At least one file posted, so skipping the failures still shows something. */
 		hasUploaded: fileStates.some((state) => state.status === "done"),
 	};
 }
