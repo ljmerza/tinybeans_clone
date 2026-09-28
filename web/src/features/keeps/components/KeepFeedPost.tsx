@@ -1,4 +1,10 @@
 import { ConfirmDialog } from "@/components";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +18,7 @@ import {
 	PostComments,
 	PostHeader,
 	PostLikeButton,
+	PostLikers,
 	PostMedia,
 	PostMediaCounter,
 	PostMediaNextButton,
@@ -28,6 +35,7 @@ import {
 	useAddKeepComment,
 	useDeleteKeepComment,
 	useKeepComments,
+	useKeepLikers,
 	useSetKeepLiked,
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
@@ -60,6 +68,11 @@ export function KeepFeedPost({
 		defaultCommentsExpanded,
 	);
 	const thread = useKeepComments(keep.id, showAllComments);
+	const [likersOpen, setLikersOpen] = useState(false);
+	const likers = useKeepLikers(keep.id, likersOpen);
+	const likersHidden = likers.data
+		? likers.data.count - likers.data.results.length
+		: 0;
 
 	const post = useMemo(
 		() =>
@@ -111,6 +124,8 @@ export function KeepFeedPost({
 				}
 				onCommentDelete={setPendingDelete}
 				onCommentsExpandedChange={setShowAllComments}
+				likersOpen={likersOpen}
+				onLikersOpenChange={setLikersOpen}
 			>
 				<PostHeader>
 					<PostAvatar />
@@ -135,6 +150,7 @@ export function KeepFeedPost({
 							label={(liked) =>
 								liked ? t("pages.feed.unlike") : t("pages.feed.like")
 							}
+							likersHint={t("pages.feed.likers_hint")}
 						/>
 						<PostCommentButton aria-label={t("pages.feed.comment")} />
 						<PostActionSpacer />
@@ -166,6 +182,37 @@ export function KeepFeedPost({
 					</div>
 				</div>
 			</PostRoot>
+			<Dialog open={likersOpen} onOpenChange={setLikersOpen}>
+				<DialogContent
+					className="max-w-sm"
+					aria-describedby={undefined}
+					closeButtonLabel={t("common.close")}
+				>
+					<DialogHeader>
+						<DialogTitle>{t("pages.feed.likers_title")}</DialogTitle>
+					</DialogHeader>
+					<PostLikers
+						className="[--rsf-likers-max-height:60vh]"
+						likers={likers.data?.results.map((liker) => ({
+							id: String(liker.user),
+							name: liker.user_display_name,
+						}))}
+						loading={likers.isPending}
+						error={likers.error}
+						onRetry={() => void likers.refetch()}
+						loadingLabel={t("pages.feed.likers_loading")}
+						emptyLabel={t("pages.feed.likers_empty")}
+						errorLabel={t("pages.feed.likers_error")}
+						retryLabel={t("pages.feed.retry")}
+						listLabel={t("pages.feed.likers_title")}
+					/>
+					{likersHidden > 0 && (
+						<p className="text-sm text-muted-foreground">
+							{t("pages.feed.likers_more", { count: likersHidden })}
+						</p>
+					)}
+				</DialogContent>
+			</Dialog>
 			<ConfirmDialog
 				open={pendingDelete !== null}
 				onOpenChange={(open) => {

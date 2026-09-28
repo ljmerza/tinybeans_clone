@@ -77,6 +77,17 @@ export function useKeepComments(keepId: string, enabled: boolean) {
 }
 
 /**
+ * Who liked a keep, fetched only while the likers dialog is open.
+ */
+export function useKeepLikers(keepId: string, enabled: boolean) {
+	return useQuery({
+		queryKey: keepKeys.likers(keepId),
+		queryFn: () => keepServices.getKeepLikers(keepId),
+		enabled,
+	});
+}
+
+/**
  * Apply `update` to a keep wherever it is cached: any loaded page of the home
  * or day feeds, and its single-keep query.
  */
@@ -140,6 +151,9 @@ export function useSetKeepLiked() {
 				viewer_reaction,
 				reaction_count: Math.max(0, cached.reaction_count + delta),
 			}));
+			void queryClient.invalidateQueries({
+				queryKey: keepKeys.likers(keep.id),
+			});
 		},
 	});
 }

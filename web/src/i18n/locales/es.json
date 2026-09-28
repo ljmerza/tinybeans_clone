@@ -539,7 +539,14 @@
 			"delete_comment_thread_description": "No se puede deshacer. También se eliminarán sus respuestas.",
 			"delete_comment_confirm": "Eliminar",
 			"delete_comment_failed": "No se pudo eliminar el comentario. Inténtalo de nuevo.",
-			"comment_failed": "No se pudo publicar tu comentario. Inténtalo de nuevo."
+			"comment_failed": "No se pudo publicar tu comentario. Inténtalo de nuevo.",
+			"likers_title": "A quiénes les gustó",
+			"likers_hint": "Mantén pulsado o pulsa Mayús+Intro para ver a quiénes les gustó",
+			"likers_loading": "Cargando…",
+			"likers_empty": "Aún no hay me gusta",
+			"likers_error": "No se pudo cargar a quiénes les gustó.",
+			"likers_more_one": "Y 1 más",
+			"likers_more_other": "Y {{count}} más"
 		},
 		"keep": {
 			"loading": "Cargando…",

@@ -6,15 +6,16 @@ from datetime import timezone as dt_timezone
 
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
+from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import CursorPagination
+from rest_framework.pagination import CursorPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..models import Keep, KeepComment, KeepMedia, KeepReaction
-from ..serializers.feed import KeepFeedSerializer
+from ..serializers.feed import FeedLikerSerializer, KeepFeedSerializer
 
 # Matches the web feed's initial comment count, so it needs no extra fetch.
 RECENT_COMMENT_COUNT = 3
@@ -190,6 +191,53 @@ class KeepFeedItemView(generics.RetrieveAPIView):
         "and it has a displayable photo or video.",
         responses={
             200: OpenApiResponse(response=KeepFeedSerializer, description="The feed post"),
+            404: OpenApiResponse(description="Not found or not visible to the user"),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class KeepLikersPagination(LimitOffsetPagination):
+    default_limit = 50
+    max_limit = 200
+
+
+class KeepFeedLikersView(generics.ListAPIView):
+    """Who liked a keep, newest first. Any reaction type counts as a like."""
+
+    serializer_class = FeedLikerSerializer
+    pagination_class = KeepLikersPagination
+
+    def get_queryset(self):
+        # Avoid queryset evaluation during schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return KeepReaction.objects.none()
+        keep_id = self.kwargs["keep_id"]
+        if not Keep.objects.filter(id=keep_id, circle__memberships__user=self.request.user).exists():
+            raise Http404
+        return KeepReaction.objects.filter(keep_id=keep_id).select_related("user").order_by("-created_at", "-id")
+
+    @extend_schema(
+        summary="Photo feed post likers",
+        description="Everyone who reacted to a keep (any reaction counts as a like), newest first. "
+        "Limit/offset paginated. 404 unless the user belongs to the keep's circle.",
+        parameters=[
+            OpenApiParameter(
+                name="limit",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Likers per page (default 50, max 200)",
+            ),
+            OpenApiParameter(
+                name="offset",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="How many likers to skip",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(response=FeedLikerSerializer(many=True), description="A page of likers"),
             404: OpenApiResponse(description="Not found or not visible to the user"),
         },
     )

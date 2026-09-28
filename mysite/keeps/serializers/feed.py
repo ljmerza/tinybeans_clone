@@ -10,7 +10,7 @@ each keep has.
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from ..models import Keep, KeepComment
+from ..models import Keep, KeepComment, KeepReaction
 from .comments import can_delete_comment
 
 # Presign for a day (instead of the 1h default). The virtualized feed remounts
@@ -37,6 +37,17 @@ class FeedCommentSerializer(serializers.ModelSerializer):
 
     def get_can_delete(self, obj) -> bool:
         return can_delete_comment(obj, self.context)
+
+
+class FeedLikerSerializer(serializers.ModelSerializer):
+    """Someone who reacted to a keep; any reaction type counts as a like."""
+
+    user_display_name = serializers.CharField(source="user.display_name", read_only=True)
+
+    class Meta:
+        model = KeepReaction
+        fields = ["id", "user", "user_display_name", "reaction_type", "created_at"]
+        read_only_fields = fields
 
 
 class KeepFeedSerializer(serializers.ModelSerializer):
