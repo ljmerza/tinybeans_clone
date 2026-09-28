@@ -1,7 +1,6 @@
 """Views for handling media uploads and processing."""
 
 import os
-import tempfile
 import uuid
 
 from django.conf import settings
@@ -14,8 +13,21 @@ from mysite.notification_utils import create_message, error_response, success_re
 
 from ..models import Keep, MediaUpload, MediaUploadStatus
 from ..serializers import MediaUploadSerializer, MediaUploadStatusSerializer
-from ..tasks import validate_media_file
+from ..tasks import max_upload_size, validate_media_file
 from .permissions import IsCircleMember
+
+# A browser-captured poster frame is one JPEG; anything near this is not one.
+MAX_POSTER_SIZE = 10 * 1024 * 1024
+
+
+def _park_file(uploaded_file, suffix):
+    """Copy an uploaded file into the shared upload dir and return its path."""
+    os.makedirs(settings.UPLOAD_TEMP_DIR, exist_ok=True)
+    path = os.path.join(settings.UPLOAD_TEMP_DIR, f"upload_{uuid.uuid4()}{suffix}")
+    with open(path, "wb") as temp_file:
+        for chunk in uploaded_file.chunks():
+            temp_file.write(chunk)
+    return path
 
 
 class MediaUploadView(APIView):
@@ -26,7 +38,9 @@ class MediaUploadView(APIView):
 
     @extend_schema(
         summary="Upload media file",
-        description="Upload a media file (photo or video) for a keep. The file will be processed asynchronously.",
+        description="Upload a media file (photo or video) for a keep. The file will be processed asynchronously. "
+        "A video may include a `poster` image (e.g. a frame captured in the browser); the feed only shows "
+        "videos that have one.",
         request={
             "multipart/form-data": {
                 "type": "object",
@@ -36,6 +50,7 @@ class MediaUploadView(APIView):
                     "file": {"type": "string", "format": "binary"},
                     "caption": {"type": "string", "maxLength": 500},
                     "upload_order": {"type": "integer", "minimum": 0},
+                    "poster": {"type": "string", "format": "binary"},
                 },
             }
         },
@@ -53,18 +68,23 @@ class MediaUploadView(APIView):
         keep_id = request.data.get("keep_id")
         media_type = request.data.get("media_type")
         uploaded_file = request.FILES.get("file")
+        poster_file = request.FILES.get("poster") if media_type == "video" else None
         caption = request.data.get("caption", "")
         upload_order = int(request.data.get("upload_order", 0))
 
         # Validate parameters
         if not keep_id or not media_type or not uploaded_file:
             return error_response(
-                messages=[create_message("errors.required_fields_missing")], status_code=status.HTTP_400_BAD_REQUEST
+                "required_fields_missing",
+                messages=[create_message("errors.required_fields_missing")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         if media_type not in ["photo", "video"]:
             return error_response(
-                messages=[create_message("errors.invalid_media_type")], status_code=status.HTTP_400_BAD_REQUEST
+                "invalid_media_type",
+                messages=[create_message("errors.invalid_media_type")],
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         # Get keep and verify access
@@ -72,19 +92,25 @@ class MediaUploadView(APIView):
             keep = Keep.objects.get(id=keep_id)
         except Keep.DoesNotExist:
             return error_response(
-                messages=[create_message("errors.keep_not_found")], status_code=status.HTTP_404_NOT_FOUND
+                "keep_not_found",
+                messages=[create_message("errors.keep_not_found")],
+                status_code=status.HTTP_404_NOT_FOUND,
             )
 
         # Verify user has access to the keep's circle
         if not keep.circle.memberships.filter(user=request.user).exists():
             return error_response(
-                messages=[create_message("errors.access_denied")], status_code=status.HTTP_403_FORBIDDEN
+                "access_denied",
+                messages=[create_message("errors.access_denied")],
+                status_code=status.HTTP_403_FORBIDDEN,
             )
 
         # Validate file size
-        if uploaded_file.size > settings.MAX_UPLOAD_SIZE:
+        max_size = max_upload_size(media_type)
+        if uploaded_file.size > max_size:
             return error_response(
-                messages=[create_message("errors.file_too_large", {"maxSize": settings.MAX_UPLOAD_SIZE})],
+                "file_too_large",
+                messages=[create_message("errors.file_too_large", {"maxSize": max_size})],
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             )
 
@@ -93,20 +119,32 @@ class MediaUploadView(APIView):
 
         if uploaded_file.content_type not in allowed_types:
             return error_response(
+                "invalid_file_type",
                 messages=[create_message("errors.invalid_file_type", {"allowedTypes": ", ".join(allowed_types)})],
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Create temporary file
-        temp_dir = tempfile.gettempdir()
-        temp_filename = f"upload_{uuid.uuid4()}{os.path.splitext(uploaded_file.name)[1]}"
-        temp_file_path = os.path.join(temp_dir, temp_filename)
+        if poster_file and (
+            poster_file.content_type not in settings.ALLOWED_IMAGE_TYPES or poster_file.size > MAX_POSTER_SIZE
+        ):
+            return error_response(
+                "invalid_file_type",
+                messages=[
+                    create_message(
+                        "errors.invalid_file_type", {"allowedTypes": ", ".join(settings.ALLOWED_IMAGE_TYPES)}
+                    )
+                ],
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        temp_file_path = ""
+        poster_temp_path = ""
 
         try:
-            # Save uploaded file to temporary location
-            with open(temp_file_path, "wb") as temp_file:
-                for chunk in uploaded_file.chunks():
-                    temp_file.write(chunk)
+            # Park the files where the Celery worker can read them
+            temp_file_path = _park_file(uploaded_file, os.path.splitext(uploaded_file.name)[1])
+            if poster_file:
+                poster_temp_path = _park_file(poster_file, ".poster")
 
             # Create upload record
             upload = MediaUpload.objects.create(
@@ -118,6 +156,7 @@ class MediaUploadView(APIView):
                 caption=caption,
                 upload_order=upload_order,
                 temp_file_path=temp_file_path,
+                poster_temp_path=poster_temp_path,
                 status=MediaUploadStatus.PENDING,
             )
 
@@ -133,12 +172,15 @@ class MediaUploadView(APIView):
             )
 
         except Exception:
-            # Clean up temporary file on error
-            if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
+            # Clean up temporary files on error
+            for path in (temp_file_path, poster_temp_path):
+                if path and os.path.exists(path):
+                    os.remove(path)
 
             return error_response(
-                messages=[create_message("errors.upload_failed")], status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                "upload_failed",
+                messages=[create_message("errors.upload_failed")],
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 

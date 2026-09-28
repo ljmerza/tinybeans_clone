@@ -36,6 +36,8 @@ class MediaUpload(models.Model):
     caption = models.CharField(max_length=500, blank=True)
     upload_order = models.PositiveSmallIntegerField(default=0)
     temp_file_path = models.CharField(max_length=500)
+    # Browser-captured poster frame for a video; the source for its renditions.
+    poster_temp_path = models.CharField(max_length=500, blank=True)
 
     status = models.CharField(max_length=20, choices=MediaUploadStatus.choices, default=MediaUploadStatus.PENDING)
     error_message = models.TextField(blank=True)

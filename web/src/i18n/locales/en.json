@@ -403,6 +403,36 @@
 			"guest_message": "Get started by signing up or logging in to your account."
 		},
 		"feed": {
+			"new_post": {
+				"open": "New post",
+				"title": "New post",
+				"description": "Share a moment with your circle: words, photos, videos, or all three.",
+				"circle": "Circle",
+				"title_label": "Title (optional)",
+				"text_label": "What happened?",
+				"text_placeholder": "Tell your family about it…",
+				"date_label": "Date",
+				"add_media": "Add photos or videos",
+				"media_hint": "Photos up to 100 MB (JPEG, PNG, GIF, WebP). Videos up to 1 GB (MP4, MOV, AVI).",
+				"rejected_type": "{{name}} isn't a supported photo or video type.",
+				"rejected_size": "{{name}} is too large.",
+				"remove_file": "Remove {{name}}",
+				"submit": "Post",
+				"posting": "Posting…",
+				"posted": "Your post is up.",
+				"create_failed": "Couldn't create your post. Please try again.",
+				"upload_failed": "Some files didn't upload.",
+				"retry_failed": "Retry failed uploads",
+				"post_uploaded": "Post without them",
+				"discard": "Discard post",
+				"status": {
+					"queued": "Waiting…",
+					"uploading": "Uploading… {{percent}}%",
+					"processing": "Processing…",
+					"done": "Uploaded",
+					"failed": "Upload failed"
+				}
+			},
 			"title": "Your feed",
 			"subtitle": "The newest photos from all of your circles.",
 			"aria_label": "Photo feed",

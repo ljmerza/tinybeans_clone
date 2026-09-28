@@ -1,7 +1,8 @@
 import { Layout, LoadingState } from "@/components";
 import { Button } from "@/components/ui/button";
-import { KeepFeedPost, useKeepFeed } from "@/features/keeps";
-import { useCallback, useMemo } from "react";
+import { KeepFeedPost, NewPostDialog, useKeepFeed } from "@/features/keeps";
+import { Plus } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "react-social-feed/styles.css";
 import { VirtualFeed } from "react-social-feed/virtual";
@@ -12,6 +13,7 @@ import { VirtualFeed } from "react-social-feed/virtual";
  */
 export function HomeFeedView() {
 	const { t } = useTranslation();
+	const [composerOpen, setComposerOpen] = useState(false);
 	const {
 		data,
 		isLoading,
@@ -67,10 +69,18 @@ export function HomeFeedView() {
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
 			<div className="space-y-6">
-				<header className="mx-auto max-w-[var(--rsf-post-max-width)] space-y-2">
-					<h1 className="heading-2">{t("pages.feed.title")}</h1>
-					<p className="text-subtitle">{t("pages.feed.subtitle")}</p>
+				<header className="mx-auto flex max-w-[var(--rsf-post-max-width)] items-start justify-between gap-4">
+					<div className="space-y-2">
+						<h1 className="heading-2">{t("pages.feed.title")}</h1>
+						<p className="text-subtitle">{t("pages.feed.subtitle")}</p>
+					</div>
+					<Button className="shrink-0" onClick={() => setComposerOpen(true)}>
+						<Plus aria-hidden="true" />
+						{t("pages.feed.new_post.open")}
+					</Button>
 				</header>
+				{/* Mounted only while open, so the feed doesn't load circles up front. */}
+				{composerOpen && <NewPostDialog open onOpenChange={setComposerOpen} />}
 
 				<VirtualFeed
 					items={keeps}

@@ -75,6 +75,23 @@ class MediaStorageBackend(ABC):
         """Calculate SHA-256 hash of file content."""
         return hashlib.sha256(content).hexdigest()
 
+    def calculate_file_hash(self, file_path: str) -> str:
+        """SHA-256 of a file on disk, read in chunks so large videos never sit in memory."""
+        digest = hashlib.sha256()
+        with open(file_path, "rb") as file_handle:
+            for chunk in iter(lambda: file_handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    def save_file(self, file_path: str, filename: str, content_type: str = None) -> str:
+        """Save a file from disk and return its storage key.
+
+        Backends that can stream from disk should override this; the default
+        reads the whole file into memory.
+        """
+        with open(file_path, "rb") as file_handle:
+            return self.save(file_handle.read(), filename, content_type)
+
 
 class MinIOStorageBackend(MediaStorageBackend):
     """MinIO (S3-compatible) storage backend."""
@@ -139,6 +156,17 @@ class MinIOStorageBackend(MediaStorageBackend):
             content_type=content_type or "application/octet-stream",
         )
 
+        return storage_key
+
+    def save_file(self, file_path: str, filename: str, content_type: str = None) -> str:
+        """Stream a file from disk to MinIO (multipart for large files)."""
+        storage_key = self.generate_storage_key(filename, self.calculate_file_hash(file_path))
+        self.client.fput_object(
+            bucket_name=self.bucket_name,
+            object_name=storage_key,
+            file_path=file_path,
+            content_type=content_type or "application/octet-stream",
+        )
         return storage_key
 
     def get_file_content(self, storage_key: str) -> bytes:

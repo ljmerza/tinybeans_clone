@@ -125,3 +125,37 @@ export interface PaginatedList<T> {
 	previous: string | null;
 	results: T[];
 }
+
+/**
+ * POST /keeps/: the fields the web composer sends. `date_of_memory` is ISO.
+ */
+export interface CreateKeepInput {
+	circle: number;
+	keep_type: "note" | "media";
+	title: string;
+	description: string;
+	date_of_memory: string;
+}
+
+export interface CreatedKeep extends CreateKeepInput {
+	id: string;
+}
+
+export type MediaUploadStatus =
+	| "pending"
+	| "validating"
+	| "processing"
+	| "completed"
+	| "failed";
+
+/**
+ * POST /keeps/upload/ and GET /keeps/upload/<id>/status/ (both wrapped in `data`).
+ */
+export interface MediaUploadRecord {
+	id: string;
+	keep: string;
+	media_type: "photo" | "video";
+	original_filename: string;
+	status: MediaUploadStatus;
+	error_message: string;
+}

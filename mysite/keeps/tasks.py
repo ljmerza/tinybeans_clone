@@ -20,6 +20,18 @@ from .tinybeans_accounts import TinybeansAccountsError, load_accounts
 logger = get_task_logger(__name__)
 
 
+def max_upload_size(media_type: str) -> int:
+    """Largest accepted upload, in bytes, for a photo or video."""
+    return settings.MAX_VIDEO_UPLOAD_SIZE if media_type == "video" else settings.MAX_UPLOAD_SIZE
+
+
+def remove_upload_temp_files(upload) -> None:
+    """Delete an upload's parked file and poster frame, if still on disk."""
+    for path in (upload.temp_file_path, upload.poster_temp_path):
+        if path and os.path.exists(path):
+            os.remove(path)
+
+
 @shared_task(bind=True, max_retries=3)
 def process_media_upload(self, upload_id: str):
     """Process a media upload asynchronously."""
@@ -51,16 +63,21 @@ def process_media_upload(self, upload_id: str):
                     },
                 )
 
-                with open(upload.temp_file_path, "rb") as file_handle:
-                    file_content = file_handle.read()
-
                 storage = get_storage_backend()
-                storage_key_original = storage.save(
-                    file_content=file_content, filename=upload.original_filename, content_type=upload.content_type
+                storage_key_original = storage.save_file(
+                    upload.temp_file_path, filename=upload.original_filename, content_type=upload.content_type
                 )
 
                 metadata = storage.get_metadata(storage_key_original)
-                file_size = metadata.get("size", len(file_content))
+                file_size = metadata.get("size", upload.file_size)
+
+                # A video's poster frame (captured by the browser) becomes the
+                # source for its thumbnail/gallery renditions.
+                poster_key = None
+                if upload.media_type == "video" and upload.poster_temp_path:
+                    poster_key = storage.save_file(
+                        upload.poster_temp_path, filename="poster.jpg", content_type="image/jpeg"
+                    )
 
                 media = KeepMedia.objects.create(
                     keep=upload.keep,
@@ -73,8 +90,8 @@ def process_media_upload(self, upload_id: str):
                     content_type=upload.content_type,
                 )
 
-                if upload.media_type == "photo":
-                    generate_image_sizes.delay(media.id)
+                if upload.media_type == "photo" or poster_key:
+                    generate_image_sizes.delay(media.id, poster_key)
                     logger.info(
                         "Queued image resize task",
                         extra={
@@ -88,8 +105,7 @@ def process_media_upload(self, upload_id: str):
                 upload.error_message = ""
                 upload.save(update_fields=["status", "media_file", "error_message"])
 
-                if os.path.exists(upload.temp_file_path):
-                    os.remove(upload.temp_file_path)
+                remove_upload_temp_files(upload)
 
                 logger.info(
                     "Successfully processed media upload",
@@ -298,23 +314,24 @@ def cleanup_failed_uploads():
 
         removed_count = 0
         for upload in failed_uploads:
-            context_extra = {
-                "upload_id": upload.id,
-                "keep_id": upload.keep_id,
-                "temp_file_path": upload.temp_file_path,
-            }
-            if upload.temp_file_path and os.path.exists(upload.temp_file_path):
-                try:
-                    os.remove(upload.temp_file_path)
-                    logger.info(
-                        "Removed temporary file for failed upload",
-                        extra={"event": "keeps.media.cleanup_file_removed", "extra": context_extra},
-                    )
-                except OSError:
-                    logger.exception(
-                        "Failed to remove temporary file for failed upload",
-                        extra={"event": "keeps.media.cleanup_file_failed", "extra": context_extra},
-                    )
+            for temp_path in (upload.temp_file_path, upload.poster_temp_path):
+                context_extra = {
+                    "upload_id": upload.id,
+                    "keep_id": upload.keep_id,
+                    "temp_file_path": temp_path,
+                }
+                if temp_path and os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                        logger.info(
+                            "Removed temporary file for failed upload",
+                            extra={"event": "keeps.media.cleanup_file_removed", "extra": context_extra},
+                        )
+                    except OSError:
+                        logger.exception(
+                            "Failed to remove temporary file for failed upload",
+                            extra={"event": "keeps.media.cleanup_file_failed", "extra": context_extra},
+                        )
 
             upload.delete()
             removed_count += 1
@@ -344,7 +361,7 @@ def validate_media_file(upload_id: str):
                     raise ValueError("Temporary file not found")
 
                 file_size = os.path.getsize(upload.temp_file_path)
-                max_size = settings.MAX_UPLOAD_SIZE
+                max_size = max_upload_size(upload.media_type)
                 if file_size > max_size:
                     raise ValueError(f"File size {file_size} exceeds maximum allowed size {max_size}")
 
@@ -354,6 +371,13 @@ def validate_media_file(upload_id: str):
                             image.verify()
                     except Exception as exc:
                         raise ValueError("Invalid image file") from exc
+
+                if upload.poster_temp_path:
+                    try:
+                        with Image.open(upload.poster_temp_path) as image:
+                            image.verify()
+                    except Exception as exc:
+                        raise ValueError("Invalid poster image") from exc
 
                 logger.info(
                     "Media file validation passed",
