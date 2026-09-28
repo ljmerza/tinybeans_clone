@@ -159,6 +159,44 @@ describe("HomeFeedView", () => {
 		expect(getFeed).toHaveBeenCalledTimes(3);
 	});
 
+	it("shows text posts without media", async () => {
+		vi.spyOn(keepServices, "getFeed").mockResolvedValue({
+			next: null,
+			previous: null,
+			results: [{ ...keep(1), description: "First steps today!", media: [] }],
+		});
+
+		renderWithQueryClient(<HomeFeedView />);
+
+		expect(await screen.findByText("First steps today!")).toBeInTheDocument();
+		expect(screen.queryByRole("img")).toBeNull();
+	});
+
+	it("opens the composer from the New post button", async () => {
+		vi.spyOn(keepServices, "getFeed").mockResolvedValue({
+			next: null,
+			previous: null,
+			results: [],
+		});
+		// Loaded here: a static import ahead of the view loads the real Layout.
+		const { circleServices } = await import("@/features/circles");
+		const listMemberships = vi
+			.spyOn(circleServices, "listMemberships")
+			.mockResolvedValue({ data: { circles: [] } });
+
+		renderWithQueryClient(<HomeFeedView />);
+		await screen.findByText("No photos yet");
+		// The composer (and its circle lookup) only loads once opened.
+		expect(listMemberships).not.toHaveBeenCalled();
+
+		fireEvent.click(screen.getByRole("button", { name: "New post" }));
+
+		expect(
+			await screen.findByRole("dialog", { name: "New post" }),
+		).toBeInTheDocument();
+		expect(listMemberships).toHaveBeenCalled();
+	});
+
 	it("shows an error state when the first page fails", async () => {
 		vi.spyOn(keepServices, "getFeed").mockRejectedValue(new Error("boom"));
 

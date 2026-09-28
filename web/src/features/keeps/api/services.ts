@@ -3,12 +3,15 @@ import type { ApiResponseWithMessages } from "@/types";
 import type {
 	AdjacentFeedDays,
 	CalendarMonthPayload,
+	CreateKeepInput,
+	CreatedKeep,
 	FeedFilters,
 	FeedKeep,
 	FeedPage,
 	KeepCommentRecord,
 	KeepLiker,
 	KeepReactionRecord,
+	MediaUploadRecord,
 	PaginatedList,
 } from "../types";
 
@@ -88,6 +91,20 @@ export const keepServices = {
 			comment,
 			...(parent !== undefined && { parent }),
 		});
+	},
+
+	createKeep(input: CreateKeepInput) {
+		return authApi.post<CreatedKeep>(`${KEEPS_BASE}/`, input);
+	},
+
+	deleteKeep(keepId: string) {
+		return authApi.delete<unknown>(`${KEEPS_BASE}/${keepId}/`);
+	},
+
+	getUploadStatus(uploadId: string) {
+		return authApi.get<ApiResponseWithMessages<MediaUploadRecord>>(
+			`${KEEPS_BASE}/upload/${uploadId}/status/`,
+		);
 	},
 
 	/** Deleting a top-level comment also deletes its replies. */

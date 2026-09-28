@@ -504,6 +504,36 @@
 			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
 		},
 		"feed": {
+			"new_post": {
+				"open": "Nueva publicación",
+				"title": "Nueva publicación",
+				"description": "Agrega fotos o videos. Cada uno se publica por separado con su propio título y fecha.",
+				"circle": "Círculo",
+				"add_media": "Agregar fotos o videos",
+				"item_title_label": "Título de {{name}}",
+				"item_title_placeholder": "Título (opcional)",
+				"item_date_label": "Fecha de {{name}}",
+				"media_hint": "Fotos de hasta 100 MB (JPEG, PNG, GIF, WebP). Videos de hasta 1 GB (MP4, MOV, AVI).",
+				"rejected_type": "{{name}} no es un tipo de foto o video compatible.",
+				"rejected_size": "{{name}} es demasiado grande.",
+				"remove_file": "Quitar {{name}}",
+				"posting": "Publicando…",
+				"submit_one": "Publicar",
+				"submit_other": "Publicar {{count}}",
+				"posted_one": "Tu foto está publicada.",
+				"posted_other": "Tus {{count}} publicaciones ya están disponibles.",
+				"upload_failed": "Algunos archivos no se subieron.",
+				"retry_failed": "Reintentar los fallidos",
+				"skip_failed": "Omitir fallidos",
+				"discard": "Descartar publicación",
+				"status": {
+					"queued": "En espera…",
+					"uploading": "Subiendo… {{percent}}%",
+					"processing": "Procesando…",
+					"done": "Subido",
+					"failed": "Error al subir"
+				}
+			},
 			"title": "Tu feed",
 			"subtitle": "Las fotos más recientes de todos tus círculos.",
 			"aria_label": "Feed de fotos",

@@ -121,6 +121,7 @@ class KeepCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Keep
         fields = [
+            "id",
             "circle",
             "keep_type",
             "title",
@@ -131,12 +132,13 @@ class KeepCreateSerializer(serializers.ModelSerializer):
             "media_files",
             "milestone_data",
         ]
+        # The id lets the client attach uploads to the keep it just created.
+        read_only_fields = ["id"]
 
     def validate(self, data):
         """Validate keep data based on type and user permissions."""
         keep_type = data.get("keep_type")
         milestone_data = data.get("milestone_data")
-        media_files = data.get("media_files", [])
         circle = data.get("circle")
         user = self.context["request"].user
 
@@ -157,9 +159,9 @@ class KeepCreateSerializer(serializers.ModelSerializer):
         if keep_type != KeepType.MILESTONE and milestone_data:
             raise serializers.ValidationError({"milestone_data": create_message("errors.milestone_not_allowed")})
 
-        # Media keeps should have media files
-        if keep_type == KeepType.MEDIA and not media_files:
-            raise serializers.ValidationError({"media_files": create_message("errors.media_files_required")})
+        # Media keeps may start empty: the web client creates the keep first and
+        # then attaches files through the upload endpoint, which needs its id.
+        # The feed hides a media keep until one of its files is displayable.
 
         # Note keeps don't require media files but can have them
         # (Notes can optionally include media attachments)

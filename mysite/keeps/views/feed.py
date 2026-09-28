@@ -14,7 +14,7 @@ from rest_framework.pagination import CursorPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Keep, KeepComment, KeepMedia, KeepReaction
+from ..models import Keep, KeepComment, KeepMedia, KeepReaction, KeepType
 from ..serializers.feed import FeedLikerSerializer, KeepFeedSerializer
 
 # Matches the web feed's initial comment count, so it needs no extra fetch.
@@ -39,14 +39,18 @@ def _count_subquery(model):
 
 
 def feed_queryset(user):
-    """Keeps with at least one displayable photo/video in the user's circles."""
+    """Text posts, and keeps with at least one displayable photo/video, in the user's circles.
+
+    A media keep stays hidden until a file is displayable, so a post whose
+    uploads are still processing never shows up as an empty text post.
+    """
     displayable_media = KeepMedia.objects.filter(keep=OuterRef("pk")).filter(
         Q(media_type="photo") | Q(media_type="video", thumbnails_generated=True)
     )
 
     return (
         Keep.objects.filter(circle__memberships__user=user)
-        .filter(Exists(displayable_media))
+        .filter(Q(keep_type=KeepType.NOTE) | Exists(displayable_media))
         .annotate(
             reaction_count=_count_subquery(KeepReaction),
             comment_count=_count_subquery(KeepComment),
@@ -117,8 +121,8 @@ class KeepFeedView(generics.ListAPIView):
 
     @extend_schema(
         summary="Photo feed",
-        description="Keeps with photos (or videos with a poster frame) from every circle the user "
-        "belongs to, newest memory first. Cursor-paginated: follow `next` for older posts.",
+        description="Text posts and keeps with photos (or videos with a poster frame) from every circle "
+        "the user belongs to, newest memory first. Cursor-paginated: follow `next` for older posts.",
         parameters=[
             OpenApiParameter(
                 name="page_size",
@@ -188,7 +192,7 @@ class KeepFeedItemView(generics.RetrieveAPIView):
     @extend_schema(
         summary="Photo feed post",
         description="One keep in the same shape as the feed. 404 unless the user belongs to its circle "
-        "and it has a displayable photo or video.",
+        "and it is a text post or has a displayable photo or video.",
         responses={
             200: OpenApiResponse(response=KeepFeedSerializer, description="The feed post"),
             404: OpenApiResponse(description="Not found or not visible to the user"),

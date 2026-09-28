@@ -1,6 +1,7 @@
 """Media storage and file upload configuration"""
 
 import os
+from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -33,6 +34,13 @@ if MINIO_PUBLIC_ENDPOINT and not MINIO_PUBLIC_ENDPOINT.startswith(("http://", "h
 
 # Media Upload Settings
 MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE", 100 * 1024 * 1024))  # 100MB
+MAX_VIDEO_UPLOAD_SIZE = int(os.environ.get("MAX_VIDEO_UPLOAD_SIZE", 1024 * 1024 * 1024))  # 1GB
+# Where the web process parks an upload until a Celery worker moves it to MinIO.
+# Web and workers run in separate containers that share only the project mount,
+# so this must live under it (not /tmp).
+UPLOAD_TEMP_DIR = os.environ.get("UPLOAD_TEMP_DIR") or str(
+    Path(__file__).resolve().parents[3] / "volumes" / "upload-tmp"
+)
 ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/x-msvideo"]
 
