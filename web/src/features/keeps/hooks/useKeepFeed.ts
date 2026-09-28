@@ -18,6 +18,12 @@ import type {
 } from "../types";
 
 /**
+ * Comments a feed keep carries in `recent_comments`; matches the backend's
+ * RECENT_COMMENT_COUNT and the post's initial comment count.
+ */
+export const RECENT_COMMENT_COUNT = 3;
+
+/**
  * Pull the opaque cursor out of DRF's absolute `next` URL.
  */
 export function cursorFromNextUrl(next: string | null): string | undefined {
@@ -177,7 +183,9 @@ export function useAddKeepComment() {
 			patchCachedKeep(queryClient, keepId, (cached) => ({
 				...cached,
 				comment_count: cached.comment_count + 1,
-				recent_comments: [...cached.recent_comments, comment].slice(-2),
+				recent_comments: [...cached.recent_comments, comment].slice(
+					-RECENT_COMMENT_COUNT,
+				),
 			}));
 			queryClient.setQueryData<KeepCommentRecord[]>(
 				keepKeys.comments(keepId),

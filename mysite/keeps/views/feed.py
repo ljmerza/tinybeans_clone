@@ -16,7 +16,8 @@ from rest_framework.views import APIView
 from ..models import Keep, KeepComment, KeepMedia, KeepReaction
 from ..serializers.feed import KeepFeedSerializer
 
-RECENT_COMMENT_COUNT = 2
+# Matches the web feed's initial comment count, so it needs no extra fetch.
+RECENT_COMMENT_COUNT = 3
 DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
