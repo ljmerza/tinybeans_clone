@@ -102,6 +102,18 @@ export interface KeepReactionRecord {
 	created_at: string;
 }
 
+/**
+ * GET /keeps/feed/<id>/likers/: someone who reacted to a keep (any reaction
+ * counts as a like), newest first.
+ */
+export interface KeepLiker {
+	id: number;
+	user: number;
+	user_display_name: string;
+	reaction_type: string;
+	created_at: string;
+}
+
 export interface KeepCommentRecord extends FeedComment {
 	keep: string;
 	updated_at: string;

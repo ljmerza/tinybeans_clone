@@ -7,6 +7,7 @@ import type {
 	FeedKeep,
 	FeedPage,
 	KeepCommentRecord,
+	KeepLiker,
 	KeepReactionRecord,
 	PaginatedList,
 } from "../types";
@@ -15,6 +16,9 @@ const KEEPS_BASE = "/keeps";
 
 /** Upper bound for one keep's full comment thread in a single request. */
 const COMMENT_THREAD_LIMIT = 200;
+
+/** How many likers the "liked by" list loads. */
+const LIKERS_LIMIT = 100;
 
 export const keepServices = {
 	getCalendarMonth(month: string, circleSlug?: string) {
@@ -55,6 +59,14 @@ export const keepServices = {
 		});
 		return authApi.get<PaginatedList<KeepCommentRecord>>(
 			`${KEEPS_BASE}/comments/?${params}`,
+		);
+	},
+
+	/** Newest first; `count` is the total when it exceeds the limit. */
+	getKeepLikers(keepId: string) {
+		const params = new URLSearchParams({ limit: String(LIKERS_LIMIT) });
+		return authApi.get<PaginatedList<KeepLiker>>(
+			`${KEEPS_BASE}/feed/${keepId}/likers/?${params}`,
 		);
 	},
 

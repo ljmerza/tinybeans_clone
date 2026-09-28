@@ -437,7 +437,14 @@
 			"delete_comment_thread_description": "This can't be undone. Any replies to it will be deleted too.",
 			"delete_comment_confirm": "Delete",
 			"delete_comment_failed": "Couldn't delete the comment. Please try again.",
-			"comment_failed": "Couldn't post your comment. Please try again."
+			"comment_failed": "Couldn't post your comment. Please try again.",
+			"likers_title": "Liked by",
+			"likers_hint": "Long press or press Shift+Enter to see who liked this",
+			"likers_loading": "Loading…",
+			"likers_empty": "No likes yet",
+			"likers_error": "Couldn't load who liked this.",
+			"likers_more_one": "And 1 more",
+			"likers_more_other": "And {{count}} more"
 		},
 		"keep": {
 			"loading": "Loading…",

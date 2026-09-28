@@ -1,6 +1,12 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { keepServices } from "./api/services";
@@ -324,5 +330,65 @@ describe("KeepFeedPost", () => {
 
 		expect(await screen.findByText("First!")).toBeInTheDocument();
 		expect(getKeepComments).toHaveBeenCalledWith(makeKeep().id);
+	});
+
+	it("long-pressing like opens who liked it without toggling the like", async () => {
+		const addReaction = vi.spyOn(keepServices, "addReaction");
+		const getKeepLikers = vi
+			.spyOn(keepServices, "getKeepLikers")
+			.mockResolvedValue({
+				count: 3,
+				next: "http://web:8000/api/keeps/feed/x/likers/?limit=2&offset=2",
+				previous: null,
+				results: [
+					{
+						id: 11,
+						user: 8,
+						user_display_name: "Grandma",
+						reaction_type: "love",
+						created_at: "2026-07-06T09:00:00Z",
+					},
+					{
+						id: 10,
+						user: 9,
+						user_display_name: "Uncle Sam",
+						reaction_type: "like",
+						created_at: "2026-07-05T09:00:00Z",
+					},
+				],
+			});
+		await renderCachedPost(makeKeep());
+		expect(getKeepLikers).not.toHaveBeenCalled();
+
+		const button = likeButton();
+		fireEvent.pointerDown(button, { clientX: 5, clientY: 5, button: 0 });
+		await act(() => new Promise((resolve) => setTimeout(resolve, 550)));
+		fireEvent.pointerUp(button, { clientX: 5, clientY: 5 });
+		fireEvent.click(button);
+
+		const dialog = await screen.findByRole("dialog", { name: "Liked by" });
+		expect(await within(dialog).findByText("Grandma")).toBeInTheDocument();
+		expect(within(dialog).getByText("Uncle Sam")).toBeInTheDocument();
+		expect(within(dialog).getByText("And 1 more")).toBeInTheDocument();
+		expect(getKeepLikers).toHaveBeenCalledWith(makeKeep().id);
+		expect(addReaction).not.toHaveBeenCalled();
+		// The open dialog hides the post from queries by role.
+		expect(button).toHaveAttribute("aria-pressed", "false");
+	});
+
+	it("opens who liked it from the keyboard too", async () => {
+		vi.spyOn(keepServices, "getKeepLikers").mockResolvedValue({
+			count: 0,
+			next: null,
+			previous: null,
+			results: [],
+		});
+		await renderCachedPost(makeKeep());
+
+		expect(likeButton()).toHaveAttribute("aria-keyshortcuts", "Shift+Enter");
+		fireEvent.keyDown(likeButton(), { key: "Enter", shiftKey: true });
+
+		const dialog = await screen.findByRole("dialog", { name: "Liked by" });
+		expect(await within(dialog).findByText("No likes yet")).toBeInTheDocument();
 	});
 });
