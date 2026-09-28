@@ -4,9 +4,9 @@ from importlib import import_module
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
-from mysite.circles.models import Circle
+from mysite.circles.models import Circle, CircleMembership
 from mysite.keeps.models import (
     Keep,
     KeepComment,
@@ -15,6 +15,7 @@ from mysite.keeps.models import (
     TinybeansObjectType,
 )
 from mysite.keeps.serializers import KeepCommentSerializer
+from mysite.users.models import UserRole
 
 User = get_user_model()
 
@@ -44,6 +45,30 @@ class CommentThreadingTests(TestCase):
 
         self.assertFalse(serializer.is_valid())
         self.assertIn("parent", serializer.errors)
+
+    def test_reply_to_reply_joins_top_level_thread(self):
+        request = RequestFactory().post("/")
+        request.user = self.user
+        CircleMembership.objects.get_or_create(user=self.user, circle=self.circle)
+
+        serializer = KeepCommentSerializer(
+            data={"keep": str(self.keep.id), "parent": self.reply.id, "comment": "@Thread me too"},
+            context={"request": request},
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.save(user=self.user).parent, self.parent)
+
+    def test_serializer_reports_can_delete_for_the_author(self):
+        request = RequestFactory().get("/")
+        request.user = self.user
+        stranger = User.objects.create_user(email="stranger@example.com", password="testpass123")
+        theirs = KeepComment.objects.create(keep=self.keep, user=stranger, comment="Not yours")
+        CircleMembership.objects.filter(user=self.user, circle=self.circle).update(role=UserRole.CIRCLE_MEMBER)
+
+        data = KeepCommentSerializer([self.parent, theirs], many=True, context={"request": request}).data
+
+        self.assertEqual([c["can_delete"] for c in data], [True, False])
 
     def test_deleting_parent_removes_replies(self):
         self.parent.delete()

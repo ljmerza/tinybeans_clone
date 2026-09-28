@@ -18,6 +18,12 @@ import type {
 } from "../types";
 
 /**
+ * Comments a feed keep carries in `recent_comments`; matches the backend's
+ * RECENT_COMMENT_COUNT and the post's initial comment count.
+ */
+export const RECENT_COMMENT_COUNT = 3;
+
+/**
  * Pull the opaque cursor out of DRF's absolute `next` URL.
  */
 export function cursorFromNextUrl(next: string | null): string | undefined {
@@ -66,6 +72,17 @@ export function useKeepComments(keepId: string, enabled: boolean) {
 	return useQuery({
 		queryKey: keepKeys.comments(keepId),
 		queryFn: async () => (await keepServices.getKeepComments(keepId)).results,
+		enabled,
+	});
+}
+
+/**
+ * Who liked a keep, fetched only while the likers dialog is open.
+ */
+export function useKeepLikers(keepId: string, enabled: boolean) {
+	return useQuery({
+		queryKey: keepKeys.likers(keepId),
+		queryFn: () => keepServices.getKeepLikers(keepId),
 		enabled,
 	});
 }
@@ -134,6 +151,9 @@ export function useSetKeepLiked() {
 				viewer_reaction,
 				reaction_count: Math.max(0, cached.reaction_count + delta),
 			}));
+			void queryClient.invalidateQueries({
+				queryKey: keepKeys.likers(keep.id),
+			});
 		},
 	});
 }
@@ -144,6 +164,7 @@ const toFeedComment = ({
 	user_display_name,
 	parent,
 	comment,
+	can_delete,
 	created_at,
 }: KeepCommentRecord): FeedComment => ({
 	id,
@@ -151,6 +172,7 @@ const toFeedComment = ({
 	user_display_name,
 	parent,
 	comment,
+	can_delete,
 	created_at,
 });
 
@@ -158,8 +180,15 @@ export function useAddKeepComment() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ keepId, text }: { keepId: string; text: string }) =>
-			keepServices.addComment(keepId, text),
+		mutationFn: ({
+			keepId,
+			text,
+			parentId,
+		}: {
+			keepId: string;
+			text: string;
+			parentId?: number;
+		}) => keepServices.addComment(keepId, text, parentId),
 		meta: {
 			toast: { error: { key: "pages.feed.comment_failed" } },
 		},
@@ -168,11 +197,65 @@ export function useAddKeepComment() {
 			patchCachedKeep(queryClient, keepId, (cached) => ({
 				...cached,
 				comment_count: cached.comment_count + 1,
-				recent_comments: [...cached.recent_comments, comment].slice(-2),
+				recent_comments: [...cached.recent_comments, comment].slice(
+					-RECENT_COMMENT_COUNT,
+				),
 			}));
 			queryClient.setQueryData<KeepCommentRecord[]>(
 				keepKeys.comments(keepId),
 				(thread) => (thread ? [...thread, record] : thread),
+			);
+		},
+	});
+}
+
+/**
+ * Delete a comment; a top-level comment takes its replies with it.
+ */
+export function useDeleteKeepComment() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			keepId,
+			commentId,
+		}: {
+			keepId: string;
+			commentId: number;
+		}) => {
+			await keepServices.deleteComment(commentId);
+			// Refetch for the true count and preview, since replies may have gone
+			// too. The comment is gone either way, so a failed refetch isn't an error.
+			return keepServices.getFeedKeep(keepId).catch(() => null);
+		},
+		meta: {
+			toast: { error: { key: "pages.feed.delete_comment_failed" } },
+		},
+		onSuccess: (fresh, { keepId, commentId }) => {
+			// Only the comment fields: fresh media URLs would reload the photos.
+			patchCachedKeep(queryClient, keepId, (cached) =>
+				fresh
+					? {
+							...cached,
+							comment_count: fresh.comment_count,
+							recent_comments: fresh.recent_comments,
+						}
+					: {
+							...cached,
+							comment_count: Math.max(0, cached.comment_count - 1),
+							recent_comments: cached.recent_comments.filter(
+								(comment) =>
+									comment.id !== commentId && comment.parent !== commentId,
+							),
+						},
+			);
+			queryClient.setQueryData<KeepCommentRecord[]>(
+				keepKeys.comments(keepId),
+				(thread) =>
+					thread?.filter(
+						(comment) =>
+							comment.id !== commentId && comment.parent !== commentId,
+					),
 			);
 		},
 	});

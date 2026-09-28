@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 
 from mysite.circles.models import Circle, CircleMembership
 from mysite.keeps.models import Keep, KeepComment, KeepMedia, KeepReaction, KeepType
+from mysite.users.models import UserRole
 
 User = get_user_model()
 
@@ -143,7 +144,7 @@ class TestKeepFeedView:
         untouched = make_keep(circle, user, BASE_TIME - timedelta(days=1))
         KeepReaction.objects.create(keep=keep, user=other_user, reaction_type="love")
         mine = KeepReaction.objects.create(keep=keep, user=user, reaction_type="like")
-        for n in range(3):
+        for n in range(4):
             KeepComment.objects.create(
                 keep=keep, user=other_user, comment=f"comment {n}", created_at=BASE_TIME + timedelta(minutes=n)
             )
@@ -152,10 +153,10 @@ class TestKeepFeedView:
         first, second = api_client.get(FEED_URL).data["results"]
 
         assert first["reaction_count"] == 2
-        assert first["comment_count"] == 3
+        assert first["comment_count"] == 4
         assert first["viewer_reaction"] == {"id": mine.id, "reaction_type": "like"}
-        # The newest two, oldest first.
-        assert [c["comment"] for c in first["recent_comments"]] == ["comment 1", "comment 2"]
+        # The newest three, oldest first.
+        assert [c["comment"] for c in first["recent_comments"]] == ["comment 1", "comment 2", "comment 3"]
 
         assert second["id"] == str(untouched.id)
         assert second["reaction_count"] == 0
@@ -182,6 +183,21 @@ class TestKeepFeedView:
         dates = {str(k.id): k.date_of_memory for k in keeps}
         seen_dates = [dates[keep_id] for keep_id in seen]
         assert seen_dates == sorted(seen_dates, reverse=True)
+
+    def test_comments_are_deletable_by_their_author_or_a_circle_admin(self, api_client, user, other_user, circle):
+        CircleMembership.objects.filter(user=user, circle=circle).update(role=UserRole.CIRCLE_ADMIN)
+        CircleMembership.objects.create(user=other_user, circle=circle, role=UserRole.CIRCLE_MEMBER)
+        keep = make_keep(circle, user, BASE_TIME)
+        KeepComment.objects.create(keep=keep, user=user, comment="admin's")
+        KeepComment.objects.create(keep=keep, user=other_user, comment="member's")
+
+        def can_delete(viewer):
+            api_client.force_authenticate(user=viewer)
+            comments = api_client.get(FEED_URL).data["results"][0]["recent_comments"]
+            return {c["comment"]: c["can_delete"] for c in comments}
+
+        assert can_delete(other_user) == {"admin's": False, "member's": True}
+        assert can_delete(user) == {"admin's": True, "member's": True}
 
     def test_query_count_does_not_grow_with_page_size(self, api_client, user, other_user, circle):
         CircleMembership.objects.create(user=other_user, circle=circle)
