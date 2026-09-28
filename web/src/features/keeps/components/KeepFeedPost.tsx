@@ -114,6 +114,10 @@ export function KeepFeedPost({
 			<PostRoot
 				post={post}
 				defaultCommentsExpanded={defaultCommentsExpanded}
+				// A keep's own page (e.g. a shared link) shows the whole discussion.
+				defaultCommentPage={
+					defaultCommentsExpanded ? Number.POSITIVE_INFINITY : 0
+				}
 				onLikeChange={(liked) => setLiked.mutateAsync({ keep, liked })}
 				onCommentSubmit={(text, _post, { parentId }) =>
 					addComment.mutateAsync({
