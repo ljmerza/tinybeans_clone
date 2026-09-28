@@ -40,6 +40,8 @@ export interface FeedComment {
 	user_display_name: string;
 	parent: number | null;
 	comment: string;
+	/** The viewer wrote it or admins its circle. */
+	can_delete: boolean;
 	created_at: string;
 }
 

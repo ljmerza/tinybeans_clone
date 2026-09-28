@@ -39,6 +39,7 @@ const makeKeep = (overrides: Partial<FeedKeep> = {}): FeedKeep => ({
 			user_display_name: "Grandma",
 			parent: null,
 			comment: "So sweet",
+			can_delete: false,
 			created_at: "2026-07-05T11:00:00Z",
 		},
 	],
@@ -54,6 +55,7 @@ const commentRecord = (
 	user_display_name: "Leo",
 	parent: null,
 	comment: "Love it",
+	can_delete: true,
 	created_at: "2026-07-06T09:00:00Z",
 	updated_at: "2026-07-06T09:00:00Z",
 	...overrides,
@@ -256,6 +258,44 @@ describe("KeepFeedPost", () => {
 		expect(
 			screen.getByText("So sweet").closest("li")?.querySelector("ul"),
 		).toContainElement(reply);
+	});
+
+	it("deletes a comment only after confirming", async () => {
+		const deleteComment = vi
+			.spyOn(keepServices, "deleteComment")
+			.mockResolvedValue(undefined);
+		const mine = commentRecord({ id: 6, comment: "Oops" });
+		const keep = makeKeep({
+			comment_count: 2,
+			recent_comments: [...makeKeep().recent_comments, mine],
+		});
+		await renderCachedPost(keep);
+		// The refetch after deleting.
+		vi.spyOn(keepServices, "getFeedKeep").mockResolvedValue(makeKeep());
+
+		// Only the viewer's own comment is deletable here.
+		const deleteButtons = screen.getAllByRole("button", {
+			name: "Delete comment",
+		});
+		expect(deleteButtons).toHaveLength(1);
+
+		fireEvent.click(deleteButtons[0]);
+		expect(
+			await screen.findByText(
+				"This can't be undone. Any replies to it will be deleted too.",
+			),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(deleteComment).not.toHaveBeenCalled();
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete comment" }));
+		await act(async () =>
+			fireEvent.click(await screen.findByRole("button", { name: "Delete" })),
+		);
+
+		expect(deleteComment).toHaveBeenCalledWith(6);
+		await waitFor(() => expect(screen.queryByText("Oops")).toBeNull());
+		expect(screen.getByText("So sweet")).toBeInTheDocument();
 	});
 
 	it("loads the full thread when comments are expanded", async () => {

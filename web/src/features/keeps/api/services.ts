@@ -77,4 +77,9 @@ export const keepServices = {
 			...(parent !== undefined && { parent }),
 		});
 	},
+
+	/** Deleting a top-level comment also deletes its replies. */
+	deleteComment(commentId: number) {
+		return authApi.delete<unknown>(`${KEEPS_BASE}/comments/${commentId}/`);
+	},
 };

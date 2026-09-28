@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@/components";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,10 +20,12 @@ import {
 	PostShareButton,
 	PostTimestamp,
 	PostTitle,
+	type SocialComment,
 } from "react-social-feed";
 
 import {
 	useAddKeepComment,
+	useDeleteKeepComment,
 	useKeepComments,
 	useSetKeepLiked,
 } from "../hooks/useKeepFeed";
@@ -45,6 +48,10 @@ export function KeepFeedPost({
 	const { t, i18n } = useTranslation();
 	const setLiked = useSetKeepLiked();
 	const addComment = useAddKeepComment();
+	const deleteComment = useDeleteKeepComment();
+	const [pendingDelete, setPendingDelete] = useState<SocialComment | null>(
+		null,
+	);
 	const [showAllComments, setShowAllComments] = useState(
 		defaultCommentsExpanded,
 	);
@@ -72,65 +79,99 @@ export function KeepFeedPost({
 		[i18n.language],
 	);
 
+	const confirmDelete = async () => {
+		if (!pendingDelete) return;
+		try {
+			await deleteComment.mutateAsync({
+				keepId: keep.id,
+				commentId: Number(pendingDelete.id),
+			});
+			setPendingDelete(null);
+		} catch {
+			// The mutation's error toast explains it; leave the dialog open to retry.
+		}
+	};
+
 	return (
-		<PostRoot
-			post={post}
-			defaultCommentsExpanded={defaultCommentsExpanded}
-			onLikeChange={(liked) => setLiked.mutateAsync({ keep, liked })}
-			onCommentSubmit={(text, _post, { parentId }) =>
-				addComment.mutateAsync({
-					keepId: keep.id,
-					text,
-					parentId: parentId === undefined ? undefined : Number(parentId),
-				})
-			}
-			onCommentsExpandedChange={setShowAllComments}
-		>
-			<PostHeader>
-				<PostAvatar />
-				<div className="rsf-post__byline">
-					<PostAuthor />
-					<span className="rsf-post__timestamp">
-						{keep.circle.name} ·{" "}
-						<PostTimestamp format={(date) => dateFormatter.format(date)} />
-					</span>
+		<>
+			<PostRoot
+				post={post}
+				defaultCommentsExpanded={defaultCommentsExpanded}
+				onLikeChange={(liked) => setLiked.mutateAsync({ keep, liked })}
+				onCommentSubmit={(text, _post, { parentId }) =>
+					addComment.mutateAsync({
+						keepId: keep.id,
+						text,
+						parentId: parentId === undefined ? undefined : Number(parentId),
+					})
+				}
+				onCommentDelete={setPendingDelete}
+				onCommentsExpandedChange={setShowAllComments}
+			>
+				<PostHeader>
+					<PostAvatar />
+					<div className="rsf-post__byline">
+						<PostAuthor />
+						<span className="rsf-post__timestamp">
+							{keep.circle.name} ·{" "}
+							<PostTimestamp format={(date) => dateFormatter.format(date)} />
+						</span>
+					</div>
+				</PostHeader>
+				<PostMedia>
+					<PostMediaPrevButton aria-label={t("pages.feed.previous_photo")} />
+					<PostMediaNextButton aria-label={t("pages.feed.next_photo")} />
+					<PostMediaCounter />
+				</PostMedia>
+				<div className="rsf-post__body">
+					<PostActions>
+						<PostLikeButton
+							label={(liked) =>
+								liked ? t("pages.feed.unlike") : t("pages.feed.like")
+							}
+						/>
+						<PostCommentButton aria-label={t("pages.feed.comment")} />
+						<PostActionSpacer />
+						<PostShareButton aria-label={t("pages.feed.share")} />
+					</PostActions>
+					<PostTitle />
+					<PostCaption />
+					<div className="rsf-post__discussion">
+						<PostComments
+							viewAllLabel={(count) =>
+								t("pages.feed.view_all_comments", { count })
+							}
+							hideLabel={t("pages.feed.hide_comments")}
+							replyLabel={t("pages.feed.reply")}
+							deleteLabel={t("pages.feed.delete_comment")}
+						/>
+						<PostCommentForm
+							placeholder={t("pages.feed.comment_placeholder")}
+							inputLabel={t("pages.feed.comment_label")}
+							submitLabel={t("pages.feed.post_comment")}
+							replyingToLabel={(name) => t("pages.feed.replying_to", { name })}
+							cancelReplyLabel={t("pages.feed.cancel_reply")}
+						/>
+					</div>
 				</div>
-			</PostHeader>
-			<PostMedia>
-				<PostMediaPrevButton aria-label={t("pages.feed.previous_photo")} />
-				<PostMediaNextButton aria-label={t("pages.feed.next_photo")} />
-				<PostMediaCounter />
-			</PostMedia>
-			<div className="rsf-post__body">
-				<PostActions>
-					<PostLikeButton
-						label={(liked) =>
-							liked ? t("pages.feed.unlike") : t("pages.feed.like")
-						}
-					/>
-					<PostCommentButton aria-label={t("pages.feed.comment")} />
-					<PostActionSpacer />
-					<PostShareButton aria-label={t("pages.feed.share")} />
-				</PostActions>
-				<PostTitle />
-				<PostCaption />
-				<div className="rsf-post__discussion">
-					<PostComments
-						viewAllLabel={(count) =>
-							t("pages.feed.view_all_comments", { count })
-						}
-						hideLabel={t("pages.feed.hide_comments")}
-						replyLabel={t("pages.feed.reply")}
-					/>
-					<PostCommentForm
-						placeholder={t("pages.feed.comment_placeholder")}
-						inputLabel={t("pages.feed.comment_label")}
-						submitLabel={t("pages.feed.post_comment")}
-						replyingToLabel={(name) => t("pages.feed.replying_to", { name })}
-						cancelReplyLabel={t("pages.feed.cancel_reply")}
-					/>
-				</div>
-			</div>
-		</PostRoot>
+			</PostRoot>
+			<ConfirmDialog
+				open={pendingDelete !== null}
+				onOpenChange={(open) => {
+					if (!open) setPendingDelete(null);
+				}}
+				title={t("pages.feed.delete_comment_title")}
+				description={
+					pendingDelete?.parentId
+						? t("pages.feed.delete_comment_description")
+						: t("pages.feed.delete_comment_thread_description")
+				}
+				confirmLabel={t("pages.feed.delete_comment_confirm")}
+				cancelLabel={t("common.cancel")}
+				variant="destructive"
+				isLoading={deleteComment.isPending}
+				onConfirm={confirmDelete}
+			/>
+		</>
 	);
 }

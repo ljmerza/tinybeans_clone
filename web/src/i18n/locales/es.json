@@ -532,6 +532,12 @@
 			"reply": "Responder",
 			"replying_to": "Respondiendo a {{name}}",
 			"cancel_reply": "Cancelar",
+			"delete_comment": "Eliminar comentario",
+			"delete_comment_title": "¿Eliminar este comentario?",
+			"delete_comment_description": "No se puede deshacer.",
+			"delete_comment_thread_description": "No se puede deshacer. También se eliminarán sus respuestas.",
+			"delete_comment_confirm": "Eliminar",
+			"delete_comment_failed": "No se pudo eliminar el comentario. Inténtalo de nuevo.",
 			"comment_failed": "No se pudo publicar tu comentario. Inténtalo de nuevo."
 		},
 		"keep": {

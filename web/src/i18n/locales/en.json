@@ -431,6 +431,12 @@
 			"reply": "Reply",
 			"replying_to": "Replying to {{name}}",
 			"cancel_reply": "Cancel",
+			"delete_comment": "Delete comment",
+			"delete_comment_title": "Delete this comment?",
+			"delete_comment_description": "This can't be undone.",
+			"delete_comment_thread_description": "This can't be undone. Any replies to it will be deleted too.",
+			"delete_comment_confirm": "Delete",
+			"delete_comment_failed": "Couldn't delete the comment. Please try again.",
 			"comment_failed": "Couldn't post your comment. Please try again."
 		},
 		"keep": {

@@ -144,6 +144,7 @@ const toFeedComment = ({
 	user_display_name,
 	parent,
 	comment,
+	can_delete,
 	created_at,
 }: KeepCommentRecord): FeedComment => ({
 	id,
@@ -151,6 +152,7 @@ const toFeedComment = ({
 	user_display_name,
 	parent,
 	comment,
+	can_delete,
 	created_at,
 });
 
@@ -180,6 +182,58 @@ export function useAddKeepComment() {
 			queryClient.setQueryData<KeepCommentRecord[]>(
 				keepKeys.comments(keepId),
 				(thread) => (thread ? [...thread, record] : thread),
+			);
+		},
+	});
+}
+
+/**
+ * Delete a comment; a top-level comment takes its replies with it.
+ */
+export function useDeleteKeepComment() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			keepId,
+			commentId,
+		}: {
+			keepId: string;
+			commentId: number;
+		}) => {
+			await keepServices.deleteComment(commentId);
+			// Refetch for the true count and preview, since replies may have gone
+			// too. The comment is gone either way, so a failed refetch isn't an error.
+			return keepServices.getFeedKeep(keepId).catch(() => null);
+		},
+		meta: {
+			toast: { error: { key: "pages.feed.delete_comment_failed" } },
+		},
+		onSuccess: (fresh, { keepId, commentId }) => {
+			// Only the comment fields: fresh media URLs would reload the photos.
+			patchCachedKeep(queryClient, keepId, (cached) =>
+				fresh
+					? {
+							...cached,
+							comment_count: fresh.comment_count,
+							recent_comments: fresh.recent_comments,
+						}
+					: {
+							...cached,
+							comment_count: Math.max(0, cached.comment_count - 1),
+							recent_comments: cached.recent_comments.filter(
+								(comment) =>
+									comment.id !== commentId && comment.parent !== commentId,
+							),
+						},
+			);
+			queryClient.setQueryData<KeepCommentRecord[]>(
+				keepKeys.comments(keepId),
+				(thread) =>
+					thread?.filter(
+						(comment) =>
+							comment.id !== commentId && comment.parent !== commentId,
+					),
 			);
 		},
 	});
