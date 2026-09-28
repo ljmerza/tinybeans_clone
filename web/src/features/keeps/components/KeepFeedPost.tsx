@@ -24,6 +24,7 @@ import {
 } from "react-social-feed";
 
 import {
+	RECENT_COMMENT_COUNT,
 	useAddKeepComment,
 	useDeleteKeepComment,
 	useKeepComments,
@@ -32,9 +33,12 @@ import {
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
 
+/** Comments each "Show more" reveals after the first RECENT_COMMENT_COUNT. */
+const COMMENT_PAGE_SIZE = 5;
+
 export interface KeepFeedPostProps {
 	keep: FeedKeep;
-	/** Open with the full comment thread loaded (e.g. on a shared link). */
+	/** Open with the full comment thread loaded and one page shown (e.g. on a shared link). */
 	defaultCommentsExpanded?: boolean;
 }
 
@@ -138,8 +142,14 @@ export function KeepFeedPost({
 					<PostCaption />
 					<div className="rsf-post__discussion">
 						<PostComments
-							viewAllLabel={(count) =>
-								t("pages.feed.view_all_comments", { count })
+							previewCount={RECENT_COMMENT_COUNT}
+							pageSize={COMMENT_PAGE_SIZE}
+							showMoreLabel={(remaining) =>
+								t("pages.feed.show_more_comments", { count: remaining })
+							}
+							// A failed fetch shouldn't read as loading forever.
+							loadingLabel={
+								thread.isError ? undefined : t("pages.feed.loading_comments")
 							}
 							hideLabel={t("pages.feed.hide_comments")}
 							replyLabel={t("pages.feed.reply")}

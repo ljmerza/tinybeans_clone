@@ -319,10 +319,67 @@ describe("KeepFeedPost", () => {
 
 		expect(getKeepComments).not.toHaveBeenCalled();
 		fireEvent.click(
-			screen.getByRole("button", { name: "View all 3 comments" }),
+			screen.getByRole("button", { name: "View more comments (2)" }),
 		);
 
 		expect(await screen.findByText("First!")).toBeInTheDocument();
 		expect(getKeepComments).toHaveBeenCalledWith(makeKeep().id);
+	});
+
+	it("shows three comments, then five more per click", async () => {
+		const thread = Array.from({ length: 12 }, (_, n) =>
+			commentRecord({ id: n + 1, comment: `comment ${n + 1}` }),
+		);
+		let resolveThread: (value: {
+			count: number;
+			next: null;
+			previous: null;
+			results: KeepCommentRecord[];
+		}) => void = () => {};
+		const getKeepComments = vi
+			.spyOn(keepServices, "getKeepComments")
+			.mockReturnValue(
+				new Promise((resolve) => {
+					resolveThread = resolve;
+				}),
+			);
+		await renderCachedPost(
+			makeKeep({
+				comment_count: 12,
+				recent_comments: thread.slice(-3).map((record) => ({
+					id: record.id,
+					user: record.user,
+					user_display_name: record.user_display_name,
+					parent: record.parent,
+					comment: record.comment,
+					can_delete: record.can_delete,
+					created_at: record.created_at,
+				})),
+			}),
+		);
+		const shown = () => screen.queryAllByText(/^comment \d+$/);
+
+		expect(shown()).toHaveLength(3);
+		fireEvent.click(
+			screen.getByRole("button", { name: "View more comments (9)" }),
+		);
+		expect(getKeepComments).toHaveBeenCalledOnce();
+		expect(screen.getByRole("status")).toHaveTextContent("Loading comments…");
+
+		resolveThread({ count: 12, next: null, previous: null, results: thread });
+		await waitFor(() => expect(shown()).toHaveLength(8));
+		expect(screen.queryByText("comment 4")).toBeNull();
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "View more comments (4)" }),
+		);
+		expect(shown()).toHaveLength(12);
+		expect(
+			screen.queryByRole("button", { name: /^View / }),
+		).not.toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Hide comments" }));
+		expect(shown()).toHaveLength(3);
+		expect(getKeepComments).toHaveBeenCalledOnce();
 	});
 });

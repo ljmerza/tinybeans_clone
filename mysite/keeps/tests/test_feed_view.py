@@ -144,7 +144,7 @@ class TestKeepFeedView:
         untouched = make_keep(circle, user, BASE_TIME - timedelta(days=1))
         KeepReaction.objects.create(keep=keep, user=other_user, reaction_type="love")
         mine = KeepReaction.objects.create(keep=keep, user=user, reaction_type="like")
-        for n in range(3):
+        for n in range(4):
             KeepComment.objects.create(
                 keep=keep, user=other_user, comment=f"comment {n}", created_at=BASE_TIME + timedelta(minutes=n)
             )
@@ -153,10 +153,10 @@ class TestKeepFeedView:
         first, second = api_client.get(FEED_URL).data["results"]
 
         assert first["reaction_count"] == 2
-        assert first["comment_count"] == 3
+        assert first["comment_count"] == 4
         assert first["viewer_reaction"] == {"id": mine.id, "reaction_type": "like"}
-        # The newest two, oldest first.
-        assert [c["comment"] for c in first["recent_comments"]] == ["comment 1", "comment 2"]
+        # The newest three, oldest first.
+        assert [c["comment"] for c in first["recent_comments"]] == ["comment 1", "comment 2", "comment 3"]
 
         assert second["id"] == str(untouched.id)
         assert second["reaction_count"] == 0
