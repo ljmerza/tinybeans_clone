@@ -1,6 +1,6 @@
 """Tests for media storage backend."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 import pytest
@@ -182,6 +182,53 @@ class TestMinIOStorageBackend:
 
             assert url == "http://presigned-url.com/file.jpg"
             mock_client.presigned_get_object.assert_called_once()
+
+    @patch("minio.Minio")
+    def test_get_url_is_stable_within_its_signing_window(self, mock_minio_class):
+        """URLs are signed from the window start so browsers can cache the files."""
+        mock_client = Mock()
+        mock_minio_class.return_value = mock_client
+
+        with override_settings(
+            MINIO_ENDPOINT="http://localhost:9000",
+            MINIO_ACCESS_KEY="test",
+            MINIO_SECRET_KEY="test",
+            MINIO_BUCKET_NAME="test-bucket",
+            MINIO_PUBLIC_ENDPOINT="",
+        ):
+            backend = MinIOStorageBackend()
+            for now in ("2026-09-27T00:00:01+00:00", "2026-09-27T23:59:59+00:00"):
+                with patch("mysite.keeps.storage.timezone.now", return_value=datetime.fromisoformat(now)):
+                    backend.get_url("keeps/2024/01/01/test.jpg", expires_in=86400)
+
+        first, second = (call.kwargs for call in mock_client.presigned_get_object.call_args_list)
+        assert first == second
+        assert first["request_date"] == datetime.fromisoformat("2026-09-27T00:00:00+00:00")
+        # Still valid for a full day when signed just before the window ends.
+        assert first["expires"] == timedelta(days=2)
+        assert first["response_headers"] == {"response-cache-control": "private, max-age=86400"}
+
+    def test_real_presigned_urls_repeat_within_the_window(self):
+        """End to end through minio-py's signer (no network: the region is pinned)."""
+        with (
+            patch("minio.Minio.bucket_exists", return_value=True),
+            override_settings(
+                MINIO_ENDPOINT="http://localhost:9000",
+                MINIO_ACCESS_KEY="test",
+                MINIO_SECRET_KEY="test",
+                MINIO_BUCKET_NAME="test-bucket",
+                MINIO_PUBLIC_ENDPOINT="https://media.example.com",
+                MINIO_REGION="us-east-1",
+            ),
+        ):
+            backend = MinIOStorageBackend()
+            urls = set()
+            for now in ("2026-09-27T08:00:00+00:00", "2026-09-27T20:00:00+00:00"):
+                with patch("mysite.keeps.storage.timezone.now", return_value=datetime.fromisoformat(now)):
+                    urls.add(backend.get_url("keeps/2024/01/01/test.jpg", expires_in=86400))
+
+        assert len(urls) == 1
+        assert "response-cache-control=" in urls.pop()
 
     @patch("minio.Minio")
     def test_get_url_uses_public_endpoint(self, mock_minio_class):

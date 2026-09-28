@@ -9,12 +9,24 @@ import hashlib
 import os
 import uuid
 from abc import ABC, abstractmethod
-from datetime import timedelta
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from typing import Any, Dict
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.utils import timezone
+
+# Presigned URLs are signed as of the start of a fixed window, so every request in
+# the window gets byte-identical URLs and browsers can reuse cached files.
+MAX_SIGNING_WINDOW = 86400
+# S3/MinIO reject presigned URLs that live longer than seven days.
+MAX_PRESIGN_EXPIRY = 7 * 86400
+
+
+def signing_window_start(now, window):
+    """Start of the fixed `window`-second UTC window containing `now`."""
+    return datetime.fromtimestamp(int(now.timestamp()) // window * window, tz=dt_timezone.utc)
 
 
 class MediaStorageBackend(ABC):
@@ -149,11 +161,22 @@ class MinIOStorageBackend(MediaStorageBackend):
             return False
 
     def get_url(self, storage_key: str, expires_in: int = 3600) -> str:
-        """Get presigned URL for MinIO file access."""
+        """Get presigned URL for MinIO file access, valid for at least `expires_in` seconds.
 
+        URLs are signed as of the start of the current window (`expires_in`, at most a
+        day), so repeat requests return the same URL and the browser can serve the file
+        from cache: a calendar month's thumbnails otherwise re-download on every visit.
+        Signing from the window start means the URL must outlive it by `expires_in`.
+        The signed Cache-Control lets browsers reuse the file without revalidating.
+        """
+        window = min(expires_in, MAX_SIGNING_WINDOW)
         try:
             url = self.url_client.presigned_get_object(
-                bucket_name=self.bucket_name, object_name=storage_key, expires=timedelta(seconds=expires_in)
+                bucket_name=self.bucket_name,
+                object_name=storage_key,
+                expires=timedelta(seconds=min(window + expires_in, MAX_PRESIGN_EXPIRY)),
+                request_date=signing_window_start(timezone.now(), window),
+                response_headers={"response-cache-control": f"private, max-age={expires_in}"},
             )
             return url
         except self.S3Error:
