@@ -16,6 +16,7 @@ import {
 	PostCommentButton,
 	PostCommentForm,
 	PostComments,
+	PostFavoriteButton,
 	PostHeader,
 	PostLikeButton,
 	PostLikers,
@@ -36,6 +37,7 @@ import {
 	useDeleteKeepComment,
 	useKeepComments,
 	useKeepLikers,
+	useSetKeepFavorited,
 	useSetKeepLiked,
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
@@ -59,6 +61,7 @@ export function KeepFeedPost({
 }: KeepFeedPostProps) {
 	const { t, i18n } = useTranslation();
 	const setLiked = useSetKeepLiked();
+	const setFavorited = useSetKeepFavorited();
 	const addComment = useAddKeepComment();
 	const deleteComment = useDeleteKeepComment();
 	const [pendingDelete, setPendingDelete] = useState<SocialComment | null>(
@@ -119,6 +122,9 @@ export function KeepFeedPost({
 					defaultCommentsExpanded ? Number.POSITIVE_INFINITY : 0
 				}
 				onLikeChange={(liked) => setLiked.mutateAsync({ keep, liked })}
+				onFavoriteChange={(favorited) =>
+					setFavorited.mutateAsync({ keepId: keep.id, favorited })
+				}
 				onCommentSubmit={(text, _post, { parentId }) =>
 					addComment.mutateAsync({
 						keepId: keep.id,
@@ -158,6 +164,13 @@ export function KeepFeedPost({
 						/>
 						<PostCommentButton aria-label={t("pages.feed.comment")} />
 						<PostActionSpacer />
+						<PostFavoriteButton
+							label={(favorited) =>
+								favorited
+									? t("pages.feed.unfavorite")
+									: t("pages.feed.favorite")
+							}
+						/>
 						<PostShareButton aria-label={t("pages.feed.share")} />
 					</PostActions>
 					<PostCaption />

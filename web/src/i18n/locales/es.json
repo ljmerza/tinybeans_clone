@@ -29,7 +29,8 @@
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
 		"logout": "Cerrar sesión",
-		"settings": "Configuración"
+		"settings": "Configuración",
+		"favorites": "Favoritos"
 	},
 	"auth": {
 		"login": {
@@ -503,6 +504,17 @@
 			"authenticated_message": "¡Has iniciado sesión!",
 			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
 		},
+		"favorites": {
+			"title": "Favoritos",
+			"subtitle": "Las publicaciones que guardaste. Solo tú puedes ver esta lista.",
+			"loading": "Cargando tus favoritos…",
+			"error_title": "No se pudieron cargar tus favoritos",
+			"error_message": "Algo salió mal. Inténtalo de nuevo.",
+			"empty_title": "Aún no tienes favoritos",
+			"empty_message": "Toca el marcador de cualquier publicación para guardarla aquí.",
+			"end": "Esos son todos tus favoritos.",
+			"aria_label": "Tus publicaciones favoritas"
+		},
 		"feed": {
 			"new_post": {
 				"open": "Nueva publicación",
@@ -549,6 +561,10 @@
 			"photo_alt": "Foto compartida por {{name}}",
 			"like": "Me gusta",
 			"unlike": "Ya no me gusta",
+			"favorite": "Añadir a favoritos",
+			"unfavorite": "Quitar de favoritos",
+			"favorite_failed": "No se pudieron actualizar tus favoritos. Inténtalo de nuevo.",
+			"favorite_gone": "Esa publicación ya no está disponible.",
 			"comment": "Comentar",
 			"share": "Compartir",
 			"previous_photo": "Foto anterior",

@@ -29,7 +29,8 @@
 		"login": "Login",
 		"signup": "Sign up",
 		"logout": "Logout",
-		"settings": "Settings"
+		"settings": "Settings",
+		"favorites": "Favorites"
 	},
 	"auth": {
 		"login": {
@@ -402,6 +403,17 @@
 			"authenticated_message": "You are signed in!",
 			"guest_message": "Get started by signing up or logging in to your account."
 		},
+		"favorites": {
+			"title": "Favorites",
+			"subtitle": "Posts you saved. Only you can see this list.",
+			"loading": "Loading your favorites…",
+			"error_title": "Couldn't load your favorites",
+			"error_message": "Something went wrong. Please try again.",
+			"empty_title": "No favorites yet",
+			"empty_message": "Tap the bookmark on any post to save it here.",
+			"end": "That's all of your favorites.",
+			"aria_label": "Your favorite posts"
+		},
 		"feed": {
 			"new_post": {
 				"open": "New post",
@@ -448,6 +460,10 @@
 			"photo_alt": "Photo shared by {{name}}",
 			"like": "Like",
 			"unlike": "Unlike",
+			"favorite": "Add to favorites",
+			"unfavorite": "Remove from favorites",
+			"favorite_failed": "Couldn't update your favorites. Please try again.",
+			"favorite_gone": "That post is no longer available.",
 			"comment": "Comment",
 			"share": "Share",
 			"previous_photo": "Previous photo",

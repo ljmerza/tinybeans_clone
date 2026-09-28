@@ -1,4 +1,4 @@
-"""Social interaction models for keeps (reactions and comments)."""
+"""Social interaction models for keeps (reactions, comments and favorites)."""
 
 from django.conf import settings
 from django.db import models
@@ -81,3 +81,31 @@ class KeepComment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.user} on {self.keep}"
+
+
+class KeepFavorite(models.Model):
+    """A keep a user saved to their private favorites list.
+
+    Only the user who favorited a keep can see it; there are no counts or
+    lists of who favorited. Deleting the keep (or the user) deletes the
+    favorite with it.
+
+    Attributes:
+        keep: The favorited keep
+        user: User who favorited it
+        created_at: When it was favorited; the favorites list is newest first
+    """
+
+    keep = models.ForeignKey(Keep, on_delete=models.CASCADE, related_name="favorites")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="keep_favorites")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("keep", "user")
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} favorited {self.keep}"

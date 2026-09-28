@@ -62,6 +62,8 @@ export interface FeedKeep {
 	comment_count: number;
 	/** The viewer's own reaction, of any type. */
 	viewer_reaction: { id: number; reaction_type: string } | null;
+	/** Whether the viewer favorited it. Favorites are private to the viewer. */
+	favorited: boolean;
 	/** The newest two comments, oldest first. */
 	recent_comments: FeedComment[];
 }

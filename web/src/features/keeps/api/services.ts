@@ -43,6 +43,24 @@ export const keepServices = {
 		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/${query}`);
 	},
 
+	/** The viewer's favorites, most recently favorited first. */
+	getFavorites(cursor?: string) {
+		const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
+		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/favorites/${query}`);
+	},
+
+	/** Idempotent; rejects with a 404 once the keep is deleted. */
+	favoriteKeep(keepId: string) {
+		return authApi.post<{ favorited: true }>(
+			`${KEEPS_BASE}/feed/${keepId}/favorite/`,
+		);
+	},
+
+	/** Idempotent; rejects with a 404 once the keep is deleted. */
+	unfavoriteKeep(keepId: string) {
+		return authApi.delete<unknown>(`${KEEPS_BASE}/feed/${keepId}/favorite/`);
+	},
+
 	getAdjacentFeedDays(date: string, circleSlug?: string) {
 		const params = new URLSearchParams({ date });
 		if (circleSlug) params.set("circle_slug", circleSlug);
