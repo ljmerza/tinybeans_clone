@@ -204,6 +204,10 @@ def generate_image_sizes(self, media_id: int, source_key: str | None = None):
                 "Media record not found for image sizing",
                 extra={"event": "keeps.media.image_sizes_missing", "extra": {"media_id": media_id}},
             )
+            # Deleted before its renditions were made: the temporary source (a
+            # video's poster frame) has no other owner that would remove it.
+            if source_key:
+                _delete_quietly(get_storage_backend(), source_key, media_id, "source image")
             return False
 
         with project_logging.log_context(keep_id=media.keep_id, media_type=media.media_type):

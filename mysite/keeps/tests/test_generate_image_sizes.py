@@ -145,6 +145,26 @@ class TestGenerateImageSizes:
         assert "tmp/poster.jpg" in storage.deleted
         assert ORIGINAL_KEY in storage.files  # the mp4 original is untouched
 
+    def test_poster_is_deleted_when_the_media_is_already_gone(self, video_media):
+        storage = FakeStorageBackend(b"", extra={"tmp/poster.jpg": b"poster"})
+        media_id = video_media.id
+        video_media.delete()
+
+        with patch("mysite.keeps.tasks.get_storage_backend", return_value=storage):
+            assert generate_image_sizes(media_id, source_key="tmp/poster.jpg") is False
+
+        assert storage.deleted == ["tmp/poster.jpg"]
+
+    def test_missing_photo_media_deletes_nothing(self, photo_media):
+        storage = FakeStorageBackend(b"")
+        media_id = photo_media.id
+        photo_media.delete()
+
+        with patch("mysite.keeps.tasks.get_storage_backend", return_value=storage):
+            assert generate_image_sizes(media_id) is False
+
+        assert storage.deleted == []
+
     def test_video_without_source_is_skipped(self, video_media):
         storage = FakeStorageBackend(b"not-an-image")
         with patch("mysite.keeps.tasks.get_storage_backend", return_value=storage):
