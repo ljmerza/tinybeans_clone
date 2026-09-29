@@ -78,8 +78,8 @@ export function Header({ isAuthenticated }: HeaderProps) {
 	return (
 		<header className="bg-card text-card-foreground border-b border-border shadow-sm transition-colors">
 			<div className="container-page">
-				<div className="flex justify-between items-center h-16">
-					<div className="flex items-center">
+				<div className="flex justify-between items-center gap-4 h-16">
+					<div className="flex shrink-0 items-center">
 						<Link
 							to="/"
 							className="text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
@@ -87,7 +87,8 @@ export function Header({ isAuthenticated }: HeaderProps) {
 							{t("nav.home")}
 						</Link>
 					</div>
-					<nav className="flex items-center gap-2">
+					{/* Scrolls sideways when the links don't fit; py-1 keeps focus rings unclipped. */}
+					<nav className="flex min-w-0 items-center gap-2 overflow-x-auto py-1 [scrollbar-width:thin] [&>*]:shrink-0">
 						{isAuthenticated ? (
 							<AuthenticatedHeaderActions />
 						) : (

@@ -194,6 +194,20 @@ describe("KeepFeedPost", () => {
 		).toBeTruthy();
 	});
 
+	it("shows the caption above the photo and the actions, even without a title", async () => {
+		await renderCachedPost(makeKeep({ title: "" }));
+
+		const caption = screen.getByText("First time in the ocean");
+		const photo = screen.getByRole("img");
+		const like = likeButton();
+		expect(
+			caption.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			caption.compareDocumentPosition(like) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+	});
+
 	it("likes through the reactions API and keeps the server's reaction id", async () => {
 		const addReaction = vi
 			.spyOn(keepServices, "addReaction")
