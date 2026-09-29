@@ -8,13 +8,13 @@ from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q,
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import CursorPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Keep, KeepComment, KeepMedia, KeepReaction, KeepType
+from ..models import Keep, KeepComment, KeepFavorite, KeepMedia, KeepReaction, KeepType
 from ..serializers.feed import FeedLikerSerializer, KeepFeedSerializer
 
 # Matches the web feed's initial comment count, so it needs no extra fetch.
@@ -54,6 +54,7 @@ def feed_queryset(user):
         .annotate(
             reaction_count=_count_subquery(KeepReaction),
             comment_count=_count_subquery(KeepComment),
+            favorited=Exists(KeepFavorite.objects.filter(keep=OuterRef("pk"), user=user)),
         )
         .select_related("circle", "created_by")
         .prefetch_related(
@@ -247,3 +248,89 @@ class KeepFeedLikersView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+def get_visible_keep_or_404(user, keep_id):
+    """A keep in one of the user's circles; 404 otherwise, including once it is deleted."""
+    keep = Keep.objects.filter(id=keep_id, circle__memberships__user=user).first()
+    if keep is None:
+        raise Http404
+    return keep
+
+
+class KeepFavoritesPagination(KeepFeedPagination):
+    # Most recently favorited first; id breaks ties.
+    ordering = ("-favorited_at", "-id")
+
+
+class KeepFeedFavoritesView(generics.ListAPIView):
+    """The user's own favorites, in feed shape, most recently favorited first."""
+
+    serializer_class = KeepFeedSerializer
+    pagination_class = KeepFavoritesPagination
+
+    def get_queryset(self):
+        # Avoid queryset evaluation during schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return Keep.objects.none()
+        user = self.request.user
+        favorited_at = KeepFavorite.objects.filter(keep=OuterRef("pk"), user=user).values("created_at")[:1]
+        # Built on the feed, so a keep drops off the list once it is deleted,
+        # stops being displayable, or the user leaves its circle.
+        return feed_queryset(user).filter(favorited=True).annotate(favorited_at=Subquery(favorited_at))
+
+    @extend_schema(
+        summary="Favorite feed posts",
+        description="The keeps the user favorited, in the same shape as the feed, most recently favorited "
+        "first. Only keeps still visible in the feed are listed. Cursor-paginated: follow `next`.",
+        parameters=[
+            OpenApiParameter(
+                name="page_size",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Posts per page (default 10, max 30)",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(response=KeepFeedSerializer(many=True), description="A page of favorites"),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class KeepFeedFavoriteView(APIView):
+    """Favorite (POST) or unfavorite (DELETE) a keep. Both are idempotent."""
+
+    @extend_schema(
+        summary="Favorite a feed post",
+        description="Add a keep to the user's private favorites. Favoriting it again is a no-op. "
+        "404 unless the user belongs to the keep's circle.",
+        request=None,
+        responses={
+            200: OpenApiResponse(description="`{favorited: true}`, already a favorite"),
+            201: OpenApiResponse(description="`{favorited: true}`, newly favorited"),
+            404: OpenApiResponse(description="Not found (e.g. deleted) or not visible to the user"),
+        },
+    )
+    def post(self, request, keep_id):
+        keep = get_visible_keep_or_404(request.user, keep_id)
+        _, created = KeepFavorite.objects.get_or_create(keep=keep, user=request.user)
+        return Response({"favorited": True}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    @extend_schema(
+        summary="Unfavorite a feed post",
+        description="Remove a keep from the user's favorites. Unfavoriting a keep that isn't a favorite is "
+        "a no-op. 404 unless the user belongs to the keep's circle.",
+        request=None,
+        responses={
+            204: OpenApiResponse(description="Not a favorite (any more)"),
+            404: OpenApiResponse(description="Not found (e.g. deleted) or not visible to the user"),
+        },
+    )
+    def delete(self, request, keep_id):
+        # The row is the user's own, so drop it even when the keep is no
+        # longer visible to them, then report whether the keep is still there.
+        KeepFavorite.objects.filter(keep_id=keep_id, user=request.user).delete()
+        get_visible_keep_or_404(request.user, keep_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)

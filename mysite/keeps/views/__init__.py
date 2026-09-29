@@ -9,6 +9,8 @@ from .comments import (
 )
 from .feed import (
     KeepFeedAdjacentDaysView,
+    KeepFeedFavoritesView,
+    KeepFeedFavoriteView,
     KeepFeedItemView,
     KeepFeedLikersView,
     KeepFeedView,
@@ -41,6 +43,8 @@ from .uploads import (
 __all__ = [
     "KeepCalendarView",
     "KeepFeedAdjacentDaysView",
+    "KeepFeedFavoritesView",
+    "KeepFeedFavoriteView",
     "KeepCommentDetailView",
     "KeepCommentListCreateView",
     "KeepFeedItemView",

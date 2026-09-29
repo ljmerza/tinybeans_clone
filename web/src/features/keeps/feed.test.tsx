@@ -38,6 +38,7 @@ const makeKeep = (overrides: Partial<FeedKeep> = {}): FeedKeep => ({
 	reaction_count: 3,
 	comment_count: 1,
 	viewer_reaction: null,
+	favorited: false,
 	recent_comments: [
 		{
 			id: 5,
@@ -144,6 +145,13 @@ describe("keepToSocialPost", () => {
 		});
 	});
 
+	it("passes the viewer's favorite through", () => {
+		expect(keepToSocialPost(makeKeep(), options).favorited).toBe(false);
+		expect(
+			keepToSocialPost(makeKeep({ favorited: true }), options).favorited,
+		).toBe(true);
+	});
+
 	it("falls back to the title, then a generic alt, and prefers a loaded thread", () => {
 		const titled = keepToSocialPost(makeKeep(), options);
 		expect(titled.media[0]?.alt).toBe("Beach day");
@@ -224,6 +232,48 @@ describe("KeepFeedPost", () => {
 			expect(likeButton()).toHaveAttribute("aria-pressed", "false"),
 		);
 		expect(likeButton()).toHaveTextContent("3");
+	});
+
+	it("favorites and unfavorites through the favorites API", async () => {
+		const favoriteKeep = vi
+			.spyOn(keepServices, "favoriteKeep")
+			.mockResolvedValue({ favorited: true });
+		const unfavoriteKeep = vi
+			.spyOn(keepServices, "unfavoriteKeep")
+			.mockResolvedValue(undefined);
+		await renderCachedPost(makeKeep());
+
+		const button = screen.getByRole("button", { name: "Add to favorites" });
+		expect(button).toHaveAttribute("aria-pressed", "false");
+		await act(async () => fireEvent.click(button));
+		expect(favoriteKeep).toHaveBeenCalledWith(makeKeep().id);
+		const saved = await screen.findByRole("button", {
+			name: "Remove from favorites",
+		});
+		expect(saved).toHaveAttribute("aria-pressed", "true");
+
+		await act(async () => fireEvent.click(saved));
+		expect(unfavoriteKeep).toHaveBeenCalledWith(makeKeep().id);
+		expect(
+			await screen.findByRole("button", { name: "Add to favorites" }),
+		).toHaveAttribute("aria-pressed", "false");
+	});
+
+	it("rolls the favorite back when the request fails", async () => {
+		vi.spyOn(keepServices, "favoriteKeep").mockRejectedValue(
+			new Error("offline"),
+		);
+		await renderCachedPost(makeKeep());
+
+		await act(async () =>
+			fireEvent.click(screen.getByRole("button", { name: "Add to favorites" })),
+		);
+
+		await waitFor(() =>
+			expect(
+				screen.getByRole("button", { name: "Add to favorites" }),
+			).toHaveAttribute("aria-pressed", "false"),
+		);
 	});
 
 	it("posts a comment and shows it without a refetch", async () => {

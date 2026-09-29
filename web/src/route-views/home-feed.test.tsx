@@ -42,6 +42,7 @@ const keep = (n: number): FeedKeep => ({
 	reaction_count: 0,
 	comment_count: 0,
 	viewer_reaction: null,
+	favorited: false,
 	recent_comments: [],
 });
 

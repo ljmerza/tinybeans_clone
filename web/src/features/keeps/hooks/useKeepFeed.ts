@@ -7,6 +7,9 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 
+import i18n from "@/i18n/config";
+import type { HttpError } from "@/lib/httpClient";
+import { showToast } from "@/lib/toast";
 import { keepKeys } from "../api/queryKeys";
 import { keepServices } from "../api/services";
 import type {
@@ -45,6 +48,21 @@ export function useKeepFeed(filters: FeedFilters = {}) {
 		queryFn: ({ pageParam }) => keepServices.getFeed(pageParam, filters),
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: (lastPage: FeedPage) => cursorFromNextUrl(lastPage.next),
+	});
+}
+
+/**
+ * The viewer's favorites, most recently favorited first. Always refetched on
+ * mount, so posts deleted or favorited elsewhere since the last visit show up
+ * (or drop off) without a reload.
+ */
+export function useFavoriteKeeps() {
+	return useInfiniteQuery({
+		queryKey: keepKeys.feedFavorites(),
+		queryFn: ({ pageParam }) => keepServices.getFavorites(pageParam),
+		initialPageParam: undefined as string | undefined,
+		getNextPageParam: (lastPage: FeedPage) => cursorFromNextUrl(lastPage.next),
+		staleTime: 0,
 	});
 }
 
@@ -114,6 +132,70 @@ function patchCachedKeep(
 	queryClient.setQueryData<FeedKeep>(keepKeys.feedKeep(keepId), (keep) =>
 		keep ? update(keep) : keep,
 	);
+}
+
+/**
+ * Drop a keep that no longer exists (or is no longer visible) from every
+ * cached feed, favorites included, and recheck its single-keep query.
+ */
+function removeCachedKeep(queryClient: QueryClient, keepId: string) {
+	queryClient.setQueriesData<InfiniteData<FeedPage>>(
+		{ queryKey: keepKeys.feed() },
+		(data) =>
+			data
+				? {
+						...data,
+						pages: data.pages.map((page) => ({
+							...page,
+							results: page.results.filter((keep) => keep.id !== keepId),
+						})),
+					}
+				: data,
+	);
+	void queryClient.invalidateQueries({ queryKey: keepKeys.feedKeep(keepId) });
+}
+
+/**
+ * Favorite or unfavorite a keep for the viewer only.
+ *
+ * The post UI flips optimistically and rolls back if this rejects. A 404 means
+ * the keep was deleted (its favorites went with it) or the viewer lost access,
+ * so it is dropped from every cached feed, the favorites list included.
+ * Unfavoriting on the favorites page leaves the post in place, unfilled, until
+ * the next visit refetches the list.
+ */
+export function useSetKeepFavorited() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({
+			keepId,
+			favorited,
+		}: { keepId: string; favorited: boolean }) =>
+			favorited
+				? keepServices.favoriteKeep(keepId)
+				: keepServices.unfavoriteKeep(keepId),
+		onSuccess: (_data, { keepId, favorited }) => {
+			patchCachedKeep(queryClient, keepId, (cached) => ({
+				...cached,
+				favorited,
+			}));
+		},
+		onError: (error, { keepId }) => {
+			if ((error as HttpError).status === 404) {
+				removeCachedKeep(queryClient, keepId);
+				showToast({
+					message: i18n.t("pages.feed.favorite_gone"),
+					level: "info",
+				});
+				return;
+			}
+			showToast({
+				message: i18n.t("pages.feed.favorite_failed"),
+				level: "error",
+			});
+		},
+	});
 }
 
 /**

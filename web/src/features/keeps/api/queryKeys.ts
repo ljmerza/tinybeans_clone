@@ -11,6 +11,8 @@ export const keepKeys = {
 	/** Nested under `feed` so cache patches reach every feed variant. */
 	feedDay: (date: string, circleSlug?: string) =>
 		keepKeysFactory.tag("feed", "day", circleSlug ?? "all", date),
+	/** The viewer's favorites; nested under `feed` so cache patches reach it. */
+	feedFavorites: () => keepKeysFactory.tag("feed", "favorites"),
 	adjacentFeedDays: (date: string, circleSlug?: string) =>
 		keepKeysFactory.tag("adjacent-feed-days", circleSlug ?? "all", date),
 	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),

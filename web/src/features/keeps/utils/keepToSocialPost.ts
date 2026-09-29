@@ -39,6 +39,7 @@ export function keepToSocialPost(
 		createdAt: keep.date_of_memory,
 		likeCount: keep.reaction_count,
 		liked: keep.viewer_reaction !== null,
+		favorited: keep.favorited,
 		commentCount: keep.comment_count,
 		comments: (comments ?? keep.recent_comments).map((comment) => ({
 			id: String(comment.id),
