@@ -49,10 +49,8 @@ x-common-env: &django-common-env
   OAUTH_STATE_EXPIRATION: ${OAUTH_STATE_EXPIRATION:-600}
   OAUTH_RATE_LIMIT_MAX_ATTEMPTS: ${OAUTH_RATE_LIMIT_MAX_ATTEMPTS:-5}
   OAUTH_RATE_LIMIT_WINDOW: ${OAUTH_RATE_LIMIT_WINDOW:-900}
-  # Celery beat runs the nightly Tinybeans sync at midnight in this zone.
+  # Zone Celery beat's crontab schedules run in.
   CELERY_TIMEZONE: ${CELERY_TIMEZONE:-America/New_York}
-  # Tinybeans accounts + families for the scheduled sync (gitignored, see volumes/tinybeans/).
-  TINYBEANS_ACCOUNTS_FILE: ${TINYBEANS_ACCOUNTS_FILE:-/app/volumes/tinybeans/accounts.yml}
 
 
 services:
@@ -67,9 +65,6 @@ services:
     env_file:
       # Local dev defaults (gitignored); optional so a fresh clone still starts
       - path: ./.env.development
-        required: false
-      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
-      - path: ./env/tinybeans.env
         required: false
     environment:
       <<: *django-common-env
@@ -111,9 +106,6 @@ services:
       # Local dev defaults (gitignored); optional so a fresh clone still starts
       - path: ./.env.development
         required: false
-      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
-      - path: ./env/tinybeans.env
-        required: false
     environment:
       <<: *django-common-env
     depends_on:
@@ -131,9 +123,6 @@ services:
     env_file:
       # Local dev defaults (gitignored); optional so a fresh clone still starts
       - path: ./.env.development
-        required: false
-      # Tinybeans account for `sync_tinybeans` / the nightly sync task (gitignored)
-      - path: ./env/tinybeans.env
         required: false
     environment:
       <<: *django-common-env
