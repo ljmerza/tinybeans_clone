@@ -199,6 +199,35 @@ export function useSetKeepFavorited() {
 }
 
 /**
+ * Delete a keep; only its creator or a circle admin may. A 404 means it is
+ * already gone, so that counts as deleted too. It leaves every cached feed,
+ * favorites included, and the calendar refetches so its day stops showing it.
+ */
+export function useDeleteKeep() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (keepId: string) => {
+			try {
+				await keepServices.deleteKeep(keepId);
+			} catch (error) {
+				if ((error as HttpError).status !== 404) throw error;
+			}
+		},
+		meta: {
+			toast: {
+				success: { key: "pages.feed.delete_post_done" },
+				error: { key: "pages.feed.delete_post_failed" },
+			},
+		},
+		onSuccess: (_data, keepId) => {
+			removeCachedKeep(queryClient, keepId);
+			void queryClient.invalidateQueries({ queryKey: keepKeys.calendar() });
+		},
+	});
+}
+
+/**
  * Like = the viewer has any reaction on the keep. Liking adds a `like`;
  * unliking removes whatever reaction the viewer has.
  *

@@ -5,9 +5,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+	PostAction,
 	PostActionSpacer,
 	PostActions,
 	PostAuthor,
@@ -34,6 +36,7 @@ import {
 import {
 	RECENT_COMMENT_COUNT,
 	useAddKeepComment,
+	useDeleteKeep,
 	useDeleteKeepComment,
 	useKeepComments,
 	useKeepLikers,
@@ -50,6 +53,8 @@ export interface KeepFeedPostProps {
 	keep: FeedKeep;
 	/** Open with the full comment thread loaded and one page shown (e.g. on a shared link). */
 	defaultCommentsExpanded?: boolean;
+	/** Called once the keep is deleted, e.g. to leave its own page. */
+	onDeleted?: () => void;
 }
 
 /**
@@ -58,6 +63,7 @@ export interface KeepFeedPostProps {
 export function KeepFeedPost({
 	keep,
 	defaultCommentsExpanded = false,
+	onDeleted,
 }: KeepFeedPostProps) {
 	const { t, i18n } = useTranslation();
 	const setLiked = useSetKeepLiked();
@@ -67,6 +73,8 @@ export function KeepFeedPost({
 	const [pendingDelete, setPendingDelete] = useState<SocialComment | null>(
 		null,
 	);
+	const deleteKeep = useDeleteKeep();
+	const [confirmingDeletePost, setConfirmingDeletePost] = useState(false);
 	const [showAllComments, setShowAllComments] = useState(
 		defaultCommentsExpanded,
 	);
@@ -107,6 +115,16 @@ export function KeepFeedPost({
 				commentId: Number(pendingDelete.id),
 			});
 			setPendingDelete(null);
+		} catch {
+			// The mutation's error toast explains it; leave the dialog open to retry.
+		}
+	};
+
+	const confirmDeletePost = async () => {
+		try {
+			await deleteKeep.mutateAsync(keep.id);
+			setConfirmingDeletePost(false);
+			onDeleted?.();
 		} catch {
 			// The mutation's error toast explains it; leave the dialog open to retry.
 		}
@@ -175,6 +193,21 @@ export function KeepFeedPost({
 							}
 						/>
 						<PostShareButton aria-label={t("pages.feed.share")} />
+						{keep.can_delete && (
+							<>
+								{/* Set apart from the everyday actions, and muted until hovered. */}
+								<span
+									aria-hidden="true"
+									className="mx-0.5 h-5 w-px bg-border"
+								/>
+								<PostAction
+									className="bg-transparent! text-muted-foreground! hover:bg-destructive/10! hover:text-destructive! focus-visible:text-destructive!"
+									aria-label={t("pages.feed.delete_post")}
+									icon={<Trash2 strokeWidth={1.8} />}
+									onClick={() => setConfirmingDeletePost(true)}
+								/>
+							</>
+						)}
 					</PostActions>
 					<div className="rsf-post__discussion">
 						<PostComments
@@ -248,6 +281,17 @@ export function KeepFeedPost({
 				variant="destructive"
 				isLoading={deleteComment.isPending}
 				onConfirm={confirmDelete}
+			/>
+			<ConfirmDialog
+				open={confirmingDeletePost}
+				onOpenChange={setConfirmingDeletePost}
+				title={t("pages.feed.delete_post_title")}
+				description={t("pages.feed.delete_post_description")}
+				confirmLabel={t("pages.feed.delete_post_confirm")}
+				cancelLabel={t("common.cancel")}
+				variant="destructive"
+				isLoading={deleteKeep.isPending}
+				onConfirm={confirmDeletePost}
 			/>
 		</>
 	);

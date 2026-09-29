@@ -1,8 +1,9 @@
 """Serializers for the photo feed.
 
 Feed items are shaped for the home-screen feed: the media to show, the
-viewer's own reaction and favorite, counts, and a short comment preview. Counts are
-annotated and the preview is a sliced prefetch (see ``views.feed``), so a page
+viewer's own reaction and favorite, whether they may delete it, counts, and a
+short comment preview. Counts and the delete permission are annotated and the
+preview is a sliced prefetch (see ``views.feed``), so a page
 costs a fixed number of queries regardless of how many reactions or comments
 each keep has.
 """
@@ -60,6 +61,9 @@ class KeepFeedSerializer(serializers.ModelSerializer):
     comment_count = serializers.IntegerField(read_only=True)
     viewer_reaction = serializers.SerializerMethodField()
     favorited = serializers.BooleanField(read_only=True, help_text="Whether the viewer favorited this keep")
+    can_delete = serializers.BooleanField(
+        read_only=True, help_text="Whether the viewer may delete this keep: its creator or a circle admin"
+    )
     recent_comments = serializers.SerializerMethodField()
 
     class Meta:
@@ -78,6 +82,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
             "comment_count",
             "viewer_reaction",
             "favorited",
+            "can_delete",
             "recent_comments",
         ]
         read_only_fields = fields

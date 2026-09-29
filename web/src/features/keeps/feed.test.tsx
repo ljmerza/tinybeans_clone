@@ -1,5 +1,7 @@
 import "@/i18n/config";
+import { createTestQueryClient } from "@/lib/query/queryClient";
 import { renderWithQueryClient } from "@/test-utils";
+import type { InfiniteData } from "@tanstack/react-query";
 import {
 	act,
 	fireEvent,
@@ -7,12 +9,14 @@ import {
 	waitFor,
 	within,
 } from "@testing-library/react";
+import { toast } from "sonner";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { keepKeys } from "./api/queryKeys";
 import { keepServices } from "./api/services";
 import { KeepFeedPost } from "./components/KeepFeedPost";
 import { cursorFromNextUrl, useFeedKeep } from "./hooks/useKeepFeed";
-import type { FeedKeep, KeepCommentRecord } from "./types";
+import type { FeedKeep, FeedPage, KeepCommentRecord } from "./types";
 import { keepToSocialPost } from "./utils/keepToSocialPost";
 
 const makeKeep = (overrides: Partial<FeedKeep> = {}): FeedKeep => ({
@@ -39,6 +43,7 @@ const makeKeep = (overrides: Partial<FeedKeep> = {}): FeedKeep => ({
 	comment_count: 1,
 	viewer_reaction: null,
 	favorited: false,
+	can_delete: false,
 	recent_comments: [
 		{
 			id: 5,
@@ -546,5 +551,133 @@ describe("KeepFeedPost", () => {
 
 		const dialog = await screen.findByRole("dialog", { name: "Liked by" });
 		expect(await within(dialog).findByText("No likes yet")).toBeInTheDocument();
+	});
+});
+
+describe("deleting a post", () => {
+	const mine = makeKeep({ can_delete: true });
+	const other = makeKeep({
+		id: "22222222-2222-2222-2222-222222222222",
+		title: "Park day",
+	});
+	const feedPage = (results: FeedKeep[]): InfiniteData<FeedPage> => ({
+		pages: [{ next: null, previous: null, results }],
+		pageParams: [undefined],
+	});
+	const deleteButton = () =>
+		screen.getByRole("button", { name: "Delete post" });
+
+	/** Seed the home, day and favorites feeds and a calendar month, then show the post. */
+	async function renderInFeeds(keep: FeedKeep) {
+		// Kept around without observers, like caches from other pages.
+		const queryClient = createTestQueryClient({
+			defaultOptions: { queries: { gcTime: Number.POSITIVE_INFINITY } },
+		});
+		queryClient.setQueryData(keepKeys.feed(), feedPage([keep, other]));
+		queryClient.setQueryData(
+			keepKeys.feedDay("2026-07-04"),
+			feedPage([keep, other]),
+		);
+		queryClient.setQueryData(keepKeys.feedFavorites(), feedPage([keep]));
+		queryClient.setQueryData(keepKeys.calendarMonth("2026-07"), { days: [] });
+		vi.spyOn(keepServices, "getFeedKeep").mockResolvedValue(keep);
+		renderWithQueryClient(<CachedPost keepId={keep.id} />, { queryClient });
+		await screen.findByRole("article");
+		return queryClient;
+	}
+
+	const cachedIds = (
+		queryClient: ReturnType<typeof createTestQueryClient>,
+		queryKey: readonly unknown[],
+	) =>
+		queryClient
+			.getQueryData<InfiniteData<FeedPage>>(queryKey)
+			?.pages.flatMap((page) => page.results.map((keep) => keep.id));
+
+	async function confirmDeletion() {
+		fireEvent.click(deleteButton());
+		await act(async () =>
+			fireEvent.click(await screen.findByRole("button", { name: "Delete" })),
+		);
+	}
+
+	it("hides delete from viewers who may not delete the post", async () => {
+		await renderCachedPost(makeKeep());
+		expect(screen.queryByRole("button", { name: "Delete post" })).toBeNull();
+	});
+
+	it("deletes only after confirming, then drops it from every feed", async () => {
+		const deleteKeep = vi
+			.spyOn(keepServices, "deleteKeep")
+			.mockResolvedValue(undefined);
+		const success = vi.spyOn(toast, "success");
+		const queryClient = await renderInFeeds(mine);
+
+		fireEvent.click(deleteButton());
+		expect(
+			await screen.findByText(
+				"This can't be undone. Its photos, likes and comments will be deleted too.",
+			),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(deleteKeep).not.toHaveBeenCalled();
+
+		await confirmDeletion();
+
+		expect(deleteKeep).toHaveBeenCalledWith(mine.id);
+		await waitFor(() =>
+			expect(cachedIds(queryClient, keepKeys.feed())).toEqual([other.id]),
+		);
+		expect(cachedIds(queryClient, keepKeys.feedDay("2026-07-04"))).toEqual([
+			other.id,
+		]);
+		expect(cachedIds(queryClient, keepKeys.feedFavorites())).toEqual([]);
+		expect(
+			queryClient.getQueryState(keepKeys.calendarMonth("2026-07"))
+				?.isInvalidated,
+		).toBe(true);
+		expect(success).toHaveBeenCalledWith("Post deleted.", expect.anything());
+	});
+
+	it("treats an already deleted post as deleted", async () => {
+		vi.spyOn(keepServices, "deleteKeep").mockRejectedValue(
+			Object.assign(new Error("Not found."), { status: 404 }),
+		);
+		const error = vi.spyOn(toast, "error");
+		const queryClient = await renderInFeeds(mine);
+
+		await confirmDeletion();
+
+		await waitFor(() =>
+			expect(cachedIds(queryClient, keepKeys.feed())).toEqual([other.id]),
+		);
+		expect(cachedIds(queryClient, keepKeys.feedFavorites())).toEqual([]);
+		expect(error).not.toHaveBeenCalled();
+	});
+
+	it("keeps the post and says so when deleting fails", async () => {
+		vi.spyOn(keepServices, "deleteKeep").mockRejectedValue(
+			Object.assign(new Error("Server error"), { status: 500 }),
+		);
+		const error = vi.spyOn(toast, "error");
+		const queryClient = await renderInFeeds(mine);
+
+		await confirmDeletion();
+
+		await waitFor(() =>
+			expect(error).toHaveBeenCalledWith(
+				"Couldn't delete the post. Please try again.",
+				expect.anything(),
+			),
+		);
+		expect(cachedIds(queryClient, keepKeys.feed())).toEqual([
+			mine.id,
+			other.id,
+		]);
+		expect(cachedIds(queryClient, keepKeys.feedFavorites())).toEqual([mine.id]);
+		// Left open to retry.
+		expect(
+			screen.getByRole("alertdialog", { name: "Delete this post?" }),
+		).toBeInTheDocument();
 	});
 });

@@ -199,6 +199,27 @@ class TestKeepFeedView:
         assert can_delete(other_user) == {"admin's": False, "member's": True}
         assert can_delete(user) == {"admin's": True, "member's": True}
 
+    def test_keeps_are_deletable_by_their_creator_or_a_circle_admin(self, api_client, user, other_user, circle):
+        CircleMembership.objects.filter(user=user, circle=circle).update(role=UserRole.CIRCLE_ADMIN)
+        CircleMembership.objects.create(user=other_user, circle=circle, role=UserRole.CIRCLE_MEMBER)
+        third_user = User.objects.create_user(email="feed-third@example.com", password="thirdpass123")
+        CircleMembership.objects.create(user=third_user, circle=circle, role=UserRole.CIRCLE_MEMBER)
+        admins = make_keep(circle, user, BASE_TIME, title="admin's")
+        members = make_keep(circle, other_user, BASE_TIME - timedelta(days=1), title="member's")
+
+        def can_delete(viewer):
+            api_client.force_authenticate(user=viewer)
+            results = api_client.get(FEED_URL).data["results"]
+            return {item["title"]: item["can_delete"] for item in results}
+
+        assert can_delete(other_user) == {"admin's": False, "member's": True}
+        assert can_delete(user) == {"admin's": True, "member's": True}
+        assert can_delete(third_user) == {"admin's": False, "member's": False}
+
+        api_client.force_authenticate(user=other_user)
+        assert api_client.get(f"{FEED_URL}{members.id}/").data["can_delete"] is True
+        assert api_client.get(f"{FEED_URL}{admins.id}/").data["can_delete"] is False
+
     def test_query_count_does_not_grow_with_page_size(self, api_client, user, other_user, circle):
         CircleMembership.objects.create(user=other_user, circle=circle)
 

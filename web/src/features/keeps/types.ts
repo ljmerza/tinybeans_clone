@@ -64,6 +64,8 @@ export interface FeedKeep {
 	viewer_reaction: { id: number; reaction_type: string } | null;
 	/** Whether the viewer favorited it. Favorites are private to the viewer. */
 	favorited: boolean;
+	/** The viewer created it or admins its circle. */
+	can_delete: boolean;
 	/** The newest two comments, oldest first. */
 	recent_comments: FeedComment[];
 }
