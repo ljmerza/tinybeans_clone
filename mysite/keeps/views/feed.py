@@ -14,6 +14,9 @@ from rest_framework.pagination import CursorPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from mysite.circles.models import CircleMembership
+from mysite.users.models import UserRole
+
 from ..models import Keep, KeepComment, KeepFavorite, KeepMedia, KeepReaction, KeepType
 from ..serializers.feed import FeedLikerSerializer, KeepFeedSerializer
 
@@ -47,6 +50,8 @@ def feed_queryset(user):
     displayable_media = KeepMedia.objects.filter(keep=OuterRef("pk")).filter(
         Q(media_type="photo") | Q(media_type="video", thumbnails_generated=True)
     )
+    # Mirrors ``KeepDetailView.perform_destroy``: the creator or a circle admin.
+    circle_admin = CircleMembership.objects.filter(circle=OuterRef("circle"), user=user, role=UserRole.CIRCLE_ADMIN)
 
     return (
         Keep.objects.filter(circle__memberships__user=user)
@@ -55,6 +60,7 @@ def feed_queryset(user):
             reaction_count=_count_subquery(KeepReaction),
             comment_count=_count_subquery(KeepComment),
             favorited=Exists(KeepFavorite.objects.filter(keep=OuterRef("pk"), user=user)),
+            can_delete=Q(created_by=user) | Exists(circle_admin),
         )
         .select_related("circle", "created_by")
         .prefetch_related(

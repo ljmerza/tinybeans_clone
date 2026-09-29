@@ -5,8 +5,10 @@ user, child) to the local record it produced. The unique (object_type,
 tinybeans_id) pair is what makes `manage.py sync_tinybeans` idempotent: an
 object already recorded here is skipped on later runs.
 
-All local foreign keys use CASCADE, so deleting a locally imported object also
-removes its mapping row — a later sync run will then re-import that object.
+Most local foreign keys use CASCADE, so deleting a locally imported object
+also removes its mapping row — a later sync run will then re-import that
+object. Entries are the exception: deleting an imported keep leaves its row
+with ``keep`` null as a tombstone, so a post someone deleted here stays deleted.
 """
 
 from django.conf import settings
@@ -57,11 +59,13 @@ class TinybeansImportRecord(models.Model):
         on_delete=models.CASCADE,
         related_name="tinybeans_import_records",
     )
+    # SET_NULL, not CASCADE: the row outlives a deleted keep so the sync
+    # doesn't re-import it.
     keep = models.ForeignKey(
         "keeps.Keep",
         null=True,
         blank=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="tinybeans_import_records",
     )
     comment = models.ForeignKey(

@@ -1,6 +1,6 @@
 import { Layout } from "@/components";
 import { KeepFeedPost, useFeedKeep } from "@/features/keeps";
-import { Link, getRouteApi } from "@tanstack/react-router";
+import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import "react-social-feed/styles.css";
 
@@ -12,6 +12,7 @@ const route = getRouteApi("/keeps/$keepId");
 export function KeepDetailRouteView() {
 	const { t } = useTranslation();
 	const { keepId } = route.useParams();
+	const navigate = useNavigate();
 	const { data: keep, isLoading, error } = useFeedKeep(keepId);
 
 	if (isLoading) {
@@ -28,7 +29,12 @@ export function KeepDetailRouteView() {
 		<Layout>
 			<div className="container-page space-y-6">
 				{keep ? (
-					<KeepFeedPost keep={keep} defaultCommentsExpanded />
+					<KeepFeedPost
+						keep={keep}
+						defaultCommentsExpanded
+						// Once it's deleted there's nothing left to show here.
+						onDeleted={() => void navigate({ to: "/" })}
+					/>
 				) : (
 					<div className="py-16 text-center">
 						<h1 className="heading-3 mb-2">

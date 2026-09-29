@@ -190,6 +190,28 @@ class TestKeepDetailView:
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not Keep.objects.filter(id=keep.id).exists()
 
+    def test_regular_user_cannot_delete_others_keep(self, api_client, user, circle, other_user):
+        """Test that regular members cannot delete others' keeps."""
+        CircleMembership.objects.create(user=other_user, circle=circle, role=UserRole.CIRCLE_MEMBER)
+        keep = Keep.objects.create(circle=circle, created_by=user, keep_type=KeepType.NOTE, title="Original")
+
+        api_client.force_authenticate(user=other_user)
+        response = api_client.delete(f"/api/keeps/{keep.id}/")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert Keep.objects.filter(id=keep.id).exists()
+
+    def test_circle_admin_can_delete_any_keep(self, api_client, user, circle, other_user):
+        """Test that circle admin can delete any keep in their circle."""
+        CircleMembership.objects.create(user=other_user, circle=circle, role=UserRole.CIRCLE_MEMBER)
+        keep = Keep.objects.create(circle=circle, created_by=other_user, keep_type=KeepType.NOTE, title="Original")
+
+        api_client.force_authenticate(user=user)
+        response = api_client.delete(f"/api/keeps/{keep.id}/")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Keep.objects.filter(id=keep.id).exists()
+
     def test_regular_user_cannot_update_others_keep(self, api_client, user, circle, other_user):
         """Test that regular users cannot update others' keeps."""
         # Add other_user to circle as member
