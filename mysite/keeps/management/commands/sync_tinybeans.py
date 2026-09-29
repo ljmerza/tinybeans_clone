@@ -7,7 +7,8 @@ journals (as circles) and children (as child profiles).
 Idempotent: every imported remote object is tracked in TinybeansImportRecord
 keyed by its Tinybeans id, so re-running the command never duplicates data.
 Deleting an imported object locally also deletes its tracking row, which means
-the next sync run will re-import it.
+the next sync run will re-import it — except entries: a keep deleted here keeps
+its row (with no keep) and is never re-imported.
 
 Examples:
     # Full sync of everything the account can see
@@ -309,6 +310,7 @@ class Command(BaseCommand):
             "entries_skipped": 0,
             "entries_redated": 0,
             "entries_deleted": 0,
+            "entries_deleted_locally": 0,
             "media_upgraded": 0,
             "video_posters": 0,
             "child_tags": 0,
@@ -385,7 +387,8 @@ class Command(BaseCommand):
                 f"child tags: {c['child_tags']}, child links: {c['child_links']}). "
                 f"Removed because deleted on Tinybeans: "
                 f"comments {c['comments_removed']}, reactions {c['reactions_removed']}. "
-                f"Deleted entries ignored: {c['entries_deleted']}. Errors: {c['errors']}."
+                f"Deleted entries ignored: {c['entries_deleted']} "
+                f"(deleted here: {c['entries_deleted_locally']}). Errors: {c['errors']}."
             )
         )
         if c["errors"]:
@@ -689,6 +692,11 @@ class Command(BaseCommand):
         ts = datetime.fromtimestamp(entry["timestamp"] / 1000, tz=dt_timezone.utc)
         memory_ts = self._memory_datetime(entry)
         record = self._record(TinybeansObjectType.ENTRY, entry_id)
+        if record and record.keep_id is None:
+            # Deleted here after it was imported: leave it, and its comments
+            # and reactions, deleted.
+            self.counts["entries_deleted_locally"] += 1
+            return
         if record:
             self.counts["entries_skipped"] += 1
             keep = record.keep

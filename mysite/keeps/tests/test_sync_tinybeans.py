@@ -364,6 +364,25 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertFalse(TinybeansImportRecord.objects.filter(object_type="comment").exists())
         self.assertFalse(TinybeansImportRecord.objects.filter(object_type="emotion").exists())
 
+    def test_entry_deleted_here_is_not_reimported(self):
+        self.run_sync(entries=[PHOTO_ENTRY])
+        keep = TinybeansImportRecord.objects.get(object_type="entry", tinybeans_id="111").keep
+        media_count = KeepMedia.objects.count()
+        keep.delete()
+
+        new_comment = {"id": 502, "details": "Wonderful", "user": {"id": 1, "emailAddress": "parent@example.com"}}
+        self.run_sync(entries=[dict(PHOTO_ENTRY, comments=PHOTO_ENTRY["comments"] + [new_comment])])
+
+        self.assertEqual(Keep.objects.count(), 0)
+        self.assertEqual(KeepMedia.objects.count(), 0)
+        self.assertEqual(KeepComment.objects.count(), 0)
+        self.assertEqual(KeepReaction.objects.count(), 0)
+        self.assertGreater(media_count, 0)
+        # The entry's row stays behind, without a keep, as the tombstone.
+        record = TinybeansImportRecord.objects.get(object_type="entry", tinybeans_id="111")
+        self.assertIsNone(record.keep_id)
+        self.assertEqual(TinybeansSyncRun.objects.first().counts["entries_deleted_locally"], 1)
+
     def test_deleted_comment_is_never_imported(self):
         entry = dict(PHOTO_ENTRY, comments=[dict(PHOTO_ENTRY["comments"][0], deleted=True)])
         self.run_sync(entries=[entry])
