@@ -1,21 +1,17 @@
 """Celery tasks for media upload and processing."""
 
 import os
-from datetime import timedelta
 from io import BytesIO
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.conf import settings
-from django.core.management import call_command
-from django.utils import timezone
 from PIL import Image, ImageOps
 
 from mysite import project_logging
 
-from .models import KeepMedia, MediaUpload, MediaUploadStatus, TinybeansSyncRun, TinybeansSyncStatus
+from .models import KeepMedia, MediaUpload, MediaUploadStatus
 from .storage import get_storage_backend
-from .tinybeans_accounts import TinybeansAccountsError, load_accounts
 
 logger = get_task_logger(__name__)
 
@@ -418,67 +414,3 @@ def validate_media_file(upload_id: str):
                     )
 
                 raise
-
-
-# A sync still marked running after this long is assumed to have died.
-TINYBEANS_SYNC_STALE_AFTER = timedelta(hours=6)
-
-
-@shared_task(soft_time_limit=3600, time_limit=3660)
-def sync_tinybeans_incremental():
-    """Scheduled incremental import for every configured Tinybeans account.
-
-    Accounts come from the YAML file named by TINYBEANS_ACCOUNTS_FILE, falling
-    back to the legacy TINYBEANS_EMAIL / TINYBEANS_PASSWORD pair; each one
-    carries its own list of families. Runs are keyed by account so one
-    account's cutoff never advances another's, and an account that fails (bad
-    password, API outage) does not stop the remaining ones. Returns the number
-    of accounts actually synced.
-    """
-    try:
-        accounts = load_accounts()
-    except TinybeansAccountsError as exc:
-        logger.error(
-            "Tinybeans accounts file is unusable; skipping scheduled sync",
-            extra={"event": "keeps.tinybeans_sync.skipped", "extra": {"reason": "bad_config", "error": str(exc)}},
-        )
-        return 0
-
-    if not accounts:
-        logger.info(
-            "No Tinybeans accounts configured; skipping scheduled sync",
-            extra={"event": "keeps.tinybeans_sync.skipped", "extra": {"reason": "no_credentials"}},
-        )
-        return 0
-
-    synced = 0
-    for account in accounts:
-        if _tinybeans_sync_in_progress(account.key):
-            logger.info(
-                "A Tinybeans sync is already running for this account; skipping it",
-                extra={
-                    "event": "keeps.tinybeans_sync.skipped",
-                    "extra": {"reason": "in_progress", "account": account.key},
-                },
-            )
-            continue
-        try:
-            call_command("sync_tinybeans", since_last_run=True, **account.command_options())
-        except Exception:
-            # The command already recorded a FAILED run row; keep going so one
-            # broken account cannot block every other account's nightly sync.
-            logger.exception(
-                "Scheduled Tinybeans sync failed for account",
-                extra={"event": "keeps.tinybeans_sync.failed", "extra": {"account": account.key}},
-            )
-            continue
-        synced += 1
-    return synced
-
-
-def _tinybeans_sync_in_progress(account_key: str) -> bool:
-    return TinybeansSyncRun.objects.filter(
-        status=TinybeansSyncStatus.RUNNING,
-        account_key=account_key,
-        started_at__gte=timezone.now() - TINYBEANS_SYNC_STALE_AFTER,
-    ).exists()

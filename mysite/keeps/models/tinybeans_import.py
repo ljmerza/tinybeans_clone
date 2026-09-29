@@ -2,8 +2,10 @@
 
 Each row maps one remote Tinybeans object (journal, entry, comment, emotion,
 user, child) to the local record it produced. The unique (object_type,
-tinybeans_id) pair is what makes `manage.py sync_tinybeans` idempotent: an
-object already recorded here is skipped on later runs.
+tinybeans_id) pair is what makes the importer's `sync_tinybeans` idempotent: an
+object already recorded here is skipped on later runs. The importer is the
+separate tinybeans_circles_migration service; these tables stay here because
+the delete tombstones below depend on them.
 
 Journals, children and users use CASCADE, so deleting one of those locally
 also removes its mapping row — a later sync run will then re-import it.
@@ -105,7 +107,7 @@ class TinybeansSyncStatus(models.TextChoices):
 
 
 class TinybeansSyncRun(models.Model):
-    """One execution of ``manage.py sync_tinybeans`` (dry runs are not recorded).
+    """One execution of the importer's ``sync_tinybeans`` (dry runs are not recorded).
 
     ``--since-last-run`` takes the ``started_at`` of the latest successful run
     (minus a safety margin) as the cutoff for its incremental walk, so a run
