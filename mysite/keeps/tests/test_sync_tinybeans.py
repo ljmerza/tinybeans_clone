@@ -383,6 +383,41 @@ class SyncTinybeansCommandTests(TestCase):
         self.assertIsNone(record.keep_id)
         self.assertEqual(TinybeansSyncRun.objects.first().counts["entries_deleted_locally"], 1)
 
+    def test_comment_and_reaction_deleted_here_are_not_reimported(self):
+        self.run_sync(entries=[PHOTO_ENTRY])
+        KeepComment.objects.get().delete()
+        KeepReaction.objects.get().delete()  # unliked here
+
+        self.run_sync(entries=[PHOTO_ENTRY])
+
+        self.assertEqual(KeepComment.objects.count(), 0)
+        self.assertEqual(KeepReaction.objects.count(), 0)
+        # Their rows stay behind, without a local object, as tombstones.
+        self.assertIsNone(TinybeansImportRecord.objects.get(object_type="comment").comment_id)
+        self.assertIsNone(TinybeansImportRecord.objects.get(object_type="emotion").reaction_id)
+
+    def test_new_reply_under_a_comment_deleted_here_is_not_imported(self):
+        self.run_sync(entries=[PHOTO_ENTRY])
+        KeepComment.objects.get().delete()
+
+        threaded = dict(PHOTO_ENTRY, comments=[dict(PHOTO_ENTRY["comments"][0], repliesCount=1)])
+        replies = {
+            501: [
+                {
+                    "id": 502,
+                    "parentId": 501,
+                    "details": "Reply!",
+                    "repliesCount": 0,
+                    "timestamp": ENTRY_TS + 120000,
+                    "user": dict(LOGIN_USER),
+                }
+            ],
+        }
+        self.run_sync(entries=[threaded], replies=replies)
+
+        self.assertEqual(KeepComment.objects.count(), 0)
+        self.assertFalse(TinybeansImportRecord.objects.filter(object_type="comment", tinybeans_id="502").exists())
+
     def test_deleted_comment_is_never_imported(self):
         entry = dict(PHOTO_ENTRY, comments=[dict(PHOTO_ENTRY["comments"][0], deleted=True)])
         self.run_sync(entries=[entry])
