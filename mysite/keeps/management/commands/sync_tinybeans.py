@@ -7,8 +7,8 @@ journals (as circles) and children (as child profiles).
 Idempotent: every imported remote object is tracked in TinybeansImportRecord
 keyed by its Tinybeans id, so re-running the command never duplicates data.
 Deleting an imported object locally also deletes its tracking row, which means
-the next sync run will re-import it — except entries: a keep deleted here keeps
-its row (with no keep) and is never re-imported.
+the next sync run will re-import it — except entries, comments and reactions:
+those keep their row (with no local object) and are never re-imported.
 
 Examples:
     # Full sync of everything the account can see
@@ -932,6 +932,7 @@ class Command(BaseCommand):
         The entries feed carries top-level comments with a ``repliesCount``;
         replies themselves come from a per-comment endpoint. Comments flagged
         ``deleted`` are skipped, and removed locally if imported earlier.
+        Comments deleted here stay deleted, as do new replies under them.
         """
         items = entry.get("comments") if comments is None else comments
         for comment in items or []:
@@ -941,21 +942,31 @@ class Command(BaseCommand):
             record = self._record(TinybeansObjectType.COMMENT, comment_id)
             if comment.get("deleted"):
                 if record and record.comment_id and not self.dry:
-                    record.comment.delete()  # cascades to the import record
+                    record.comment.delete()
+                    record.delete()  # deleted remotely, so no tombstone is needed
                     self.counts["comments_removed"] += 1
                 continue
+            if record and not record.comment_id:
+                # Deleted here after it was imported: leave it, and any
+                # replies under it, deleted.
+                continue
+            parent_record = None
+            if comment.get("parentId") is not None:
+                parent_record = self._record(TinybeansObjectType.COMMENT, comment["parentId"])
+                if parent_record and not parent_record.comment_id:
+                    # A new reply in a thread deleted here.
+                    continue
             # Replies imported before threading existed have no parent yet.
             if (
                 record
                 and record.comment_id
-                and comment.get("parentId") is not None
+                and parent_record
+                and parent_record.comment_id
                 and not self.dry
                 and record.comment.parent_id is None
             ):
-                parent_record = self._record(TinybeansObjectType.COMMENT, comment["parentId"])
-                if parent_record and parent_record.comment_id:
-                    record.comment.parent_id = parent_record.comment_id
-                    record.comment.save(update_fields=["parent"])
+                record.comment.parent_id = parent_record.comment_id
+                record.comment.save(update_fields=["parent"])
             if not record:
                 self.counts["comments"] += 1
                 if depth:
@@ -965,10 +976,7 @@ class Command(BaseCommand):
                     created_at = ts
                     if comment.get("timestamp"):
                         created_at = datetime.fromtimestamp(comment["timestamp"] / 1000, tz=dt_timezone.utc)
-                    parent = None
-                    if comment.get("parentId") is not None:
-                        parent_record = self._record(TinybeansObjectType.COMMENT, comment["parentId"])
-                        parent = parent_record.comment if parent_record else None
+                    parent = parent_record.comment if parent_record else None
                     with transaction.atomic():
                         obj = KeepComment.objects.create(
                             keep=keep,
@@ -1004,10 +1012,12 @@ class Command(BaseCommand):
             record = self._record(TinybeansObjectType.EMOTION, emotion_id)
             if emotion.get("deleted"):
                 if record and record.reaction_id and not self.dry:
-                    record.reaction.delete()  # cascades to the import record
+                    record.reaction.delete()
+                    record.delete()  # deleted remotely, so no tombstone is needed
                     self.counts["reactions_removed"] += 1
                 continue
             if record:
+                # Already imported, or removed here (unliked) since: either way, skip.
                 continue
             self.counts["reactions"] += 1
             if self.dry or keep is None:
