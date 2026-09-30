@@ -1,8 +1,8 @@
 """User notification preferences models.
 
 This module defines models for managing user notification preferences,
-including channels (email, push) and frequency settings for different
-types of notifications within circles.
+which circle events a user hears about and the channel (email, phone)
+they arrive on. Preferences are global or overridden per circle.
 """
 
 from django.conf import settings
@@ -19,18 +19,7 @@ class NotificationChannel(models.TextChoices):
     """
 
     EMAIL = "email", "Email"
-    PUSH = "push", "Push"
-
-
-class DigestFrequency(models.TextChoices):
-    """Frequency options for digest notifications.
-
-    Controls how often digest notifications are sent to users.
-    """
-
-    NEVER = "never", "Never"
-    DAILY = "daily", "Daily"
-    WEEKLY = "weekly", "Weekly"
+    SMS = "sms", "Phone"
 
 
 class UserNotificationPreferences(models.Model):
@@ -42,11 +31,11 @@ class UserNotificationPreferences(models.Model):
     Attributes:
         user: The user these preferences belong to
         circle: Specific circle these preferences apply to (None for global)
-        notify_new_media: Whether to notify about new photos/videos
-        notify_weekly_digest: Whether to send weekly digest emails
-        channel: Preferred notification channel (email or push)
-        digest_frequency: How often to send digest notifications
-        push_enabled: Whether push notifications are enabled
+        notify_new_media: Whether to notify about new photos/videos in the circle
+        notify_comments: Whether to notify about comments on the user's posts
+        notify_replies: Whether to notify when someone replies to (tags) the user in a comment
+        notify_likes: Whether to notify when someone likes the user's posts
+        channel: Channel notifications are delivered on (email or phone)
         created_at: When these preferences were created
         updated_at: When these preferences were last modified
     """
@@ -58,14 +47,10 @@ class UserNotificationPreferences(models.Model):
         Circle, on_delete=models.CASCADE, related_name="notification_preferences", null=True, blank=True
     )
     notify_new_media = models.BooleanField(default=True)
-    notify_weekly_digest = models.BooleanField(default=True)
+    notify_comments = models.BooleanField(default=True)
+    notify_replies = models.BooleanField(default=True)
+    notify_likes = models.BooleanField(default=True)
     channel = models.CharField(max_length=20, choices=NotificationChannel.choices, default=NotificationChannel.EMAIL)
-    digest_frequency = models.CharField(
-        max_length=20,
-        choices=DigestFrequency.choices,
-        default=DigestFrequency.WEEKLY,
-    )
-    push_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -84,3 +69,25 @@ class UserNotificationPreferences(models.Model):
             True if this is a circle-specific override, False if global defaults
         """
         return self.circle_id is not None
+
+    @classmethod
+    def effective_for(cls, user, circle=None) -> "UserNotificationPreferences":
+        """Return the preferences that apply to ``user`` in ``circle``.
+
+        A circle override wins over the user's global row, which wins over the
+        model defaults (returned as an unsaved instance).
+        """
+        return cls.effective_for_users([user], circle)[user.id]
+
+    @classmethod
+    def effective_for_users(cls, users, circle=None) -> dict[int, "UserNotificationPreferences"]:
+        """Resolve :meth:`effective_for` for many users in one query, keyed by user id."""
+        users = list(users)
+        scope = models.Q(circle__isnull=True)
+        if circle is not None:
+            scope |= models.Q(circle=circle)
+        resolved = {}
+        for prefs in cls.objects.filter(scope, user__in=users).order_by("id"):
+            if prefs.circle_id is not None or prefs.user_id not in resolved:
+                resolved[prefs.user_id] = prefs
+        return {user.id: resolved.get(user.id) or cls(user=user) for user in users}

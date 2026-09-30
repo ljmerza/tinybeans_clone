@@ -343,7 +343,8 @@
 			"manage_description": "Elige tu método predeterminado configurando las opciones de abajo.",
 			"tabs": {
 				"general": "General",
-				"two_factor": "Autenticación de dos factores"
+				"two_factor": "Autenticación de dos factores",
+				"notifications": "Notificaciones"
 			},
 			"general": {
 				"title": "Configuración general",
@@ -786,6 +787,8 @@
 		}
 	},
 	"errors": {
+		"notification_channel_unavailable": "Ese método de notificación aún no está disponible.",
+		"notification_circle_required": "Elige un círculo para restablecer.",
 		"file_too_large": "El archivo {{filename}} es demasiado grande. El tamaño máximo es {{maxSize}}.",
 		"invalid_file_type": "Tipo de archivo inválido. Tipos permitidos: {{allowedTypes}}",
 		"email_invalid": "Por favor ingrese una dirección de correo electrónico válida",
@@ -886,6 +889,41 @@
 		}
 	},
 	"profile": {
+	"notifications": {
+		"title": "Notificaciones",
+		"description": "Elige de qué te enteras y cómo te llega.",
+		"scope_label": "Configuración para",
+		"scope_default": "Todos los círculos (predeterminado)",
+		"circle_uses_default": "Este círculo usa tu configuración predeterminada. Si cambias algo aquí, solo se aplica a este círculo.",
+		"circle_override": "Este círculo tiene su propia configuración.",
+		"use_default": "Usar mi configuración predeterminada",
+		"load_error": "No pudimos cargar tu configuración de notificaciones. Intenta nuevamente.",
+		"channel_label": "Enviar notificaciones por",
+		"channel_description": "Pronto habrá más formas de recibir notificaciones.",
+		"channel_coming_soon": "{{channel}} (próximamente)",
+		"channels": {
+			"email": "Correo electrónico",
+			"sms": "Teléfono (mensaje de texto)"
+		},
+		"events": {
+			"new_media": {
+				"title": "Nuevas fotos y videos",
+				"description": "Alguien agrega fotos o videos a un círculo."
+			},
+			"comments": {
+				"title": "Comentarios en mis publicaciones",
+				"description": "Alguien comenta algo que publicaste."
+			},
+			"replies": {
+				"title": "Respuestas para mí",
+				"description": "Alguien responde a tu comentario o te etiqueta en uno."
+			},
+			"likes": {
+				"title": "Me gusta en mis publicaciones",
+				"description": "A alguien le gusta algo que publicaste."
+			}
+		}
+	},
 	"general": {
 		"loading_title": "Cargando configuración del perfil…",
 		"loading_description": "Obteniendo tus preferencias de cuenta.",

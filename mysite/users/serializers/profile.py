@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from django.conf import settings
 from rest_framework import serializers
 
-from ..models import User, UserNotificationPreferences
+from mysite.notification_utils import create_message
+
+from ..models import NotificationChannel, User, UserNotificationPreferences
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -53,14 +56,20 @@ class EmailPreferencesSerializer(serializers.ModelSerializer):
         model = UserNotificationPreferences
         fields = [
             "notify_new_media",
-            "notify_weekly_digest",
-            "digest_frequency",
-            "push_enabled",
+            "notify_comments",
+            "notify_replies",
+            "notify_likes",
             "channel",
             "circle_id",
             "per_circle_override",
         ]
         read_only_fields = ["circle_id", "per_circle_override"]
+
+    def validate_channel(self, value):
+        # Phone delivery is not wired up yet; accepting it would silently drop notifications.
+        if value == NotificationChannel.SMS and not getattr(settings, "NOTIFICATIONS_SMS_ENABLED", False):
+            raise serializers.ValidationError(create_message("errors.notification_channel_unavailable"))
+        return value
 
     def get_per_circle_override(self, obj) -> bool:
         return obj.is_circle_override

@@ -12,7 +12,6 @@ from mysite.users.models import (
     CircleInvitationStatus,
     CircleMembership,
     CircleOnboardingStatus,
-    DigestFrequency,
     User,
     UserNotificationPreferences,
     UserRole,
@@ -249,11 +248,7 @@ class Command(BaseCommand):
                 "solo@example.com",
             ]
         ):
-            prefs, _ = UserNotificationPreferences.objects.get_or_create(user=user, circle=None)
-            prefs.digest_frequency = DigestFrequency.WEEKLY
-            prefs.notify_weekly_digest = True
-            prefs.push_enabled = False
-            prefs.save()
+            UserNotificationPreferences.objects.get_or_create(user=user, circle=None)
 
             # Ensure at least one circle override exists if the user has memberships
             membership = user.notification_preferences.exclude(circle__isnull=True).first()
@@ -264,10 +259,8 @@ class Command(BaseCommand):
                         user=user,
                         circle=circle_membership.circle,
                         defaults={
-                            "digest_frequency": DigestFrequency.DAILY,
                             "notify_new_media": True,
-                            "notify_weekly_digest": False,
-                            "push_enabled": True,
+                            "notify_likes": False,
                         },
                     )
 

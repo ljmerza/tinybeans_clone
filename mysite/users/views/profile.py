@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from mysite import project_logging
 from mysite.auth.permissions import IsEmailVerified
-from mysite.notification_utils import create_message, success_response
+from mysite.notification_utils import create_message, error_response, success_response
 
 from ..models import Circle, CircleMembership, UserNotificationPreferences
 from ..serializers import EmailPreferencesSerializer, UserProfileSerializer
@@ -62,18 +62,35 @@ class EmailPreferencesView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
     serializer_class = EmailPreferencesSerializer
 
-    def get_object(self, request):
+    def get_circle(self, request):
         circle_id = request.query_params.get("circle_id")
-        circle = None
-        if circle_id:
-            circle = get_object_or_404(Circle, id=circle_id)
-            if not CircleMembership.objects.filter(circle=circle, user=request.user).exists():
-                raise PermissionDenied(_("Not a member of this circle"))
-        prefs, _created = UserNotificationPreferences.objects.get_or_create(user=request.user, circle=circle)
+        if not circle_id:
+            return None
+        circle = get_object_or_404(Circle, id=circle_id)
+        if not CircleMembership.objects.filter(circle=circle, user=request.user).exists():
+            raise PermissionDenied(_("Not a member of this circle"))
+        return circle
+
+    def get_object(self, request):
+        """Return the row to edit, creating it if needed.
+
+        A new circle override starts as a copy of the user's current global
+        preferences, so changing one setting doesn't reset the others.
+        """
+        circle = self.get_circle(request)
+        if circle is None:
+            prefs, _created = UserNotificationPreferences.objects.get_or_create(user=request.user, circle=None)
+            return prefs
+        prefs = UserNotificationPreferences.effective_for(request.user, circle)
+        if prefs.circle_id is None:
+            prefs.pk = None
+            prefs.circle = circle
+            prefs.save()
         return prefs
 
     @extend_schema(
-        description="Fetch notification preferences, optionally scoped to a specific circle.",
+        description="Fetch the notification preferences in effect, optionally for a specific circle. "
+        "A circle without its own override returns the user's global preferences.",
         parameters=[
             OpenApiParameter(
                 name="circle_id",
@@ -86,7 +103,7 @@ class EmailPreferencesView(APIView):
         responses=EmailPreferencesSerializer,
     )
     def get(self, request):
-        prefs = self.get_object(request)
+        prefs = UserNotificationPreferences.effective_for(request.user, self.get_circle(request))
         return success_response(EmailPreferencesSerializer(prefs).data)
 
     @extend_schema(
@@ -122,6 +139,35 @@ class EmailPreferencesView(APIView):
             )
         return success_response(
             serializer.data,
+            messages=[create_message("notifications.preferences.updated")],
+            status_code=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        description="Remove a circle's notification override so the global preferences apply again.",
+        parameters=[
+            OpenApiParameter(
+                name="circle_id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Circle whose override should be removed.",
+                required=True,
+            )
+        ],
+        responses=EmailPreferencesSerializer,
+    )
+    def delete(self, request):
+        circle = self.get_circle(request)
+        if circle is None:
+            return error_response(
+                "circle_required",
+                [create_message("errors.notification_circle_required")],
+                status.HTTP_400_BAD_REQUEST,
+            )
+        UserNotificationPreferences.objects.filter(user=request.user, circle=circle).delete()
+        prefs = UserNotificationPreferences.effective_for(request.user, circle)
+        return success_response(
+            EmailPreferencesSerializer(prefs).data,
             messages=[create_message("notifications.preferences.updated")],
             status_code=status.HTTP_200_OK,
         )

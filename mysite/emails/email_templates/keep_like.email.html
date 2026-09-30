@@ -1,0 +1,29 @@
+{% block subject %}{% autoescape off %}{{ actor_name }} liked your post in {{ circle_name }}{% endautoescape %}{% endblock %}
+
+{% block text_body %}{% autoescape off %}
+Hi {{ recipient_name|default:"there" }},
+
+{{ actor_name }} liked your post{% if post_summary %} "{{ post_summary }}"{% endif %}.
+
+See the post: {{ keep_url }}
+
+--
+Change which notifications you get: {{ settings_url }}
+{% endautoescape %}{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title=circle_name intro_text="Someone liked your post." email_tag="New Like" %}
+
+<p>Hi {{ recipient_name|default:"there" }},</p>
+<p><strong>{{ actor_name }}</strong> liked your post{% if post_summary %} &ldquo;{{ post_summary }}&rdquo;{% endif %}.</p>
+
+<p style="margin: 30px 0;">
+    <a href="{{ keep_url }}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+        See the post
+    </a>
+</p>
+
+<p style="color: #666; font-size: 12px;"><a href="{{ settings_url }}" style="color: #666;">Change which notifications you get</a></p>
+
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

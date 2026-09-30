@@ -6,6 +6,7 @@ from rest_framework import generics, permissions
 from mysite.circles.models import Circle
 
 from ..models import KeepReaction
+from ..notifications import notify_new_like
 from ..serializers import KeepReactionSerializer
 from .permissions import IsCircleAdminOrOwner, IsCircleMember, is_circle_admin
 
@@ -31,7 +32,8 @@ class KeepReactionListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         """Set the user when creating a reaction."""
-        serializer.save(user=self.request.user)
+        reaction = serializer.save(user=self.request.user)
+        notify_new_like(reaction)
 
     @extend_schema(
         summary="List keep reactions",

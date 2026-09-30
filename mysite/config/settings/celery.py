@@ -53,6 +53,7 @@ CELERY_TASK_ROUTES = {
     "mysite.keeps.tasks.generate_image_sizes": {"queue": "media"},
     "mysite.keeps.tasks.cleanup_failed_uploads": {"queue": "media"},
     "mysite.keeps.tasks.validate_media_file": {"queue": "media"},
+    "mysite.keeps.tasks.send_activity_notifications": {"queue": "email"},
     "mysite.auth.tasks.cleanup_expired_trusted_devices": {"queue": "maintenance"},
     "mysite.auth.tasks.cleanup_expired_oauth_states": {"queue": "maintenance"},
     "mysite.auth.tasks.cleanup_expired_magic_login_tokens": {"queue": "maintenance"},

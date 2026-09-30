@@ -10,6 +10,12 @@ CIRCLE_INVITATION_ACCEPTED_TEMPLATE = "users.circle.invitation_accepted"
 CHILD_UPGRADE_TEMPLATE = "users.child.upgrade"
 MAGIC_LOGIN_TEMPLATE = "users.magic.login"
 
+# Circle activity notifications
+KEEP_NEW_MEDIA_TEMPLATE = "keeps.notify.new_media"
+KEEP_COMMENT_TEMPLATE = "keeps.notify.comment"
+KEEP_REPLY_TEMPLATE = "keeps.notify.reply"
+KEEP_LIKE_TEMPLATE = "keeps.notify.like"
+
 # 2FA-related templates
 TWOFA_CODE_TEMPLATE = "twofa.code"
 TWOFA_ENABLED_TEMPLATE = "twofa.enabled"
@@ -26,6 +32,10 @@ EMAIL_TEMPLATE_FILES = {
     CIRCLE_INVITATION_ACCEPTED_TEMPLATE: "circle_invitation_accepted.email.html",
     CHILD_UPGRADE_TEMPLATE: "child_upgrade.email.html",
     MAGIC_LOGIN_TEMPLATE: "magic_login.email.html",
+    KEEP_NEW_MEDIA_TEMPLATE: "keep_new_media.email.html",
+    KEEP_COMMENT_TEMPLATE: "keep_comment.email.html",
+    KEEP_REPLY_TEMPLATE: "keep_reply.email.html",
+    KEEP_LIKE_TEMPLATE: "keep_like.email.html",
     TWOFA_CODE_TEMPLATE: "twofa_code.email.html",
     TWOFA_ENABLED_TEMPLATE: "twofa_enabled.email.html",
     TWOFA_DISABLED_TEMPLATE: "twofa_disabled.email.html",
@@ -39,6 +49,10 @@ __all__ = [
     "CIRCLE_INVITATION_TEMPLATE",
     "CHILD_UPGRADE_TEMPLATE",
     "MAGIC_LOGIN_TEMPLATE",
+    "KEEP_NEW_MEDIA_TEMPLATE",
+    "KEEP_COMMENT_TEMPLATE",
+    "KEEP_REPLY_TEMPLATE",
+    "KEEP_LIKE_TEMPLATE",
     "TWOFA_CODE_TEMPLATE",
     "TWOFA_ENABLED_TEMPLATE",
     "TWOFA_DISABLED_TEMPLATE",

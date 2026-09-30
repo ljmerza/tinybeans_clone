@@ -11,6 +11,7 @@ from PIL import Image, ImageOps
 from mysite import project_logging
 
 from .models import KeepMedia, MediaUpload, MediaUploadStatus
+from .notifications import send_activity
 from .storage import get_storage_backend
 
 logger = get_task_logger(__name__)
@@ -414,3 +415,10 @@ def validate_media_file(upload_id: str):
                     )
 
                 raise
+
+
+@shared_task
+def send_activity_notifications(event: str, object_id: str):
+    """Notify circle members about a new post, comment, reply or like."""
+    with project_logging.log_context(task="keeps.send_activity_notifications", event=event, object_id=object_id):
+        send_activity(event, object_id)

@@ -235,12 +235,12 @@ class UserNotificationPreferencesAdmin(admin.ModelAdmin):
         "user",
         "circle",
         "notify_new_media",
-        "notify_weekly_digest",
-        "digest_frequency",
-        "push_enabled",
+        "notify_comments",
+        "notify_replies",
+        "notify_likes",
         "channel",
     )
-    list_filter = ("channel", "notify_new_media", "notify_weekly_digest", "digest_frequency", "push_enabled")
+    list_filter = ("channel", "notify_new_media", "notify_comments", "notify_replies", "notify_likes")
 
 
 @admin.register(ChildUpgradeAuditLog)

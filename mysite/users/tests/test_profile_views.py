@@ -43,42 +43,94 @@ class NotificationPreferencesViewTests(TestCase):
         self.circle = Circle.objects.create(name="Notif Circle", created_by=self.user)
         # Membership for user is auto-created by the post_save signal on Circle
 
-    def test_get_preferences_returns_extended_fields(self):
+    def test_get_preferences_returns_event_fields(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse("user-email-preferences"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
-        self.assertIn("digest_frequency", data)
-        self.assertIn("push_enabled", data)
-        self.assertIn("per_circle_override", data)
+        for field in ("notify_new_media", "notify_comments", "notify_replies", "notify_likes", "channel"):
+            self.assertIn(field, data)
+        self.assertEqual(data["channel"], "email")
         self.assertFalse(data["per_circle_override"])
 
-    def test_patch_updates_digest_and_push_preferences(self):
+    def test_patch_updates_event_preferences(self):
         self.client.force_authenticate(user=self.user)
-        payload = {
-            "digest_frequency": "daily",
-            "push_enabled": True,
-        }
+        payload = {"notify_likes": False, "notify_comments": False}
         response = self.client.patch(reverse("user-email-preferences"), payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         prefs = UserNotificationPreferences.objects.get(user=self.user, circle__isnull=True)
-        self.assertEqual(prefs.digest_frequency, payload["digest_frequency"])
-        self.assertTrue(prefs.push_enabled)
+        self.assertFalse(prefs.notify_likes)
+        self.assertFalse(prefs.notify_comments)
+        self.assertTrue(prefs.notify_replies)
 
-    def test_circle_override_creates_separate_preferences(self):
+    def test_phone_channel_rejected_until_enabled(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(
-            reverse("user-email-preferences"),
-            {"circle_id": self.circle.id},
-        )
+        response = self.client.patch(reverse("user-email-preferences"), {"channel": "sms"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, channel="sms").exists())
+
+    def test_phone_channel_accepted_when_enabled(self):
+        self.client.force_authenticate(user=self.user)
+        with self.settings(NOTIFICATIONS_SMS_ENABLED=True):
+            response = self.client.patch(reverse("user-email-preferences"), {"channel": "sms"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(UserNotificationPreferences.objects.get(user=self.user, circle=None).channel, "sms")
+
+    def test_get_circle_without_override_returns_global_and_creates_nothing(self):
+        UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse("user-email-preferences"), {"circle_id": self.circle.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data.get("data", response.data)
+        self.assertFalse(data["per_circle_override"])
+        self.assertFalse(data["notify_likes"])
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, circle=self.circle).exists())
+
+    def test_patch_circle_creates_override_seeded_from_global(self):
+        UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
+        self.client.force_authenticate(user=self.user)
+        url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
+        response = self.client.patch(url, {"notify_new_media": False}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
         self.assertTrue(data["per_circle_override"])
         override = UserNotificationPreferences.objects.get(user=self.user, circle=self.circle)
-        self.assertIsNotNone(override)
+        self.assertFalse(override.notify_new_media)
+        self.assertFalse(override.notify_likes)  # copied from the global row
+        global_prefs = UserNotificationPreferences.objects.get(user=self.user, circle=None)
+        self.assertTrue(global_prefs.notify_new_media)
+
+    def test_delete_circle_override_restores_global(self):
+        UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, notify_likes=False)
+        self.client.force_authenticate(user=self.user)
+        url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data.get("data", response.data)
+        self.assertFalse(data["per_circle_override"])
+        self.assertTrue(data["notify_likes"])
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, circle=self.circle).exists())
+
+    def test_delete_without_circle_is_rejected(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(reverse("user-email-preferences"))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_circle_preferences_require_membership(self):
+        other = User.objects.create_user(email="other@example.com", password="password123")
+        other_circle = Circle.objects.create(name="Other", created_by=other)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse("user-email-preferences"), {"circle_id": other_circle.id})
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch_profile_updates_names(self):
         self.client.force_authenticate(user=self.user)
