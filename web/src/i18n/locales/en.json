@@ -344,7 +344,8 @@
 			"manage_description": "Choose your default method by configuring the options below.",
 			"tabs": {
 				"general": "General",
-				"two_factor": "Two-Factor Authentication"
+				"two_factor": "Two-Factor Authentication",
+				"notifications": "Notifications"
 			},
 			"general": {
 				"title": "General settings",
@@ -786,6 +787,8 @@
 		}
 	},
 	"errors": {
+		"notification_channel_unavailable": "That notification method isn't available yet.",
+		"notification_circle_required": "Choose a circle to reset.",
 		"file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
 		"invalid_file_type": "Invalid file type. Allowed types: {{allowedTypes}}",
 		"email_invalid": "Please enter a valid email address",
@@ -887,6 +890,41 @@
 		}
 	},
 	"profile": {
+		"notifications": {
+			"title": "Notifications",
+			"description": "Choose what you hear about and how it reaches you.",
+			"scope_label": "Settings for",
+			"scope_default": "All circles (default)",
+			"circle_uses_default": "This circle uses your default settings. Changing one here applies to this circle only.",
+			"circle_override": "This circle has its own settings.",
+			"use_default": "Use my defaults",
+			"load_error": "We couldn't load your notification settings. Please try again.",
+			"channel_label": "Send notifications by",
+			"channel_description": "More ways to get notified are on the way.",
+			"channel_coming_soon": "{{channel}} (coming soon)",
+			"channels": {
+				"email": "Email",
+				"sms": "Phone (text message)"
+			},
+			"events": {
+				"new_media": {
+					"title": "New photos and videos",
+					"description": "Someone adds photos or videos to a circle."
+				},
+				"comments": {
+					"title": "Comments on my posts",
+					"description": "Someone comments on something you posted."
+				},
+				"replies": {
+					"title": "Replies to me",
+					"description": "Someone replies to your comment or tags you in one."
+				},
+				"likes": {
+					"title": "Likes on my posts",
+					"description": "Someone likes something you posted."
+				}
+			}
+		},
 		"general": {
 			"loading_title": "Loading profile settings…",
 			"loading_description": "Fetching your account preferences.",

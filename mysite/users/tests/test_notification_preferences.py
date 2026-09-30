@@ -7,7 +7,6 @@ from rest_framework.test import APIClient
 
 from mysite.users.models import (
     Circle,
-    DigestFrequency,
     NotificationChannel,
     User,
     UserNotificationPreferences,
@@ -44,7 +43,7 @@ class NotificationPreferencesEdgeCaseTests(TestCase):
             {
                 "notification_preferences": {
                     "notify_new_media": True,
-                    "digest_frequency": DigestFrequency.DAILY,
+                    "notify_likes": False,
                     "channel": NotificationChannel.EMAIL,
                 }
             },
@@ -65,7 +64,7 @@ class NotificationPreferencesEdgeCaseTests(TestCase):
             reverse("user-profile"),
             {
                 "notification_preferences": {
-                    f"circle_{self.circle.id}": {"notify_new_media": False, "digest_frequency": DigestFrequency.NEVER}
+                    f"circle_{self.circle.id}": {"notify_new_media": False, "notify_likes": False}
                 }
             },
             format="json",

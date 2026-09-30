@@ -8,6 +8,7 @@ from rest_framework import generics, permissions
 from mysite.circles.models import Circle
 
 from ..models import KeepComment
+from ..notifications import notify_new_comment
 from ..serializers import KeepCommentSerializer
 from .permissions import IsCircleAdminOrOwner, IsCircleMember, is_circle_admin
 
@@ -43,7 +44,8 @@ class KeepCommentListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         """Set the user when creating a comment."""
-        serializer.save(user=self.request.user)
+        comment = serializer.save(user=self.request.user)
+        notify_new_comment(comment)
 
     @extend_schema(
         summary="List keep comments",

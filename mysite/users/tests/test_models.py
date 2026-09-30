@@ -15,8 +15,8 @@ from mysite.users.models import (
     CircleInvitation,
     CircleInvitationStatus,
     CircleMembership,
-    DigestFrequency,
     GuardianConsentMethod,
+    NotificationChannel,
     User,
     UserNotificationPreferences,
     UserRole,
@@ -263,17 +263,16 @@ class UserNotificationPreferencesModelTests(TestCase):
         prefs = UserNotificationPreferences.objects.create(
             user=self.user,
             notify_new_media=True,
-            notify_weekly_digest=False,
-            digest_frequency=DigestFrequency.DAILY,
-            push_enabled=True,
+            notify_likes=False,
         )
 
         self.assertEqual(prefs.user, self.user)
         self.assertIsNone(prefs.circle)
         self.assertTrue(prefs.notify_new_media)
-        self.assertFalse(prefs.notify_weekly_digest)
-        self.assertEqual(prefs.digest_frequency, DigestFrequency.DAILY)
-        self.assertTrue(prefs.push_enabled)
+        self.assertTrue(prefs.notify_comments)
+        self.assertTrue(prefs.notify_replies)
+        self.assertFalse(prefs.notify_likes)
+        self.assertEqual(prefs.channel, NotificationChannel.EMAIL)
         self.assertFalse(prefs.is_circle_override)
 
     def test_create_circle_specific_preferences(self):
@@ -282,6 +281,17 @@ class UserNotificationPreferencesModelTests(TestCase):
 
         self.assertEqual(prefs.circle, self.circle)
         self.assertTrue(prefs.is_circle_override)
+
+    def test_effective_for_prefers_circle_override_then_global_then_defaults(self):
+        other_circle = Circle.objects.create(name="Friends", created_by=self.user)
+        self.assertIsNone(UserNotificationPreferences.effective_for(self.user, self.circle).pk)
+
+        global_prefs = UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
+        override = UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, notify_likes=True)
+
+        self.assertEqual(UserNotificationPreferences.effective_for(self.user, self.circle), override)
+        self.assertEqual(UserNotificationPreferences.effective_for(self.user, other_circle), global_prefs)
+        self.assertEqual(UserNotificationPreferences.effective_for(self.user), global_prefs)
 
     def test_unique_constraint(self):
         """Test unique constraint on user-circle combination."""

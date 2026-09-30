@@ -9,9 +9,15 @@ const mutationKey = <Parts extends QueryKey>(...parts: Parts) =>
 export const profileKeys = {
 	all: () => profileKeysFactory.root(),
 	profile: () => profileKeysFactory.tag("profile"),
+	allNotificationPreferences: () =>
+		profileKeysFactory.tag("notification-preferences"),
+	notificationPreferences: (circleId: number | null) =>
+		profileKeysFactory.tag("notification-preferences", circleId ?? "default"),
 	mutation: mutationKey,
 	mutations: {
 		updateProfile: () => mutationKey("update-profile"),
+		updateNotificationPreferences: () =>
+			mutationKey("update-notification-preferences"),
 	},
 };
 

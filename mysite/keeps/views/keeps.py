@@ -10,6 +10,7 @@ from mysite.circles.models import Circle
 from mysite.notification_utils import create_message, error_response, success_response
 
 from ..models import Keep, KeepType
+from ..notifications import notify_new_post
 from ..serializers import (
     KeepCreateSerializer,
     KeepDetailSerializer,
@@ -65,7 +66,8 @@ class KeepListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         """Set the creator when creating a new keep."""
-        serializer.save(created_by=self.request.user)
+        keep = serializer.save(created_by=self.request.user)
+        notify_new_post(keep)
 
     @extend_schema(
         summary="List keeps in user's circles",

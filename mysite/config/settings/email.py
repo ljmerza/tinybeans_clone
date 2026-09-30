@@ -38,3 +38,9 @@ SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "twilio")
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "")
+
+# Circle activity notifications
+# Phone delivery isn't built yet; users can't pick it until this is on.
+NOTIFICATIONS_SMS_ENABLED = _env_flag("NOTIFICATIONS_SMS_ENABLED", default=False)
+# New-photo notices wait this long so the post's uploads can finish first.
+NOTIFICATIONS_NEW_MEDIA_DELAY_SECONDS = int(os.environ.get("NOTIFICATIONS_NEW_MEDIA_DELAY_SECONDS", 600))

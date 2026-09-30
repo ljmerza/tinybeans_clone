@@ -1,0 +1,32 @@
+{% block subject %}{% autoescape off %}{{ actor_name }} replied to you in {{ circle_name }}{% endautoescape %}{% endblock %}
+
+{% block text_body %}{% autoescape off %}
+Hi {{ recipient_name|default:"there" }},
+
+{{ actor_name }} replied to your comment:
+
+{{ comment_text }}
+
+Reply: {{ keep_url }}
+
+--
+Change which notifications you get: {{ settings_url }}
+{% endautoescape %}{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title=circle_name intro_text="Someone replied to your comment." email_tag="New Reply" %}
+
+<p>Hi {{ recipient_name|default:"there" }},</p>
+<p><strong>{{ actor_name }}</strong> replied to your comment:</p>
+<blockquote style="margin: 16px 0; padding: 12px 16px; border-left: 3px solid #4F46E5; background: #f7f7fb; white-space: pre-line;">{{ comment_text }}</blockquote>
+
+<p style="margin: 30px 0;">
+    <a href="{{ keep_url }}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+        Reply
+    </a>
+</p>
+
+<p style="color: #666; font-size: 12px;"><a href="{{ settings_url }}" style="color: #666;">Change which notifications you get</a></p>
+
+{% include 'emails/partials/footer.html' %}
+{% endblock %}
