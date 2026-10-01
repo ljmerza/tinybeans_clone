@@ -653,9 +653,7 @@
 					"submit": "Enviar invitación",
 					"submitting": "Enviando invitación…",
 					"description_email": "Invita usando el correo electrónico de la persona. Nosotros nos encargamos del resto.",
-					"identifier_label_email": "Correo electrónico",
-					"lookup": "Comprobar disponibilidad",
-					"lookup_loading": "Comprobando…"
+					"identifier_label_email": "Correo electrónico"
 				},
 				"roles": {
 					"member": "Miembro del círculo",
@@ -701,10 +699,6 @@
 					"identifier_required": "Ingresa un correo electrónico",
 					"identifier_max": "El correo debe tener 255 caracteres o menos",
 					"email_invalid": "Ingresa un correo válido"
-				},
-				"lookup": {
-					"existing_user": "{{email}} ya tiene una cuenta y recibirá una notificación.",
-					"new_user": "Enviaremos un correo a {{email}} con los pasos para unirse."
 				}
 			},
 			"members": {
