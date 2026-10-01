@@ -380,7 +380,8 @@
 					"select_placeholder": "Select a language",
 					"options": {
 						"en": "English",
-						"es": "Español"
+						"es": "Español",
+						"it": "Italiano"
 					}
 				}
 			},

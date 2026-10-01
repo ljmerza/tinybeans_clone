@@ -21,7 +21,9 @@ export function LanguagePreferenceSelect() {
 	const updateProfile = useUpdateUserProfileMutation({
 		suppressSuccessToast: true,
 	});
-	const currentLanguage = toSupportedLanguage(i18n.language);
+	// resolvedLanguage is the language actually on screen: if a locale chunk
+	// failed to load, it stays "en" even though i18n.language changed.
+	const currentLanguage = toSupportedLanguage(i18n.resolvedLanguage);
 
 	const handleLanguageChange = async (value: string) => {
 		const nextLanguage = toSupportedLanguage(value);
@@ -30,6 +32,11 @@ export function LanguagePreferenceSelect() {
 
 		try {
 			await i18n.changeLanguage(nextLanguage);
+			// changeLanguage resolves even when the locale chunk fails to load
+			// (e.g. offline), so check the strings actually arrived.
+			if (!i18n.hasResourceBundle(nextLanguage, "translation")) {
+				throw new Error(`Could not load the "${nextLanguage}" translations`);
+			}
 			await updateProfile.mutateAsync({ language: nextLanguage });
 		} catch (error) {
 			console.error("Failed to change language:", error);

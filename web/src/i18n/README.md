@@ -97,6 +97,10 @@ function LanguageSwitcher() {
 Add translations to:
 - `src/i18n/locales/en.json` - English
 - `src/i18n/locales/es.json` - Spanish
+- `src/i18n/locales/it.json` - Italian
+
+English is bundled; other locales load on demand (see "How Locales Load" in
+`web/INTERNATIONALIZATION_IMPLEMENTATION.md`).
 
 ### Example Entry
 ```json

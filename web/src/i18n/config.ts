@@ -7,24 +7,41 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { getBrowserLanguage } from "./browserLanguage";
+import { createLocaleBackend } from "./localeBackend";
 import en from "./locales/en.json";
-import es from "./locales/es.json";
 
-i18next.use(initReactI18next).init({
-	resources: {
-		en: { translation: en },
-		es: { translation: es },
-	},
-	// Logged-out pages follow the browser; a signed-in user's saved
-	// preference is applied by AuthSessionProvider once the session loads.
-	lng: getBrowserLanguage(),
-	fallbackLng: "en", // missing keys fall back to English
-	interpolation: {
-		escapeValue: false, // React already escapes
-	},
-	// Return key if translation is missing (easier debugging)
-	returnNull: false,
-	returnEmptyString: false,
-});
+/**
+ * Resolves once the startup language can be rendered: straight away for
+ * English (bundled), or after its chunk loads for any other language. It also
+ * resolves if that chunk fails, leaving the UI on the English fallback.
+ * `main.tsx` waits on it before the first render.
+ */
+export const i18nReady: Promise<void> = i18next
+	.use(initReactI18next)
+	.use(createLocaleBackend())
+	.init({
+		// Only English is bundled. Other locales load through the backend when
+		// first used; partialBundledLanguages lets the two coexist.
+		resources: {
+			en: { translation: en },
+		},
+		partialBundledLanguages: true,
+		// Logged-out pages follow the browser; a signed-in user's saved
+		// preference is applied by AuthSessionProvider once the session loads.
+		lng: getBrowserLanguage(),
+		fallbackLng: "en", // missing keys fall back to English
+		interpolation: {
+			escapeValue: false, // React already escapes
+		},
+		// Return key if translation is missing (easier debugging)
+		returnNull: false,
+		returnEmptyString: false,
+	})
+	.then(
+		() => undefined,
+		(error: unknown) => {
+			console.error("[i18n] Failed to initialize", error);
+		},
+	);
 
 export default i18next;

@@ -11,6 +11,9 @@ describe("toSupportedLanguage", () => {
 		["es", "es"],
 		["es-MX", "es"],
 		["ES_es", "es"],
+		["it", "it"],
+		["it-IT", "it"],
+		["IT_ch", "it"],
 		["en-GB", "en"],
 		["fr-FR", "en"],
 		["", "en"],
@@ -24,6 +27,12 @@ describe("toSupportedLanguage", () => {
 describe("getBrowserLanguage", () => {
 	it("maps a Spanish browser to es", () => {
 		expect(getBrowserLanguage(nav(["es-419", "en"]))).toBe("es");
+	});
+
+	it("maps an Italian browser to it", () => {
+		expect(getBrowserLanguage(nav(["it-IT", "en"]))).toBe("it");
+		expect(getBrowserLanguage(nav(["fr-CH", "it-CH", "es"]))).toBe("it");
+		expect(getBrowserLanguage(nav([], "it-SM"))).toBe("it");
 	});
 
 	it("maps an English browser to en", () => {
