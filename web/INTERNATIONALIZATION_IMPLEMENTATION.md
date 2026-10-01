@@ -181,24 +181,22 @@ errors/        # Error messages (API responses)
 6. **Separation of Concerns**: Backend sends i18n keys, frontend handles display
 7. **User Preference Persistence**: Language preference saved to user profile
 
-## Language Switcher
+## Language Setting
 
-The existing `LanguageSwitcher` component provides:
-- Full version with flag emojis and labels
-- Compact version for navigation bars
-- Automatic persistence to backend (when authenticated)
-- Immediate UI update
+Users pick their language in **Settings → General** (`LanguagePreferenceSelect` in
+`src/features/profile/components/`). It:
+- Updates the UI immediately
+- Saves the choice to the user's profile (`language`)
+- Restores the previous language if the save fails
+
+New users default to their browser language (`src/i18n/browserLanguage.ts`), which is sent
+with signup and Google OAuth account creation. Logged-out pages also follow the browser language.
 
 ## Testing Language Switching
 
 To test the implementation:
 
-1. **Use the Language Switcher Component**:
-   ```typescript
-   import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-   
-   <LanguageSwitcher />
-   ```
+1. **Use the Language Setting**: open Settings → General and change the language.
 
 2. **Programmatically Change Language**:
    ```typescript
@@ -230,7 +228,9 @@ To add a new language (e.g., French):
      // ...
    });
    ```
-3. Update `LanguageSwitcher.tsx` to include French option
+3. Add `fr` to `SUPPORTED_LANGUAGES` and the tag matching in `src/i18n/browserLanguage.ts`
+4. Add a `twofa.settings.general.language.options.fr` label to every locale file
+5. Add `FRENCH = "fr", "French"` to the backend `Language` choices (`mysite/users/models/user.py`) and run `makemigrations` (choices are part of the migration state)
 
 ## Adding New Translation Keys
 

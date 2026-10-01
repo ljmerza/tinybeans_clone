@@ -4,16 +4,11 @@ Google OAuth Account Operations Tests
 Tests for user account creation, linking, and unlinking with Google OAuth.
 """
 
-import unittest
-from unittest.mock import patch
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from mysite.auth.exceptions import UnverifiedAccountExistsError
 from mysite.auth.serializers import OAuthCallbackRequestSerializer
-from mysite.auth.services.google_oauth_service import GoogleOAuthService
-from mysite.auth.tests.conftest import create_oauth_state
+from mysite.auth.services.google_oauth_service import GoogleOAuthService, UnverifiedAccountError
 
 User = get_user_model()
 
@@ -24,33 +19,16 @@ class TestUserCreation(TestCase):
     def setUp(self):
         """Set up test data."""
         self.service = GoogleOAuthService()
-        self.redirect_uri = "http://localhost:3000/auth/google/callback"
-        self.ip_address = "192.168.1.1"
-        self.user_agent = "Mozilla/5.0"
 
-    @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch("mysite.auth.services.google_oauth_service.id_token.verify_oauth2_token")
-    @patch("mysite.auth.services.google_oauth_service.requests.post")
-    def test_get_or_create_user_new_user(self, mock_post, mock_verify):
+    def test_get_or_create_user_new_user(self):
         """Test creating new user from Google OAuth."""
-        # Mock token verification
-        mock_verify.return_value = {
-            "sub": "123456789",
-            "email": "newuser@gmail.com",
-            "email_verified": True,
-            "name": "New User",
-            "picture": "https://example.com/photo.jpg",
-        }
-
-        # Create state
-        oauth_state = create_oauth_state(
-            redirect_uri=self.redirect_uri,
-            code_verifier="test_verifier_" + "a" * 32,
-        )
-
-        # Get or create user
         user, action = self.service.get_or_create_user(
-            google_token_data={"id_token": "test_token"}, oauth_state=oauth_state
+            {
+                "sub": "123456789",
+                "email": "newuser@gmail.com",
+                "given_name": "New",
+                "family_name": "User",
+            }
         )
 
         self.assertEqual(action, "created")
@@ -58,6 +36,7 @@ class TestUserCreation(TestCase):
         self.assertEqual(user.google_id, "123456789")
         self.assertTrue(user.email_verified)
         self.assertEqual(user.auth_provider, "google")
+        self.assertFalse(user.has_usable_password())
 
 
 class TestAccountLinkingSecurity(TestCase):
@@ -66,68 +45,31 @@ class TestAccountLinkingSecurity(TestCase):
     def setUp(self):
         """Set up test data."""
         self.service = GoogleOAuthService()
-        self.redirect_uri = "http://localhost:3000/auth/google/callback"
-        self.ip_address = "192.168.1.1"
-        self.user_agent = "Mozilla/5.0"
 
-    @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch("mysite.auth.services.google_oauth_service.id_token.verify_oauth2_token")
-    @patch("mysite.auth.services.google_oauth_service.requests.post")
-    def test_get_or_create_user_unverified_account_blocks(self, mock_post, mock_verify):
+    def test_get_or_create_user_unverified_account_blocks(self):
         """Test that linking to unverified account is blocked (CRITICAL)."""
-        # Create unverified user
-        User.objects.create_user(
+        existing = User.objects.create_user(
             email="existing@gmail.com",
             password="testpass123",
             email_verified=False,  # UNVERIFIED
         )
 
-        # Mock token verification
-        mock_verify.return_value = {
-            "sub": "123456789",
-            "email": "existing@gmail.com",  # Same email
-            "email_verified": True,
-            "name": "Existing User",
-        }
-
-        oauth_state = create_oauth_state(
-            redirect_uri=self.redirect_uri,
-            code_verifier="test_verifier_" + "a" * 32,
-        )
-
         # Should raise error - CRITICAL SECURITY CHECK
-        with self.assertRaises(UnverifiedAccountExistsError):
-            self.service.get_or_create_user(google_token_data={"id_token": "test_token"}, oauth_state=oauth_state)
+        with self.assertRaises(UnverifiedAccountError):
+            self.service.get_or_create_user({"sub": "123456789", "email": "existing@gmail.com"})
 
-    @unittest.skip("Needs complex Google OAuth library mocking")
-    @patch("mysite.auth.services.google_oauth_service.id_token.verify_oauth2_token")
-    @patch("mysite.auth.services.google_oauth_service.requests.post")
-    def test_get_or_create_user_existing_verified_links(self, mock_post, mock_verify):
+        existing.refresh_from_db()
+        self.assertIsNone(existing.google_id)
+
+    def test_get_or_create_user_existing_verified_links(self):
         """Test linking Google to existing verified account."""
-        # Create verified user
         User.objects.create_user(
             email="verified@gmail.com",
             password="testpass123",
             email_verified=True,  # VERIFIED
         )
 
-        # Mock token verification
-        mock_verify.return_value = {
-            "sub": "123456789",
-            "email": "verified@gmail.com",
-            "email_verified": True,
-            "name": "Verified User",
-        }
-
-        oauth_state = create_oauth_state(
-            redirect_uri=self.redirect_uri,
-            code_verifier="test_verifier_" + "a" * 32,
-        )
-
-        # Should link Google account
-        user, action = self.service.get_or_create_user(
-            google_token_data={"id_token": "test_token"}, oauth_state=oauth_state
-        )
+        user, action = self.service.get_or_create_user({"sub": "123456789", "email": "verified@gmail.com"})
 
         self.assertEqual(action, "linked")
         self.assertEqual(user.email, "verified@gmail.com")
