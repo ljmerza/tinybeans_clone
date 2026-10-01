@@ -46,7 +46,7 @@ export function ProfileSettingsTabs({
 			value={currentTab}
 			onValueChange={handleTabChange}
 		>
-			<TabsList className="grid w-full grid-cols-3">
+			<TabsList className="grid h-auto w-full grid-cols-1 sm:h-9 sm:grid-cols-3">
 				<TabsTrigger value="general">
 					{t("twofa.settings.tabs.general")}
 				</TabsTrigger>
