@@ -15,10 +15,13 @@ function extractPayload(
 }
 
 /**
- * Current month in the `YYYY-MM` key format the calendar API expects (UTC).
+ * The user's current local month in the `YYYY-MM` key format the calendar API
+ * expects. Local, not UTC: on the evening of the last day of a month in the
+ * Americas, UTC has already rolled over and would open an empty next month.
  */
-export function currentMonthKey() {
-	return new Date().toISOString().slice(0, 7);
+export function currentMonthKey(now: Date = new Date()) {
+	const month = String(now.getMonth() + 1).padStart(2, "0");
+	return `${now.getFullYear()}-${month}`;
 }
 
 /**
