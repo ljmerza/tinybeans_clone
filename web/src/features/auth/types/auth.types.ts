@@ -1,4 +1,5 @@
 import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
+import type { SupportedLanguage } from "@/i18n/browserLanguage";
 import type { ApiMessage } from "@/types";
 
 export interface AuthTokens {
@@ -54,6 +55,7 @@ export interface SignupRequest {
 	last_name: string;
 	email: string;
 	password: string;
+	language?: SupportedLanguage;
 }
 
 export type SignupResponse = AuthUser & {

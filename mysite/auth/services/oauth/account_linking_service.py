@@ -7,7 +7,7 @@ This service handles:
 """
 
 import logging
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -43,7 +43,7 @@ class AccountLinkingService:
     """Service for linking/unlinking Google accounts."""
 
     @transaction.atomic
-    def get_or_create_user(self, google_user_info: Dict[str, any]) -> Tuple[User, str]:
+    def get_or_create_user(self, google_user_info: Dict[str, any], language: Optional[str] = None) -> Tuple[User, str]:
         """Get existing user or create new user from Google info.
 
         Implements the 5 account scenarios from ADR-010:
@@ -55,6 +55,7 @@ class AccountLinkingService:
 
         Args:
             google_user_info: User info from Google ID token
+            language: Preferred UI language, applied only when a new account is created
 
         Returns:
             Tuple of (User, action) where action is 'created', 'linked', or 'login'
@@ -117,6 +118,7 @@ class AccountLinkingService:
             password_login_enabled=False,  # No password set
             google_linked_at=timezone.now(),
             last_google_sync=timezone.now(),
+            **({"language": language} if language else {}),
         )
 
         # Set unusable password (prevents password login)

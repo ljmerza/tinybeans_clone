@@ -6,6 +6,8 @@ from rest_framework import serializers
 
 from mysite.users.serializers import UserSerializer
 
+from .account import PreferredLanguageField
+
 
 class OAuthInitiateRequestSerializer(serializers.Serializer):
     """Request serializer for OAuth initiation."""
@@ -26,6 +28,7 @@ class OAuthCallbackRequestSerializer(serializers.Serializer):
 
     code = serializers.CharField(required=True, max_length=512, help_text="Authorization code from Google")
     state = serializers.CharField(required=True, max_length=512, help_text="OAuth state token")
+    language = PreferredLanguageField(help_text="Preferred UI language, applied only when a new account is created")
 
 
 class JWTTokenSerializer(serializers.Serializer):

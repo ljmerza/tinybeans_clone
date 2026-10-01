@@ -7,19 +7,42 @@ from rest_framework import serializers
 
 from mysite.notification_utils import create_message
 from mysite.users.models import User
+from mysite.users.models.user import Language
+
+
+class PreferredLanguageField(serializers.CharField):
+    """Optional UI language for a new account.
+
+    Unsupported codes become ``None`` rather than a validation error, so the
+    caller can drop the value and let the model default apply.
+    """
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("required", False)
+        kwargs.setdefault("allow_null", True)
+        kwargs.setdefault("allow_blank", True)
+        kwargs.setdefault("write_only", True)
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        return value if value in Language.values else None
 
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
+    language = PreferredLanguageField(help_text="Preferred UI language; unsupported values use the default.")
 
     class Meta:
         model = User
-        fields = ["email", "password", "first_name", "last_name"]
+        fields = ["email", "password", "first_name", "last_name", "language"]
 
     def create(self, validated_data):
         password = validated_data.pop("password")
+        if not validated_data.get("language"):
+            validated_data.pop("language", None)
         user = User.objects.create_user(password=password, **validated_data)
         return user
 
@@ -90,6 +113,7 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 __all__ = [
+    "PreferredLanguageField",
     "SignupSerializer",
     "LoginSerializer",
     "EmailVerificationSerializer",

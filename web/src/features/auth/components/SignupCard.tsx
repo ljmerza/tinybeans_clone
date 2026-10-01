@@ -3,6 +3,7 @@ import { AuthCard } from "@/components/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
+import { getBrowserLanguage } from "@/i18n/browserLanguage";
 import { zodValidator } from "@/lib/form/index";
 import { signupSchemaBase } from "@/lib/validations/schemas/signup";
 import type { ApiError } from "@/types";
@@ -41,7 +42,10 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 			const { password_confirm: _ignored, ...payload } = value;
 
 			try {
-				await signup.mutateAsync(payload);
+				await signup.mutateAsync({
+					...payload,
+					language: getBrowserLanguage(),
+				});
 			} catch (error) {
 				const apiError = error as ApiError;
 				console.error("Signup error:", apiError);

@@ -10,6 +10,7 @@ from mysite.auth.serializers import (
     SignupSerializer,
 )
 from mysite.users.models import User, UserRole
+from mysite.users.models.user import Language
 
 
 class SignupSerializerTests(TestCase):
@@ -139,6 +140,40 @@ class SignupSerializerTests(TestCase):
 
         self.assertEqual(CircleMembership.objects.filter(user=user).count(), 0)
         self.assertEqual(user.role, UserRole.CIRCLE_MEMBER)  # Default role
+
+
+class SignupLanguageTests(TestCase):
+    """The optional signup ``language`` falls back to the model default when unusable."""
+
+    def _signup(self, **extra):
+        data = {
+            "email": "lang@example.com",
+            "password": "securepassword123",
+            "first_name": "Lang",
+            "last_name": "User",
+            **extra,
+        }
+        serializer = SignupSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        return serializer.save()
+
+    def test_supported_language_is_saved(self):
+        self.assertEqual(self._signup(language="es").language, Language.SPANISH)
+
+    def test_missing_language_uses_default(self):
+        self.assertEqual(self._signup().language, Language.ENGLISH)
+
+    def test_unsupported_language_uses_default(self):
+        self.assertEqual(self._signup(language="fr").language, Language.ENGLISH)
+
+    def test_region_tag_is_not_accepted_as_is(self):
+        # The client normalizes browser tags; the API only takes bare codes.
+        self.assertEqual(self._signup(language="es-MX").language, Language.ENGLISH)
+
+    def test_blank_and_null_language_use_default(self):
+        self.assertEqual(self._signup(language="").language, Language.ENGLISH)
+        User.objects.filter(email="lang@example.com").delete()
+        self.assertEqual(self._signup(language=None).language, Language.ENGLISH)
 
 
 class LoginSerializerTests(TestCase):

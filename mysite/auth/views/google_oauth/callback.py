@@ -78,6 +78,7 @@ class GoogleOAuthCallbackView(APIView):
 
         authorization_code = serializer.validated_data["code"]
         state_token = serializer.validated_data["state"]
+        language = serializer.validated_data.get("language")
         ip_address = get_client_ip(request)
 
         try:
@@ -97,7 +98,7 @@ class GoogleOAuthCallbackView(APIView):
             token_result = oauth_service.exchange_code_for_token(authorization_code, oauth_state)
 
             # Get or create user
-            user, account_action = oauth_service.get_or_create_user(token_result["user_info"])
+            user, account_action = oauth_service.get_or_create_user(token_result["user_info"], language=language)
 
             # Generate JWT tokens
             tokens = get_tokens_for_user(user)

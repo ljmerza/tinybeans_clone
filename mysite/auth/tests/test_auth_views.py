@@ -38,6 +38,19 @@ class AuthViewSecurityTests(TestCase):
         mock_delay.assert_called_once()
 
     @patch("mysite.auth.views.send_email_task.delay")
+    def test_signup_saves_requested_language(self, _mock_delay):
+        payload = {"password": "StrongPass123", "first_name": "Lang", "last_name": "User"}
+        cases = [("es", "es"), ("xx", "en"), (None, "en")]
+        for index, (sent, expected) in enumerate(cases):
+            body = {**payload, "email": f"lang{index}@example.com"}
+            if sent is not None:
+                body["language"] = sent
+            response = self.client.post(reverse("auth-signup"), body, format="json")
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED, sent)
+            self.assertEqual(User.objects.get(email=body["email"]).language, expected, sent)
+
+    @patch("mysite.auth.views.send_email_task.delay")
     def test_verification_resend_does_not_expose_token(self, mock_delay):
         user = User.objects.create_user(email="existing@example.com", password="pw123456")
 

@@ -372,6 +372,16 @@
 							"description": "Keep Tinybeans in sync with your browser preference."
 						}
 					}
+				},
+				"language": {
+					"title": "Language",
+					"description": "Choose the language used across Tinybeans.",
+					"select_label": "Display language",
+					"select_placeholder": "Select a language",
+					"options": {
+						"en": "English",
+						"es": "Español"
+					}
 				}
 			},
 			"not_enabled_title": "2FA is not enabled.",

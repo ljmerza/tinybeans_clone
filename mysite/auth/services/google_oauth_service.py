@@ -134,7 +134,7 @@ class GoogleOAuthService:
         code_verifier = self.pkce_state_service.pop_code_verifier(oauth_state)
         return self.google_api_service.exchange_code_for_token(authorization_code, oauth_state, code_verifier)
 
-    def get_or_create_user(self, google_user_info: Dict[str, any]) -> Tuple[User, str]:
+    def get_or_create_user(self, google_user_info: Dict[str, any], language: Optional[str] = None) -> Tuple[User, str]:
         """Get existing user or create new user from Google info.
 
         Implements the 5 account scenarios from ADR-010:
@@ -146,6 +146,7 @@ class GoogleOAuthService:
 
         Args:
             google_user_info: User info from Google ID token
+            language: Preferred UI language, applied only when a new account is created
 
         Returns:
             Tuple of (User, action) where action is 'created', 'linked', or 'login'
@@ -154,7 +155,7 @@ class GoogleOAuthService:
             UnverifiedAccountError: If unverified account exists
             GoogleAccountAlreadyLinkedError: If Google ID already linked
         """
-        return self.account_linking_service.get_or_create_user(google_user_info)
+        return self.account_linking_service.get_or_create_user(google_user_info, language=language)
 
     def link_google_account(self, user: User, google_user_info: Dict[str, any]) -> User:
         """Link Google account to existing authenticated user.
