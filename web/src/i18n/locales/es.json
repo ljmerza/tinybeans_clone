@@ -369,108 +369,6 @@
 						"system": {
 							"title": "Coincidir con el navegador",
 							"description": "Mantén Tinybeans sincronizado con la preferencia de tu navegador."
-						},
-						"circles": {
-							"index": {
-								"title": "Tus círculos",
-								"subtitle": "Selecciona un círculo para gestionar miembros e invitaciones.",
-								"loading": "Cargando círculos…",
-								"error_title": "No se pueden cargar los círculos",
-								"error_message": "No pudimos cargar tus círculos. Inténtalo de nuevo.",
-								"retry": "Reintentar",
-								"refreshing": "Actualizando…",
-								"empty": "Aún no te has unido a ningún círculo.",
-								"empty_title": "Crea tu primer círculo",
-								"empty_description": "Invita a tus personas cercanas para compartir recuerdos juntos.",
-								"empty_action": "Comenzar configuración",
-								"member_count": "{{count}} miembros",
-								"member_count_one": "{{count}} miembro",
-								"member_count_other": "{{count}} miembros",
-								"role_label": "Rol: {{role}}",
-								"manage": "Abrir panel",
-								"leave": "Salir del círculo",
-								"leave_confirm_title": "¿Salir de este círculo?",
-								"leave_confirm_body": "Perderás el acceso a {{circle}} y a sus recuerdos compartidos.",
-								"leave_confirm_cta": "Sí, salir del círculo",
-								"create_own_title": "Crea tu propio círculo",
-								"create_own_description": "Eres parte de círculos, pero aún no has creado el tuyo. Comienza tu propio círculo para invitar a familiares y amigos.",
-								"create_own_action": "Crear círculo"
-							},
-							"dashboard": {
-								"loading": "Cargando detalles del círculo…",
-								"error_title": "No se puede cargar el círculo",
-								"error_message": "No pudimos cargar este círculo. Inténtalo otra vez.",
-								"retry": "Reintentar",
-								"back_to_list": "← Volver a círculos",
-								"title_fallback": "Círculo",
-								"description": "{{count}} miembros en este círculo",
-								"description_one": "{{count}} miembro en este círculo",
-								"description_other": "{{count}} miembros en este círculo",
-								"admin_count": "{{count}} administradores",
-								"admin_count_one": "{{count}} administrador",
-								"admin_count_other": "{{count}} administradores",
-								"member_count": "{{count}} miembros",
-								"member_count_one": "{{count}} miembro",
-								"member_count_other": "{{count}} miembros",
-								"refreshing": "Actualizando…",
-								"no_members": "Invita a tu primer miembro para comenzar.",
-								"no_members_title": "Aún no hay miembros",
-								"no_members_description": "Envía una invitación para que el círculo no quede vacío.",
-								"no_members_action": "Invitar a alguien"
-							},
-							"invites": {
-				"form": {
-					"title": "Invitar a alguien a este círculo",
-					"description": "Ingresa su correo electrónico, elige su rol y envía la invitación.",
-					"identifier_label": "Correo electrónico",
-					"identifier_help_email": "Usa el correo asociado a la cuenta del invitado.",
-									"role_label": "Rol tras aceptar",
-									"role_placeholder": "Selecciona un rol",
-									"lookup": "Comprobar disponibilidad",
-									"lookup_loading": "Comprobando…",
-									"submit": "Enviar invitación",
-									"submitting": "Enviando invitación…"
-								},
-				"lookup": {
-					"existing_user": "{{email}} ya tiene una cuenta y recibirá una notificación.",
-					"new_user": "Enviaremos un correo a {{email}} con los pasos para unirse."
-				},
-								"roles": {
-									"member": "Miembro del círculo",
-									"admin": "Administrador del círculo"
-								},
-								"list": {
-									"title": "Invitaciones pendientes",
-									"description": "Consulta quién debe responder y toma acciones cuando sea necesario.",
-									"loading": "Actualizando invitaciones…",
-									"empty": "Aún no hay invitaciones. Envía una para comenzar.",
-									"empty_title": "Aún no hay invitaciones",
-									"empty_description": "Envía una invitación para sumar a alguien al círculo.",
-									"empty_action": "Crear invitación",
-									"existing_user": "Cuenta existente",
-									"resend": "Reenviar",
-									"resending": "Reenviando…",
-									"cancel": "Cancelar",
-									"cancelling": "Cancelando…",
-									"created_at": "Enviada {{createdAt}}",
-									"responded_at": "Respondida {{respondedAt}}",
-									"reminder_sent_at": "Último recordatorio {{reminderAt}}",
-									"retry": "Reintentar",
-									"error": "Algo salió mal ({{status}}). Inténtalo nuevamente."
-								},
-								"status": {
-									"pending": "Pendiente",
-									"accepted": "Aceptada",
-									"declined": "Rechazada",
-									"cancelled": "Cancelada",
-									"expired": "Expirada"
-								},
-				"validation": {
-					"identifier_required": "Ingresa un correo electrónico",
-					"identifier_max": "El correo debe tener 255 caracteres o menos",
-					"email_invalid": "Ingresa un correo válido"
-				}
-			}
 						}
 					}
 				},
@@ -690,6 +588,53 @@
 			"declinedMessage": "La invitación fue rechazada. Puedes cerrar esta ventana."
 		},
 		"circles": {
+			"index": {
+				"title": "Tus círculos",
+				"subtitle": "Selecciona un círculo para gestionar miembros e invitaciones.",
+				"loading": "Cargando círculos…",
+				"error_title": "No se pueden cargar los círculos",
+				"error_message": "No pudimos cargar tus círculos. Inténtalo de nuevo.",
+				"retry": "Reintentar",
+				"refreshing": "Actualizando…",
+				"empty": "Aún no te has unido a ningún círculo.",
+				"empty_title": "Crea tu primer círculo",
+				"empty_description": "Invita a tus personas cercanas para compartir recuerdos juntos.",
+				"empty_action": "Comenzar configuración",
+				"member_count": "{{count}} miembros",
+				"member_count_one": "{{count}} miembro",
+				"member_count_other": "{{count}} miembros",
+				"role_label": "Rol: {{role}}",
+				"manage": "Abrir panel",
+				"leave": "Salir del círculo",
+				"leave_confirm_title": "¿Salir de este círculo?",
+				"leave_confirm_body": "Perderás el acceso a {{circle}} y a sus recuerdos compartidos.",
+				"leave_confirm_cta": "Sí, salir del círculo",
+				"create_own_title": "Crea tu propio círculo",
+				"create_own_description": "Eres parte de círculos, pero aún no has creado el tuyo. Comienza tu propio círculo para invitar a familiares y amigos.",
+				"create_own_action": "Crear círculo"
+			},
+			"dashboard": {
+				"loading": "Cargando detalles del círculo…",
+				"error_title": "No se puede cargar el círculo",
+				"error_message": "No pudimos cargar este círculo. Inténtalo otra vez.",
+				"retry": "Reintentar",
+				"back_to_list": "← Volver a círculos",
+				"title_fallback": "Círculo",
+				"description": "{{count}} miembros en este círculo",
+				"description_one": "{{count}} miembro en este círculo",
+				"description_other": "{{count}} miembros en este círculo",
+				"admin_count": "{{count}} administradores",
+				"admin_count_one": "{{count}} administrador",
+				"admin_count_other": "{{count}} administradores",
+				"member_count": "{{count}} miembros",
+				"member_count_one": "{{count}} miembro",
+				"member_count_other": "{{count}} miembros",
+				"refreshing": "Actualizando…",
+				"no_members": "Invita a tu primer miembro para comenzar.",
+				"no_members_title": "Aún no hay miembros",
+				"no_members_description": "Envía una invitación para que el círculo no quede vacío.",
+				"no_members_action": "Invitar a alguien"
+			},
 			"invites": {
 				"form": {
 					"title": "Invitar a alguien a este círculo",
@@ -701,12 +646,32 @@
 					"submit": "Enviar invitación",
 					"submitting": "Enviando invitación…",
 					"description_email": "Invita usando el correo electrónico de la persona. Nosotros nos encargamos del resto.",
-					"identifier_label_email": "Correo electrónico"
+					"identifier_label_email": "Correo electrónico",
+					"lookup": "Comprobar disponibilidad",
+					"lookup_loading": "Comprobando…"
+				},
+				"roles": {
+					"member": "Miembro del círculo",
+					"admin": "Administrador del círculo"
 				},
 				"list": {
 					"title": "Miembros e invitaciones del círculo",
 					"description": "Administra a todos en el círculo, incluidas invitaciones pendientes y miembros activos.",
 					"loading": "Actualizando invitaciones…",
+					"empty": "Aún no hay invitaciones. Envía una para comenzar.",
+					"empty_title": "Aún no hay invitaciones",
+					"empty_description": "Envía una invitación para sumar a alguien al círculo.",
+					"empty_action": "Crear invitación",
+					"existing_user": "Cuenta existente",
+					"resend": "Reenviar",
+					"resending": "Reenviando…",
+					"cancel": "Cancelar",
+					"cancelling": "Cancelando…",
+					"created_at": "Enviada {{createdAt}}",
+					"responded_at": "Respondida {{respondedAt}}",
+					"reminder_sent_at": "Último recordatorio {{reminderAt}}",
+					"retry": "Reintentar",
+					"error": "Algo salió mal ({{status}}). Inténtalo nuevamente.",
 					"confirming": "Confirmando…",
 					"cancel_title": "¿Cancelar esta invitación?",
 					"cancel_description": "Se eliminará la invitación pendiente. Si la persona desea unirse, necesitará una nueva invitación.",
@@ -717,6 +682,22 @@
 					"remove_description": "Se revocará su acceso a las publicaciones compartidas. Necesitará una nueva invitación para regresar.",
 					"remove_confirm": "Sí, eliminar miembro",
 					"remove_error": "No pudimos encontrar a este miembro. Actualiza e inténtalo de nuevo."
+				},
+				"status": {
+					"pending": "Pendiente",
+					"accepted": "Aceptada",
+					"declined": "Rechazada",
+					"cancelled": "Cancelada",
+					"expired": "Expirada"
+				},
+				"validation": {
+					"identifier_required": "Ingresa un correo electrónico",
+					"identifier_max": "El correo debe tener 255 caracteres o menos",
+					"email_invalid": "Ingresa un correo válido"
+				},
+				"lookup": {
+					"existing_user": "{{email}} ya tiene una cuenta y recibirá una notificación.",
+					"new_user": "Enviaremos un correo a {{email}} con los pasos para unirse."
 				}
 			}
 		}
