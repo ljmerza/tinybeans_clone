@@ -20,7 +20,11 @@
 		"remove": "Rimuovi",
 		"back_home": "← Torna alla home",
 		"back_to_login": "← Torna all'accesso",
-		"done": "Fatto"
+		"done": "Fatto",
+		"initializing": "Avvio in corso...",
+		"init_error_title": "Errore di inizializzazione",
+		"init_error_message": "Impossibile avviare l'applicazione",
+		"refresh": "Aggiorna"
 	},
 	"nav": {
 		"home": "Home",
@@ -156,7 +160,8 @@
 			"remove_confirm_description": "La prossima volta che accedi da questo dispositivo dovrai completare di nuovo la 2FA.",
 			"remove_confirm_cta": "Rimuovi dispositivo",
 			"back_to_settings": "← Torna alle impostazioni 2FA",
-			"count_label": "{{count}} {{count, plural, one {dispositivo attendibile} other {dispositivi attendibili}}}"
+			"count_label_one": "{{count}} dispositivo attendibile",
+			"count_label_other": "{{count}} dispositivi attendibili"
 		},
 		"setup_title": "Configura l'autenticazione a due fattori",
 		"verify_title": "Autenticazione a due fattori richiesta",

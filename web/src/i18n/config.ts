@@ -10,6 +10,13 @@ import { getBrowserLanguage } from "./browserLanguage";
 import { createLocaleBackend } from "./localeBackend";
 import en from "./locales/en.json";
 
+// Keep <html lang> on the language actually shown. resolvedLanguage stays
+// "en" when a locale chunk fails and the UI falls back to English.
+// Registered before init so the startup language is applied too.
+i18next.on("languageChanged", (lng) => {
+	document.documentElement.lang = i18next.resolvedLanguage ?? lng;
+});
+
 /**
  * Resolves once the startup language can be rendered: straight away for
  * English (bundled), or after its chunk loads for any other language. It also
