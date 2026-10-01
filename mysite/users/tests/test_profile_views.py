@@ -32,6 +32,29 @@ class UserProfileViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_get_profile_includes_default_color_theme(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse("user-profile"))
+
+        data = response.data.get("data", response.data)
+        self.assertEqual(data["user"]["color_theme"], "default")
+
+    def test_patch_updates_color_theme(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(reverse("user-profile"), {"color_theme": "sage"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.color_theme, "sage")
+
+    def test_patch_rejects_unknown_color_theme(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(reverse("user-profile"), {"color_theme": "neon"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.color_theme, "default")
+
 
 class NotificationPreferencesViewTests(TestCase):
     def setUp(self):

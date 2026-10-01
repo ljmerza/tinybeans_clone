@@ -11,13 +11,29 @@ import {
 type ThemePreference = "light" | "dark" | "system";
 type ThemeValue = "light" | "dark";
 
+/** Color palettes; must match `ColorTheme` on the Django user model. */
+const COLOR_THEMES = [
+	"default",
+	"rose",
+	"peach",
+	"sage",
+	"sky",
+	"lavender",
+	"midnight",
+] as const;
+type ColorTheme = (typeof COLOR_THEMES)[number];
+
 interface ThemeContextValue {
 	preference: ThemePreference;
 	resolvedTheme: ThemeValue;
 	setPreference: (preference: ThemePreference) => void;
+	colorTheme: ColorTheme;
+	setColorTheme: (colorTheme: ColorTheme) => void;
 }
 
 const STORAGE_KEY = "tinybeans.themePreference";
+// index.html reads this key before first paint; keep the two in sync.
+const COLOR_THEME_STORAGE_KEY = "tinybeans.colorTheme";
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
@@ -35,6 +51,17 @@ const readStoredPreference = (): ThemePreference => {
 	return "system";
 };
 
+const isColorTheme = (value: unknown): value is ColorTheme =>
+	typeof value === "string" &&
+	(COLOR_THEMES as readonly string[]).includes(value);
+
+const readStoredColorTheme = (): ColorTheme => {
+	if (!isBrowser()) return "default";
+
+	const stored = window.localStorage.getItem(COLOR_THEME_STORAGE_KEY);
+	return isColorTheme(stored) ? stored : "default";
+};
+
 const getSystemTheme = (): ThemeValue => {
 	if (!isBrowser()) return "light";
 	return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -50,6 +77,17 @@ const applyThemeClass = (theme: ThemeValue) => {
 	root.style.colorScheme = theme;
 };
 
+const applyColorTheme = (colorTheme: ColorTheme) => {
+	if (!isBrowser()) return;
+
+	const root = document.documentElement;
+	if (colorTheme === "default") {
+		root.removeAttribute("data-color-theme");
+	} else {
+		root.setAttribute("data-color-theme", colorTheme);
+	}
+};
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
 	const [preference, setPreferenceState] = useState<ThemePreference>(() =>
 		readStoredPreference(),
@@ -60,6 +98,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 		applyThemeClass(initialTheme);
 		return initialTheme;
 	});
+	const [colorTheme, setColorThemeState] = useState<ColorTheme>(() =>
+		readStoredColorTheme(),
+	);
+
+	useEffect(() => {
+		if (!isBrowser()) return;
+
+		window.localStorage.setItem(COLOR_THEME_STORAGE_KEY, colorTheme);
+		applyColorTheme(colorTheme);
+	}, [colorTheme]);
 
 	useEffect(() => {
 		if (!isBrowser()) return;
@@ -100,13 +148,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 		setPreferenceState(nextPreference);
 	}, []);
 
+	const setColorTheme = useCallback((nextColorTheme: ColorTheme) => {
+		setColorThemeState(nextColorTheme);
+	}, []);
+
 	const value = useMemo(
 		() => ({
 			preference,
 			resolvedTheme,
 			setPreference,
+			colorTheme,
+			setColorTheme,
 		}),
-		[preference, resolvedTheme, setPreference],
+		[preference, resolvedTheme, setPreference, colorTheme, setColorTheme],
 	);
 
 	return (
@@ -123,4 +177,5 @@ export const useTheme = () => {
 	return context;
 };
 
-export type { ThemePreference, ThemeValue, ThemeContextValue };
+export { COLOR_THEMES, isColorTheme };
+export type { ColorTheme, ThemePreference, ThemeValue, ThemeContextValue };

@@ -26,6 +26,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "email_verified",
             "date_joined",
             "language",
+            "color_theme",
             "circle_onboarding_status",
             "circle_onboarding_updated_at",
             "needs_circle_onboarding",

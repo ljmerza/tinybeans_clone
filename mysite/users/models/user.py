@@ -81,6 +81,22 @@ class Language(models.TextChoices):
     ITALIAN = "it", "Italian"
 
 
+class ColorTheme(models.TextChoices):
+    """Color palette choices for the interface.
+
+    Each palette has a light and a dark variant; light/dark mode itself is a
+    per-device setting kept in the browser.
+    """
+
+    DEFAULT = "default", "Default"
+    ROSE = "rose", "Rose"
+    PEACH = "peach", "Peach"
+    SAGE = "sage", "Sage"
+    SKY = "sky", "Sky"
+    LAVENDER = "lavender", "Lavender"
+    MIDNIGHT = "midnight", "Midnight"
+
+
 class CircleOnboardingStatus(models.TextChoices):
     """Onboarding status choices for first-circle flow."""
 
@@ -139,6 +155,12 @@ class User(AbstractUser):
         choices=Language.choices,
         default=Language.ENGLISH,
         help_text="User's preferred language for the interface",
+    )
+    color_theme = models.CharField(
+        max_length=20,
+        choices=ColorTheme.choices,
+        default=ColorTheme.DEFAULT,
+        help_text="User's preferred color palette for the interface",
     )
 
     circle_onboarding_status = models.CharField(
