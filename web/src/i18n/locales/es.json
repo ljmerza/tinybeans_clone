@@ -473,6 +473,16 @@
 			}
 						}
 					}
+				},
+				"language": {
+					"title": "Idioma",
+					"description": "Elige el idioma que se usa en Tinybeans.",
+					"select_label": "Idioma de la interfaz",
+					"select_placeholder": "Selecciona un idioma",
+					"options": {
+						"en": "English",
+						"es": "Español"
+					}
 				}
 			},
 			"not_enabled_title": "2FA no está habilitado.",

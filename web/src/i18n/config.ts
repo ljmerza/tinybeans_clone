@@ -6,6 +6,7 @@
  */
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
+import { getBrowserLanguage } from "./browserLanguage";
 import en from "./locales/en.json";
 import es from "./locales/es.json";
 
@@ -14,7 +15,9 @@ i18next.use(initReactI18next).init({
 		en: { translation: en },
 		es: { translation: es },
 	},
-	lng: "en", // default language
+	// Logged-out pages follow the browser; a signed-in user's saved
+	// preference is applied by AuthSessionProvider once the session loads.
+	lng: getBrowserLanguage(),
 	fallbackLng: "en", // missing keys fall back to English
 	interpolation: {
 		escapeValue: false, // React already escapes

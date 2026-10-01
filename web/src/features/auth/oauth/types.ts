@@ -3,6 +3,7 @@
  * Based on API specifications with standardized message format
  */
 
+import type { SupportedLanguage } from "@/i18n/browserLanguage";
 import type { ApiMessage } from "@/types";
 
 // Re-export for convenience
@@ -22,6 +23,8 @@ export interface OAuthInitiateResponse {
 export interface OAuthCallbackRequest {
 	code: string;
 	state: string;
+	/** Only used by the callback, to set the language of a newly created account. */
+	language?: SupportedLanguage;
 }
 
 export interface OAuthUser {

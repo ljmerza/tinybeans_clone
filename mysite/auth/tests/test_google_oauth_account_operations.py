@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from mysite.auth.exceptions import UnverifiedAccountExistsError
+from mysite.auth.serializers import OAuthCallbackRequestSerializer
 from mysite.auth.services.google_oauth_service import GoogleOAuthService
 from mysite.auth.tests.conftest import create_oauth_state
 
@@ -178,3 +179,48 @@ class TestAccountLinkingOperations(TestCase):
         self.assertIsNone(updated_user.google_id)
         self.assertEqual(updated_user.auth_provider, "manual")
         self.assertIsNone(updated_user.google_linked_at)
+
+
+class TestNewGoogleUserLanguage(TestCase):
+    """The callback's optional ``language`` applies only to newly created accounts."""
+
+    google_user_info = {
+        "sub": "555000111",
+        "email": "lang@gmail.com",
+        "given_name": "Lang",
+        "family_name": "User",
+    }
+
+    def setUp(self):
+        self.service = GoogleOAuthService()
+
+    def test_new_user_gets_requested_language(self):
+        user, action = self.service.get_or_create_user(self.google_user_info, language="es")
+
+        self.assertEqual(action, "created")
+        self.assertEqual(user.language, "es")
+
+    def test_new_user_without_language_uses_default(self):
+        user, action = self.service.get_or_create_user(self.google_user_info)
+
+        self.assertEqual(action, "created")
+        self.assertEqual(user.language, "en")
+
+    def test_existing_user_language_is_not_overwritten(self):
+        User.objects.create_user(email="lang@gmail.com", password="testpass123", email_verified=True, language="en")
+
+        user, action = self.service.get_or_create_user(self.google_user_info, language="es")
+
+        self.assertEqual(action, "linked")
+        self.assertEqual(user.language, "en")
+
+    def test_callback_serializer_drops_unsupported_language(self):
+        valid = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s", "language": "es"})
+        unsupported = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s", "language": "fr"})
+        missing = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s"})
+
+        for serializer in (valid, unsupported, missing):
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(valid.validated_data["language"], "es")
+        self.assertIsNone(unsupported.validated_data["language"])
+        self.assertNotIn("language", missing.validated_data)

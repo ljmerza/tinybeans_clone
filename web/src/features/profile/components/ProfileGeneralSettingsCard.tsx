@@ -2,6 +2,7 @@ import { Layout } from "@/components/Layout";
 import { useAuthSession } from "@/features/auth";
 import { ThemePreferenceSelect, useTheme } from "@/features/theme";
 import { useTranslation } from "react-i18next";
+import { LanguagePreferenceSelect } from "./LanguagePreferenceSelect";
 
 export function ProfileGeneralSettingsCard() {
 	const { t } = useTranslation();
@@ -62,6 +63,18 @@ export function ProfileGeneralSettingsCard() {
 									})}
 						</p>
 					</div>
+				</div>
+
+				<div className="space-y-4 border-t border-border pt-6">
+					<div className="space-y-1">
+						<h3 className="text-base font-medium">
+							{t("twofa.settings.general.language.title")}
+						</h3>
+						<p className="text-sm text-muted-foreground">
+							{t("twofa.settings.general.language.description")}
+						</p>
+					</div>
+					<LanguagePreferenceSelect />
 				</div>
 			</div>
 		</div>

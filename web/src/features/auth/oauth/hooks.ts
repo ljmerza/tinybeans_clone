@@ -3,6 +3,7 @@ import {
 	parseInvitationRedirect,
 } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
+import { getBrowserLanguage } from "@/i18n/browserLanguage";
 import type { ApiError } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -112,7 +113,11 @@ export function useGoogleOAuth() {
 		// Functions
 		initiateOAuth: () => initiateMutation.mutate(),
 		handleCallback: (code: string, state: string) =>
-			callbackMutation.mutate({ code, state }),
+			callbackMutation.mutate({
+				code,
+				state,
+				language: getBrowserLanguage(),
+			}),
 		linkGoogleAccount: (code: string, state: string) =>
 			linkMutation.mutate({ code, state }),
 		unlinkGoogleAccount: (password: string) => unlinkMutation.mutate(password),
