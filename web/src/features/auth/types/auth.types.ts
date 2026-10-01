@@ -16,6 +16,7 @@ export interface AuthUser {
 	display_name?: string;
 	email_verified?: boolean;
 	language?: string;
+	color_theme?: string;
 	role?: string;
 	circle_onboarding_status?: CircleOnboardingStatus;
 	circle_onboarding_updated_at?: string | null;

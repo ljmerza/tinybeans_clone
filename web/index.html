@@ -12,6 +12,26 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>Create TanStack App - web</title>
+    <script>
+      // Apply the saved light/dark mode and color theme before first paint so
+      // the page doesn't flash the default palette. Mirrors ThemeProvider.tsx.
+      (function () {
+        try {
+          var root = document.documentElement;
+          var mode = localStorage.getItem("tinybeans.themePreference");
+          var dark =
+            mode === "dark" ||
+            (mode !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          root.classList.toggle("dark", dark);
+          root.style.colorScheme = dark ? "dark" : "light";
+          var color = localStorage.getItem("tinybeans.colorTheme");
+          if (color && color !== "default") {
+            root.setAttribute("data-color-theme", color);
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

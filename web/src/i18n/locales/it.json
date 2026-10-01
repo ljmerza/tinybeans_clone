@@ -378,6 +378,19 @@
 						}
 					}
 				},
+				"color_theme": {
+					"title": "Tema colore",
+					"description": "Scegli una palette di colori. Viene salvata nel tuo account e funziona sia in modalità chiara che scura.",
+					"options": {
+						"default": "Predefinito",
+						"rose": "Rosa",
+						"peach": "Pesca",
+						"sage": "Salvia",
+						"sky": "Cielo",
+						"lavender": "Lavanda",
+						"midnight": "Mezzanotte"
+					}
+				},
 				"language": {
 					"title": "Lingua",
 					"description": "Scegli la lingua da usare in Tinybeans.",

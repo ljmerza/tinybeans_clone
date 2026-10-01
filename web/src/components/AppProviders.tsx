@@ -3,14 +3,17 @@
  * Encapsulates all context providers in a single component
  */
 
-import { AuthSessionProvider } from "@/features/auth/context/AuthSessionProvider";
-import { ThemeProvider } from "@/features/theme";
+import {
+	AuthSessionProvider,
+	useAuthSession,
+} from "@/features/auth/context/AuthSessionProvider";
+import { ThemeProvider, isColorTheme, useTheme } from "@/features/theme";
 import { createQueryPersistOptions } from "@/lib/query/persister";
 import { router } from "@/router";
 import { type QueryClient, useIsRestoring } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { RouterProvider } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Toaster } from "sonner";
 
 const persistOptions = createQueryPersistOptions();
@@ -26,6 +29,24 @@ function WaitForCacheRestore({ children }: { children: ReactNode }) {
 		return null;
 	}
 	return <>{children}</>;
+}
+
+/**
+ * Applies the color theme saved on the account whenever the session reports a
+ * new one, so the choice follows the user across devices.
+ */
+function SyncAccountColorTheme() {
+	const { user } = useAuthSession();
+	const { setColorTheme } = useTheme();
+	const savedColorTheme = user?.color_theme;
+
+	useEffect(() => {
+		if (isColorTheme(savedColorTheme)) {
+			setColorTheme(savedColorTheme);
+		}
+	}, [savedColorTheme, setColorTheme]);
+
+	return null;
 }
 
 interface AppProvidersProps {
@@ -50,6 +71,7 @@ export function AppProviders({
 			>
 				<WaitForCacheRestore>
 					<AuthSessionProvider isInitializing={isInitializing}>
+						<SyncAccountColorTheme />
 						{/* While bootstrapping (or on bootstrap error) render the given
 						    screen instead of the router: mounting the router early runs
 						    route guards before the session is restored, so a refresh on

@@ -378,6 +378,19 @@
 						}
 					}
 				},
+				"color_theme": {
+					"title": "Color theme",
+					"description": "Pick a color palette. It’s saved to your account and works in both light and dark mode.",
+					"options": {
+						"default": "Default",
+						"rose": "Rose",
+						"peach": "Peach",
+						"sage": "Sage",
+						"sky": "Sky",
+						"lavender": "Lavender",
+						"midnight": "Midnight"
+					}
+				},
 				"language": {
 					"title": "Language",
 					"description": "Choose the language used across Tinybeans.",
