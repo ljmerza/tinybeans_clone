@@ -379,7 +379,8 @@
 					"select_placeholder": "Selecciona un idioma",
 					"options": {
 						"en": "English",
-						"es": "Español"
+						"es": "Español",
+						"it": "Italiano"
 					}
 				}
 			},

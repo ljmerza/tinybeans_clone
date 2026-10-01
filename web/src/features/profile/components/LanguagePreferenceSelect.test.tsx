@@ -1,4 +1,5 @@
 import i18n from "@/i18n/config";
+import { localeLoaders } from "@/i18n/localeBackend";
 import { renderWithQueryClient } from "@/test-utils";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,14 +18,14 @@ afterEach(async () => {
 	await act(() => i18n.changeLanguage("en"));
 });
 
-async function chooseSpanish() {
+async function chooseLanguage(name: string) {
 	const trigger = await screen.findByRole("combobox", {
 		name: "Display language",
 	});
 	expect(trigger).toHaveTextContent("English");
 	// jsdom drops pointer event details, so open it the keyboard way.
 	fireEvent.keyDown(trigger, { key: "ArrowDown" });
-	fireEvent.click(await screen.findByRole("option", { name: "Español" }));
+	fireEvent.click(await screen.findByRole("option", { name }));
 }
 
 describe("LanguagePreferenceSelect", () => {
@@ -36,7 +37,7 @@ describe("LanguagePreferenceSelect", () => {
 			});
 
 		renderWithQueryClient(<LanguagePreferenceSelect />);
-		await chooseSpanish();
+		await chooseLanguage("Español");
 
 		await waitFor(() =>
 			expect(update).toHaveBeenCalledWith(
@@ -57,9 +58,29 @@ describe("LanguagePreferenceSelect", () => {
 			.mockRejectedValue(new Error("network down"));
 
 		renderWithQueryClient(<LanguagePreferenceSelect />);
-		await chooseSpanish();
+		await chooseLanguage("Español");
 
 		await waitFor(() => expect(update).toHaveBeenCalled());
+		await waitFor(() => expect(i18n.language).toBe("en"));
+		expect(
+			await screen.findByRole("combobox", { name: "Display language" }),
+		).toHaveTextContent("English");
+	});
+
+	it("stays in English without saving when the language fails to load", async () => {
+		const consoleError = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+		vi.spyOn(localeLoaders, "it").mockRejectedValue(
+			new Error("Failed to fetch dynamically imported module"),
+		);
+		const update = vi.spyOn(profileServices, "updateProfile");
+
+		renderWithQueryClient(<LanguagePreferenceSelect />);
+		await chooseLanguage("Italiano");
+
+		await waitFor(() => expect(consoleError).toHaveBeenCalled());
+		expect(update).not.toHaveBeenCalled();
 		await waitFor(() => expect(i18n.language).toBe("en"));
 		expect(
 			await screen.findByRole("combobox", { name: "Display language" }),

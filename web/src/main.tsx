@@ -6,7 +6,7 @@ import { AppBootstrap } from "./components/AppBootstrap";
 
 import "./styles.css";
 import "sonner/dist/styles.css";
-import "./i18n/config"; // Initialize i18n
+import { i18nReady } from "./i18n/config"; // Initialize i18n
 import reportWebVitals from "./reportWebVitals.ts";
 
 // Create QueryClient instance
@@ -23,11 +23,16 @@ const rootElement = document.getElementById("app");
 if (rootElement && !rootElement.innerHTML) {
 	const root = ReactDOM.createRoot(rootElement);
 
-	root.render(
-		<StrictMode>
-			<AppBootstrap queryClient={queryClient} />
-		</StrictMode>,
-	);
+	// Hold the first render until the startup language is loaded so Spanish or
+	// Italian users never see an English first paint. English is bundled, so
+	// for English users this resolves without any request.
+	void i18nReady.then(() => {
+		root.render(
+			<StrictMode>
+				<AppBootstrap queryClient={queryClient} />
+			</StrictMode>,
+		);
+	});
 }
 
 reportWebVitals();

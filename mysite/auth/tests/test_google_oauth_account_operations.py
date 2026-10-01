@@ -142,6 +142,12 @@ class TestNewGoogleUserLanguage(TestCase):
         self.assertEqual(action, "created")
         self.assertEqual(user.language, "es")
 
+    def test_new_user_gets_italian(self):
+        user, action = self.service.get_or_create_user(self.google_user_info, language="it")
+
+        self.assertEqual(action, "created")
+        self.assertEqual(user.language, "it")
+
     def test_new_user_without_language_uses_default(self):
         user, action = self.service.get_or_create_user(self.google_user_info)
 
@@ -158,11 +164,13 @@ class TestNewGoogleUserLanguage(TestCase):
 
     def test_callback_serializer_drops_unsupported_language(self):
         valid = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s", "language": "es"})
+        italian = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s", "language": "it"})
         unsupported = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s", "language": "fr"})
         missing = OAuthCallbackRequestSerializer(data={"code": "c", "state": "s"})
 
-        for serializer in (valid, unsupported, missing):
+        for serializer in (valid, italian, unsupported, missing):
             self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertEqual(valid.validated_data["language"], "es")
+        self.assertEqual(italian.validated_data["language"], "it")
         self.assertIsNone(unsupported.validated_data["language"])
         self.assertNotIn("language", missing.validated_data)

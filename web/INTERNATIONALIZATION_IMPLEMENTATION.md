@@ -21,6 +21,9 @@ Added comprehensive translation keys organized by domain:
 #### Spanish (`src/i18n/locales/es.json`)
 Complete Spanish translations matching all English keys, maintaining the same structure.
 
+#### Italian (`src/i18n/locales/it.json`)
+Italian translations of every English key, in the informal "tu" register used by the Spanish file.
+
 ### 2. Components Updated
 
 #### Core Components
@@ -192,6 +195,25 @@ Users pick their language in **Settings → General** (`LanguagePreferenceSelect
 New users default to their browser language (`src/i18n/browserLanguage.ts`), which is sent
 with signup and Google OAuth account creation. Logged-out pages also follow the browser language.
 
+## How Locales Load
+
+Only English is bundled into the main JavaScript: it's the default language and the fallback
+for every other one. Every other locale is its own lazily loaded chunk, so each user downloads
+only the language they use.
+
+- `src/i18n/localeBackend.ts` holds `localeLoaders`, one literal `import()` per locale
+  (`es: () => import("./locales/es.json")`, …), so Vite emits one hashed chunk per file. Don't
+  replace it with a template-literal import: that would also match `en.json`.
+- `src/i18n/config.ts` registers that map as a small i18next backend with
+  `partialBundledLanguages: true`, and exports `i18nReady`.
+- `src/main.tsx` waits for `i18nReady` before the first render, so a Spanish or Italian user never
+  sees an English first paint. For English users it resolves without any request.
+- `i18n.changeLanguage(lng)` loads the locale before switching, so `AuthSessionProvider` and
+  `LanguagePreferenceSelect` never render a half-loaded language.
+- If a chunk fails to load (e.g. offline), i18next keeps rendering the English fallback and nothing
+  crashes. `LanguagePreferenceSelect` treats that as a failed change: it restores the previous
+  language and doesn't save. i18next doesn't retry a failed locale until the page is reloaded.
+
 ## Testing Language Switching
 
 To test the implementation:
@@ -207,30 +229,31 @@ To test the implementation:
 3. **Check Current Language**:
    ```typescript
    const { i18n } = useTranslation();
-   console.log(i18n.language); // 'en' or 'es'
+   console.log(i18n.language); // 'en', 'es' or 'it'
    ```
 
 ## Adding New Languages
 
 To add a new language (e.g., French):
 
-1. Create `src/i18n/locales/fr.json` with all translation keys
-2. Update `src/i18n/config.ts`:
+1. Create `src/i18n/locales/fr.json` with all translation keys. Keep the key structure of
+   `en.json`, keep every `{{placeholder}}` as is, and keep the `_one`/`_other` plural pairs.
+2. Add `fr` to `SUPPORTED_LANGUAGES` in `src/i18n/browserLanguage.ts`. Browser tag matching
+   (`fr-CA` → `fr`) is driven by that list, so nothing else changes there.
+3. Add a loader to `localeLoaders` in `src/i18n/localeBackend.ts`. TypeScript requires an entry
+   for every supported language except English:
    ```typescript
-   import fr from './locales/fr.json';
-   
-   i18next.init({
-     resources: {
-       en: { translation: en },
-       es: { translation: es },
-       fr: { translation: fr }
-     },
-     // ...
-   });
+   export const localeLoaders: Record<LazyLanguage, LocaleLoader> = {
+     es: () => import("./locales/es.json"),
+     it: () => import("./locales/it.json"),
+     fr: () => import("./locales/fr.json"),
+   };
    ```
-3. Add `fr` to `SUPPORTED_LANGUAGES` and the tag matching in `src/i18n/browserLanguage.ts`
-4. Add a `twofa.settings.general.language.options.fr` label to every locale file
-5. Add `FRENCH = "fr", "French"` to the backend `Language` choices (`mysite/users/models/user.py`) and run `makemigrations` (choices are part of the migration state)
+   Don't add it to `resources` in `config.ts`: only English is bundled.
+4. Add a `twofa.settings.general.language.options.fr` label to every locale file, using the
+   language's own name ("Français"), like "English", "Español" and "Italiano".
+5. Add `FRENCH = "fr", "French"` to the backend `Language` choices (`mysite/users/models/user.py`) and run `makemigrations users` (choices are part of the migration state, so this creates a choices-only `AlterField`)
+6. Run a production build and check that `dist/assets/` has a separate `fr-<hash>.js` chunk.
 
 ## Adding New Translation Keys
 

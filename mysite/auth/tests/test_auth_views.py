@@ -40,7 +40,7 @@ class AuthViewSecurityTests(TestCase):
     @patch("mysite.auth.views.send_email_task.delay")
     def test_signup_saves_requested_language(self, _mock_delay):
         payload = {"password": "StrongPass123", "first_name": "Lang", "last_name": "User"}
-        cases = [("es", "es"), ("xx", "en"), (None, "en")]
+        cases = [("es", "es"), ("it", "it"), ("xx", "en"), (None, "en")]
         for index, (sent, expected) in enumerate(cases):
             body = {**payload, "email": f"lang{index}@example.com"}
             if sent is not None:

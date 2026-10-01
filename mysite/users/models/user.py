@@ -78,6 +78,7 @@ class Language(models.TextChoices):
 
     ENGLISH = "en", "English"
     SPANISH = "es", "Spanish"
+    ITALIAN = "it", "Italian"
 
 
 class CircleOnboardingStatus(models.TextChoices):
