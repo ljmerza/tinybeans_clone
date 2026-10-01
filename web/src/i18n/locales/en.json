@@ -20,7 +20,11 @@
 		"remove": "Remove",
 		"back_home": "← Back to home",
 		"back_to_login": "← Back to login",
-		"done": "Done"
+		"done": "Done",
+		"initializing": "Initializing...",
+		"init_error_title": "Initialization Error",
+		"init_error_message": "Failed to start application",
+		"refresh": "Refresh"
 	},
 	"nav": {
 		"home": "Home",
@@ -156,7 +160,8 @@
 			"remove_confirm_description": "You’ll need to complete 2FA again the next time you sign in from this device.",
 			"remove_confirm_cta": "Remove device",
 			"back_to_settings": "← Back to 2FA settings",
-			"count_label": "{{count}} trusted {{count, plural, one {device} other {devices}}}"
+			"count_label_one": "{{count}} trusted device",
+			"count_label_other": "{{count}} trusted devices"
 		},
 		"setup_title": "Set up Two-Factor Authentication",
 		"verify_title": "Two-Factor Authentication Required",

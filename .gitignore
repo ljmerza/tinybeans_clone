@@ -120,3 +120,6 @@ volumes/
 
 # Family milestone notes (names and birth dates; repo is public)
 docs/milestones.md
+
+# In-repo git worktrees used for isolated dev work
+.wt-*/

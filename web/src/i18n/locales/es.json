@@ -20,7 +20,11 @@
 		"remove": "Eliminar",
 		"back_home": "← Volver al inicio",
 		"back_to_login": "← Volver al inicio de sesión",
-		"done": "Listo"
+		"done": "Listo",
+		"initializing": "Iniciando...",
+		"init_error_title": "Error de inicialización",
+		"init_error_message": "No se pudo iniciar la aplicación",
+		"refresh": "Actualizar"
 	},
 	"nav": {
 		"home": "Inicio",
@@ -156,7 +160,8 @@
 			"remove_confirm_description": "Tendrás que completar 2FA la próxima vez que inicies sesión desde este dispositivo.",
 			"remove_confirm_cta": "Eliminar dispositivo",
 			"back_to_settings": "← Volver a ajustes de 2FA",
-			"count_label": "{{count}} dispositivo{{count, plural, one {} other {s}}} de confianza"
+			"count_label_one": "{{count}} dispositivo de confianza",
+			"count_label_other": "{{count}} dispositivos de confianza"
 		},
 		"setup_title": "Configurar autenticación de dos factores",
 		"verify_title": "Se requiere autenticación de dos factores",
@@ -223,7 +228,8 @@
 			"copy_code": "No se pudo copiar el código. Copia manualmente.",
 			"copy_codes": "No se pudieron copiar los códigos. Copia manualmente.",
 			"invalid_code": "Código inválido. Inténtalo de nuevo.",
-			"load_settings": "No pudimos cargar tu configuración de 2FA. Inténtalo de nuevo."
+			"load_settings": "No pudimos cargar tu configuración de 2FA. Inténtalo de nuevo.",
+			"add_trusted_device": "No se pudo agregar el dispositivo de confianza."
 		},
 		"setup": {
 			"choose_method": "Elegir método 2FA",
@@ -700,6 +706,30 @@
 					"existing_user": "{{email}} ya tiene una cuenta y recibirá una notificación.",
 					"new_user": "Enviaremos un correo a {{email}} con los pasos para unirse."
 				}
+			},
+			"members": {
+				"list": {
+					"title": "Miembros del círculo",
+					"description": "Administra a los miembros activos de este círculo.",
+					"loading": "Cargando miembros…",
+					"empty_title": "Aún no hay miembros",
+					"empty_description": "Invita a personas a unirse a este círculo.",
+					"error": "Algo salió mal ({{status}}). Inténtalo nuevamente.",
+					"retry": "Reintentar",
+					"remove_title": "¿Eliminar a {{name}} de este círculo?",
+					"remove_description": "Se revocará su acceso a las publicaciones compartidas. Necesitará una nueva invitación para regresar.",
+					"remove_confirm": "Sí, eliminar miembro"
+				},
+				"role": {
+					"admin": "Administrador",
+					"member": "Miembro",
+					"owner": "Propietario"
+				},
+				"you": "Tú",
+				"remove": "Eliminar",
+				"removing": "Eliminando…",
+				"joined_at": "Se unió el {{joinedAt}}",
+				"cannot_remove_owner": "No se puede eliminar"
 			}
 		}
 	},
@@ -878,7 +908,8 @@
 			"partial_token_invalid": "Token parcial inválido o expirado. Por favor inicie sesión de nuevo",
 			"not_configured_for_account": "2FA no configurado para esta cuenta",
 			"must_be_enabled_for_recovery": "2FA debe estar habilitado para generar códigos de recuperación"
-		}
+		},
+		"cannot_remove_owner": "No se puede eliminar al propietario del círculo. La persona que creó el círculo no puede ser eliminada."
 	},
 	"profile": {
 	"notifications": {

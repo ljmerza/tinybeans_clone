@@ -39,4 +39,42 @@ describe("i18n config", () => {
 			"Pubblica 3",
 		);
 	});
+
+	it("keeps <html lang> on the language being shown", async () => {
+		await i18nReady;
+		expect(document.documentElement.lang).toBe("en");
+
+		await i18n.changeLanguage("it");
+		expect(document.documentElement.lang).toBe("it");
+
+		await i18n.changeLanguage("en");
+		expect(document.documentElement.lang).toBe("en");
+	});
+
+	it("leaves <html lang> on English when a locale chunk fails", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(localeLoaders, "es").mockRejectedValue(new Error("offline"));
+
+		await i18n.changeLanguage("es");
+
+		expect(i18n.resolvedLanguage).toBe("en");
+		expect(document.documentElement.lang).toBe("en");
+	});
+
+	it("uses plural keys for the trusted device count", async () => {
+		expect(i18n.t("twofa.trusted_devices.count_label", { count: 1 })).toBe(
+			"1 trusted device",
+		);
+		expect(i18n.t("twofa.trusted_devices.count_label", { count: 2 })).toBe(
+			"2 trusted devices",
+		);
+
+		await i18n.changeLanguage("it");
+		expect(i18n.t("twofa.trusted_devices.count_label", { count: 1 })).toBe(
+			"1 dispositivo attendibile",
+		);
+		expect(i18n.t("twofa.trusted_devices.count_label", { count: 3 })).toBe(
+			"3 dispositivi attendibili",
+		);
+	});
 });

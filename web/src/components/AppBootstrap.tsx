@@ -9,6 +9,7 @@ import { ensureCsrfToken } from "@/lib/csrf";
 import type { HttpError } from "@/lib/httpClient";
 import type { QueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppProviders } from "./AppProviders";
 import { Layout } from "./Layout";
 
@@ -20,6 +21,7 @@ interface AppBootstrapProps {
  * Bootstrap component that initializes CSRF and session before rendering app
  */
 export function AppBootstrap({ queryClient }: AppBootstrapProps) {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<"loading" | "ready" | "error">(
 		"loading",
 	);
@@ -86,7 +88,7 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 	if (status === "loading") {
 		return (
 			<AppProviders queryClient={queryClient} isInitializing={true}>
-				<Layout.Loading showHeader={false} message="Initializing..." />
+				<Layout.Loading showHeader={false} message={t("common.initializing")} />
 			</AppProviders>
 		);
 	}
@@ -96,9 +98,9 @@ export function AppBootstrap({ queryClient }: AppBootstrapProps) {
 			<AppProviders queryClient={queryClient} isInitializing={false}>
 				<Layout.Error
 					showHeader={false}
-					title="Initialization Error"
-					message={error?.message ?? "Failed to start application"}
-					actionLabel="Refresh"
+					title={t("common.init_error_title")}
+					message={error?.message ?? t("common.init_error_message")}
+					actionLabel={t("common.refresh")}
 					onAction={() => window.location.reload()}
 				/>
 			</AppProviders>
