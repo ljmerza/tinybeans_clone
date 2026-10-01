@@ -1,6 +1,6 @@
 /**
  * App Bootstrap
- * Handles async startup logic (CSRF + session hydration) with Suspense
+ * Handles async startup logic (CSRF + session hydration), showing a loading or error screen until it finishes
  */
 
 import { authKeys, authServices, refreshAccessToken } from "@/features/auth";
