@@ -5,6 +5,7 @@ import {
 	useAdjacentFeedDays,
 	useKeepFeed,
 } from "@/features/keeps";
+import { useSwipeNavigation } from "@/features/keeps/hooks/useSwipeNavigation";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useMemo } from "react";
@@ -63,6 +64,13 @@ export function CalendarDayRouteView() {
 			params: { date: nextDate },
 			search: { circle: circleSlug },
 		});
+
+	// Swipe left for the next day with photos, right for the previous one,
+	// like the arrows beside the date.
+	const swipeRef = useSwipeNavigation<HTMLDivElement>({
+		onSwipeLeft: () => adjacent?.next && goToDay(adjacent.next),
+		onSwipeRight: () => adjacent?.previous && goToDay(adjacent.previous),
+	});
 
 	const renderLoader = () => (
 		<LoadingState
@@ -142,7 +150,7 @@ export function CalendarDayRouteView() {
 	return (
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
-			<div className="space-y-6">
+			<div ref={swipeRef} className="space-y-6">
 				<header className="mx-auto max-w-[var(--rsf-post-max-width)] space-y-2">
 					<div className="flex items-center justify-between gap-2">
 						<Button

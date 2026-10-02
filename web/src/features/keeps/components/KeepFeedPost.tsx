@@ -45,6 +45,7 @@ import {
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
+import { useKeepPhotoViewer } from "./useKeepPhotoViewer";
 
 /** Comments each "Show more" reveals after the first RECENT_COMMENT_COUNT. */
 const COMMENT_PAGE_SIZE = 5;
@@ -84,6 +85,7 @@ export function KeepFeedPost({
 	const likersHidden = likers.data
 		? likers.data.count - likers.data.results.length
 		: 0;
+	const photoViewer = useKeepPhotoViewer(keep);
 
 	const post = useMemo(
 		() =>
@@ -170,7 +172,7 @@ export function KeepFeedPost({
 					<PostTitle />
 					<PostCaption />
 				</div>
-				<PostMedia>
+				<PostMedia {...photoViewer.mediaProps}>
 					<PostMediaPrevButton aria-label={t("pages.feed.previous_photo")} />
 					<PostMediaNextButton aria-label={t("pages.feed.next_photo")} />
 					<PostMediaCounter />
@@ -234,6 +236,7 @@ export function KeepFeedPost({
 					</div>
 				</div>
 			</PostRoot>
+			{photoViewer.viewer}
 			<Dialog open={likersOpen} onOpenChange={setLikersOpen}>
 				<DialogContent
 					className="max-w-sm"

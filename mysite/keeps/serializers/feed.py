@@ -105,6 +105,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
                     "id": {"type": "integer"},
                     "media_type": {"type": "string", "enum": ["photo", "video"]},
                     "url": {"type": "string"},
+                    "original_url": {"type": "string"},
                     "poster_url": {"type": "string", "nullable": True},
                     "width": {"type": "integer", "nullable": True},
                     "height": {"type": "integer", "nullable": True},
@@ -120,18 +121,22 @@ class KeepFeedSerializer(serializers.ModelSerializer):
                 continue
             if media.media_type == "video":
                 url = media.get_url("original", FEED_URL_EXPIRES_IN)
+                original_url = url
                 poster_url = media.get_url("gallery", FEED_URL_EXPIRES_IN)
             else:
                 # The gallery rendition keeps the original's aspect ratio, so the
                 # original width/height still describe its shape.
                 size = "gallery" if media.thumbnails_generated else "original"
                 url = media.get_url(size, FEED_URL_EXPIRES_IN)
+                # Full size, for viewing one photo on its own.
+                original_url = url if size == "original" else media.get_url("original", FEED_URL_EXPIRES_IN)
                 poster_url = None
             items.append(
                 {
                     "id": media.id,
                     "media_type": media.media_type,
                     "url": url,
+                    "original_url": original_url,
                     "poster_url": poster_url,
                     "width": media.width,
                     "height": media.height,
