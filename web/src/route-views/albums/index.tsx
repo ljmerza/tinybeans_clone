@@ -1,6 +1,11 @@
 import { EmptyState, Layout } from "@/components";
 import { Button } from "@/components/ui/button";
-import { type Album, AlbumFormDialog, useAlbums } from "@/features/albums";
+import {
+	type Album,
+	AlbumFormDialog,
+	useAdminCircleIds,
+	useAlbums,
+} from "@/features/albums";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Images, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -53,6 +58,7 @@ export function AlbumsRouteView() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const [creating, setCreating] = useState(false);
+	const canCreate = useAdminCircleIds().size > 0;
 	const {
 		data,
 		isLoading,
@@ -91,12 +97,13 @@ export function AlbumsRouteView() {
 		);
 	}
 
-	const newAlbumButton = (
+	// Only circle admins create albums.
+	const newAlbumButton = canCreate ? (
 		<Button className="shrink-0" onClick={() => setCreating(true)}>
 			<Plus aria-hidden="true" />
 			{t("pages.albums.new_album")}
 		</Button>
-	);
+	) : null;
 
 	return (
 		<Layout>
@@ -110,7 +117,9 @@ export function AlbumsRouteView() {
 					/>
 				) : (
 					<>
-						<div className="flex justify-end">{newAlbumButton}</div>
+						{newAlbumButton && (
+							<div className="flex justify-end">{newAlbumButton}</div>
+						)}
 						<ul
 							className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3"
 							aria-label={t("pages.albums.aria_label")}

@@ -52,9 +52,10 @@ export function AlbumFormDialog({
 	const ids = useId();
 	const editing = album !== undefined;
 	const { data: memberships } = useCircleMemberships();
-	const circles = ((memberships ?? []) as CircleMembershipSummary[]).map(
-		(membership) => membership.circle,
-	);
+	// Only admins create albums, so offer only the circles the user admins.
+	const circles = ((memberships ?? []) as CircleMembershipSummary[])
+		.filter((membership) => membership.role === "admin")
+		.map((membership) => membership.circle);
 	const create = useCreateAlbum();
 	const update = useUpdateAlbum();
 	const saving = create.isPending || update.isPending;

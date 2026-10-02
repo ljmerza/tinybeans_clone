@@ -8,10 +8,14 @@ import { albumServices } from "../api/services";
 import { makeAlbum } from "../testData";
 import { AlbumFormDialog } from "./AlbumFormDialog";
 
-const membership = (id: number, name: string) => ({
+const membership = (
+	id: number,
+	name: string,
+	role: "admin" | "member" = "admin",
+) => ({
 	membership_id: id,
 	circle: { id, name, slug: name.toLowerCase(), member_count: 2 },
-	role: "member",
+	role,
 	is_owner: false,
 	created_at: "2026-01-01T00:00:00Z",
 });
@@ -83,6 +87,32 @@ describe("AlbumFormDialog", () => {
 		fireEvent.change(screen.getByLabelText("Name"), {
 			target: { value: "Reunion" },
 		});
+		await act(async () =>
+			fireEvent.click(screen.getByRole("button", { name: "Create album" })),
+		);
+
+		expect(create).toHaveBeenCalledWith(
+			expect.objectContaining({ circle: 9, name: "Reunion" }),
+		);
+	});
+
+	it("only offers the circles the viewer is an admin of", async () => {
+		mockCircles(membership(7, "Family", "member"), membership(9, "Cousins"));
+		const create = vi
+			.spyOn(albumServices, "create")
+			.mockResolvedValue(makeAlbum());
+
+		renderWithQueryClient(<AlbumFormDialog open onOpenChange={vi.fn()} />);
+
+		fireEvent.change(await screen.findByLabelText("Name"), {
+			target: { value: "Reunion" },
+		});
+		// One admin circle: no picker, and the album goes there.
+		await waitFor(() =>
+			expect(
+				screen.queryByRole("combobox", { name: "Circle" }),
+			).not.toBeInTheDocument(),
+		);
 		await act(async () =>
 			fireEvent.click(screen.getByRole("button", { name: "Create album" })),
 		);

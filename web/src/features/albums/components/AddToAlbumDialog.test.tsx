@@ -1,4 +1,5 @@
 import "@/i18n/config";
+import { circleServices } from "@/features/circles";
 import { type FeedKeep, KeepFeedPost } from "@/features/keeps";
 import { renderWithQueryClient } from "@/test-utils";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
@@ -50,6 +51,23 @@ function renderDialog() {
 afterEach(() => {
 	vi.restoreAllMocks();
 });
+
+// The viewer's role in the post's circle (7); only admins add posts to albums.
+function mockViewerRole(role: "admin" | "member") {
+	vi.spyOn(circleServices, "listMemberships").mockResolvedValue({
+		data: {
+			circles: [
+				{
+					membership_id: 1,
+					circle: { id: 7, name: "Family", slug: "family", member_count: 2 },
+					role,
+					is_owner: false,
+					created_at: "2026-01-01T00:00:00Z",
+				},
+			],
+		},
+	});
+}
 
 describe("AddToAlbumDialog", () => {
 	it("lists the circle's albums, checked when the post is in them", async () => {
@@ -152,6 +170,7 @@ describe("AddToAlbumDialog", () => {
 	});
 
 	it("opens from a post's action row", async () => {
+		mockViewerRole("admin");
 		const list = vi
 			.spyOn(albumServices, "list")
 			.mockResolvedValue(albumPage([beach]));
@@ -159,7 +178,9 @@ describe("AddToAlbumDialog", () => {
 		renderWithQueryClient(<KeepFeedPost keep={keep} />);
 		// Nothing is fetched until the dialog opens.
 		expect(list).not.toHaveBeenCalled();
-		fireEvent.click(screen.getByRole("button", { name: "Add to album" }));
+		fireEvent.click(
+			await screen.findByRole("button", { name: "Add to album" }),
+		);
 
 		expect(
 			await screen.findByRole("dialog", { name: "Add to album" }),
@@ -167,5 +188,18 @@ describe("AddToAlbumDialog", () => {
 		expect(
 			await screen.findByRole("checkbox", { name: /Beach trip/ }),
 		).toBeChecked();
+	});
+
+	it("isn't offered to members who aren't admins", async () => {
+		mockViewerRole("member");
+		const list = vi.spyOn(circleServices, "listMemberships");
+
+		renderWithQueryClient(<KeepFeedPost keep={keep} />);
+
+		await waitFor(() => expect(list).toHaveBeenCalled());
+		await act(async () => {});
+		expect(
+			screen.queryByRole("button", { name: "Add to album" }),
+		).not.toBeInTheDocument();
 	});
 });

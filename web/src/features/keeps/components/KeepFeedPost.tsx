@@ -6,6 +6,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
+import { useAdminCircleIds } from "@/features/albums/hooks/useAdminCircleIds";
 import { Images, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -89,6 +90,8 @@ export function KeepFeedPost({
 		: 0;
 	const photoViewer = useKeepPhotoViewer(keep);
 	const [albumsOpen, setAlbumsOpen] = useState(false);
+	// Only circle admins put posts into albums.
+	const canAddToAlbum = useAdminCircleIds().has(keep.circle.id);
 
 	const post = useMemo(
 		() =>
@@ -198,11 +201,13 @@ export function KeepFeedPost({
 									: t("pages.feed.favorite")
 							}
 						/>
-						<PostAction
-							aria-label={t("pages.albums.add.action")}
-							icon={<Images strokeWidth={1.8} />}
-							onClick={() => setAlbumsOpen(true)}
-						/>
+						{canAddToAlbum && (
+							<PostAction
+								aria-label={t("pages.albums.add.action")}
+								icon={<Images strokeWidth={1.8} />}
+								onClick={() => setAlbumsOpen(true)}
+							/>
+						)}
 						<PostShareButton aria-label={t("pages.feed.share")} />
 						{keep.can_delete && (
 							<>
