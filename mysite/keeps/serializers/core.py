@@ -61,7 +61,7 @@ class KeepMediaSerializer(serializers.ModelSerializer):
 class MilestoneSerializer(serializers.ModelSerializer):
     """Serializer for milestone information."""
 
-    child_name = serializers.CharField(source="child_profile.name", read_only=True)
+    child_name = serializers.CharField(source="child_profile.display_name", read_only=True)
 
     class Meta:
         model = Milestone

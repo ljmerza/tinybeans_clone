@@ -52,5 +52,5 @@ class Milestone(models.Model):
         ]
 
     def __str__(self):
-        child_name = self.child_profile.name if self.child_profile else "Unknown child"
+        child_name = self.child_profile.display_name if self.child_profile else "Unknown child"
         return f"{self.milestone_type} for {child_name}"

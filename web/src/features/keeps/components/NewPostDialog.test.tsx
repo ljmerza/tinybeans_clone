@@ -10,7 +10,7 @@ vi.mock("../utils/exifDate", () => ({ readExifDate: vi.fn() }));
 
 import { keepServices } from "../api/services";
 import { type UploadMediaInput, uploadMedia } from "../api/uploadMedia";
-import type { FeedKeep, MediaUploadRecord } from "../types";
+import type { FeedKeep, KeepChild, MediaUploadRecord } from "../types";
 import { readExifDate } from "../utils/exifDate";
 import { NewPostDialog } from "./NewPostDialog";
 
@@ -69,6 +69,7 @@ beforeEach(() => {
 		...input,
 	}));
 	vi.spyOn(keepServices, "deleteKeep").mockResolvedValue(undefined);
+	vi.spyOn(keepServices, "getChildren").mockResolvedValue([]);
 	// Visible in the feed on the first check.
 	vi.spyOn(keepServices, "getFeedKeep").mockResolvedValue({} as FeedKeep);
 	URL.createObjectURL = vi.fn(() => "blob:preview");
@@ -264,5 +265,133 @@ describe("NewPostDialog", () => {
 
 		await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
 		expect(keepServices.deleteKeep).toHaveBeenCalledWith("keep-1");
+	});
+});
+
+describe("NewPostDialog milestones", () => {
+	const child = (
+		id: string,
+		name: string,
+		circleId = circle.id,
+	): KeepChild => ({
+		id,
+		display_name: name,
+		circle: { id: circleId, name: "Family", slug: "family" },
+		milestone_count: 0,
+	});
+
+	beforeEach(() => {
+		// Radix Select scrolls the chosen option into view; jsdom can't.
+		Element.prototype.scrollIntoView = vi.fn();
+		vi.mocked(uploadMedia).mockImplementation(async (input) => uploaded(input));
+	});
+
+	function choose(label: string, option: string) {
+		fireEvent.keyDown(screen.getByLabelText(label), { key: "ArrowDown" });
+		fireEvent.click(screen.getByRole("option", { name: option }));
+	}
+
+	async function pickAndOpenMilestone(name: string) {
+		await screen.findByRole("button", { name: "Post" });
+		pickFiles([photo(name)]);
+		fireEvent.click(
+			screen.getByRole("button", { name: `Mark ${name} as a milestone` }),
+		);
+	}
+
+	it("posts a photo as a milestone for a child in its circle", async () => {
+		vi.mocked(keepServices.getChildren).mockResolvedValue([
+			child("emma", "Emma"),
+			child("liam", "Liam"),
+			child("elsewhere", "Cousin", 99),
+		]);
+		const { onOpenChange } = renderDialog();
+		await pickAndOpenMilestone("steps.jpg");
+
+		// A milestone needs its type before it can post.
+		expect(screen.getByRole("button", { name: "Post" })).toBeDisabled();
+		choose("Milestone for steps.jpg", "First steps");
+		fireEvent.keyDown(screen.getByLabelText("Child for steps.jpg"), {
+			key: "ArrowDown",
+		});
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent),
+		).toEqual(["No one in particular", "Emma", "Liam"]);
+		fireEvent.click(screen.getByRole("option", { name: "Liam" }));
+		await clickPost();
+
+		await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+		expect(keepServices.createKeep).toHaveBeenCalledWith(
+			expect.objectContaining({
+				keep_type: "milestone",
+				milestone_data: {
+					milestone_type: "first_steps",
+					child_profile: "liam",
+				},
+			}),
+		);
+	});
+
+	it("picks an only child for the milestone", async () => {
+		vi.mocked(keepServices.getChildren).mockResolvedValue([
+			child("emma", "Emma"),
+		]);
+		renderDialog();
+		await waitFor(() => expect(keepServices.getChildren).toHaveBeenCalled());
+		await pickAndOpenMilestone("tooth.jpg");
+
+		await waitFor(() =>
+			expect(screen.getByLabelText("Child for tooth.jpg")).toHaveTextContent(
+				"Emma",
+			),
+		);
+		choose("Milestone for tooth.jpg", "First tooth");
+		await clickPost();
+
+		await waitFor(() =>
+			expect(keepServices.createKeep).toHaveBeenCalledWith(
+				expect.objectContaining({
+					milestone_data: {
+						milestone_type: "first_tooth",
+						child_profile: "emma",
+					},
+				}),
+			),
+		);
+	});
+
+	it("has no child picker when the circle has no children", async () => {
+		renderDialog();
+		await pickAndOpenMilestone("party.jpg");
+
+		expect(screen.queryByLabelText("Child for party.jpg")).toBeNull();
+		choose("Milestone for party.jpg", "Birthday");
+		await clickPost();
+
+		await waitFor(() =>
+			expect(keepServices.createKeep).toHaveBeenCalledWith(
+				expect.objectContaining({
+					keep_type: "milestone",
+					milestone_data: { milestone_type: "birthday", child_profile: null },
+				}),
+			),
+		);
+	});
+
+	it("posts a plain photo once the milestone is removed", async () => {
+		renderDialog();
+		await pickAndOpenMilestone("beach.jpg");
+
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: "Remove the milestone from beach.jpg",
+			}),
+		);
+		await clickPost();
+
+		await waitFor(() => expect(keepServices.createKeep).toHaveBeenCalled());
+		const [input] = vi.mocked(keepServices.createKeep).mock.calls[0];
+		expect(input.keep_type).toBe("media");
+		expect(input).not.toHaveProperty("milestone_data");
 	});
 });

@@ -427,6 +427,28 @@
 			}
 		}
 	},
+	"milestones": {
+		"badge_label": "{{milestone}}. See milestones",
+		"types": {
+			"first_word": "First word",
+			"first_steps": "First steps",
+			"first_tooth": "First tooth",
+			"first_day_school": "First day of school",
+			"birthday": "Birthday",
+			"height_weight": "Height & weight",
+			"other": "Milestone"
+		},
+		"age": {
+			"years_one": "{{count}} yr",
+			"years_other": "{{count}} yrs",
+			"months_one": "{{count}} mo",
+			"months_other": "{{count}} mo",
+			"weeks_one": "{{count}} wk",
+			"weeks_other": "{{count}} wks",
+			"days_one": "{{count}} day",
+			"days_other": "{{count}} days"
+		}
+	},
 	"pages": {
 		"home": {
 			"welcome": "Welcome",
@@ -443,6 +465,17 @@
 			"empty_message": "Tap the bookmark on any post to save it here.",
 			"end": "That's all of your favorites.",
 			"aria_label": "Your favorite posts"
+		},
+		"milestones": {
+			"loading": "Loading milestones…",
+			"error_title": "Couldn't load milestones",
+			"error_message": "Something went wrong. Please try again.",
+			"empty_title": "No milestones yet",
+			"empty_message": "When you post a photo, tap Milestone to mark it as one.",
+			"end": "That's every milestone so far.",
+			"aria_label": "Milestones",
+			"children_label": "Whose milestones",
+			"everyone": "Everyone"
 		},
 		"feed": {
 			"new_post": {
@@ -467,6 +500,16 @@
 				"retry_failed": "Retry failed uploads",
 				"skip_failed": "Skip failed",
 				"discard": "Discard post",
+				"milestone": {
+					"open": "Milestone",
+					"add": "Mark {{name}} as a milestone",
+					"type_label": "Milestone for {{name}}",
+					"type_placeholder": "Which milestone?",
+					"other_type": "Something else",
+					"child_label": "Child for {{name}}",
+					"no_child": "No one in particular",
+					"remove": "Remove the milestone from {{name}}"
+				},
 				"status": {
 					"queued": "Waiting…",
 					"uploading": "Uploading… {{percent}}%",
@@ -873,6 +916,7 @@
 		"circle_membership_required": "You must be a member of this circle to create keeps.",
 		"milestone_required": "Milestone data is required for milestone keeps.",
 		"milestone_not_allowed": "Milestone data should only be provided for milestone keeps.",
+		"milestone_child_not_in_circle": "That child isn't in this circle.",
 		"media_files_required": "Media keeps should include media files.",
 		"reaction_exists": "You have already reacted to this keep.",
 		"keep_update_forbidden": "You can only update keeps you created or as a circle admin.",
