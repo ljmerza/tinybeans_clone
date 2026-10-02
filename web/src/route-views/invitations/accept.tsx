@@ -149,7 +149,7 @@ export function InvitationAcceptContent({
 						</p>
 						<Button
 							variant="secondary"
-							onClick={() => navigate({ to: "/circles" })}
+							onClick={() => navigate({ to: "/profile/circles" })}
 						>
 							{t("pages.inviteAccept.viewCircles")}
 						</Button>

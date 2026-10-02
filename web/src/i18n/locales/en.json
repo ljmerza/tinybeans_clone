@@ -29,7 +29,6 @@
 	"nav": {
 		"home": "Home",
 		"calendar": "Calendar",
-		"circles": "Circles",
 		"login": "Login",
 		"signup": "Sign up",
 		"logout": "Logout",
@@ -350,7 +349,8 @@
 			"tabs": {
 				"general": "General",
 				"two_factor": "Two-Factor Authentication",
-				"notifications": "Notifications"
+				"notifications": "Notifications",
+				"circles": "Circles"
 			},
 			"general": {
 				"title": "General settings",
@@ -475,8 +475,6 @@
 					"failed": "Upload failed"
 				}
 			},
-			"title": "Your feed",
-			"subtitle": "The newest photos from all of your circles.",
 			"aria_label": "Photo feed",
 			"loading": "Loading your feed…",
 			"loading_more": "Loading more photos…",
@@ -606,8 +604,6 @@
 		},
 		"circles": {
 			"index": {
-				"title": "Your circles",
-				"subtitle": "Select a circle to manage members and invitations.",
 				"loading": "Loading circles…",
 				"error_title": "Can't load circles",
 				"error_message": "We couldn't load your circles. Please try again.",

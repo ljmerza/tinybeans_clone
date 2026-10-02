@@ -171,7 +171,7 @@ export function useLogin(options?: { redirect?: string }) {
 							params: { circleId: String(circleId) },
 						});
 					} else {
-						navigate({ to: "/circles" });
+						navigate({ to: "/profile/circles" });
 					}
 					return;
 				}
@@ -278,7 +278,7 @@ export function useSignup(options?: { redirect?: string }) {
 							params: { circleId: String(circleId) },
 						});
 					} else {
-						navigate({ to: "/circles" });
+						navigate({ to: "/profile/circles" });
 					}
 					return;
 				}

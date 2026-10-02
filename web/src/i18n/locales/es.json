@@ -29,7 +29,6 @@
 	"nav": {
 		"home": "Inicio",
 		"calendar": "Calendario",
-		"circles": "Círculos",
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
 		"logout": "Cerrar sesión",
@@ -350,7 +349,8 @@
 			"tabs": {
 				"general": "General",
 				"two_factor": "Autenticación de dos factores",
-				"notifications": "Notificaciones"
+				"notifications": "Notificaciones",
+				"circles": "Círculos"
 			},
 			"general": {
 				"title": "Configuración general",
@@ -475,8 +475,6 @@
 					"failed": "Error al subir"
 				}
 			},
-			"title": "Tu feed",
-			"subtitle": "Las fotos más recientes de todos tus círculos.",
 			"aria_label": "Feed de fotos",
 			"loading": "Cargando tu feed…",
 			"loading_more": "Cargando más fotos…",
@@ -606,8 +604,6 @@
 		},
 		"circles": {
 			"index": {
-				"title": "Tus círculos",
-				"subtitle": "Selecciona un círculo para gestionar miembros e invitaciones.",
 				"loading": "Cargando círculos…",
 				"error_title": "No se pueden cargar los círculos",
 				"error_message": "No pudimos cargar tus círculos. Inténtalo de nuevo.",
