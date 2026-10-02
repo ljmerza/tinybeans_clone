@@ -69,16 +69,12 @@ export function HomeFeedView() {
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
 			<div className="space-y-6">
-				<header className="mx-auto flex max-w-[var(--rsf-post-max-width)] items-start justify-between gap-4">
-					<div className="space-y-2">
-						<h1 className="heading-2">{t("pages.feed.title")}</h1>
-						<p className="text-subtitle">{t("pages.feed.subtitle")}</p>
-					</div>
+				<div className="mx-auto flex max-w-[var(--rsf-post-max-width)] justify-end">
 					<Button className="shrink-0" onClick={() => setComposerOpen(true)}>
 						<Plus aria-hidden="true" />
 						{t("pages.feed.new_post.open")}
 					</Button>
-				</header>
+				</div>
 				{/* Mounted only while open, so the feed doesn't load circles up front. */}
 				{composerOpen && <NewPostDialog open onOpenChange={setComposerOpen} />}
 

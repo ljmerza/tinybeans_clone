@@ -475,8 +475,6 @@
 					"failed": "Caricamento non riuscito"
 				}
 			},
-			"title": "Il tuo feed",
-			"subtitle": "Le foto più recenti da tutte le tue cerchie.",
 			"aria_label": "Feed di foto",
 			"loading": "Caricamento del feed…",
 			"loading_more": "Caricamento di altre foto…",
