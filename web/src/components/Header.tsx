@@ -28,9 +28,6 @@ function AuthenticatedHeaderActions() {
 				<Link to="/favorites">{t("nav.favorites")}</Link>
 			</Button>
 			<Button asChild variant="ghost" size="sm">
-				<Link to="/circles">{t("nav.circles")}</Link>
-			</Button>
-			<Button asChild variant="ghost" size="sm">
 				<Link to="/profile/general">{t("nav.settings")}</Link>
 			</Button>
 			<Button asChild variant="ghost" size="sm">

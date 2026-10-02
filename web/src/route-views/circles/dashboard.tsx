@@ -53,7 +53,7 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 			<div className="container-page space-y-8">
 				<div className="space-y-4">
 					<Button asChild variant="ghost" size="sm" className="px-0">
-						<Link to="/circles">
+						<Link to="/profile/circles">
 							{t("pages.circles.dashboard.back_to_list")}
 						</Link>
 					</Button>

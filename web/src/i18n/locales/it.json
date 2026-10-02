@@ -29,7 +29,6 @@
 	"nav": {
 		"home": "Home",
 		"calendar": "Calendario",
-		"circles": "Cerchie",
 		"login": "Accedi",
 		"signup": "Registrati",
 		"logout": "Esci",
@@ -350,7 +349,8 @@
 			"tabs": {
 				"general": "Generali",
 				"two_factor": "Autenticazione a due fattori",
-				"notifications": "Notifiche"
+				"notifications": "Notifiche",
+				"circles": "Cerchie"
 			},
 			"general": {
 				"title": "Impostazioni generali",
@@ -607,8 +607,6 @@
 		},
 		"circles": {
 			"index": {
-				"title": "Le tue cerchie",
-				"subtitle": "Seleziona una cerchia per gestire membri e inviti.",
 				"loading": "Caricamento delle cerchie…",
 				"error_title": "Impossibile caricare le cerchie",
 				"error_message": "Non siamo riusciti a caricare le tue cerchie. Riprova.",

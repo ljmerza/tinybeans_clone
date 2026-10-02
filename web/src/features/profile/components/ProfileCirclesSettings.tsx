@@ -6,7 +6,8 @@ import {
 	CardTitle,
 	ConfirmDialog,
 	EmptyState,
-	Layout,
+	LoadingState,
+	StandardError,
 } from "@/components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,8 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export function CirclesIndexRouteView() {
+/** Circle memberships list shown in the Circles tab of settings. */
+export function ProfileCirclesSettings() {
 	const { t } = useTranslation();
 	const session = useAuthSession();
 	const { data, isLoading, error, refetch, isFetching } =
@@ -32,8 +34,7 @@ export function CirclesIndexRouteView() {
 
 	if (isLoading && !data) {
 		return (
-			<Layout.Loading
-				showHeader={false}
+			<LoadingState
 				message={t("pages.circles.index.loading")}
 				spinnerSize="sm"
 			/>
@@ -42,7 +43,7 @@ export function CirclesIndexRouteView() {
 
 	if (error) {
 		return (
-			<Layout.Error
+			<StandardError
 				title={t("pages.circles.index.error_title")}
 				message={t("pages.circles.index.error_message")}
 				actionLabel={t("pages.circles.index.retry")}
@@ -56,21 +57,16 @@ export function CirclesIndexRouteView() {
 	const hasMemberships = memberships.length > 0;
 
 	return (
-		<Layout>
-			<div className="container-page space-y-6">
-				<header className="space-y-2">
-					<h1 className="heading-2">{t("pages.circles.index.title")}</h1>
-					<p className="text-subtitle">{t("pages.circles.index.subtitle")}</p>
-					{isFetching ? (
-						<Layout.Loading
-							showHeader={false}
-							layout="inline"
-							spinnerSize="sm"
-							className="text-sm text-muted-foreground"
-							message={t("pages.circles.index.refreshing")}
-						/>
-					) : null}
-				</header>
+		<>
+			<div className="space-y-6">
+				{isFetching ? (
+					<LoadingState
+						layout="inline"
+						spinnerSize="sm"
+						className="text-sm text-muted-foreground"
+						message={t("pages.circles.index.refreshing")}
+					/>
+				) : null}
 
 				{hasMemberships && !hasOwnedCircle && (
 					<div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -105,7 +101,7 @@ export function CirclesIndexRouteView() {
 						}
 					/>
 				) : (
-					<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+					<div className="grid gap-4 md:grid-cols-2">
 						{memberships.map((membership) => {
 							const isAdmin = membership.role === "admin";
 							const isOwner = membership.is_owner;
@@ -115,7 +111,10 @@ export function CirclesIndexRouteView() {
 										<div className="flex items-center gap-2">
 											<CardTitle>{membership.circle.name}</CardTitle>
 											{isOwner && (
-												<Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+												<Badge
+													variant="default"
+													className="bg-blue-600 hover:bg-blue-700"
+												>
 													{t("pages.circles.members.role.owner")}
 												</Badge>
 											)}
@@ -198,6 +197,6 @@ export function CirclesIndexRouteView() {
 					}
 				}}
 			/>
-		</Layout>
+		</>
 	);
 }
