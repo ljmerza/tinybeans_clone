@@ -28,6 +28,8 @@ export interface FeedMedia {
 	id: number;
 	media_type: "photo" | "video";
 	url: string;
+	/** The full-size file, for viewing a photo on its own. Missing in data cached before it was added. */
+	original_url?: string;
 	poster_url: string | null;
 	width: number | null;
 	height: number | null;

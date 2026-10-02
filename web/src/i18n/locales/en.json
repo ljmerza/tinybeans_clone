@@ -496,6 +496,8 @@
 			"share": "Share",
 			"previous_photo": "Previous photo",
 			"next_photo": "Next photo",
+			"zoom_in": "Zoom in",
+			"zoom_out": "Zoom out",
 			"show_more_comments_one": "View 1 more comment",
 			"show_more_comments_other": "View more comments ({{count}})",
 			"loading_comments": "Loading comments…",

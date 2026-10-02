@@ -137,6 +137,12 @@ class TestKeepFeedView:
             ("video", f"https://cdn.test/original/{keep.id}-2", f"https://cdn.test/gallery/{keep.id}-2"),
         ]
         assert (media[0]["width"], media[0]["height"]) == (1080, 1350)
+        # The full-size file, for viewing a photo on its own.
+        assert [m["original_url"] for m in media] == [
+            f"https://cdn.test/original/{keep.id}-0",
+            f"https://cdn.test/original/{keep.id}-1",
+            f"https://cdn.test/original/{keep.id}-2",
+        ]
 
     def test_counts_viewer_reaction_and_recent_comments(self, api_client, user, other_user, circle):
         CircleMembership.objects.create(user=other_user, circle=circle)
