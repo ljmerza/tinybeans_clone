@@ -4,14 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="theme-color" content="#000000" />
+    <!-- Browser/status-bar color; follows the OS light/dark setting (styles.css --background). -->
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#09090b"
+    />
     <meta
       name="description"
       content="Web site created using create-tsrouter-app"
     />
-    <link rel="apple-touch-icon" href="/logo192.png" />
+    <!-- Home-screen install: manifest for Android/Chrome, apple-* tags for iOS Safari. -->
     <link rel="manifest" href="/manifest.json" />
-    <title>Create TanStack App - web</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Circles" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>Circles</title>
     <script>
       // Apply the saved light/dark mode and color theme before first paint so
       // the page doesn't flash the default palette. Mirrors ThemeProvider.tsx.
