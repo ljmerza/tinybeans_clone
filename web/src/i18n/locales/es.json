@@ -527,7 +527,10 @@
 			"likers_empty": "Aún no hay me gusta",
 			"likers_error": "No se pudo cargar a quiénes les gustó.",
 			"likers_more_one": "Y 1 más",
-			"likers_more_other": "Y {{count}} más"
+			"likers_more_other": "Y {{count}} más",
+			"on_this_day": "Un día como hoy",
+			"on_this_day_years_ago_one": "Hace {{count}} año",
+			"on_this_day_years_ago_other": "Hace {{count}} años"
 		},
 		"keep": {
 			"loading": "Cargando…",

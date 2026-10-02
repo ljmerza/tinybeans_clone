@@ -527,7 +527,10 @@
 			"likers_empty": "Ancora nessun Mi piace",
 			"likers_error": "Impossibile caricare a chi piace.",
 			"likers_more_one": "E un'altra persona",
-			"likers_more_other": "E altre {{count}} persone"
+			"likers_more_other": "E altre {{count}} persone",
+			"on_this_day": "Accadde oggi",
+			"on_this_day_years_ago_one": "{{count}} anno fa",
+			"on_this_day_years_ago_other": "{{count}} anni fa"
 		},
 		"keep": {
 			"loading": "Caricamento…",

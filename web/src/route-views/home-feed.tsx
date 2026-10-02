@@ -1,6 +1,17 @@
 import { Layout, LoadingState } from "@/components";
 import { Button } from "@/components/ui/button";
-import { KeepFeedPost, NewPostDialog, useKeepFeed } from "@/features/keeps";
+import {
+	type FeedRow,
+	KeepFeedPost,
+	NewPostDialog,
+	OnThisDayCard,
+	injectOnThisDay,
+	localDate,
+	onThisDaySeed,
+	useKeepFeed,
+	useOnThisDayKeeps,
+	yearsAgo,
+} from "@/features/keeps";
 import { Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,7 +20,7 @@ import { VirtualFeed } from "react-social-feed/virtual";
 
 /**
  * Home screen for signed-in users: every circle's photos, newest first, in a
- * virtualized infinite list.
+ * virtualized infinite list, with "On this day" memories mixed in.
  */
 export function HomeFeedView() {
 	const { t } = useTranslation();
@@ -28,6 +39,21 @@ export function HomeFeedView() {
 	const keeps = useMemo(
 		() => data?.pages.flatMap((page) => page.results) ?? [],
 		[data],
+	);
+
+	// Fixed for the visit: the viewer's local today, and a per-session seed so
+	// the memory cards keep their places while scrolling and paging.
+	const [today] = useState(() => localDate(new Date()));
+	const [seed] = useState(onThisDaySeed);
+	const { data: memoryData } = useOnThisDayKeeps(today);
+	const rows = useMemo(
+		() =>
+			injectOnThisDay(
+				keeps,
+				memoryData?.pages.flatMap((page) => page.results) ?? [],
+				{ seed, complete: data !== undefined && !hasNextPage },
+			),
+		[keeps, memoryData, seed, data, hasNextPage],
 	);
 
 	const loadMore = useCallback(() => {
@@ -79,9 +105,20 @@ export function HomeFeedView() {
 				{composerOpen && <NewPostDialog open onOpenChange={setComposerOpen} />}
 
 				<VirtualFeed
-					items={keeps}
-					getItemKey={(keep) => keep.id}
-					renderItem={(keep) => <KeepFeedPost keep={keep} />}
+					items={rows}
+					getItemKey={(row: FeedRow) =>
+						row.kind === "post" ? row.keep.id : `on-this-day-${row.keep.id}`
+					}
+					renderItem={(row: FeedRow) =>
+						row.kind === "post" ? (
+							<KeepFeedPost keep={row.keep} />
+						) : (
+							<OnThisDayCard
+								keep={row.keep}
+								yearsAgo={yearsAgo(row.keep, today)}
+							/>
+						)
+					}
 					// A failed page stops auto-paging; otherwise the list would
 					// re-request it every time the in-flight flag drops.
 					hasMore={hasNextPage && !isFetchNextPageError}

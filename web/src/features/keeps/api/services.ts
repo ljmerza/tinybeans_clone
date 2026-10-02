@@ -12,6 +12,7 @@ import type {
 	KeepLiker,
 	KeepReactionRecord,
 	MediaUploadRecord,
+	OnThisDayPayload,
 	PaginatedList,
 } from "../types";
 
@@ -59,6 +60,14 @@ export const keepServices = {
 	/** Idempotent; rejects with a 404 once the keep is deleted. */
 	unfavoriteKeep(keepId: string) {
 		return authApi.delete<unknown>(`${KEEPS_BASE}/feed/${keepId}/favorite/`);
+	},
+
+	/** Earlier years' posts from `date` (the viewer's local today)'s month and day. */
+	getOnThisDay(date: string) {
+		const params = new URLSearchParams({ date });
+		return authApi.get<OnThisDayPayload>(
+			`${KEEPS_BASE}/feed/on-this-day/?${params}`,
+		);
 	},
 
 	getAdjacentFeedDays(date: string, circleSlug?: string) {

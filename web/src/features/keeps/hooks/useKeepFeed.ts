@@ -67,6 +67,25 @@ export function useFavoriteKeeps() {
 }
 
 /**
+ * Posts from earlier years on `date`'s month and day, for the home feed's
+ * "On this day" cards. `date` is the viewer's local today.
+ *
+ * Cached as a one-page infinite query under the feed key, so likes,
+ * favorites, comments and deletes made on a card patch it like any feed post.
+ */
+export function useOnThisDayKeeps(date: string) {
+	return useInfiniteQuery({
+		queryKey: keepKeys.feedOnThisDay(date),
+		queryFn: async (): Promise<FeedPage> => {
+			const { results } = await keepServices.getOnThisDay(date);
+			return { next: null, previous: null, results };
+		},
+		initialPageParam: undefined as string | undefined,
+		getNextPageParam: () => undefined,
+	});
+}
+
+/**
  * The nearest earlier/later days with posts, for the day view's arrows.
  */
 export function useAdjacentFeedDays(date: string, circleSlug?: string) {

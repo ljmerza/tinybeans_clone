@@ -16,7 +16,13 @@ vi.mock("@/components", async (importOriginal) => {
 	return { ...actual, Layout };
 });
 
-import { type FeedKeep, keepServices } from "@/features/keeps";
+import {
+	type FeedKeep,
+	ON_THIS_DAY_SEED_KEY,
+	keepServices,
+	localDate,
+	onThisDaySlots,
+} from "@/features/keeps";
 import { HomeFeedView } from "./home-feed";
 
 const keep = (n: number): FeedKeep => ({
@@ -50,9 +56,14 @@ const keep = (n: number): FeedKeep => ({
 beforeEach(() => {
 	// jsdom has no scrolling; the window virtualizer calls this on mount.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	vi.spyOn(keepServices, "getOnThisDay").mockResolvedValue({
+		date: "2026-07-04",
+		results: [],
+	});
 });
 
 afterEach(() => {
+	window.sessionStorage.clear();
 	vi.restoreAllMocks();
 });
 
@@ -109,6 +120,43 @@ describe("HomeFeedView", () => {
 		).toBeInTheDocument();
 		expect(screen.queryByRole("heading", { name: "Memory 30" })).toBeNull();
 		expect(screen.getAllByRole("article").length).toBeLessThan(30);
+	});
+
+	it("mixes in this day's memories at the session's seeded slot", async () => {
+		window.sessionStorage.setItem(ON_THIS_DAY_SEED_KEY, "1");
+		const [slot] = onThisDaySlots(1, 1);
+		const memory = {
+			...keep(9),
+			id: "99999999-0000-0000-0000-000000000000",
+			title: "Years back",
+		};
+		const getOnThisDay = vi
+			.spyOn(keepServices, "getOnThisDay")
+			.mockResolvedValue({ date: "2026-07-04", results: [memory] });
+		vi.spyOn(keepServices, "getFeed").mockResolvedValue({
+			next: null,
+			previous: null,
+			results: Array.from({ length: 12 }, (_, i) => ({
+				...keep(i),
+				id: `00000000-0000-0000-0000-0000000000${10 + i}`,
+				title: `Memory ${i}`,
+			})),
+		});
+
+		renderWithQueryClient(<HomeFeedView />);
+
+		const card = await screen.findByRole("region", { name: /on this day/i });
+		expect(card).toHaveTextContent("Years back");
+		expect(getOnThisDay).toHaveBeenCalledWith(localDate(new Date()));
+		// Right between the posts either side of its slot.
+		const before = screen.getByRole("heading", { name: `Memory ${slot - 1}` });
+		const after = screen.getByRole("heading", { name: `Memory ${slot}` });
+		expect(
+			before.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			card.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 	});
 
 	it("shows an empty state when there are no photos", async () => {
