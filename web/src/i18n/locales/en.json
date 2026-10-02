@@ -534,10 +534,7 @@
 			"back_to_feed": "Back to your feed"
 		},
 		"calendar": {
-			"title": "Calendar",
-			"subtitle": "Your family's photos, one month at a time.",
 			"loading": "Loading your calendar…",
-			"refreshing": "Refreshing…",
 			"error_title": "Couldn't load the calendar",
 			"error_message": "Something went wrong while loading your photos.",
 			"retry": "Try again",

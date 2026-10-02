@@ -1,4 +1,4 @@
-import { Layout, LoadingState } from "@/components";
+import { Layout } from "@/components";
 import {
 	Select,
 	SelectContent,
@@ -45,7 +45,7 @@ export function CalendarRouteView() {
 	const month = search.month ?? currentMonthKey();
 	const circleSlug = search.circle;
 
-	const { data, isLoading, isFetching, error, refetch } = useCalendarMonth(
+	const { data, isLoading, error, refetch } = useCalendarMonth(
 		month,
 		circleSlug,
 	);
@@ -131,24 +131,8 @@ export function CalendarRouteView() {
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
 			<div className="space-y-6">
-				<header className="flex flex-wrap items-end justify-between gap-4">
-					<div className="space-y-2">
-						<h1 className="heading-2">{t("pages.calendar.title")}</h1>
-						<p className="text-subtitle">{t("pages.calendar.subtitle")}</p>
-						{/* Fixed-height slot so the indicator appearing/disappearing
-						    does not push the calendar down. */}
-						<div className="h-5">
-							{isFetching ? (
-								<LoadingState
-									layout="inline"
-									spinnerSize="sm"
-									className="text-sm text-muted-foreground"
-									message={t("pages.calendar.refreshing")}
-								/>
-							) : null}
-						</div>
-					</div>
-					{circles.length > 1 ? (
+				{circles.length > 1 ? (
+					<div className="flex justify-end">
 						<Select
 							value={circleSlug ?? ALL_CIRCLES}
 							onValueChange={(value) =>
@@ -175,12 +159,14 @@ export function CalendarRouteView() {
 								))}
 							</SelectContent>
 						</Select>
-					) : null}
-				</header>
+					</div>
+				) : null}
 
 				<PhotoCalendar
 					monthKey={month}
 					navigationMode="auto"
+					virtualScroll="window"
+					virtualOrder="newest-first"
 					maxMonthKey={currentMonthKey()}
 					onMonthsInViewChange={setMonthsInView}
 					onMonthChange={(nextMonthKey, { source }) => {
