@@ -13,8 +13,11 @@ export const Route = createFileRoute("/calendar")({
 	validateSearch: (
 		search: Record<string, unknown>,
 	): { month?: string; circle?: string } => ({
+		// Future months have no photos; a link to one opens the current month.
 		month:
-			typeof search.month === "string" && MONTH_PATTERN.test(search.month)
+			typeof search.month === "string" &&
+			MONTH_PATTERN.test(search.month) &&
+			search.month <= currentMonthKey()
 				? search.month
 				: undefined,
 		circle: typeof search.circle === "string" ? search.circle : undefined,

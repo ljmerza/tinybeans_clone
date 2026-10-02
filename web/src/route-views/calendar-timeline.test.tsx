@@ -36,7 +36,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 }));
 
 import { circleServices } from "@/features/circles/api/services";
-import { keepServices } from "@/features/keeps";
+import { currentMonthKey, keepServices } from "@/features/keeps";
 import { CalendarRouteView } from "./calendar";
 
 afterEach(() => {
@@ -90,6 +90,13 @@ describe("CalendarRouteView timeline", () => {
 			]),
 		);
 		expect(getCalendarMonth).toHaveBeenCalledWith("2026-06", "family");
+	});
+
+	it("does not go past the current month", async () => {
+		renderCalendar();
+		const props = await waitForCalendar();
+
+		expect(props.maxMonthKey).toBe(currentMonthKey());
 	});
 
 	it("opens the day feed for a day in a neighbouring month", async () => {
