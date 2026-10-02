@@ -16,10 +16,6 @@ export const keepKeys = {
 	/** Earlier years' posts from `date`'s month and day; nested under `feed` so cache patches reach it. */
 	feedOnThisDay: (date: string) =>
 		keepKeysFactory.tag("feed", "on-this-day", date),
-	/** Milestones, oldest first; nested under `feed` so cache patches reach it. */
-	feedMilestones: (childId?: string) =>
-		keepKeysFactory.tag("feed", "milestones", childId ?? "all"),
-	children: () => keepKeysFactory.tag("children"),
 	adjacentFeedDays: (date: string, circleSlug?: string) =>
 		keepKeysFactory.tag("adjacent-feed-days", circleSlug ?? "all", date),
 	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),

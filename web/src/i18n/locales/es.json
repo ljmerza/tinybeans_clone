@@ -428,28 +428,6 @@
 			}
 		}
 	},
-	"milestones": {
-		"badge_label": "{{milestone}}. Ver hitos",
-		"types": {
-			"first_word": "Primera palabra",
-			"first_steps": "Primeros pasos",
-			"first_tooth": "Primer diente",
-			"first_day_school": "Primer día de escuela",
-			"birthday": "Cumpleaños",
-			"height_weight": "Altura y peso",
-			"other": "Hito"
-		},
-		"age": {
-			"years_one": "{{count}} año",
-			"years_other": "{{count}} años",
-			"months_one": "{{count}} mes",
-			"months_other": "{{count}} meses",
-			"weeks_one": "{{count}} sem.",
-			"weeks_other": "{{count}} sem.",
-			"days_one": "{{count}} día",
-			"days_other": "{{count}} días"
-		}
-	},
 	"pages": {
 		"home": {
 			"welcome": "Bienvenido",
@@ -519,17 +497,6 @@
 				"gone": "Ese álbum o esa publicación ya no existe."
 			}
 		},
-		"milestones": {
-			"loading": "Cargando hitos…",
-			"error_title": "No se pudieron cargar los hitos",
-			"error_message": "Algo salió mal. Inténtalo de nuevo.",
-			"empty_title": "Aún no hay hitos",
-			"empty_message": "Al publicar una foto, toca Hito para marcarla como uno.",
-			"end": "Esos son todos los hitos por ahora.",
-			"aria_label": "Hitos",
-			"children_label": "De quién son los hitos",
-			"everyone": "Todos"
-		},
 		"feed": {
 			"new_post": {
 				"open": "Nueva publicación",
@@ -553,16 +520,6 @@
 				"retry_failed": "Reintentar los fallidos",
 				"skip_failed": "Omitir fallidos",
 				"discard": "Descartar publicación",
-				"milestone": {
-					"open": "Hito",
-					"add": "Marcar {{name}} como hito",
-					"type_label": "Hito de {{name}}",
-					"type_placeholder": "¿Qué hito?",
-					"other_type": "Otro",
-					"child_label": "Niño o niña de {{name}}",
-					"no_child": "Nadie en particular",
-					"remove": "Quitar el hito de {{name}}"
-				},
 				"status": {
 					"queued": "En espera…",
 					"uploading": "Subiendo… {{percent}}%",
@@ -968,7 +925,6 @@
 		"circle_membership_required": "Debes ser miembro de este círculo para crear recuerdos.",
 		"milestone_required": "Se requieren datos de hito para los recuerdos de tipo hito.",
 		"milestone_not_allowed": "Los datos de hito solo deben proporcionarse para recuerdos de tipo hito.",
-		"milestone_child_not_in_circle": "Ese niño no pertenece a este círculo.",
 		"media_files_required": "Los recuerdos de tipo multimedia deben incluir archivos multimedia.",
 		"reaction_exists": "Ya has reaccionado a este recuerdo.",
 		"keep_update_forbidden": "Solo puedes actualizar recuerdos que creaste o como administrador del círculo.",
