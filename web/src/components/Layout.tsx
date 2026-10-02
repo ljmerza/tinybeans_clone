@@ -27,7 +27,7 @@ function LayoutBase({ children, showHeader = true }: LayoutProps) {
 			
 			{shouldShowHeader && <Header isAuthenticated={session.isAuthenticated} />}
 
-			<main className={shouldShowHeader ? "container-page section-spacing" : ""}>
+			<main className={shouldShowHeader ? "container-page pt-6 pb-12" : ""}>
 				{children}
 			</main>
 		</div>

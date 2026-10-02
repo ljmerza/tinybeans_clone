@@ -475,8 +475,6 @@
 					"failed": "Error al subir"
 				}
 			},
-			"title": "Tu feed",
-			"subtitle": "Las fotos más recientes de todos tus círculos.",
 			"aria_label": "Feed de fotos",
 			"loading": "Cargando tu feed…",
 			"loading_more": "Cargando más fotos…",

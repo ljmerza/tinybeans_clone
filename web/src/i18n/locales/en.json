@@ -475,8 +475,6 @@
 					"failed": "Upload failed"
 				}
 			},
-			"title": "Your feed",
-			"subtitle": "The newest photos from all of your circles.",
 			"aria_label": "Photo feed",
 			"loading": "Loading your feed…",
 			"loading_more": "Loading more photos…",
