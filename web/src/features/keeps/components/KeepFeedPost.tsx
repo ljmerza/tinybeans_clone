@@ -6,6 +6,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
+import { useAdminCircleIds } from "@/features/albums/hooks/useAdminCircleIds";
 import { Images, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -46,7 +47,6 @@ import {
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
-import { MilestoneBadge } from "./MilestoneBadge";
 import { useKeepPhotoViewer } from "./useKeepPhotoViewer";
 
 /** Comments each "Show more" reveals after the first RECENT_COMMENT_COUNT. */
@@ -89,6 +89,8 @@ export function KeepFeedPost({
 		: 0;
 	const photoViewer = useKeepPhotoViewer(keep);
 	const [albumsOpen, setAlbumsOpen] = useState(false);
+	// Only circle admins put posts into albums.
+	const canAddToAlbum = useAdminCircleIds().has(keep.circle.id);
 
 	const post = useMemo(
 		() =>
@@ -172,7 +174,6 @@ export function KeepFeedPost({
 				</PostHeader>
 				{/* Title and caption above the photo, aligned with the header's padding. */}
 				<div className="-mt-1.5 space-y-1 px-[var(--rsf-spacing)] pb-2.5 empty:hidden">
-					{keep.milestone && <MilestoneBadge milestone={keep.milestone} />}
 					<PostTitle />
 					<PostCaption />
 				</div>
@@ -198,11 +199,13 @@ export function KeepFeedPost({
 									: t("pages.feed.favorite")
 							}
 						/>
-						<PostAction
-							aria-label={t("pages.albums.add.action")}
-							icon={<Images strokeWidth={1.8} />}
-							onClick={() => setAlbumsOpen(true)}
-						/>
+						{canAddToAlbum && (
+							<PostAction
+								aria-label={t("pages.albums.add.action")}
+								icon={<Images strokeWidth={1.8} />}
+								onClick={() => setAlbumsOpen(true)}
+							/>
+						)}
 						<PostShareButton aria-label={t("pages.feed.share")} />
 						{keep.can_delete && (
 							<>

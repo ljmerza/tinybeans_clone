@@ -8,7 +8,6 @@ import type {
 	FeedFilters,
 	FeedKeep,
 	FeedPage,
-	KeepChild,
 	KeepCommentRecord,
 	KeepLiker,
 	KeepReactionRecord,
@@ -49,20 +48,6 @@ export const keepServices = {
 	getFavorites(cursor?: string) {
 		const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
 		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/favorites/${query}`);
-	},
-
-	/** Milestone posts, oldest first, optionally one child's. */
-	getMilestones(cursor?: string, childId?: string) {
-		const params = new URLSearchParams();
-		if (cursor) params.set("cursor", cursor);
-		if (childId) params.set("child", childId);
-		const query = params.toString() ? `?${params}` : "";
-		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/milestones/${query}`);
-	},
-
-	/** Children in the viewer's circles, with their milestone counts. */
-	getChildren() {
-		return authApi.get<KeepChild[]>(`${KEEPS_BASE}/children/`);
 	},
 
 	/** Idempotent; rejects with a 404 once the keep is deleted. */

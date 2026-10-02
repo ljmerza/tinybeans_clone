@@ -47,44 +47,6 @@ export interface FeedComment {
 	created_at: string;
 }
 
-export type MilestoneType =
-	| "first_word"
-	| "first_steps"
-	| "first_tooth"
-	| "first_day_school"
-	| "birthday"
-	| "height_weight"
-	| "other";
-
-/** Whole years, months and days since a child's birth. */
-export interface ChildAge {
-	years: number;
-	months: number;
-	days: number;
-}
-
-/**
- * A keep's milestone as feed posts carry it.
- */
-export interface FeedMilestone {
-	milestone_type: MilestoneType;
-	child: { id: string; display_name: string } | null;
-	/** The child's age on the memory's (UTC) date, when their birthdate is known. */
-	child_age: ChildAge | null;
-	/** Age typed in by hand, if any; "" otherwise. */
-	age_at_milestone: string;
-}
-
-/**
- * GET /keeps/children/: a child in one of the viewer's circles.
- */
-export interface KeepChild {
-	id: string;
-	display_name: string;
-	circle: { id: number; name: string; slug: string };
-	milestone_count: number;
-}
-
 /**
  * One keep as returned by GET /keeps/feed/ and GET /keeps/feed/<id>/.
  */
@@ -108,8 +70,6 @@ export interface FeedKeep {
 	can_delete: boolean;
 	/** The newest two comments, oldest first. */
 	recent_comments: FeedComment[];
-	/** Set when the keep is a milestone. Missing in data cached before it was added. */
-	milestone?: FeedMilestone | null;
 }
 
 /**
@@ -186,16 +146,10 @@ export interface PaginatedList<T> {
  */
 export interface CreateKeepInput {
 	circle: number;
-	/** "milestone" needs `milestone_data`; it is still a photo/video post. */
-	keep_type: "note" | "media" | "milestone";
+	keep_type: "note" | "media";
 	title: string;
 	description: string;
 	date_of_memory: string;
-	milestone_data?: {
-		milestone_type: MilestoneType;
-		/** A child in the same circle. */
-		child_profile: string | null;
-	};
 }
 
 export interface CreatedKeep extends CreateKeepInput {

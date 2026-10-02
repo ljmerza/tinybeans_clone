@@ -1,6 +1,12 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { act, fireEvent, screen, within } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -53,20 +59,24 @@ const xmas = makeAlbum({
 	post_count: 1,
 });
 
-beforeEach(() => {
+function mockRole(role: "admin" | "member") {
 	vi.spyOn(circleServices, "listMemberships").mockResolvedValue({
 		data: {
 			circles: [
 				{
 					membership_id: 1,
 					circle: { id: 7, name: "Family", slug: "family", member_count: 2 },
-					role: "member",
+					role,
 					is_owner: false,
 					created_at: "2026-01-01T00:00:00Z",
 				},
 			],
 		},
 	});
+}
+
+beforeEach(() => {
+	mockRole("admin");
 });
 
 afterEach(() => {
@@ -154,5 +164,20 @@ describe("AlbumsRouteView", () => {
 			to: "/albums/$albumId",
 			params: { albumId: created.id },
 		});
+	});
+
+	it("doesn't offer to create albums to members who aren't admins", async () => {
+		vi.restoreAllMocks();
+		mockRole("member");
+		vi.spyOn(albumServices, "list").mockResolvedValue(albumPage([xmas]));
+
+		renderWithQueryClient(<AlbumsRouteView />);
+
+		expect(await screen.findByText("Christmas")).toBeInTheDocument();
+		await waitFor(() =>
+			expect(
+				screen.queryByRole("button", { name: "New album" }),
+			).not.toBeInTheDocument(),
+		);
 	});
 });

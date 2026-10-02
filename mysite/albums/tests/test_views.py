@@ -145,7 +145,8 @@ class TestAlbumList:
         assert album.cover_keep is None
         assert api_client.get(ALBUMS_URL).data["results"][0]["cover"]["keep_id"] == str(first.id)
 
-    def test_can_edit_for_creator_and_admin_only(self, api_client, circle, admin, member, other_member):
+    def test_can_edit_for_circle_admins_only(self, api_client, circle, admin, member, other_member):
+        # An album a member made before albums became admin-only stays read-only for them.
         make_album(circle, member, name="Member's")
         make_album(circle, admin, name="Admin's")
 
@@ -154,7 +155,7 @@ class TestAlbumList:
             return {item["name"]: item["can_edit"] for item in api_client.get(ALBUMS_URL).data["results"]}
 
         assert can_edit(admin) == {"Member's": True, "Admin's": True}
-        assert can_edit(member) == {"Member's": True, "Admin's": False}
+        assert can_edit(member) == {"Member's": False, "Admin's": False}
         assert can_edit(other_member) == {"Member's": False, "Admin's": False}
 
     def test_keep_filter_flags_the_albums_holding_it(self, api_client, circle, admin):
@@ -210,28 +211,40 @@ class TestAlbumList:
 
 @pytest.mark.django_db
 class TestAlbumCreate:
-    def test_any_member_can_create(self, api_client, circle, member):
-        api_client.force_authenticate(user=member)
+    def test_circle_admin_can_create(self, api_client, circle, admin):
+        api_client.force_authenticate(user=admin)
 
         response = api_client.post(ALBUMS_URL, {"circle": circle.id, "name": "  Beach trip 2026  "}, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["name"] == "Beach trip 2026"
-        assert response.data["created_by"] == member.id
+        assert response.data["created_by"] == admin.id
         assert response.data["post_count"] == 0
         assert response.data["can_edit"] is True
-        assert Album.objects.get().created_by == member
+        assert Album.objects.get().created_by == admin
 
-    def test_with_a_first_post(self, api_client, circle, admin, member):
+    def test_members_cannot_create(self, api_client, circle, admin, member):
         keep = make_keep(circle, admin)
         api_client.force_authenticate(user=member)
+
+        plain = api_client.post(ALBUMS_URL, {"circle": circle.id, "name": "Beach"})
+        with_post = api_client.post(ALBUMS_URL, {"circle": circle.id, "name": "Beach", "keep": str(keep.id)})
+
+        assert plain.status_code == status.HTTP_403_FORBIDDEN
+        assert with_post.status_code == status.HTTP_403_FORBIDDEN
+        assert not Album.objects.exists()
+        assert not AlbumKeep.objects.exists()
+
+    def test_with_a_first_post(self, api_client, circle, admin, member):
+        keep = make_keep(circle, member)
+        api_client.force_authenticate(user=admin)
 
         response = api_client.post(ALBUMS_URL, {"circle": circle.id, "name": "Beach", "keep": str(keep.id)})
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["post_count"] == 1
         assert response.data["cover"]["keep_id"] == str(keep.id)
-        assert AlbumKeep.objects.get().added_by == member
+        assert AlbumKeep.objects.get().added_by == admin
 
     def test_rejects_a_circle_the_user_is_not_in(self, api_client, other_circle, admin):
         api_client.force_authenticate(user=admin)
@@ -283,9 +296,9 @@ class TestAlbumDetail:
         assert api_client.patch(album_url(album.id), {"name": "x"}).status_code == status.HTTP_404_NOT_FOUND
         assert api_client.delete(album_url(album.id)).status_code == status.HTTP_404_NOT_FOUND
 
-    def test_creator_renames(self, api_client, circle, member):
-        album = make_album(circle, member)
-        api_client.force_authenticate(user=member)
+    def test_circle_admin_renames(self, api_client, circle, admin):
+        album = make_album(circle, admin)
+        api_client.force_authenticate(user=admin)
 
         response = api_client.patch(album_url(album.id), {"name": "Lake trip", "description": "July"}, format="json")
 
@@ -293,6 +306,14 @@ class TestAlbumDetail:
         assert (response.data["name"], response.data["description"]) == ("Lake trip", "July")
         album.refresh_from_db()
         assert album.name == "Lake trip"
+
+    def test_a_member_who_created_it_cannot_rename_or_delete(self, api_client, circle, member):
+        album = make_album(circle, member)
+        api_client.force_authenticate(user=member)
+
+        assert api_client.patch(album_url(album.id), {"name": "Mine"}).status_code == status.HTTP_403_FORBIDDEN
+        assert api_client.delete(album_url(album.id)).status_code == status.HTTP_403_FORBIDDEN
+        assert Album.objects.filter(pk=album.pk, name="Beach trip 2026").exists()
 
     def test_circle_admin_renames_someone_elses(self, api_client, circle, admin, member):
         album = make_album(circle, member)
@@ -324,15 +345,14 @@ class TestAlbumDetail:
         assert accepted.data["cover_keep"] == inside.id
         assert cleared.data["cover_keep"] is None
 
-    def test_creator_or_admin_deletes_it_and_posts_stay(self, api_client, circle, admin, member):
+    def test_circle_admin_deletes_it_and_posts_stay(self, api_client, circle, admin, member):
         keep = make_keep(circle, admin)
-        mine = make_album(circle, member, keeps=[keep])
-        theirs = make_album(circle, member, name="Second", keeps=[keep])
+        own = make_album(circle, admin, keeps=[keep])
+        members = make_album(circle, member, name="Second", keeps=[keep])
 
-        api_client.force_authenticate(user=member)
-        assert api_client.delete(album_url(mine.id)).status_code == status.HTTP_204_NO_CONTENT
         api_client.force_authenticate(user=admin)
-        assert api_client.delete(album_url(theirs.id)).status_code == status.HTTP_204_NO_CONTENT
+        assert api_client.delete(album_url(own.id)).status_code == status.HTTP_204_NO_CONTENT
+        assert api_client.delete(album_url(members.id)).status_code == status.HTTP_204_NO_CONTENT
 
         assert not Album.objects.exists()
         keep.refresh_from_db()
@@ -399,10 +419,10 @@ class TestAlbumKeeps:
 
 @pytest.mark.django_db
 class TestAddRemoveKeep:
-    def test_any_member_adds_once(self, api_client, circle, admin, member):
-        keep = make_keep(circle, admin)
+    def test_circle_admin_adds_once(self, api_client, circle, admin, member):
+        keep = make_keep(circle, member)
         album = make_album(circle, admin)
-        api_client.force_authenticate(user=member)
+        api_client.force_authenticate(user=admin)
 
         first = api_client.post(album_keep_url(album.id, keep.id))
         again = api_client.post(album_keep_url(album.id, keep.id))
@@ -411,7 +431,19 @@ class TestAddRemoveKeep:
         assert first.data == {"in_album": True}
         assert again.status_code == status.HTTP_200_OK
         entry = AlbumKeep.objects.get()
-        assert (entry.album, entry.keep, entry.added_by) == (album, keep, member)
+        assert (entry.album, entry.keep, entry.added_by) == (album, keep, admin)
+
+    def test_members_cannot_add_or_remove(self, api_client, circle, admin, member):
+        kept = make_keep(circle, admin)
+        album = make_album(circle, admin, keeps=[kept])
+        api_client.force_authenticate(user=member)
+
+        added = api_client.post(album_keep_url(album.id, make_keep(circle, member).id))
+        removed = api_client.delete(album_keep_url(album.id, kept.id))
+
+        assert added.status_code == status.HTTP_403_FORBIDDEN
+        assert removed.status_code == status.HTTP_403_FORBIDDEN
+        assert list(AlbumKeep.objects.values_list("keep_id", flat=True)) == [kept.id]
 
     def test_rejects_a_post_from_another_of_the_users_circles(self, api_client, circle, admin):
         second = Circle.objects.create(name="Second Family", created_by=admin)
@@ -435,10 +467,10 @@ class TestAddRemoveKeep:
         assert api_client.delete(album_keep_url(foreign_album.id, keep.id)).status_code == status.HTTP_404_NOT_FOUND
         assert not AlbumKeep.objects.exists()
 
-    def test_any_member_removes_and_it_is_idempotent(self, api_client, circle, admin, member):
+    def test_circle_admin_removes_and_it_is_idempotent(self, api_client, circle, admin):
         keep = make_keep(circle, admin)
         album = make_album(circle, admin, keeps=[keep])
-        api_client.force_authenticate(user=member)
+        api_client.force_authenticate(user=admin)
 
         assert api_client.delete(album_keep_url(album.id, keep.id)).status_code == status.HTTP_204_NO_CONTENT
         assert api_client.delete(album_keep_url(album.id, keep.id)).status_code == status.HTTP_204_NO_CONTENT

@@ -55,7 +55,7 @@ def visible_albums(user, *, keep=None):
     default_cover = displayable.filter(keep__album_memberships__album=OuterRef("pk")).order_by(
         *(f"keep__{field}" for field in ALBUM_KEEP_ORDERING), *media_order
     )
-    # Mirrors the keeps' delete rule: the creator or a circle admin.
+    # Only circle admins manage albums; everyone in the circle can view them.
     circle_admin = CircleMembership.objects.filter(circle=OuterRef("circle"), user=user, role=UserRole.CIRCLE_ADMIN)
 
     albums = (
@@ -68,7 +68,7 @@ def visible_albums(user, *, keep=None):
                 Subquery(chosen_cover.values("id")[:1]),
                 Subquery(default_cover.values("id")[:1]),
             ),
-            can_edit=Q(created_by=user) | Exists(circle_admin),
+            can_edit=Exists(circle_admin),
         )
     )
     if keep is not None:
@@ -76,6 +76,16 @@ def visible_albums(user, *, keep=None):
             has_keep=Exists(AlbumKeep.objects.filter(album=OuterRef("pk"), keep=keep))
         )
     return albums
+
+
+def is_circle_admin(user, circle_id):
+    """Whether the user is an admin of the circle (the role that manages its albums)."""
+    return CircleMembership.objects.filter(circle_id=circle_id, user=user, role=UserRole.CIRCLE_ADMIN).exists()
+
+
+def require_circle_admin(user, circle_id):
+    if not is_circle_admin(user, circle_id):
+        raise PermissionDenied("Only circle admins can create or change albums.")
 
 
 def attach_covers(albums):
@@ -173,25 +183,30 @@ class AlbumListCreateView(generics.ListCreateAPIView):
 
     @extend_schema(
         summary="Create an album",
-        description="Any member of the circle can create an album, optionally adding a first post.",
+        description="Circle admins can create an album, optionally adding a first post.",
         request=AlbumCreateSerializer,
-        responses={201: ALBUM_RESPONSE, 400: OpenApiResponse(description="Invalid input or not your circle")},
+        responses={
+            201: ALBUM_RESPONSE,
+            400: OpenApiResponse(description="Invalid input or not your circle"),
+            403: OpenApiResponse(description="Not an admin of the circle"),
+        },
     )
     def post(self, request, *args, **kwargs):
         serializer = AlbumCreateSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
+        require_circle_admin(request.user, serializer.validated_data["circle"].id)
         album = serializer.save()
         album = get_visible_album_or_404(request.user, album.pk)
         return Response(self.get_serializer(album).data, status=status.HTTP_201_CREATED)
 
 
 class AlbumDetailView(APIView):
-    """One album: view (any member), rename/describe/set cover or delete (creator or circle admin)."""
+    """One album: view (any member), rename/describe/set cover or delete (circle admins)."""
 
     def _album_for_edit(self, request, album_id):
         album = get_visible_album_or_404(request.user, album_id)
         if not album.can_edit:
-            raise PermissionDenied("Only the album's creator or a circle admin can change it.")
+            raise PermissionDenied("Only circle admins can create or change albums.")
         return album
 
     @extend_schema(
@@ -204,12 +219,12 @@ class AlbumDetailView(APIView):
 
     @extend_schema(
         summary="Update an album",
-        description="Rename it, change its description or pick its cover post. Only its creator or a circle admin.",
+        description="Rename it, change its description or pick its cover post. Circle admins only.",
         request=AlbumUpdateSerializer,
         responses={
             200: ALBUM_RESPONSE,
             400: OpenApiResponse(description="Invalid input"),
-            403: OpenApiResponse(description="Not the creator or a circle admin"),
+            403: OpenApiResponse(description="Not an admin of the circle"),
             404: OpenApiResponse(description="Not found or not visible to the user"),
         },
     )
@@ -223,10 +238,10 @@ class AlbumDetailView(APIView):
 
     @extend_schema(
         summary="Delete an album",
-        description="Deletes the album only; its posts stay. Only its creator or a circle admin.",
+        description="Deletes the album only; its posts stay. Circle admins only.",
         responses={
             204: OpenApiResponse(description="Deleted"),
-            403: OpenApiResponse(description="Not the creator or a circle admin"),
+            403: OpenApiResponse(description="Not an admin of the circle"),
             404: OpenApiResponse(description="Not found or not visible to the user"),
         },
     )
@@ -280,21 +295,23 @@ class AlbumKeepsView(generics.ListAPIView):
 
 
 class AlbumKeepView(APIView):
-    """Add (POST) or remove (DELETE) a post. Any circle member may; both are idempotent."""
+    """Add (POST) or remove (DELETE) a post. Circle admins only; both are idempotent."""
 
     @extend_schema(
         summary="Add a post to an album",
-        description="Any member of the circle can add one of its posts. Adding it again is a no-op.",
+        description="Circle admins can add one of the circle's posts. Adding it again is a no-op.",
         request=None,
         responses={
             200: OpenApiResponse(description="`{in_album: true}`, already in the album"),
             201: OpenApiResponse(description="`{in_album: true}`, newly added"),
             400: OpenApiResponse(description="The post is from another circle"),
+            403: OpenApiResponse(description="Not an admin of the circle"),
             404: OpenApiResponse(description="Album or post not found or not visible to the user"),
         },
     )
     def post(self, request, album_id, keep_id):
         album = get_object_or_404(Album, pk=album_id, circle__memberships__user=request.user)
+        require_circle_admin(request.user, album.circle_id)
         keep = get_visible_keep_or_404(request.user, keep_id)
         if keep.circle_id != album.circle_id:
             raise ValidationError({"keep": "Only posts from the album's circle can be added."})
@@ -305,16 +322,18 @@ class AlbumKeepView(APIView):
 
     @extend_schema(
         summary="Remove a post from an album",
-        description="Any member of the circle can remove a post; the post itself stays. Removing one that isn't "
+        description="Circle admins can remove a post; the post itself stays. Removing one that isn't "
         "in the album is a no-op.",
         request=None,
         responses={
             204: OpenApiResponse(description="Not in the album (any more)"),
+            403: OpenApiResponse(description="Not an admin of the circle"),
             404: OpenApiResponse(description="Album not found or not visible to the user"),
         },
     )
     def delete(self, request, album_id, keep_id):
         album = get_object_or_404(Album, pk=album_id, circle__memberships__user=request.user)
+        require_circle_admin(request.user, album.circle_id)
         deleted, _ = AlbumKeep.objects.filter(album=album, keep_id=keep_id).delete()
         if deleted:
             if album.cover_keep_id == keep_id:
