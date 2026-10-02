@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { keepKeys } from "../api/queryKeys";
 import { keepServices } from "../api/services";
 import { uploadMedia } from "../api/uploadMedia";
+import type { MilestoneType } from "../types";
 import { captureVideoPoster } from "../utils/captureVideoPoster";
 import { mediaTypeOf } from "../utils/mediaFiles";
 
@@ -30,6 +31,8 @@ export interface PostItem {
 	title: string;
 	/** `YYYY-MM-DD` */
 	date: string;
+	/** Post it as a milestone, optionally for a child in the same circle. */
+	milestone?: { type: MilestoneType; childId: string | null };
 }
 
 export type PostFileStatus =
@@ -106,7 +109,7 @@ export function useCreatePost() {
 	const postOne = useCallback(
 		async (index: number) => {
 			const signal = abortRef.current.signal;
-			const { file, title, date } = itemsRef.current[index];
+			const { file, title, date, milestone } = itemsRef.current[index];
 			const mediaType = mediaTypeOf(file) ?? "photo";
 			setFileState(index, { status: "uploading", progress: 0 });
 			try {
@@ -115,10 +118,16 @@ export function useCreatePost() {
 				if (!keepId) {
 					const keep = await keepServices.createKeep({
 						circle: circleIdRef.current as number,
-						keep_type: "media",
+						keep_type: milestone ? "milestone" : "media",
 						title: title.trim(),
 						description: "",
 						date_of_memory: memoryTimestamp(date),
+						...(milestone && {
+							milestone_data: {
+								milestone_type: milestone.type,
+								child_profile: milestone.childId,
+							},
+						}),
 					});
 					keepId = keep.id;
 					setFileState(index, { keepId });

@@ -13,6 +13,7 @@ from rest_framework import serializers
 
 from ..models import Keep, KeepComment, KeepReaction
 from .comments import can_delete_comment
+from .milestones import FEED_MILESTONE_SCHEMA, feed_milestone
 
 # Presign for a day (instead of the 1h default). The virtualized feed remounts
 # images as they scroll back into view, so short-lived URLs would break on a
@@ -65,6 +66,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
         read_only=True, help_text="Whether the viewer may delete this keep: its creator or a circle admin"
     )
     recent_comments = serializers.SerializerMethodField()
+    milestone = serializers.SerializerMethodField()
 
     class Meta:
         model = Keep
@@ -84,6 +86,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
             "favorited",
             "can_delete",
             "recent_comments",
+            "milestone",
         ]
         read_only_fields = fields
 
@@ -165,3 +168,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
         # in reading order.
         newest_first = getattr(obj, "recent_comments_desc", [])
         return FeedCommentSerializer(list(reversed(newest_first)), many=True, context=self.context).data
+
+    @extend_schema_field(FEED_MILESTONE_SCHEMA)
+    def get_milestone(self, obj):
+        return feed_milestone(obj)
