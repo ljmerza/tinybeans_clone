@@ -23,6 +23,8 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from mysite.metrics import metrics_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
@@ -32,4 +34,6 @@ urlpatterns = [
     path("api/users/", include("mysite.users.urls")),
     path("api/keeps/", include("mysite.keeps.urls")),
     path("health/", include("health_check.urls")),
+    # Prometheus scrape target; token-protected and not proxied by nginx.
+    path("metrics", metrics_view, name="metrics"),
 ]

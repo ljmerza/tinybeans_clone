@@ -21,5 +21,6 @@ The table below summarizes the required runtime environment variables for the Dj
 | `MAGIC_LOGIN_TOKEN_SIGNING_KEY` | Optional override for passwordless token HMAC. Falls back to `DJANGO_SECRET_KEY`. | None | Optional |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth credentials. | Empty | Staging, Production |
 | `ACCOUNT_FRONTEND_BASE_URL` | Base URL for account-related email links. | `http://localhost:3000` | All |
+| `METRICS_TOKEN` | Bearer token Prometheus must send to `GET /metrics`. Empty turns the endpoint off (404). See [monitoring.md](../monitoring.md). | Empty (off) | Optional |
 
 For additional feature-specific toggles see inline documentation in `mysite/mysite/config/settings/base.py`.
