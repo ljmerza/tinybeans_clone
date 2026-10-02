@@ -527,7 +527,10 @@
 			"likers_empty": "No likes yet",
 			"likers_error": "Couldn't load who liked this.",
 			"likers_more_one": "And 1 more",
-			"likers_more_other": "And {{count}} more"
+			"likers_more_other": "And {{count}} more",
+			"on_this_day": "On this day",
+			"on_this_day_years_ago_one": "{{count}} year ago",
+			"on_this_day_years_ago_other": "{{count}} years ago"
 		},
 		"keep": {
 			"loading": "Loading…",

@@ -90,6 +90,15 @@ export interface FeedFilters {
 }
 
 /**
+ * GET /keeps/feed/on-this-day/: posts from `date`'s month and day in earlier
+ * years, newest first.
+ */
+export interface OnThisDayPayload {
+	date: string;
+	results: FeedKeep[];
+}
+
+/**
  * GET /keeps/feed/adjacent-days/: the closest days with posts either side of
  * `date`, or null when there are none.
  */
