@@ -1,4 +1,5 @@
 import {
+	type InfiniteData,
 	useInfiniteQuery,
 	useMutation,
 	useQuery,
@@ -125,6 +126,51 @@ export function useUpdateAlbum() {
 			void queryClient.invalidateQueries({ queryKey: albumKeys.list() });
 			void queryClient.invalidateQueries({
 				queryKey: albumKeys.forKeepAll(),
+			});
+		},
+	});
+}
+
+/**
+ * Pick an album's cover post, or pass null to go back to the default (the
+ * album's first post); only circle admins.
+ * The album's page and its card in the albums list show the new cover at once.
+ */
+export function useSetAlbumCover(albumId: string) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationKey: albumKeys.setCover(albumId),
+		mutationFn: (keepId: string | null) =>
+			albumServices.update(albumId, { cover_keep: keepId }),
+		meta: {
+			toast: { error: { key: "pages.albums.cover.failed" } },
+		},
+		onSuccess: (album) => {
+			queryClient.setQueryData(albumKeys.detail(album.id), album);
+			queryClient.setQueryData<InfiniteData<AlbumPage>>(
+				albumKeys.list(),
+				(data) =>
+					data && {
+						...data,
+						pages: data.pages.map((page) => ({
+							...page,
+							results: page.results.map((item) =>
+								item.id === album.id ? album : item,
+							),
+						})),
+					},
+			);
+			// Changing the cover also bumps the album to the top of the list.
+			void queryClient.invalidateQueries({ queryKey: albumKeys.list() });
+			void queryClient.invalidateQueries({
+				queryKey: albumKeys.forKeepAll(),
+			});
+		},
+		onError: () => {
+			// E.g. the post left the album meanwhile; show what the album is now.
+			void queryClient.invalidateQueries({
+				queryKey: albumKeys.detail(albumId),
 			});
 		},
 	});

@@ -495,6 +495,13 @@
 				"done": "Done",
 				"toggle_failed": "Couldn't update the album. Please try again.",
 				"gone": "That album or post no longer exists."
+			},
+			"cover": {
+				"set": "Set as album cover",
+				"reset": "Use the default album cover",
+				"default": "Album cover (default)",
+				"badge": "Cover",
+				"failed": "Couldn't change the album cover. Please try again."
 			}
 		},
 		"feed": {
@@ -693,7 +700,7 @@
 				"error_title": "Can't load circle",
 				"error_message": "We couldn't load this circle right now. Please try again.",
 				"retry": "Try again",
-				"back_to_list": "← Back to circles",
+				"back_to_list": "← Back to Settings",
 				"title_fallback": "Circle",
 				"description": "{{count}} members in this circle",
 				"description_one": "{{count}} member in this circle",

@@ -11,3 +11,7 @@ export {
 	AddToAlbumDialog,
 	type AddToAlbumDialogProps,
 } from "./components/AddToAlbumDialog";
+export {
+	AlbumCoverAction,
+	type AlbumCoverActionProps,
+} from "./components/AlbumCoverAction";

@@ -33,11 +33,13 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 	),
 }));
 
-import { albumServices } from "@/features/albums";
-import { makeAlbum } from "@/features/albums/testData";
+import { albumKeys, albumServices } from "@/features/albums";
+import { albumPage, makeAlbum } from "@/features/albums/testData";
 import { circleServices } from "@/features/circles";
 import type { FeedKeep } from "@/features/keeps";
 import type { HttpError } from "@/lib/httpClient";
+import { createTestQueryClient } from "@/lib/query/queryClient";
+import { toast } from "sonner";
 import { AlbumRouteView } from "./detail";
 
 const keep = (n: number): FeedKeep => ({
@@ -56,6 +58,28 @@ const keep = (n: number): FeedKeep => ({
 	favorited: false,
 	can_delete: false,
 	recent_comments: [],
+});
+
+/** A post with one photo, so it can be an album's cover. */
+const photoKeep = (n: number): FeedKeep => ({
+	...keep(n),
+	media: [
+		{
+			id: n,
+			media_type: "photo",
+			url: `/media/${n}.jpg`,
+			poster_url: null,
+			width: 800,
+			height: 600,
+			caption: "",
+		},
+	],
+});
+
+const coverOf = (n: number) => ({
+	keep_id: keep(n).id,
+	media_type: "photo" as const,
+	url: `/media/${n}.jpg`,
 });
 
 const notFound = () =>
@@ -202,5 +226,143 @@ describe("AlbumRouteView", () => {
 		renderWithQueryClient(<AlbumRouteView />);
 
 		expect(await screen.findByText("Album not found")).toBeInTheDocument();
+	});
+
+	describe("cover picker", () => {
+		const coverButton = async (name: string) =>
+			screen.findByRole("button", { name });
+
+		function renderAlbum(
+			albumOverrides: Parameters<typeof makeAlbum>[0],
+			keeps: FeedKeep[] = [photoKeep(1), photoKeep(2), keep(3)],
+		) {
+			vi.spyOn(albumServices, "get").mockResolvedValue(
+				makeAlbum({
+					id: ALBUM_ID,
+					post_count: keeps.length,
+					...albumOverrides,
+				}),
+			);
+			vi.spyOn(albumServices, "getKeeps").mockResolvedValue({
+				next: null,
+				previous: null,
+				results: keeps,
+			});
+			vi.spyOn(circleServices, "listMemberships").mockResolvedValue({
+				data: { circles: [] },
+			});
+			// Keep the albums list cached without an observer, as after a visit.
+			const queryClient = createTestQueryClient({
+				defaultOptions: { queries: { gcTime: Number.POSITIVE_INFINITY } },
+			});
+			return renderWithQueryClient(<AlbumRouteView />, { queryClient });
+		}
+
+		it("lets an admin make a post the cover, marking the current one", async () => {
+			const album = makeAlbum({
+				id: ALBUM_ID,
+				can_edit: true,
+				post_count: 3,
+				cover: coverOf(1),
+			});
+			const update = vi.spyOn(albumServices, "update").mockResolvedValue({
+				...album,
+				cover_keep: keep(2).id,
+				cover: coverOf(2),
+			});
+			const { queryClient } = renderAlbum({
+				can_edit: true,
+				cover: coverOf(1),
+			});
+			queryClient.setQueryData(albumKeys.list(), {
+				pages: [albumPage([album])],
+				pageParams: [0],
+			});
+
+			// The first post is the cover by default; nothing to reset.
+			const current = await coverButton("Album cover (default)");
+			expect(current).toHaveAttribute("data-active");
+			expect(current).toHaveAttribute("aria-disabled", "true");
+			fireEvent.click(current);
+			expect(update).not.toHaveBeenCalled();
+			// A text-only post can't be a cover.
+			expect(
+				screen.getAllByRole("button", { name: /album cover/i }),
+			).toHaveLength(2);
+
+			await act(async () =>
+				fireEvent.click(await coverButton("Set as album cover")),
+			);
+
+			expect(update).toHaveBeenCalledWith(ALBUM_ID, {
+				cover_keep: keep(2).id,
+			});
+			expect(await coverButton("Use the default album cover")).toHaveAttribute(
+				"data-active",
+			);
+			expect(await coverButton("Set as album cover")).not.toHaveAttribute(
+				"data-active",
+			);
+			const list = queryClient.getQueryData<{
+				pages: { results: { cover: unknown }[] }[];
+			}>(albumKeys.list());
+			expect(list?.pages[0].results[0].cover).toEqual(coverOf(2));
+		});
+
+		it("lets an admin go back to the default cover", async () => {
+			const album = makeAlbum({
+				id: ALBUM_ID,
+				can_edit: true,
+				post_count: 3,
+				cover_keep: keep(2).id,
+				cover: coverOf(2),
+			});
+			const update = vi
+				.spyOn(albumServices, "update")
+				.mockResolvedValue({ ...album, cover_keep: null, cover: coverOf(1) });
+			renderAlbum({
+				can_edit: true,
+				cover_keep: keep(2).id,
+				cover: coverOf(2),
+			});
+
+			await act(async () =>
+				fireEvent.click(await coverButton("Use the default album cover")),
+			);
+
+			expect(update).toHaveBeenCalledWith(ALBUM_ID, { cover_keep: null });
+			expect(await coverButton("Album cover (default)")).toHaveAttribute(
+				"data-active",
+			);
+		});
+
+		it("says so when changing the cover fails", async () => {
+			vi.spyOn(albumServices, "update").mockRejectedValue(
+				Object.assign(new Error("Server error"), { status: 500 }),
+			);
+			const error = vi.spyOn(toast, "error");
+			renderAlbum({ can_edit: true, cover: coverOf(1) });
+
+			await act(async () =>
+				fireEvent.click(await coverButton("Set as album cover")),
+			);
+
+			await waitFor(() =>
+				expect(error).toHaveBeenCalledWith(
+					"Couldn't change the album cover. Please try again.",
+					expect.anything(),
+				),
+			);
+			expect(await coverButton("Album cover (default)")).toBeInTheDocument();
+		});
+
+		it("isn't offered to members who can't edit the album", async () => {
+			renderAlbum({ can_edit: false, cover: coverOf(1) });
+
+			expect(
+				await screen.findByRole("heading", { name: "Day 1" }),
+			).toBeInTheDocument();
+			expect(screen.queryByRole("button", { name: /album cover/i })).toBeNull();
+		});
 	});
 });

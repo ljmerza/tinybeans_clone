@@ -65,7 +65,8 @@ function GuestHeaderActions() {
  * Application header with navigation.
  *
  * Displays the site branding (Home link) and authentication-dependent navigation.
- * For authenticated users, shows 2FA Settings and Logout links.
+ * For authenticated users, shows Calendar, Favorites, Albums, Settings and
+ * Logout links.
  * For guest users, shows Login and Sign up links.
  *
  * @example

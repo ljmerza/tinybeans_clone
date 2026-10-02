@@ -10,6 +10,8 @@ export const albumKeys = {
 	/** A post's circle's albums, flagged with whether the post is in each. */
 	forKeep: (keepId: string) => albumKeysFactory.tag("for-keep", keepId),
 	detail: (albumId: string) => albumKeysFactory.tag("detail", albumId),
+	/** Mutation key for changing an album's cover, so its pickers can wait on each other. */
+	setCover: (albumId: string) => albumKeysFactory.tag("set-cover", albumId),
 	/**
 	 * An album's posts. Nested under the keeps feed key so likes, favorites,
 	 * comments and deletes patch it like any other feed.
