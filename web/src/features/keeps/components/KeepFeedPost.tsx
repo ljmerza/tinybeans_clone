@@ -5,7 +5,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash2 } from "lucide-react";
+import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
+import { Images, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -86,6 +87,7 @@ export function KeepFeedPost({
 		? likers.data.count - likers.data.results.length
 		: 0;
 	const photoViewer = useKeepPhotoViewer(keep);
+	const [albumsOpen, setAlbumsOpen] = useState(false);
 
 	const post = useMemo(
 		() =>
@@ -194,6 +196,11 @@ export function KeepFeedPost({
 									: t("pages.feed.favorite")
 							}
 						/>
+						<PostAction
+							aria-label={t("pages.albums.add.action")}
+							icon={<Images strokeWidth={1.8} />}
+							onClick={() => setAlbumsOpen(true)}
+						/>
 						<PostShareButton aria-label={t("pages.feed.share")} />
 						{keep.can_delete && (
 							<>
@@ -237,6 +244,9 @@ export function KeepFeedPost({
 				</div>
 			</PostRoot>
 			{photoViewer.viewer}
+			{albumsOpen && (
+				<AddToAlbumDialog keep={keep} open onOpenChange={setAlbumsOpen} />
+			)}
 			<Dialog open={likersOpen} onOpenChange={setLikersOpen}>
 				<DialogContent
 					className="max-w-sm"

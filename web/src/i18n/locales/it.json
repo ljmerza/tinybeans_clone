@@ -33,7 +33,8 @@
 		"signup": "Registrati",
 		"logout": "Esci",
 		"settings": "Impostazioni",
-		"favorites": "Preferiti"
+		"favorites": "Preferiti",
+		"albums": "Album"
 	},
 	"auth": {
 		"login": {
@@ -443,6 +444,60 @@
 			"empty_message": "Tocca il segnalibro su un post per salvarlo qui.",
 			"end": "Questi sono tutti i tuoi preferiti.",
 			"aria_label": "I tuoi post preferiti"
+		},
+		"albums": {
+			"loading": "Caricamento degli album…",
+			"error_title": "Impossibile caricare gli album",
+			"error_message": "Qualcosa è andato storto. Riprova.",
+			"new_album": "Nuovo album",
+			"empty_title": "Ancora nessun album",
+			"empty_message": "Raccogli in un album i post di più giorni, come un viaggio o una vacanza.",
+			"post_count_one": "{{count}} post",
+			"post_count_other": "{{count}} post",
+			"show_more": "Mostra altri",
+			"aria_label": "Album",
+			"back": "Tutti gli album",
+			"album_loading": "Caricamento dell'album…",
+			"not_found_title": "Album non trovato",
+			"not_found_message": "Potrebbe essere stato eliminato, oppure non fai più parte della sua cerchia.",
+			"album_empty_title": "Questo album è vuoto",
+			"album_empty_message": "Usa il pulsante album su un post per aggiungerlo qui.",
+			"album_end": "Non c'è altro in questo album.",
+			"album_aria_label": "Post in {{name}}",
+			"rename": "Modifica album",
+			"delete": "Elimina album",
+			"delete_title": "Eliminare questo album?",
+			"delete_description": "L'album sparisce per tutti nella cerchia. I suoi post restano.",
+			"delete_confirm": "Elimina album",
+			"deleted": "Album eliminato.",
+			"delete_failed": "Impossibile eliminare l'album. Riprova.",
+			"form": {
+				"create_title": "Nuovo album",
+				"edit_title": "Modifica album",
+				"circle": "Cerchia",
+				"name": "Nome",
+				"name_placeholder": "Viaggio al mare 2026",
+				"description": "Descrizione (facoltativa)",
+				"create": "Crea album",
+				"save": "Salva",
+				"saving": "Salvataggio…",
+				"create_failed": "Impossibile creare l'album. Riprova.",
+				"save_failed": "Impossibile salvare l'album. Riprova."
+			},
+			"add": {
+				"action": "Aggiungi a un album",
+				"title": "Aggiungi a un album",
+				"description": "Album di {{circle}}. Tutti nella cerchia possono vederli.",
+				"loading": "Caricamento degli album…",
+				"error": "Impossibile caricare gli album.",
+				"empty": "Ancora nessun album in questa cerchia. Crea il primo qui sotto.",
+				"new_label": "Nome del nuovo album",
+				"new_placeholder": "Nuovo album",
+				"create": "Crea",
+				"done": "Fatto",
+				"toggle_failed": "Impossibile aggiornare l'album. Riprova.",
+				"gone": "Quell'album o quel post non esiste più."
+			}
 		},
 		"feed": {
 			"new_post": {
