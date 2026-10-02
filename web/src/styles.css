@@ -461,6 +461,12 @@ html[data-color-theme] {
 	--calendar-color-chip-active-text: var(--primary);
 }
 
+/* The page already pads its content, so the mobile calendar timeline adds no
+   side padding of its own. Set on the element so it applies in every theme. */
+.calendar-virtual-container {
+	--calendar-virtual-padding-x: 0;
+}
+
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);

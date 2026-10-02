@@ -129,7 +129,8 @@ export function CalendarRouteView() {
 
 	return (
 		<Layout>
-			<div className="container-page space-y-6">
+			{/* Layout's <main> already applies container-page padding. */}
+			<div className="space-y-6">
 				<header className="flex flex-wrap items-end justify-between gap-4">
 					<div className="space-y-2">
 						<h1 className="heading-2">{t("pages.calendar.title")}</h1>
