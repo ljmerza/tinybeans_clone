@@ -544,7 +544,12 @@
 			"error_message": "Algo salió mal al cargar tus fotos.",
 			"retry": "Reintentar",
 			"all_circles": "Todos los círculos",
-			"select_circle": "Elige un círculo"
+			"select_circle": "Elige un círculo",
+			"jump_to_month": "Ir a un mes",
+			"jump_to_month_current": "Ir a un mes, mostrando {{month}}",
+			"jump_today": "Hoy",
+			"previous_year": "Año anterior",
+			"next_year": "Año siguiente"
 		},
 		"calendar_day": {
 			"loading": "Cargando las fotos de este día…",

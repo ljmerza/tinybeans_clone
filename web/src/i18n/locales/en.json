@@ -544,7 +544,12 @@
 			"error_message": "Something went wrong while loading your photos.",
 			"retry": "Try again",
 			"all_circles": "All circles",
-			"select_circle": "Choose a circle"
+			"select_circle": "Choose a circle",
+			"jump_to_month": "Jump to month",
+			"jump_to_month_current": "Jump to month, showing {{month}}",
+			"jump_today": "Today",
+			"previous_year": "Previous year",
+			"next_year": "Next year"
 		},
 		"calendar_day": {
 			"loading": "Loading this day's photos…",

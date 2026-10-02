@@ -11,6 +11,10 @@ export {
 	type KeepFeedPostProps,
 } from "./components/KeepFeedPost";
 export {
+	CalendarMonthJump,
+	shiftMonthKey,
+} from "./components/CalendarMonthJump";
+export {
 	OnThisDayCard,
 	type OnThisDayCardProps,
 } from "./components/OnThisDayCard";
