@@ -24,8 +24,7 @@ import { useTranslation } from "react-i18next";
 export function ProfileCirclesSettings() {
 	const { t } = useTranslation();
 	const session = useAuthSession();
-	const { data, isLoading, error, refetch } =
-		useCircleMemberships();
+	const { data, isLoading, error, refetch } = useCircleMemberships();
 	const [removeTarget, setRemoveTarget] = useState<{
 		circleId: number;
 		name: string;
