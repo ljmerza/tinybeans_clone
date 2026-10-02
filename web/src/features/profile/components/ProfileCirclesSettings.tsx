@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 export function ProfileCirclesSettings() {
 	const { t } = useTranslation();
 	const session = useAuthSession();
-	const { data, isLoading, error, refetch, isFetching } =
+	const { data, isLoading, error, refetch } =
 		useCircleMemberships();
 	const [removeTarget, setRemoveTarget] = useState<{
 		circleId: number;
@@ -59,15 +59,6 @@ export function ProfileCirclesSettings() {
 	return (
 		<>
 			<div className="space-y-6">
-				{isFetching ? (
-					<LoadingState
-						layout="inline"
-						spinnerSize="sm"
-						className="text-sm text-muted-foreground"
-						message={t("pages.circles.index.refreshing")}
-					/>
-				) : null}
-
 				{hasMemberships && !hasOwnedCircle && (
 					<div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
 						<div className="flex items-start justify-between gap-4">
