@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     "mysite.users.apps.UsersConfig",
     "mysite.circles.apps.CirclesConfig",
     "mysite.keeps.apps.KeepsConfig",
+    "mysite.albums.apps.AlbumsConfig",
 ]
 
 MIDDLEWARE = [

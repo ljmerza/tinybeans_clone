@@ -33,7 +33,8 @@
 		"signup": "Registrarse",
 		"logout": "Cerrar sesión",
 		"settings": "Configuración",
-		"favorites": "Favoritos"
+		"favorites": "Favoritos",
+		"albums": "Álbumes"
 	},
 	"auth": {
 		"login": {
@@ -465,6 +466,60 @@
 			"empty_message": "Toca el marcador de cualquier publicación para guardarla aquí.",
 			"end": "Esos son todos tus favoritos.",
 			"aria_label": "Tus publicaciones favoritas"
+		},
+		"albums": {
+			"loading": "Cargando álbumes…",
+			"error_title": "No se pudieron cargar los álbumes",
+			"error_message": "Algo salió mal. Inténtalo de nuevo.",
+			"new_album": "Nuevo álbum",
+			"empty_title": "Aún no hay álbumes",
+			"empty_message": "Reúne en un álbum publicaciones de varios días, como un viaje o unas vacaciones.",
+			"post_count_one": "{{count}} publicación",
+			"post_count_other": "{{count}} publicaciones",
+			"show_more": "Ver más",
+			"aria_label": "Álbumes",
+			"back": "Todos los álbumes",
+			"album_loading": "Cargando álbum…",
+			"not_found_title": "Álbum no encontrado",
+			"not_found_message": "Puede que se haya eliminado o que ya no estés en su círculo.",
+			"album_empty_title": "Este álbum está vacío",
+			"album_empty_message": "Usa el botón de álbum de cualquier publicación para añadirla aquí.",
+			"album_end": "Eso es todo lo que hay en este álbum.",
+			"album_aria_label": "Publicaciones de {{name}}",
+			"rename": "Editar álbum",
+			"delete": "Eliminar álbum",
+			"delete_title": "¿Eliminar este álbum?",
+			"delete_description": "El álbum desaparece para todos en el círculo. Sus publicaciones se conservan.",
+			"delete_confirm": "Eliminar álbum",
+			"deleted": "Álbum eliminado.",
+			"delete_failed": "No se pudo eliminar el álbum. Inténtalo de nuevo.",
+			"form": {
+				"create_title": "Nuevo álbum",
+				"edit_title": "Editar álbum",
+				"circle": "Círculo",
+				"name": "Nombre",
+				"name_placeholder": "Viaje a la playa 2026",
+				"description": "Descripción (opcional)",
+				"create": "Crear álbum",
+				"save": "Guardar",
+				"saving": "Guardando…",
+				"create_failed": "No se pudo crear el álbum. Inténtalo de nuevo.",
+				"save_failed": "No se pudo guardar el álbum. Inténtalo de nuevo."
+			},
+			"add": {
+				"action": "Añadir a un álbum",
+				"title": "Añadir a un álbum",
+				"description": "Álbumes de {{circle}}. Todos en el círculo pueden verlos.",
+				"loading": "Cargando álbumes…",
+				"error": "No se pudieron cargar los álbumes.",
+				"empty": "Aún no hay álbumes en este círculo. Crea el primero abajo.",
+				"new_label": "Nombre del nuevo álbum",
+				"new_placeholder": "Nuevo álbum",
+				"create": "Crear",
+				"done": "Listo",
+				"toggle_failed": "No se pudo actualizar el álbum. Inténtalo de nuevo.",
+				"gone": "Ese álbum o esa publicación ya no existe."
+			}
 		},
 		"milestones": {
 			"loading": "Cargando hitos…",

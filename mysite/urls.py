@@ -33,6 +33,7 @@ urlpatterns = [
     path("api/auth/", include("mysite.auth.urls")),
     path("api/users/", include("mysite.users.urls")),
     path("api/keeps/", include("mysite.keeps.urls")),
+    path("api/albums/", include("mysite.albums.urls")),
     path("health/", include("health_check.urls")),
     # Prometheus scrape target; token-protected and not proxied by nginx.
     path("metrics", metrics_view, name="metrics"),

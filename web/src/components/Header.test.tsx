@@ -32,4 +32,15 @@ describe("Header", () => {
 			"/profile/general",
 		);
 	});
+
+	it("links to the albums next to favorites", () => {
+		render(<Header isAuthenticated />);
+
+		const links = screen.getAllByRole("link").map((link) => link.textContent);
+		expect(links.indexOf("Albums")).toBe(links.indexOf("Favorites") + 1);
+		expect(screen.getByRole("link", { name: "Albums" })).toHaveAttribute(
+			"href",
+			"/albums",
+		);
+	});
 });

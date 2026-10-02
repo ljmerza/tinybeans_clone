@@ -33,7 +33,8 @@
 		"signup": "Sign up",
 		"logout": "Logout",
 		"settings": "Settings",
-		"favorites": "Favorites"
+		"favorites": "Favorites",
+		"albums": "Albums"
 	},
 	"auth": {
 		"login": {
@@ -465,6 +466,60 @@
 			"empty_message": "Tap the bookmark on any post to save it here.",
 			"end": "That's all of your favorites.",
 			"aria_label": "Your favorite posts"
+		},
+		"albums": {
+			"loading": "Loading albums…",
+			"error_title": "Couldn't load albums",
+			"error_message": "Something went wrong. Please try again.",
+			"new_album": "New album",
+			"empty_title": "No albums yet",
+			"empty_message": "Gather posts from across days, like a trip or a holiday, into an album.",
+			"post_count_one": "{{count}} post",
+			"post_count_other": "{{count}} posts",
+			"show_more": "Show more",
+			"aria_label": "Albums",
+			"back": "All albums",
+			"album_loading": "Loading album…",
+			"not_found_title": "Album not found",
+			"not_found_message": "It may have been deleted, or you may no longer be in its circle.",
+			"album_empty_title": "This album is empty",
+			"album_empty_message": "Use the album button on any post to add it here.",
+			"album_end": "That's everything in this album.",
+			"album_aria_label": "Posts in {{name}}",
+			"rename": "Edit album",
+			"delete": "Delete album",
+			"delete_title": "Delete this album?",
+			"delete_description": "The album goes away for everyone in the circle. Its posts stay.",
+			"delete_confirm": "Delete album",
+			"deleted": "Album deleted.",
+			"delete_failed": "Couldn't delete the album. Please try again.",
+			"form": {
+				"create_title": "New album",
+				"edit_title": "Edit album",
+				"circle": "Circle",
+				"name": "Name",
+				"name_placeholder": "Beach trip 2026",
+				"description": "Description (optional)",
+				"create": "Create album",
+				"save": "Save",
+				"saving": "Saving…",
+				"create_failed": "Couldn't create the album. Please try again.",
+				"save_failed": "Couldn't save the album. Please try again."
+			},
+			"add": {
+				"action": "Add to album",
+				"title": "Add to album",
+				"description": "Albums in {{circle}}. Everyone in the circle can see them.",
+				"loading": "Loading albums…",
+				"error": "Couldn't load albums.",
+				"empty": "No albums in this circle yet. Create the first one below.",
+				"new_label": "New album name",
+				"new_placeholder": "New album",
+				"create": "Create",
+				"done": "Done",
+				"toggle_failed": "Couldn't update the album. Please try again.",
+				"gone": "That album or post no longer exists."
+			}
 		},
 		"milestones": {
 			"loading": "Loading milestones…",
