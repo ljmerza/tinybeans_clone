@@ -216,3 +216,24 @@ The users app has a solid foundation and can be enhanced in many directions. The
 4. Maintain simplicity while adding power
 
 Regular user feedback and usage analytics should guide which features to implement first.
+
+## Feed, Calendar & Operations Ideas (added 2026-10-02)
+
+Ideas beyond the users app, written after the calendar timeline, full-size photo viewer and day-swipe work. Each item notes what already exists. Pick one and lay out 2–3 implementation options before building.
+
+### Quick wins
+- **On this day**: a card at the top of the home feed with photos from this date in past years. With years of synced Tinybeans history this is likely the most-used addition. Nothing like it exists yet.
+- **Download original**: a download button in the full-size photo viewer. The feed already returns `original_url`, and `yet-another-react-lightbox` ships a download plugin.
+- **Install as an app (PWA)**: manifest icons + `display: standalone` so it opens like an app on phones; offline caching of recent months later. A `manifest.json` exists but there is no service worker.
+- **Jump to a month/year in the calendar**: a year/month picker over the virtualized timeline, so reaching 2018 doesn't take a long scroll.
+
+### Bigger features
+- **Milestones in the UI**: the backend already has a milestone model (first steps, birthday, …), a milestone keep type and a `tags` field on keeps, but none of it is shown in the web app. Show milestone badges on posts and a per-child milestone timeline.
+- **Kids' ages on posts**: child profiles with a `birthdate` already exist in the users app. Link keeps to children and show "Emma · 2 years 3 months" on each post.
+- **Search & filters**: search captions, titles and tags, and filter by who posted. Postgres full-text search covers it without new infrastructure.
+- **New-post notifications**: an email digest of the day's new photos per circle, or web push once the PWA exists. The email app and notification settings page already exist; check what they send today.
+- **Albums / collections**: group posts across days ("Beach trip 2026"). Favorites already covers part of this.
+
+### Operations
+- **App health alerts**: alert on Postgres connection count and API error rate in the existing Prometheus setup. On 2026-10-02 leaked connections filled all 100 slots and every login returned 500; an alert would have caught it early.
+- **Production app server**: `web` runs Django's `runserver` (the source of that connection leak). Moving to gunicorn would be faster and sturdier, but it changes how deploys and code reloads work, so plan it first.
