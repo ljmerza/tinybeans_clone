@@ -3,17 +3,19 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-type ProfileTabKey = "general" | "notifications" | "2fa";
+type ProfileTabKey = "general" | "notifications" | "circles" | "2fa";
 
 type ProfileSettingsTabsProps = {
 	general: ReactNode;
 	notifications?: ReactNode;
+	circles?: ReactNode;
 	twoFactor?: ReactNode;
 };
 
 export function ProfileSettingsTabs({
 	general,
 	notifications,
+	circles,
 	twoFactor,
 }: ProfileSettingsTabsProps) {
 	const navigate = useNavigate();
@@ -26,7 +28,9 @@ export function ProfileSettingsTabs({
 		? "general"
 		: pathname.startsWith("/profile/notifications")
 			? "notifications"
-			: "2fa";
+			: pathname.startsWith("/profile/circles")
+				? "circles"
+				: "2fa";
 
 	const handleTabChange = (value: string) => {
 		if (value === currentTab) return;
@@ -35,6 +39,8 @@ export function ProfileSettingsTabs({
 			navigate({ to: "/profile/general" });
 		} else if (value === "notifications") {
 			navigate({ to: "/profile/notifications" });
+		} else if (value === "circles") {
+			navigate({ to: "/profile/circles" });
 		} else if (value === "2fa") {
 			navigate({ to: "/profile/2fa" });
 		}
@@ -46,12 +52,15 @@ export function ProfileSettingsTabs({
 			value={currentTab}
 			onValueChange={handleTabChange}
 		>
-			<TabsList className="grid h-auto w-full grid-cols-1 sm:h-9 sm:grid-cols-3">
+			<TabsList className="grid h-auto w-full grid-cols-1 sm:h-9 sm:grid-cols-4">
 				<TabsTrigger value="general">
 					{t("twofa.settings.tabs.general")}
 				</TabsTrigger>
 				<TabsTrigger value="notifications">
 					{t("twofa.settings.tabs.notifications")}
+				</TabsTrigger>
+				<TabsTrigger value="circles">
+					{t("twofa.settings.tabs.circles")}
 				</TabsTrigger>
 				<TabsTrigger value="2fa">
 					{t("twofa.settings.tabs.two_factor")}
@@ -60,6 +69,7 @@ export function ProfileSettingsTabs({
 
 			<TabsContent value="general">{general}</TabsContent>
 			<TabsContent value="notifications">{notifications}</TabsContent>
+			<TabsContent value="circles">{circles}</TabsContent>
 			<TabsContent value="2fa">{twoFactor}</TabsContent>
 		</Tabs>
 	);
