@@ -9,11 +9,14 @@ import {
 import type { CircleMembershipSummary } from "@/features/circles";
 import { useCircleMemberships } from "@/features/circles";
 import {
+	CalendarMonthJump,
 	type CalendarMonthPayload,
 	calendarMonthQueryOptions,
 	currentMonthKey,
+	shiftMonthKey,
 	useCalendarMonth,
 } from "@/features/keeps";
+import { cn } from "@/lib/utils";
 import { PhotoCalendar } from "react-photo-calendar";
 import "react-photo-calendar/styles.css";
 import {
@@ -33,6 +36,9 @@ const ALL_CIRCLES = "all";
 // each one every time it does.
 const IN_VIEW_MONTH_STALE_TIME = 1000 * 60 * 5;
 
+// How far back the mobile timeline reaches; the month jump stops there too.
+const TIMELINE_MONTHS_BACK = 120;
+
 // Module-level so useQueries can reuse the combined array between renders.
 function combineMonthEntries(results: UseQueryResult<CalendarMonthPayload>[]) {
 	return results.flatMap((result) => result.data?.entries ?? []);
@@ -44,6 +50,7 @@ export function CalendarRouteView() {
 	const search = route.useSearch();
 	const month = search.month ?? currentMonthKey();
 	const circleSlug = search.circle;
+	const maxMonthKey = currentMonthKey();
 
 	const { data, isLoading, error, refetch } = useCalendarMonth(
 		month,
@@ -126,13 +133,38 @@ export function CalendarRouteView() {
 	const circles = ((memberships ?? []) as CircleMembershipSummary[]).map(
 		(membership) => membership.circle,
 	);
+	const hasCirclePicker = circles.length > 1;
+
+	// Pushes history like the desktop arrows. A scroll sync still waiting on
+	// its data is dropped so it can't pull ?month= back afterwards.
+	const jumpToMonth = (nextMonthKey: string) => {
+		latestScrolledMonthRef.current = null;
+		navigate({
+			to: "/calendar",
+			search: { month: nextMonthKey, circle: circleSlug },
+		});
+	};
 
 	return (
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
 			<div className="space-y-6">
-				{circles.length > 1 ? (
-					<div className="flex justify-end">
+				{/* The month jump is for the phone timeline; from 875px the
+				    calendar's own year and month controls do the same. */}
+				<div
+					className={cn(
+						"flex items-center justify-end gap-2",
+						!hasCirclePicker && "min-[875px]:hidden",
+					)}
+				>
+					<CalendarMonthJump
+						className="mr-auto min-[875px]:hidden"
+						monthKey={month}
+						minMonthKey={shiftMonthKey(maxMonthKey, -TIMELINE_MONTHS_BACK)}
+						maxMonthKey={maxMonthKey}
+						onSelect={jumpToMonth}
+					/>
+					{hasCirclePicker ? (
 						<Select
 							value={circleSlug ?? ALL_CIRCLES}
 							onValueChange={(value) =>
@@ -145,7 +177,7 @@ export function CalendarRouteView() {
 								})
 							}
 						>
-							<SelectTrigger className="w-56">
+							<SelectTrigger className="w-56 min-w-0">
 								<SelectValue placeholder={t("pages.calendar.select_circle")} />
 							</SelectTrigger>
 							<SelectContent>
@@ -159,15 +191,16 @@ export function CalendarRouteView() {
 								))}
 							</SelectContent>
 						</Select>
-					</div>
-				) : null}
+					) : null}
+				</div>
 
 				<PhotoCalendar
 					monthKey={month}
 					navigationMode="auto"
 					virtualScroll="window"
 					virtualOrder="newest-first"
-					maxMonthKey={currentMonthKey()}
+					virtualRange={{ before: TIMELINE_MONTHS_BACK }}
+					maxMonthKey={maxMonthKey}
 					onMonthsInViewChange={setMonthsInView}
 					onMonthChange={(nextMonthKey, { source }) => {
 						if (source === "scroll") {

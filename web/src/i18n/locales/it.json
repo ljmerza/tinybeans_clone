@@ -541,7 +541,12 @@
 			"error_message": "Qualcosa è andato storto durante il caricamento delle foto.",
 			"retry": "Riprova",
 			"all_circles": "Tutte le cerchie",
-			"select_circle": "Scegli una cerchia"
+			"select_circle": "Scegli una cerchia",
+			"jump_to_month": "Vai a un mese",
+			"jump_to_month_current": "Vai a un mese, attualmente {{month}}",
+			"jump_today": "Oggi",
+			"previous_year": "Anno precedente",
+			"next_year": "Anno successivo"
 		},
 		"calendar_day": {
 			"loading": "Caricamento delle foto del giorno…",

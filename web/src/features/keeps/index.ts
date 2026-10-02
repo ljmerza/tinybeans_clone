@@ -10,6 +10,10 @@ export {
 	type KeepFeedPostProps,
 } from "./components/KeepFeedPost";
 export {
+	CalendarMonthJump,
+	shiftMonthKey,
+} from "./components/CalendarMonthJump";
+export {
 	NewPostDialog,
 	type NewPostDialogProps,
 } from "./components/NewPostDialog";
