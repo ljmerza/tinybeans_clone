@@ -539,7 +539,6 @@
 			"title": "Calendario",
 			"subtitle": "Le foto della tua famiglia, un mese alla volta.",
 			"loading": "Caricamento del calendario…",
-			"refreshing": "Aggiornamento…",
 			"error_title": "Impossibile caricare il calendario",
 			"error_message": "Qualcosa è andato storto durante il caricamento delle foto.",
 			"retry": "Riprova",
