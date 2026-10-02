@@ -365,3 +365,7 @@ CELERY_RESULT_BACKEND = _get_celery_result_backend(REDIS_URL)
 # nightly sync can run at local midnight without changing how Django stores or
 # renders datetimes.
 CELERY_TIMEZONE = os.environ.get("CELERY_TIMEZONE") or TIME_ZONE
+
+# Bearer token Prometheus sends to GET /metrics (see mysite/metrics.py). Empty
+# disables the endpoint, which then answers 404.
+METRICS_TOKEN = os.environ.get("METRICS_TOKEN", "").strip()

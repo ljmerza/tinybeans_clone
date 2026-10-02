@@ -72,6 +72,8 @@ services:
       # connection is left open when its thread ends. They piled up until
       # Postgres refused new clients and every login failed (2026-10-02).
       POSTGRES_CONN_MAX_AGE: "0"
+      # Bearer token for GET /metrics (Prometheus). Empty = endpoint off (404).
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-your-client-secret}
       GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://localhost:3053/auth/google/callback}
