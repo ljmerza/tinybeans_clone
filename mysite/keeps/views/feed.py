@@ -66,7 +66,7 @@ def feed_queryset(user):
             favorited=Exists(KeepFavorite.objects.filter(keep=OuterRef("pk"), user=user)),
             can_delete=Q(created_by=user) | Exists(circle_admin),
         )
-        .select_related("circle", "created_by", "milestone__child_profile")
+        .select_related("circle", "created_by")
         .prefetch_related(
             Prefetch("media_files", queryset=KeepMedia.objects.order_by("upload_order", "id")),
             Prefetch("reactions", queryset=KeepReaction.objects.filter(user=user), to_attr="viewer_reactions"),
