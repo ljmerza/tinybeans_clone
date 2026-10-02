@@ -68,11 +68,6 @@ export function FavoritesRouteView() {
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
 			<div className="space-y-6">
-				<header className="mx-auto max-w-[var(--rsf-post-max-width)] space-y-2">
-					<h1 className="heading-2">{t("pages.favorites.title")}</h1>
-					<p className="text-subtitle">{t("pages.favorites.subtitle")}</p>
-				</header>
-
 				<VirtualFeed
 					items={keeps}
 					getItemKey={(keep) => keep.id}

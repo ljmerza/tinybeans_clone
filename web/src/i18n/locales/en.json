@@ -457,8 +457,6 @@
 			"guest_message": "Get started by signing up or logging in to your account."
 		},
 		"favorites": {
-			"title": "Favorites",
-			"subtitle": "Posts you saved. Only you can see this list.",
 			"loading": "Loading your favorites…",
 			"error_title": "Couldn't load your favorites",
 			"error_message": "Something went wrong. Please try again.",

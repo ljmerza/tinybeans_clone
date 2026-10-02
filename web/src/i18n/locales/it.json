@@ -457,8 +457,6 @@
 			"guest_message": "Inizia registrandoti o accedendo al tuo account."
 		},
 		"favorites": {
-			"title": "Preferiti",
-			"subtitle": "I post che hai salvato. Solo tu puoi vedere questo elenco.",
 			"loading": "Caricamento dei preferiti…",
 			"error_title": "Impossibile caricare i preferiti",
 			"error_message": "Qualcosa è andato storto. Riprova.",
