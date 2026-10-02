@@ -12,12 +12,14 @@ from rest_framework.test import APIClient
 
 from mysite.circles.models import Circle, CircleMembership
 from mysite.keeps.models import Keep, KeepComment, KeepMedia, KeepReaction, KeepType
+from mysite.keeps.views.feed import ON_THIS_DAY_LIMIT, ON_THIS_DAY_PER_YEAR
 from mysite.users.models import UserRole
 
 User = get_user_model()
 
 FEED_URL = "/api/keeps/feed/"
 ADJACENT_DAYS_URL = "/api/keeps/feed/adjacent-days/"
+ON_THIS_DAY_URL = "/api/keeps/feed/on-this-day/"
 COMMENTS_URL = "/api/keeps/comments/"
 BASE_TIME = datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc)
 
@@ -359,6 +361,132 @@ class TestKeepFeedAdjacentDaysView:
         api_client.force_authenticate(user=user)
 
         response = api_client.get(ADJACENT_DAYS_URL, params)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def utc(*args):
+    return datetime(*args, tzinfo=timezone.utc)
+
+
+@pytest.mark.django_db
+class TestKeepFeedOnThisDayView:
+    def test_requires_authentication(self, api_client):
+        response = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_same_month_and_day_in_earlier_years_newest_first(self, api_client, user, other_user, circle):
+        second_circle = Circle.objects.create(name="Grandparents", created_by=other_user)
+        CircleMembership.objects.create(user=user, circle=second_circle)
+        last_year = make_keep(circle, user, utc(2025, 10, 2, 9, 0))
+        late_utc = make_keep(second_circle, other_user, utc(2023, 10, 2, 23, 59))
+        early_utc = make_keep(circle, user, utc(2023, 10, 2, 0, 0))
+        long_ago = make_keep(circle, user, utc(2019, 10, 2, 12, 0))
+        make_keep(circle, user, utc(2026, 10, 2, 8, 0))  # today: not a memory yet
+        make_keep(circle, user, utc(2026, 1, 1, 0, 0))  # earlier this year, other day
+        make_keep(circle, user, utc(2025, 10, 1, 23, 59))  # the day before
+        make_keep(circle, user, utc(2025, 10, 3, 0, 0))  # the day after
+        make_keep(circle, user, utc(2025, 11, 2, 12, 0))  # same day, other month
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["date"] == "2026-10-02"
+        assert feed_ids(response) == [str(k.id) for k in (last_year, late_utc, early_utc, long_ago)]
+
+    def test_returns_feed_shaped_posts(self, api_client, user, circle):
+        keep = make_keep(circle, user, utc(2025, 10, 2, 12, 0))
+        api_client.force_authenticate(user=user)
+
+        item = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"}).data["results"][0]
+        feed_item = api_client.get(f"{FEED_URL}{keep.id}/").data
+
+        assert item == feed_item
+
+    def test_keeps_membership_and_media_rules(self, api_client, user, other_user, circle, other_circle):
+        visible = make_keep(circle, user, utc(2025, 10, 2, 12, 0))
+        make_keep(other_circle, other_user, utc(2025, 10, 2, 12, 0))  # not a member
+        make_keep(circle, user, utc(2024, 10, 2, 12, 0), media=(("video", False),))  # no poster yet
+        make_keep(circle, user, utc(2023, 10, 2, 12, 0), media=())  # media keep with nothing to show
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"})
+
+        assert feed_ids(response) == [str(visible.id)]
+
+    def test_respects_circle_filter(self, api_client, user, other_user, circle, other_circle):
+        second_circle = Circle.objects.create(name="Grandparents", created_by=other_user)
+        CircleMembership.objects.create(user=user, circle=second_circle)
+        mine = make_keep(circle, user, utc(2025, 10, 2, 12, 0))
+        make_keep(second_circle, other_user, utc(2024, 10, 2, 12, 0))
+        make_keep(other_circle, other_user, utc(2024, 10, 2, 12, 0))
+
+        api_client.force_authenticate(user=user)
+        filtered = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02", "circle_slug": circle.slug})
+        other = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02", "circle_slug": other_circle.slug})
+
+        assert feed_ids(filtered) == [str(mine.id)]
+        assert feed_ids(other) == []
+
+    def test_feb_28_in_a_non_leap_year_includes_leap_days(self, api_client, user, circle):
+        leap_day = make_keep(circle, user, utc(2024, 2, 29, 12, 0))
+        feb_28 = make_keep(circle, user, utc(2024, 2, 28, 12, 0))
+        make_keep(circle, user, utc(2024, 3, 1, 12, 0))
+
+        api_client.force_authenticate(user=user)
+        response = api_client.get(ON_THIS_DAY_URL, {"date": "2027-02-28"})
+
+        assert feed_ids(response) == [str(leap_day.id), str(feb_28.id)]
+
+    def test_leap_years_keep_feb_28_and_29_apart(self, api_client, user, circle):
+        leap_day = make_keep(circle, user, utc(2024, 2, 29, 12, 0))
+        feb_28 = make_keep(circle, user, utc(2025, 2, 28, 12, 0))
+
+        api_client.force_authenticate(user=user)
+        on_28 = api_client.get(ON_THIS_DAY_URL, {"date": "2028-02-28"})
+        on_29 = api_client.get(ON_THIS_DAY_URL, {"date": "2028-02-29"})
+
+        assert feed_ids(on_28) == [str(feb_28.id)]
+        assert feed_ids(on_29) == [str(leap_day.id)]
+
+    def test_caps_per_year_and_spreads_across_years(self, api_client, user, circle):
+        # A busy recent year, then one keep in each of many earlier years.
+        busy_year = [make_keep(circle, user, utc(2025, 10, 2, 20 - hour, 0)) for hour in range(5)]
+        earlier_years = [make_keep(circle, user, utc(2024 - n, 10, 2, 12, 0)) for n in range(ON_THIS_DAY_LIMIT)]
+
+        api_client.force_authenticate(user=user)
+        ids = feed_ids(api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"}))
+
+        assert len(ids) == ON_THIS_DAY_LIMIT
+        # Every year gets one before any year gets a second, so the busy year
+        # only has its newest keep and the oldest years fill the rest.
+        assert ids == [str(busy_year[0].id)] + [str(k.id) for k in earlier_years[: ON_THIS_DAY_LIMIT - 1]]
+
+    def test_a_single_year_is_capped(self, api_client, user, circle):
+        keeps = [make_keep(circle, user, utc(2025, 10, 2, 20 - hour, 0)) for hour in range(ON_THIS_DAY_PER_YEAR + 2)]
+
+        api_client.force_authenticate(user=user)
+        ids = feed_ids(api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"}))
+
+        assert ids == [str(k.id) for k in keeps[:ON_THIS_DAY_PER_YEAR]]
+
+    def test_empty_when_nothing_matches(self, api_client, user, circle):
+        make_keep(circle, user, utc(2025, 10, 3, 12, 0))
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == {"date": "2026-10-02", "results": []}
+
+    @pytest.mark.parametrize(
+        "params", [{}, {"date": ""}, {"date": "2026-10-2"}, {"date": "2026-02-30"}, {"date": "today"}]
+    )
+    def test_missing_or_invalid_date_is_rejected(self, api_client, user, params):
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(ON_THIS_DAY_URL, params)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 

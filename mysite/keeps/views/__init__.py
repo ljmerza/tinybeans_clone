@@ -13,6 +13,7 @@ from .feed import (
     KeepFeedFavoriteView,
     KeepFeedItemView,
     KeepFeedLikersView,
+    KeepFeedOnThisDayView,
     KeepFeedView,
 )
 from .keeps import (
@@ -49,6 +50,7 @@ __all__ = [
     "KeepCommentListCreateView",
     "KeepFeedItemView",
     "KeepFeedLikersView",
+    "KeepFeedOnThisDayView",
     "KeepFeedView",
     "KeepByCircleView",
     "KeepByTypeView",

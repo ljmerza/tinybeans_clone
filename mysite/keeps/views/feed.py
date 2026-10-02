@@ -1,11 +1,12 @@
 """Home-screen photo feed across all of the user's circles."""
 
+import calendar
 import re
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, ExtractDay, ExtractMonth
 from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import generics, status
@@ -23,6 +24,9 @@ from ..serializers.feed import FeedLikerSerializer, KeepFeedSerializer
 # Matches the web feed's initial comment count, so it needs no extra fetch.
 RECENT_COMMENT_COUNT = 3
 DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# "On this day" picks at most this many keeps, and this many from any one year.
+ON_THIS_DAY_LIMIT = 12
+ON_THIS_DAY_PER_YEAR = 3
 
 
 class KeepFeedPagination(CursorPagination):
@@ -182,6 +186,84 @@ class KeepFeedAdjacentDaysView(APIView):
             return moment.astimezone(dt_timezone.utc).date().isoformat() if moment else None
 
         return Response({"date": day, "previous": as_day(previous), "next": as_day(following)})
+
+
+def on_this_day_ids(keeps, day):
+    """Ids of `keeps` from earlier years on `day`'s month and day, newest first.
+
+    Memories are matched on their UTC date, like the calendar. In a non-leap
+    year, Feb 28 also brings back Feb 29 memories so they still come up once a
+    year. Each year (newest first) contributes one keep per round, up to
+    ON_THIS_DAY_PER_YEAR, until ON_THIS_DAY_LIMIT, so one busy year can't push
+    out the others.
+    """
+    month_days = [(day.month, day.day)]
+    if (day.month, day.day) == (2, 28) and not calendar.isleap(day.year):
+        month_days.append((2, 29))
+    same_day = Q()
+    for month, day_of_month in month_days:
+        same_day |= Q(memory_month=month, memory_day=day_of_month)
+    candidates = (
+        keeps.annotate(
+            memory_month=ExtractMonth("date_of_memory", tzinfo=dt_timezone.utc),
+            memory_day=ExtractDay("date_of_memory", tzinfo=dt_timezone.utc),
+        )
+        .filter(same_day, date_of_memory__lt=datetime(day.year, 1, 1, tzinfo=dt_timezone.utc))
+        .order_by(*KeepFeedPagination.ordering)
+        .values_list("id", "date_of_memory")
+    )
+    by_year = {}
+    for keep_id, moment in candidates:
+        by_year.setdefault(moment.astimezone(dt_timezone.utc).year, []).append(keep_id)
+    chosen = []
+    for rank in range(ON_THIS_DAY_PER_YEAR):
+        for ids in by_year.values():
+            if rank < len(ids) and len(chosen) < ON_THIS_DAY_LIMIT:
+                chosen.append(ids[rank])
+    return chosen
+
+
+class KeepFeedOnThisDayView(generics.GenericAPIView):
+    """Keeps from this month and day in earlier years, for the home feed's memories."""
+
+    serializer_class = KeepFeedSerializer
+
+    def get_queryset(self):
+        # Avoid queryset evaluation during schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return Keep.objects.none()
+        return filter_by_circle(feed_queryset(self.request.user), self.request.query_params.get("circle_slug"))
+
+    @extend_schema(
+        summary="On this day",
+        description="Feed posts whose memory (UTC date) falls on the same month and day as `date` in an "
+        "earlier year, from every circle the user belongs to, newest first. `date` is the viewer's local "
+        f"today. At most {ON_THIS_DAY_LIMIT} posts, up to {ON_THIS_DAY_PER_YEAR} from each year, spread "
+        "across as many years as possible. In a non-leap year, Feb 28 also includes Feb 29 memories.",
+        parameters=[
+            OpenApiParameter(
+                name="date",
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="The viewer's local today (YYYY-MM-DD)",
+                required=True,
+            ),
+            DAY_PARAMETERS[1],
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=KeepFeedSerializer(many=True), description="`{date, results}`: feed posts, newest first"
+            ),
+            400: OpenApiResponse(description="Missing or invalid date"),
+        },
+    )
+    def get(self, request):
+        day = request.query_params.get("date", "")
+        start, _ = parse_day(day)
+        keeps = self.get_queryset()
+        ids = on_this_day_ids(keeps, start)
+        results = keeps.filter(id__in=ids).order_by(*KeepFeedPagination.ordering) if ids else []
+        return Response({"date": day, "results": self.get_serializer(results, many=True).data})
 
 
 class KeepFeedItemView(generics.RetrieveAPIView):
