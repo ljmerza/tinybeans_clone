@@ -131,12 +131,8 @@ export function CalendarRouteView() {
 		<Layout>
 			{/* Layout's <main> already applies container-page padding. */}
 			<div className="space-y-6">
-				<header className="flex flex-wrap items-end justify-between gap-4">
-					<div className="space-y-2">
-						<h1 className="heading-2">{t("pages.calendar.title")}</h1>
-						<p className="text-subtitle">{t("pages.calendar.subtitle")}</p>
-					</div>
-					{circles.length > 1 ? (
+				{circles.length > 1 ? (
+					<div className="flex justify-end">
 						<Select
 							value={circleSlug ?? ALL_CIRCLES}
 							onValueChange={(value) =>
@@ -163,8 +159,8 @@ export function CalendarRouteView() {
 								))}
 							</SelectContent>
 						</Select>
-					) : null}
-				</header>
+					</div>
+				) : null}
 
 				<PhotoCalendar
 					monthKey={month}

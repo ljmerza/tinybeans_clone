@@ -536,8 +536,6 @@
 			"back_to_feed": "Volver a tu feed"
 		},
 		"calendar": {
-			"title": "Calendario",
-			"subtitle": "Las fotos de tu familia, mes a mes.",
 			"loading": "Cargando tu calendario…",
 			"error_title": "No se pudo cargar el calendario",
 			"error_message": "Algo salió mal al cargar tus fotos.",
