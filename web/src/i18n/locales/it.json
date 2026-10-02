@@ -428,6 +428,28 @@
 			}
 		}
 	},
+	"milestones": {
+		"badge_label": "{{milestone}}. Vedi i traguardi",
+		"types": {
+			"first_word": "Prima parola",
+			"first_steps": "Primi passi",
+			"first_tooth": "Primo dentino",
+			"first_day_school": "Primo giorno di scuola",
+			"birthday": "Compleanno",
+			"height_weight": "Altezza e peso",
+			"other": "Traguardo"
+		},
+		"age": {
+			"years_one": "{{count}} anno",
+			"years_other": "{{count}} anni",
+			"months_one": "{{count}} mese",
+			"months_other": "{{count}} mesi",
+			"weeks_one": "{{count}} sett.",
+			"weeks_other": "{{count}} sett.",
+			"days_one": "{{count}} giorno",
+			"days_other": "{{count}} giorni"
+		}
+	},
 	"pages": {
 		"home": {
 			"welcome": "Ti diamo il benvenuto",
@@ -499,6 +521,17 @@
 				"gone": "Quell'album o quel post non esiste più."
 			}
 		},
+		"milestones": {
+			"loading": "Caricamento dei traguardi…",
+			"error_title": "Impossibile caricare i traguardi",
+			"error_message": "Qualcosa è andato storto. Riprova.",
+			"empty_title": "Ancora nessun traguardo",
+			"empty_message": "Quando pubblichi una foto, tocca Traguardo per segnarla come tale.",
+			"end": "Questi sono tutti i traguardi finora.",
+			"aria_label": "Traguardi",
+			"children_label": "Di chi sono i traguardi",
+			"everyone": "Tutti"
+		},
 		"feed": {
 			"new_post": {
 				"open": "Nuovo post",
@@ -522,6 +555,16 @@
 				"retry_failed": "Riprova i caricamenti non riusciti",
 				"skip_failed": "Salta quelli non riusciti",
 				"discard": "Scarta il post",
+				"milestone": {
+					"open": "Traguardo",
+					"add": "Segna {{name}} come traguardo",
+					"type_label": "Traguardo per {{name}}",
+					"type_placeholder": "Quale traguardo?",
+					"other_type": "Altro",
+					"child_label": "Bambino o bambina di {{name}}",
+					"no_child": "Nessuno in particolare",
+					"remove": "Rimuovi il traguardo da {{name}}"
+				},
 				"status": {
 					"queued": "In attesa…",
 					"uploading": "Caricamento… {{percent}}%",
@@ -928,6 +971,7 @@
 		"circle_membership_required": "Devi far parte di questa cerchia per creare ricordi.",
 		"milestone_required": "I ricordi di tipo traguardo richiedono i dati del traguardo.",
 		"milestone_not_allowed": "I dati del traguardo vanno indicati solo per i ricordi di tipo traguardo.",
+		"milestone_child_not_in_circle": "Questo bambino non fa parte di questa cerchia.",
 		"media_files_required": "I ricordi multimediali devono includere dei file.",
 		"reaction_exists": "Hai già reagito a questo ricordo.",
 		"keep_update_forbidden": "Puoi modificare solo i ricordi che hai creato tu, oppure se sei amministratore della cerchia.",

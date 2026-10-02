@@ -14,6 +14,7 @@ from mysite.users.models.child_profile import ChildProfile
 
 from ..models import Keep, KeepMedia, KeepType, Milestone
 from .core import KeepMediaSerializer, MilestoneSerializer
+from .milestones import validate_child_in_circle
 
 
 class KeepChildSerializer(serializers.ModelSerializer):
@@ -158,6 +159,13 @@ class KeepCreateSerializer(serializers.ModelSerializer):
         # Non-milestone keeps shouldn't have milestone data
         if keep_type != KeepType.MILESTONE and milestone_data:
             raise serializers.ValidationError({"milestone_data": create_message("errors.milestone_not_allowed")})
+
+        # A milestone's child must be one of this circle's children.
+        if milestone_data:
+            try:
+                validate_child_in_circle(milestone_data.get("child_profile"), circle)
+            except serializers.ValidationError as error:
+                raise serializers.ValidationError({"milestone_data": error.detail}) from None
 
         # Media keeps may start empty: the web client creates the keep first and
         # then attaches files through the upload endpoint, which needs its id.

@@ -28,6 +28,7 @@ import {
 	type PostItem,
 	useCreatePost,
 } from "../hooks/useCreatePost";
+import { useKeepChildren } from "../hooks/useMilestones";
 import { readExifDate } from "../utils/exifDate";
 import { makeThumbnail } from "../utils/imageThumbnail";
 import {
@@ -36,6 +37,8 @@ import {
 	fileProblem,
 	mediaTypeOf,
 } from "../utils/mediaFiles";
+import { MILESTONE_EMOJI } from "../utils/milestones";
+import { type MilestoneDraft, MilestoneFields } from "./MilestoneFields";
 
 const ACCEPT = [...PHOTO_TYPES, ...VIDEO_TYPES].join(",");
 
@@ -64,9 +67,24 @@ function defaultDate(file: File) {
 	);
 }
 
-/** A file in the composer; `dateEdited` stops the EXIF date overwriting a picked one. */
-interface DraftItem extends PostItem {
+/**
+ * A file in the composer; `dateEdited` stops the EXIF date overwriting a
+ * picked one. `milestone` is set while its milestone fields are open.
+ */
+interface DraftItem extends Omit<PostItem, "milestone"> {
 	dateEdited: boolean;
+	milestone?: MilestoneDraft;
+}
+
+function toPostItem({ file, title, date, milestone }: DraftItem): PostItem {
+	return {
+		file,
+		title,
+		date,
+		milestone: milestone?.type
+			? { type: milestone.type, childId: milestone.childId }
+			: undefined,
+	};
 }
 
 function fileKey(file: File) {
@@ -171,6 +189,14 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 		(membership) => membership.circle,
 	);
 	const post = useCreatePost();
+	const { data: children } = useKeepChildren();
+	const childrenOf = (id: number | null) =>
+		(children ?? []).filter((child) => child.circle.id === id);
+	/** An only child is picked for a new milestone; otherwise nobody yet. */
+	const defaultChildId = (id: number | null) => {
+		const options = childrenOf(id);
+		return options.length === 1 ? options[0].id : null;
+	};
 
 	const [circleId, setCircleId] = useState<number | null>(null);
 	const [items, setItems] = useState<DraftItem[]>([]);
@@ -182,7 +208,11 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const canPost =
 		selectedCircleId !== null &&
 		items.length > 0 &&
-		items.every((item) => item.date !== "");
+		items.every(
+			(item) =>
+				item.date !== "" && (!item.milestone || item.milestone.type !== null),
+		);
+	const circleChildren = childrenOf(selectedCircleId);
 
 	const { phase, reset } = post;
 	const postedCount = post.fileStates.filter(
@@ -253,7 +283,7 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const handleSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
 		if (!canPost || selectedCircleId === null || locked) return;
-		void post.submit(selectedCircleId, items);
+		void post.submit(selectedCircleId, items.map(toPostItem));
 	};
 
 	const handleCancel = async () => {
@@ -295,7 +325,24 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 										? undefined
 										: String(selectedCircleId)
 								}
-								onValueChange={(value) => setCircleId(Number(value))}
+								onValueChange={(value) => {
+									const id = Number(value);
+									setCircleId(id);
+									// Children belong to one circle; start milestones over with the new one's.
+									setItems((current) =>
+										current.map((item) =>
+											item.milestone
+												? {
+														...item,
+														milestone: {
+															...item.milestone,
+															childId: defaultChildId(id),
+														},
+													}
+												: item,
+										),
+									);
+								}}
 								disabled={locked}
 							>
 								<SelectTrigger id={`${ids}-circle`} className="w-full">
@@ -418,6 +465,45 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 													disabled={locked}
 												/>
 											</div>
+											{item.milestone ? (
+												<MilestoneFields
+													name={item.file.name}
+													value={item.milestone}
+													childOptions={circleChildren}
+													disabled={locked}
+													onChange={(milestone) =>
+														updateItem(index, { milestone })
+													}
+													onRemove={() =>
+														updateItem(index, { milestone: undefined })
+													}
+												/>
+											) : (
+												!locked && (
+													<Button
+														type="button"
+														variant="ghost"
+														size="sm"
+														className="-ml-2 h-7 text-xs text-muted-foreground"
+														aria-label={t("pages.feed.new_post.milestone.add", {
+															name: item.file.name,
+														})}
+														onClick={() =>
+															updateItem(index, {
+																milestone: {
+																	type: null,
+																	childId: defaultChildId(selectedCircleId),
+																},
+															})
+														}
+													>
+														<span aria-hidden="true">
+															{MILESTONE_EMOJI.other}
+														</span>
+														{t("pages.feed.new_post.milestone.open")}
+													</Button>
+												)
+											)}
 											<FileStatus state={state} />
 										</div>
 									</li>

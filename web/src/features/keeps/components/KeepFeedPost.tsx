@@ -46,6 +46,7 @@ import {
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
+import { MilestoneBadge } from "./MilestoneBadge";
 import { useKeepPhotoViewer } from "./useKeepPhotoViewer";
 
 /** Comments each "Show more" reveals after the first RECENT_COMMENT_COUNT. */
@@ -171,6 +172,7 @@ export function KeepFeedPost({
 				</PostHeader>
 				{/* Title and caption above the photo, aligned with the header's padding. */}
 				<div className="-mt-1.5 space-y-1 px-[var(--rsf-spacing)] pb-2.5 empty:hidden">
+					{keep.milestone && <MilestoneBadge milestone={keep.milestone} />}
 					<PostTitle />
 					<PostCaption />
 				</div>
