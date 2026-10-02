@@ -181,6 +181,8 @@ export function CalendarRouteView() {
 				<PhotoCalendar
 					monthKey={month}
 					navigationMode="auto"
+					virtualScroll="window"
+					virtualOrder="newest-first"
 					maxMonthKey={currentMonthKey()}
 					onMonthsInViewChange={setMonthsInView}
 					onMonthChange={(nextMonthKey, { source }) => {

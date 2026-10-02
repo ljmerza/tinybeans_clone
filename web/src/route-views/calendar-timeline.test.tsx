@@ -97,6 +97,9 @@ describe("CalendarRouteView timeline", () => {
 		const props = await waitForCalendar();
 
 		expect(props.maxMonthKey).toBe(currentMonthKey());
+		// On phones the timeline scrolls with the page, newest month on top.
+		expect(props.virtualScroll).toBe("window");
+		expect(props.virtualOrder).toBe("newest-first");
 	});
 
 	it("opens the day feed for a day in a neighbouring month", async () => {
