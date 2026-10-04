@@ -13,6 +13,7 @@ from mysite.users.models import UserRole
 from mysite.users.models.child_profile import ChildProfile
 
 from ..models import Keep, KeepMedia, KeepType, Milestone
+from ..people import resolve_circle_people, set_keep_people
 from .core import KeepMediaSerializer, MilestoneSerializer
 
 
@@ -117,6 +118,13 @@ class KeepCreateSerializer(serializers.ModelSerializer):
 
     media_files = KeepMediaSerializer(many=True, required=False)
     milestone_data = MilestoneSerializer(required=False, write_only=True)
+    people = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        write_only=True,
+        max_length=200,
+        help_text="Ids of people from the circle to tag on the post",
+    )
 
     class Meta:
         model = Keep
@@ -131,6 +139,7 @@ class KeepCreateSerializer(serializers.ModelSerializer):
             "tags",
             "media_files",
             "milestone_data",
+            "people",
         ]
         # The id lets the client attach uploads to the keep it just created.
         read_only_fields = ["id"]
@@ -159,6 +168,10 @@ class KeepCreateSerializer(serializers.ModelSerializer):
         if keep_type != KeepType.MILESTONE and milestone_data:
             raise serializers.ValidationError({"milestone_data": create_message("errors.milestone_not_allowed")})
 
+        # Swap the ids for the people themselves; all must be from the circle.
+        if data.get("people") and circle:
+            data["people"] = resolve_circle_people(circle.id, data["people"])
+
         # Media keeps may start empty: the web client creates the keep first and
         # then attaches files through the upload endpoint, which needs its id.
         # The feed hides a media keep until one of its files is displayable.
@@ -172,6 +185,7 @@ class KeepCreateSerializer(serializers.ModelSerializer):
         """Create a new keep with related objects."""
         media_files_data = validated_data.pop("media_files", [])
         milestone_data = validated_data.pop("milestone_data", None)
+        people = validated_data.pop("people", [])
 
         # Set the creator to the current user
         validated_data["created_by"] = self.context["request"].user
@@ -186,6 +200,9 @@ class KeepCreateSerializer(serializers.ModelSerializer):
         # Create milestone data if provided
         if milestone_data:
             Milestone.objects.create(keep=keep, **milestone_data)
+
+        if people:
+            set_keep_people(keep, people, validated_data["created_by"])
 
         return keep
 

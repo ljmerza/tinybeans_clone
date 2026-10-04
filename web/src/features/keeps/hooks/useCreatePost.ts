@@ -82,6 +82,7 @@ export function useCreatePost() {
 	const [phase, setPhase] = useState<PostPhase>("idle");
 	const [fileStates, setFileStates] = useState<PostFileState[]>([]);
 	const circleIdRef = useRef<number | null>(null);
+	const peopleRef = useRef<string[]>([]);
 	const itemsRef = useRef<PostItem[]>([]);
 	const statesRef = useRef<PostFileState[]>([]);
 	const abortRef = useRef(new AbortController());
@@ -119,6 +120,9 @@ export function useCreatePost() {
 						title: title.trim(),
 						description: "",
 						date_of_memory: memoryTimestamp(date),
+						...(peopleRef.current.length > 0 && {
+							people: peopleRef.current,
+						}),
 					});
 					keepId = keep.id;
 					setFileState(index, { keepId });
@@ -229,9 +233,11 @@ export function useCreatePost() {
 		}
 	}, []);
 
+	/** `people` (ids from the circle) are tagged on every post in the batch. */
 	const submit = useCallback(
-		(circleId: number, items: PostItem[]) => {
+		(circleId: number, items: PostItem[], people: string[] = []) => {
 			circleIdRef.current = circleId;
+			peopleRef.current = people;
 			itemsRef.current = items;
 			statesRef.current = items.map(() => ({ status: "queued", progress: 0 }));
 			setFileStates(statesRef.current);
@@ -283,6 +289,7 @@ export function useCreatePost() {
 		abortRef.current.abort();
 		abortRef.current = new AbortController();
 		circleIdRef.current = null;
+		peopleRef.current = [];
 		itemsRef.current = [];
 		statesRef.current = [];
 		setFileStates([]);

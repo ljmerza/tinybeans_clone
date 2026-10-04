@@ -4,11 +4,14 @@ import logging
 
 from django.db import transaction
 from django.db.models import Q
-from django.db.models.signals import post_delete
+from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 
+from mysite.users.models import ChildProfile
+
 from . import storage
-from .models import KeepMedia
+from .models import Keep, KeepMedia, KeepPerson
+from .people import person_for_child
 
 logger = logging.getLogger(__name__)
 
@@ -47,3 +50,31 @@ def delete_media_files(sender, instance: KeepMedia, **kwargs) -> None:
     ]
     if keys:
         transaction.on_commit(lambda: delete_unreferenced_files(keys))
+
+
+@receiver(m2m_changed, sender=Keep.children.through)
+def mirror_children_to_people(sender, instance, action, reverse, pk_set, **kwargs) -> None:
+    """Mirror ``Keep.children`` into the post's people tags.
+
+    The Tinybeans importer only knows ``children``: linking a child tags the
+    child's person in the keep's circle (created if needed), and unlinking or
+    clearing untags it, so the two stay in step. Works from either side of the
+    relation. Only tags are written here, never ``children``, so it can't loop.
+    """
+    if action == "post_add" and pk_set:
+        if reverse:
+            pairs = [(keep, instance) for keep in Keep.objects.filter(pk__in=pk_set)]
+        else:
+            pairs = [(instance, child) for child in ChildProfile.objects.filter(pk__in=pk_set)]
+        for keep, child in pairs:
+            KeepPerson.objects.get_or_create(keep=keep, person=person_for_child(keep.circle_id, child))
+    elif action == "post_remove" and pk_set:
+        if reverse:
+            KeepPerson.objects.filter(keep_id__in=pk_set, person__child=instance).delete()
+        else:
+            KeepPerson.objects.filter(keep=instance, person__child_id__in=pk_set).delete()
+    elif action == "pre_clear":
+        if reverse:
+            KeepPerson.objects.filter(person__child=instance).delete()
+        else:
+            KeepPerson.objects.filter(keep=instance, person__child__isnull=False).delete()

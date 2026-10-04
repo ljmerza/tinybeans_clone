@@ -504,6 +504,42 @@
 				"failed": "Impossibile cambiare la copertina dell'album. Riprova."
 			}
 		},
+		"people": {
+			"with": "Con",
+			"tag": {
+				"action": "Tagga persone",
+				"title": "Chi c'è in questo post?",
+				"description": "Chiunque in {{circle}} può taggare le persone. Tocca un nome per aggiungerlo o toglierlo.",
+				"save": "Salva",
+				"saving": "Salvataggio…",
+				"save_failed": "Impossibile salvare chi c'è in questo post. Riprova."
+			},
+			"picker": {
+				"loading": "Caricamento persone…",
+				"error": "Impossibile caricare le persone.",
+				"empty": "Ancora nessuno da taggare. Aggiungi qualcuno qui sotto.",
+				"list_label": "Persone",
+				"add_label": "Aggiungi qualcuno",
+				"add_placeholder": "Aggiungi qualcuno, es. nonna Jo",
+				"add": "Aggiungi",
+				"add_failed": "Impossibile aggiungere questa persona. Riprova."
+			},
+			"composer": {
+				"label": "Chi c'è?",
+				"hint": "Taggato in ogni foto e video che pubblichi ora."
+			},
+			"page": {
+				"loading": "Caricamento post…",
+				"back": "Torna al feed",
+				"not_found_title": "Persona non trovata",
+				"not_found_message": "Potrebbe far parte di una cerchia di cui non fai parte.",
+				"error_message": "Impossibile caricare questi post. Riprova.",
+				"end": "Questi sono tutti i post con {{name}}.",
+				"empty_title": "Ancora nessun post",
+				"empty_message": "Qui compaiono i post in cui è taggato/a {{name}}.",
+				"aria_label": "Post con {{name}}"
+			}
+		},
 		"feed": {
 			"new_post": {
 				"open": "Nuovo post",

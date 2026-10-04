@@ -504,6 +504,42 @@
 				"failed": "Couldn't change the album cover. Please try again."
 			}
 		},
+		"people": {
+			"with": "With",
+			"tag": {
+				"action": "Tag people",
+				"title": "Who's in this post?",
+				"description": "Anyone in {{circle}} can tag people. Tap a name to add or remove them.",
+				"save": "Save",
+				"saving": "Saving…",
+				"save_failed": "Couldn't save who's in this post. Please try again."
+			},
+			"picker": {
+				"loading": "Loading people…",
+				"error": "Couldn't load people.",
+				"empty": "No one to tag yet. Add someone below.",
+				"list_label": "People",
+				"add_label": "Add someone",
+				"add_placeholder": "Add someone, e.g. Grandma Jo",
+				"add": "Add",
+				"add_failed": "Couldn't add that person. Please try again."
+			},
+			"composer": {
+				"label": "Who's in these?",
+				"hint": "Tagged on every photo and video you post now."
+			},
+			"page": {
+				"loading": "Loading posts…",
+				"back": "Back to the feed",
+				"not_found_title": "Person not found",
+				"not_found_message": "They may be in a circle you're not part of.",
+				"error_message": "Couldn't load these posts. Please try again.",
+				"end": "That's every post with {{name}}.",
+				"empty_title": "No posts yet",
+				"empty_message": "Posts {{name}} is tagged in show up here.",
+				"aria_label": "Posts with {{name}}"
+			}
+		},
 		"feed": {
 			"new_post": {
 				"open": "New post",

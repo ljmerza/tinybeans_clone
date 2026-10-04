@@ -13,6 +13,9 @@ export const keepKeys = {
 		keepKeysFactory.tag("feed", "day", circleSlug ?? "all", date),
 	/** The viewer's favorites; nested under `feed` so cache patches reach it. */
 	feedFavorites: () => keepKeysFactory.tag("feed", "favorites"),
+	/** Posts a person is tagged on; nested under `feed` so cache patches reach it. */
+	feedPerson: (personId: string) =>
+		keepKeysFactory.tag("feed", "person", personId),
 	/** Earlier years' posts from `date`'s month and day; nested under `feed` so cache patches reach it. */
 	feedOnThisDay: (date: string) =>
 		keepKeysFactory.tag("feed", "on-this-day", date),
@@ -21,4 +24,8 @@ export const keepKeys = {
 	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),
 	comments: (keepId: string) => keepKeysFactory.tag("comments", keepId),
 	likers: (keepId: string) => keepKeysFactory.tag("likers", keepId),
+	/** Everyone who can be tagged on a circle's posts. */
+	circlePeople: (circleId: number) =>
+		keepKeysFactory.tag("circle-people", circleId),
+	person: (personId: string) => keepKeysFactory.tag("person", personId),
 };

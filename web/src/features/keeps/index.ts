@@ -4,6 +4,7 @@ export { keepServices } from "./api/services";
 export * from "./hooks/useCalendarMonth";
 export * from "./hooks/useKeepFeed";
 export * from "./hooks/useCreatePost";
+export * from "./hooks/usePeople";
 export * from "./utils/mediaFiles";
 export * from "./utils/onThisDay";
 export {
@@ -22,4 +23,13 @@ export {
 	NewPostDialog,
 	type NewPostDialogProps,
 } from "./components/NewPostDialog";
+export { KeepPeople, type KeepPeopleProps } from "./components/KeepPeople";
+export {
+	PeoplePicker,
+	type PeoplePickerProps,
+} from "./components/PeoplePicker";
+export {
+	TagPeopleDialog,
+	type TagPeopleDialogProps,
+} from "./components/TagPeopleDialog";
 export { keepSharePath, keepToSocialPost } from "./utils/keepToSocialPost";

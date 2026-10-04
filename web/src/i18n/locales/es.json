@@ -504,6 +504,42 @@
 				"failed": "No se pudo cambiar la portada del álbum. Inténtalo de nuevo."
 			}
 		},
+		"people": {
+			"with": "Con",
+			"tag": {
+				"action": "Etiquetar personas",
+				"title": "¿Quién sale en esta publicación?",
+				"description": "Cualquiera en {{circle}} puede etiquetar personas. Toca un nombre para añadirlo o quitarlo.",
+				"save": "Guardar",
+				"saving": "Guardando…",
+				"save_failed": "No se pudo guardar quién sale en esta publicación. Inténtalo de nuevo."
+			},
+			"picker": {
+				"loading": "Cargando personas…",
+				"error": "No se pudieron cargar las personas.",
+				"empty": "Aún no hay nadie para etiquetar. Añade a alguien abajo.",
+				"list_label": "Personas",
+				"add_label": "Añadir a alguien",
+				"add_placeholder": "Añade a alguien, p. ej. la abuela Jo",
+				"add": "Añadir",
+				"add_failed": "No se pudo añadir a esa persona. Inténtalo de nuevo."
+			},
+			"composer": {
+				"label": "¿Quién sale?",
+				"hint": "Se etiqueta en cada foto y vídeo que publiques ahora."
+			},
+			"page": {
+				"loading": "Cargando publicaciones…",
+				"back": "Volver al inicio",
+				"not_found_title": "Persona no encontrada",
+				"not_found_message": "Puede que esté en un círculo del que no formas parte.",
+				"error_message": "No se pudieron cargar estas publicaciones. Inténtalo de nuevo.",
+				"end": "Esas son todas las publicaciones con {{name}}.",
+				"empty_title": "Aún no hay publicaciones",
+				"empty_message": "Aquí aparecen las publicaciones en las que está etiquetado/a {{name}}.",
+				"aria_label": "Publicaciones con {{name}}"
+			}
+		},
 		"feed": {
 			"new_post": {
 				"open": "Nueva publicación",

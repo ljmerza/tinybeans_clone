@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    CirclePeopleView,
     KeepByCircleView,
     KeepByTypeView,
     KeepCalendarView,
@@ -15,6 +16,7 @@ from .views import (
     KeepFeedItemView,
     KeepFeedLikersView,
     KeepFeedOnThisDayView,
+    KeepFeedPeopleView,
     KeepFeedView,
     KeepListCreateView,
     KeepMediaDetailView,
@@ -23,6 +25,7 @@ from .views import (
     KeepReactionListCreateView,
     MediaUploadStatusView,
     MediaUploadView,
+    PersonDetailView,
 )
 
 app_name = "keeps"
@@ -38,9 +41,13 @@ urlpatterns = [
     path("feed/<uuid:keep_id>/", KeepFeedItemView.as_view(), name="keep-feed-item"),
     path("feed/<uuid:keep_id>/favorite/", KeepFeedFavoriteView.as_view(), name="keep-feed-favorite"),
     path("feed/<uuid:keep_id>/likers/", KeepFeedLikersView.as_view(), name="keep-feed-likers"),
+    path("feed/<uuid:keep_id>/people/", KeepFeedPeopleView.as_view(), name="keep-feed-people"),
     path("<uuid:keep_id>/", KeepDetailView.as_view(), name="keep-detail"),
     path("by-circle/<str:circle_slug>/", KeepByCircleView.as_view(), name="keep-by-circle"),
     path("by-type/", KeepByTypeView.as_view(), name="keep-by-type"),
+    # People who can be tagged on posts
+    path("circles/<int:circle_id>/people/", CirclePeopleView.as_view(), name="circle-people"),
+    path("people/<uuid:person_id>/", PersonDetailView.as_view(), name="person-detail"),
     # Media upload endpoints
     path("upload/", MediaUploadView.as_view(), name="media-upload"),
     path("upload/<uuid:upload_id>/status/", MediaUploadStatusView.as_view(), name="media-upload-status"),

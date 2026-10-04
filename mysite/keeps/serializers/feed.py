@@ -65,6 +65,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
         read_only=True, help_text="Whether the viewer may delete this keep: its creator or a circle admin"
     )
     recent_comments = serializers.SerializerMethodField()
+    people = serializers.SerializerMethodField()
 
     class Meta:
         model = Keep
@@ -84,6 +85,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
             "favorited",
             "can_delete",
             "recent_comments",
+            "people",
         ]
         read_only_fields = fields
 
@@ -165,3 +167,16 @@ class KeepFeedSerializer(serializers.ModelSerializer):
         # in reading order.
         newest_first = getattr(obj, "recent_comments_desc", [])
         return FeedCommentSerializer(list(reversed(newest_first)), many=True, context=self.context).data
+
+    @extend_schema_field(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"id": {"type": "string", "format": "uuid"}, "name": {"type": "string"}},
+            },
+        }
+    )
+    def get_people(self, obj):
+        # Prefetched in name order (see ``views.feed``).
+        return [{"id": str(person.id), "name": person.name} for person in obj.people.all()]
