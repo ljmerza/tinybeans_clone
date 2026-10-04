@@ -257,7 +257,6 @@ from .auth import (  # noqa
     GOOGLE_OAUTH_CLIENT_ID,
     GOOGLE_OAUTH_CLIENT_SECRET,
     GOOGLE_OAUTH_REDIRECT_URI,
-    OAUTH_ALLOWED_REDIRECT_URIS,
     OAUTH_STATE_EXPIRATION,
     OAUTH_RATE_LIMIT_MAX_ATTEMPTS,
     OAUTH_RATE_LIMIT_WINDOW,
@@ -277,8 +276,10 @@ from .auth import (  # noqa
     EMAIL_VERIFICATION_TOKEN_TTL_HOURS,
     EMAIL_VERIFICATION_TOKEN_TTL_SECONDS,
     EMAIL_VERIFICATION_ENFORCED,
+    RATELIMIT_IP_META_KEY,
     _get_twofa_encryption_key,
     _get_ratelimit_enable,
+    _get_oauth_allowed_redirect_uris,
 )
 
 # Django REST Framework Configuration
@@ -340,6 +341,7 @@ TRUSTED_PROXY_IPS = _ip_trust_config["TRUSTED_PROXY_IPS"]
 # Apply DEBUG-dependent auth settings
 TWOFA_ENCRYPTION_KEY = _get_twofa_encryption_key(DEBUG, SECRET_KEY)
 RATELIMIT_ENABLE = _get_ratelimit_enable(DEBUG)
+OAUTH_ALLOWED_REDIRECT_URIS = _get_oauth_allowed_redirect_uris(DEBUG)
 
 # Celery Configuration
 from .celery import (  # noqa

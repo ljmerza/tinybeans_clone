@@ -20,6 +20,10 @@ The table below summarizes the required runtime environment variables for the Dj
 | `TWOFA_TRUSTED_DEVICE_ROTATION_DAYS` | Days before a remembered device is reissued with a new signed token. | `15` | Optional |
 | `MAGIC_LOGIN_TOKEN_SIGNING_KEY` | Optional override for passwordless token HMAC. Falls back to `DJANGO_SECRET_KEY`. | None | Optional |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth credentials. | Empty | Staging, Production |
+| `OAUTH_ALLOWED_REDIRECT_URIS` | Comma-separated exact redirect URIs Google sign-in accepts. The SPA sends `<origin>/auth/google-callback`, so list one per origin, e.g. `https://app.example.com/auth/google-callback`. Each must also be an authorized redirect URI on the Google OAuth client. | `http://localhost:3053/…`, `http://127.0.0.1:3053/…`, `http://localhost:3000/…` when `DEBUG=1`; empty otherwise | Staging, Production (if Google sign-in is used) |
+| `DJANGO_TRUST_FORWARDED_FOR` | Read `X-Forwarded-For` / `X-Real-IP` when resolving the client IP for rate limits, throttles and audit data. Outside DEBUG it only counts when the immediate peer is in `DJANGO_TRUSTED_PROXY_IPS`. | `1` when `DEBUG=1`, else `0` | Production behind a proxy |
+| `DJANGO_TRUSTED_PROXY_IPS` | Comma-separated proxy addresses or CIDR ranges. `X-Forwarded-For` is walked from the right past these; the first other address is the client. The production image's nginx talks to gunicorn on loopback, so use `127.0.0.1,::1` there. An invalid entry fails at startup. | `127.0.0.1,::1` when `DEBUG=1`, else empty | Production behind a proxy |
+| `RATELIMIT_ENABLE` | django-ratelimit on/off. The dev compose file sets `0`; do not carry that into production. | `0` when `DEBUG=1`, else `1` | Optional |
 | `ACCOUNT_FRONTEND_BASE_URL` | Base URL for account-related email links. | `http://localhost:3000` | All |
 | `METRICS_TOKEN` | Bearer token Prometheus must send to `GET /metrics`. Empty turns the endpoint off (404). See [monitoring.md](../monitoring.md). | Empty (off) | Optional |
 

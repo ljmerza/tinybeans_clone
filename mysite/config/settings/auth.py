@@ -115,13 +115,28 @@ GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
 GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:3000/auth/google/callback")
 
-# Security: Allowed redirect URIs (whitelist)
-# Prevents open redirect vulnerabilities
-OAUTH_ALLOWED_REDIRECT_URIS = [
-    "https://tinybeans.app/auth/google/callback",
-    "https://staging.tinybeans.app/auth/google/callback",
-    "http://localhost:3000/auth/google/callback",  # Development only
+# Security: Allowed redirect URIs (whitelist), exact match. Prevents open
+# redirects. The SPA sends `<browser origin>/auth/google-callback`, so list one
+# entry per origin the app is served from, e.g.
+#   OAUTH_ALLOWED_REDIRECT_URIS=https://app.example.com/auth/google-callback
+# Each entry must also be an authorized redirect URI on the Google OAuth client.
+_DEV_OAUTH_REDIRECT_URIS = [
+    "http://localhost:3053/auth/google-callback",
+    "http://127.0.0.1:3053/auth/google-callback",
+    "http://localhost:3000/auth/google-callback",
 ]
+
+
+def _get_oauth_allowed_redirect_uris(debug: bool) -> list:
+    """Comma-separated OAUTH_ALLOWED_REDIRECT_URIS; localhost defaults only when DEBUG."""
+    value = os.environ.get("OAUTH_ALLOWED_REDIRECT_URIS")
+    if not value:
+        return list(_DEV_OAUTH_REDIRECT_URIS) if debug else []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+# This will be set by base.py after DEBUG is available
+# OAUTH_ALLOWED_REDIRECT_URIS = _get_oauth_allowed_redirect_uris(DEBUG)
 
 # OAuth state expiration (seconds)
 # State tokens expire after 10 minutes to prevent stale requests
@@ -148,6 +163,11 @@ def _get_ratelimit_enable(debug: bool) -> bool:
 
 # This will be set by base.py after DEBUG is available
 # RATELIMIT_ENABLE = _get_ratelimit_enable(DEBUG)
+
+# django-ratelimit `key="ip"` resolves the client through the proxy-aware
+# resolver (TRUST_FORWARDED_FOR / TRUSTED_PROXY_IPS) instead of REMOTE_ADDR,
+# which is the in-image nginx (127.0.0.1) in production.
+RATELIMIT_IP_META_KEY = "mysite.security.ip_utils.ratelimit_client_ip"
 
 PASSWORD_RESET_RATELIMIT = os.environ.get("PASSWORD_RESET_RATELIMIT", "5/15m")
 PASSWORD_RESET_CONFIRM_RATELIMIT = os.environ.get("PASSWORD_RESET_CONFIRM_RATELIMIT", "10/15m")
