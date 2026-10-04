@@ -11,5 +11,5 @@ jobs:
       packages: write
     uses: ljmerza/misc-actions/.github/workflows/cleanup-pr-image.yml@v2
     with:
-      package-name: tinybeans
+      package-name: circles
     secrets: inherit

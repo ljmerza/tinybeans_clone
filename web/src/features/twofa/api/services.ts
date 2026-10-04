@@ -132,7 +132,7 @@ export const twoFactorServices = {
 		const downloadUrl = window.URL.createObjectURL(blob);
 		const link = document.createElement("a");
 		link.href = downloadUrl;
-		link.download = `tinybeans-recovery-codes.${format}`;
+		link.download = `circles-recovery-codes.${format}`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);

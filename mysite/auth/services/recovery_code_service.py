@@ -22,7 +22,7 @@ class RecoveryCodeService:
             recovery_codes: List of plain text recovery code strings
         """
         lines = [
-            "Tinybeans Recovery Codes",
+            "Circles Recovery Codes",
             "=" * 50,
             f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC')}",
             f"User: {user.display_name}",
@@ -61,7 +61,7 @@ class RecoveryCodeService:
         story = []
 
         # Title
-        title = Paragraph("Tinybeans Recovery Codes", styles["Heading1"])
+        title = Paragraph("Circles Recovery Codes", styles["Heading1"])
         story.append(title)
         story.append(Spacer(1, 0.3 * inch))
 

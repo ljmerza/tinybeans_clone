@@ -14,9 +14,9 @@ x-common-env: &django-common-env
   DJANGO_CSRF_COOKIE_SECURE: ${DJANGO_CSRF_COOKIE_SECURE:-0}
   DJANGO_CSRF_COOKIE_SAMESITE: ${DJANGO_CSRF_COOKIE_SAMESITE:-Strict}
   DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:3053,http://localhost:3053,http://127.0.0.1:3053}
-  POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
-  POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
-  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
+  POSTGRES_DB: ${POSTGRES_DB:-circles}
+  POSTGRES_USER: ${POSTGRES_USER:-circles}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-circles}
   POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
   POSTGRES_PORT: ${POSTGRES_PORT:-5432}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
@@ -33,7 +33,7 @@ x-common-env: &django-common-env
   MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-  MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-tinybeans-media}
+  MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-circles-media}
   MINIO_USE_SSL: ${MINIO_USE_SSL:-0}
   # Base URL browsers load media from (defaults to MinIO's published port; e.g. an HTTPS proxy in front of MinIO).
   MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9220}
@@ -187,9 +187,9 @@ services:
     restart: unless-stopped
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
-      POSTGRES_USER: ${POSTGRES_USER:-tinybeans}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tinybeans}
+      POSTGRES_DB: ${POSTGRES_DB:-circles}
+      POSTGRES_USER: ${POSTGRES_USER:-circles}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-circles}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     expose:
@@ -200,7 +200,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@tinybeans.com
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
@@ -236,8 +236,8 @@ services:
       /bin/sh -c "
       sleep 10;
       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/tinybeans-media || true;
-      /usr/bin/mc policy set public myminio/tinybeans-media || true;
+      /usr/bin/mc mb myminio/${MINIO_BUCKET_NAME:-circles-media} || true;
+      /usr/bin/mc policy set public myminio/${MINIO_BUCKET_NAME:-circles-media} || true;
       echo 'MinIO bucket setup complete';
       "
 

@@ -67,7 +67,7 @@ TWOFA_MAX_ATTEMPTS = 5
 TWOFA_RATE_LIMIT_WINDOW = int(os.environ.get("TWOFA_RATE_LIMIT_WINDOW", 900))
 TWOFA_RATE_LIMIT_MAX = int(os.environ.get("TWOFA_RATE_LIMIT_MAX", 3))
 TWOFA_RECOVERY_CODE_COUNT = 10
-TWOFA_ISSUER_NAME = os.environ.get("TWOFA_ISSUER_NAME", "Tinybeans")
+TWOFA_ISSUER_NAME = os.environ.get("TWOFA_ISSUER_NAME", "Circles")
 
 
 # 2FA Security - Encryption Key for TOTP Secrets

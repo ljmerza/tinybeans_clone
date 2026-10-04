@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains Architecture Decision Records (ADRs) for the Tinybeans project. ADRs document significant architectural decisions, including their context, alternatives considered, and consequences.
+This directory contains Architecture Decision Records (ADRs) for the Circles project. ADRs document significant architectural decisions, including their context, alternatives considered, and consequences.
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# Tinybeans Development Services
+# Circles Development Services
 
 ## 🎯 Quick Access Dashboard
 
@@ -21,28 +21,30 @@ All services are accessible through the unified dashboard at the link above!
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| pgAdmin | http://localhost:5150 | Email: `admin@tinybeans.com`<br>Password: `admin` |
+| pgAdmin | http://localhost:5150 | Email: `admin@example.com`<br>Password: `admin` |
 | RedisInsight | http://localhost:8182 | No login required (connects on first use) |
 
 ### PostgreSQL Connection (for pgAdmin)
+Defaults shown; dev volumes created before the rename to Circles use `tinybeans` for all three (set via `.env`).
+
 - **Host**: `postgres`
 - **Port**: `5432`
-- **Database**: `tinybeans`
-- **Username**: `tinybeans`
-- **Password**: `tinybeans`
+- **Database**: `circles`
+- **Username**: `circles`
+- **Password**: `circles`
 
 ### PostgreSQL External Connection
 - **Host**: `localhost`
 - **Port**: `5532`
-- **Database**: `tinybeans`
-- **Username**: `tinybeans`
-- **Password**: `tinybeans`
+- **Database**: `circles`
+- **Username**: `circles`
+- **Password**: `circles`
 
 ### Redis Connection (for RedisInsight)
 On first launch, add a database with:
 - **Host**: `redis`
 - **Port**: `6379`
-- **Name**: `Tinybeans Redis` (or any name you prefer)
+- **Name**: `Circles Redis` (or any name you prefer)
 
 ---
 

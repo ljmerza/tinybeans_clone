@@ -10,11 +10,11 @@ The table below summarizes the required runtime environment variables for the Dj
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated hostnames served by Django. Wildcards are rejected when `DEBUG=0`. | `localhost,127.0.0.1,[::1],web` | Staging, Production |
 | `DJANGO_SECURE_SSL_REDIRECT` | Forces HTTPS redirects. Defaults to `True` outside local. | `False` when `DEBUG=1`. | Staging, Production |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | Comma-separated CSRF origins. Must be set for non-local deployments. | Local dev origins when `DEBUG=1`. | Staging, Production |
-| `POSTGRES_*` | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT` configure the PostgreSQL connection. | `tinybeans`, `tinybeans`, `tinybeans`, `localhost`, `5432` | All |
+| `POSTGRES_*` | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT` configure the PostgreSQL connection. | `circles`, `circles`, `circles`, `localhost`, `5432` | All |
 | `REDIS_URL` | Redis connection string for cache + Celery broker. | `redis://127.0.0.1:6379/0` | All |
 | `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND` | Override Celery transport if Redis not used. | `REDIS_URL` | Optional |
 | `MAILJET_API_KEY`, `MAILJET_API_SECRET` | Mailjet credentials for transactional email. Leave empty to disable Mailjet. | Empty | Staging, Production |
-| `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET_NAME` | MinIO/S3 storage configuration. | `http://minio:9020`, `minioadmin`, `minioadmin`, `tinybeans-media` | All |
+| `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET_NAME` | MinIO/S3 storage configuration. | `http://minio:9020`, `minioadmin`, `minioadmin`, `circles-media` | All |
 | `TWOFA_ENCRYPTION_KEY` | Base64 Fernet key for encrypting TOTP secrets. | Generated in debug mode. | Staging, Production |
 | `TWOFA_TRUSTED_DEVICE_SIGNING_KEY` | Optional override for trusted-device cookie signer. Falls back to `DJANGO_SECRET_KEY`. | None | Optional |
 | `TWOFA_TRUSTED_DEVICE_ROTATION_DAYS` | Days before a remembered device is reissued with a new signed token. | `15` | Optional |

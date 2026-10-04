@@ -1,6 +1,6 @@
 # Google Cloud Console Setup Guide
 
-This guide walks through setting up Google OAuth 2.0 credentials for the Tinybeans application.
+This guide walks through setting up Google OAuth 2.0 credentials for the Circles application.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ This guide walks through setting up Google OAuth 2.0 credentials for the Tinybea
 2. Click the project dropdown in the top navigation bar
 3. Click "New Project"
 4. Enter project details:
-   - **Project name**: `tinybeans-dev` (for development) or `tinybeans-prod` (for production)
+   - **Project name**: `circles-dev` (for development) or `circles-prod` (for production)
    - **Organization**: Leave as "No organization" unless you have one
 5. Click "Create"
 6. Wait for project creation (takes ~30 seconds)
@@ -34,7 +34,7 @@ This guide walks through setting up Google OAuth 2.0 credentials for the Tinybea
 3. Click "Create"
 
 ### App Information
-- **App name**: `Tinybeans` (or your app name)
+- **App name**: `Circles` (or your app name)
 - **User support email**: Your email address
 - **App logo**: (Optional) Upload your app logo
 - **Application home page**: `https://tinybeans.app` (or your domain)
@@ -73,7 +73,7 @@ This guide walks through setting up Google OAuth 2.0 credentials for the Tinybea
 4. Configure the OAuth client:
 
 ### For Development
-- **Name**: `Tinybeans Web Client - Development`
+- **Name**: `Circles Web Client - Development`
 - **Authorized JavaScript origins**:
   - `http://localhost:3000`
   - `http://127.0.0.1:3000`
@@ -81,14 +81,14 @@ This guide walks through setting up Google OAuth 2.0 credentials for the Tinybea
   - `http://localhost:3000/auth/google/callback`
 
 ### For Staging
-- **Name**: `Tinybeans Web Client - Staging`
+- **Name**: `Circles Web Client - Staging`
 - **Authorized JavaScript origins**:
   - `https://staging.tinybeans.app`
 - **Authorized redirect URIs**:
   - `https://staging.tinybeans.app/auth/google/callback`
 
 ### For Production
-- **Name**: `Tinybeans Web Client - Production`
+- **Name**: `Circles Web Client - Production`
 - **Authorized JavaScript origins**:
   - `https://tinybeans.app`
 - **Authorized redirect URIs**:

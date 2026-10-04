@@ -1,6 +1,6 @@
 ---
 pageInfo:
-  title: Tinybeans Development Dashboard
+  title: Circles Development Dashboard
   description: Quick access to all development services
   navLinks:
     - title: GitHub
@@ -23,7 +23,7 @@ sections:
     icon: fas fa-rocket
     items:
       - title: Django Web App
-        description: Main Tinybeans application
+        description: Main Circles application
         icon: hl-django
         url: http://localhost:8100/admin
         statusCheck: true
@@ -95,12 +95,12 @@ sections:
       hideForGuests: false
     items:
       - title: pgAdmin Login
-        description: Email:admin@tinybeans.com | Password:admin
+        description: Email:admin@example.com | Password:admin
         icon: fas fa-user-lock
         id: 8_pgadmin_creds
 
       - title: PostgreSQL Connection
-        description: Host:postgres | Port:5432 | DB:tinybeans | User:tinybeans | Pass:tinybeans
+        description: Host:postgres | Port:5432 | DB:circles | User:circles | Pass:circles
         icon: fas fa-database
         id: 9_postgres_creds
 

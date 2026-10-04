@@ -208,7 +208,7 @@ class EmailTemplateLoaderTests(SimpleTestCase):
             }
         )
 
-        self.assertEqual(rendered.subject, "Verify your Tinybeans-inspired account")
+        self.assertEqual(rendered.subject, "Verify your Circles account")
         self.assertIn("123456", rendered.text_body)
         self.assertIn("https://example.com/verify", rendered.text_body)
         self.assertIn("This link expires in 15 minutes.", rendered.text_body)
@@ -240,7 +240,7 @@ class EmailTemplateLoaderTests(SimpleTestCase):
         self.assertTrue(dispatched)
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
-        self.assertEqual(message.subject, "Verify your Tinybeans-inspired account")
+        self.assertEqual(message.subject, "Verify your Circles account")
         lines = [line for line in message.body.splitlines() if line]
         self.assertEqual(
             lines,

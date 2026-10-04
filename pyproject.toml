@@ -1,5 +1,5 @@
 [project]
-name = "tinybeans"
+name = "circles"
 version = "0.1.0"
 description = "Family memory keeping app: Django REST backend with a React frontend"
 requires-python = ">=3.12,<3.13"

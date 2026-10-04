@@ -1,7 +1,7 @@
-# Tinybeans Circles Brownfield Architecture Document
+# Circles Brownfield Architecture Document
 
 ## Introduction
-This document captures the current-state architecture of the Tinybeans Circles project—a Tinybeans-inspired platform where users participate in “circles” to share photos, videos, notes, and comments. It maps the live Django + React system, highlights technical debt and quirks, and serves as the starting point for future ADRs in the rebuilt `docs/` directory.
+This document captures the current-state architecture of the Circles project—a Tinybeans-inspired platform where users participate in “circles” to share photos, videos, notes, and comments. It maps the live Django + React system, highlights technical debt and quirks, and serves as the starting point for future ADRs in the rebuilt `docs/` directory.
 
 ## System Snapshot
 - **Repository Layout**: Monorepo with Django backend in `mysite/` and React 19 frontend in `web/`

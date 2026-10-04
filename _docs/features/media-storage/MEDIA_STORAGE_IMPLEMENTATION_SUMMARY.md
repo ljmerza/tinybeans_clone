@@ -83,7 +83,7 @@ MEDIA_URL=/media/
 MINIO_ENDPOINT=http://minio:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=tinybeans-media
+MINIO_BUCKET_NAME=circles-media
 
 # AWS S3 settings (production)
 AWS_STORAGE_BUCKET_NAME=your-bucket
@@ -266,4 +266,4 @@ def migrate_media_to_s3():
 3. **Storage optimization** (tiered storage, compression)
 4. **Analytics and reporting** for usage patterns
 
-The media storage architecture provides a solid foundation for TinyBeans' family photo and video sharing while maintaining flexibility for future growth and feature additions!
+The media storage architecture provides a solid foundation for Circles' family photo and video sharing while maintaining flexibility for future growth and feature additions!

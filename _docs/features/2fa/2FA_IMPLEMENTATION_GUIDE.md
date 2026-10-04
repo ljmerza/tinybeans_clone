@@ -172,7 +172,7 @@ Auth App (Core Logic)
 ```python
 # Required environment variables
 TWOFA_ENABLED=True
-TWOFA_ISSUER_NAME=Tinybeans  # For TOTP QR codes
+TWOFA_ISSUER_NAME=Circles  # For TOTP QR codes
 SMS_PROVIDER=twilio  # or 'aws_sns'
 TWILIO_ACCOUNT_SID=your_sid
 TWILIO_AUTH_TOKEN=your_token

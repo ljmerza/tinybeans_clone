@@ -51,12 +51,12 @@ describe("ColorThemePicker", () => {
 			),
 		);
 		expect(root).toHaveAttribute("data-color-theme", "sage");
-		expect(window.localStorage.getItem("tinybeans.colorTheme")).toBe("sage");
+		expect(window.localStorage.getItem("circles.colorTheme")).toBe("sage");
 		expect(screen.getByRole("radio", { name: "Sage" })).toBeChecked();
 	});
 
 	it("drops the attribute when switching back to the default palette", async () => {
-		window.localStorage.setItem("tinybeans.colorTheme", "rose");
+		window.localStorage.setItem("circles.colorTheme", "rose");
 		vi.spyOn(profileServices, "updateProfile").mockResolvedValue({
 			data: { user: { id: 1, email: "a@b.c", color_theme: "default" } },
 		});
@@ -83,6 +83,6 @@ describe("ColorThemePicker", () => {
 		await waitFor(() => expect(update).toHaveBeenCalled());
 		await waitFor(() => expect(root).not.toHaveAttribute("data-color-theme"));
 		expect(screen.getByRole("radio", { name: "Default" })).toBeChecked();
-		expect(window.localStorage.getItem("tinybeans.colorTheme")).toBe("default");
+		expect(window.localStorage.getItem("circles.colorTheme")).toBe("default");
 	});
 });

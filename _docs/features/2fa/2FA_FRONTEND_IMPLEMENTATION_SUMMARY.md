@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a quick reference for implementing Two-Factor Authentication (2FA) in the Tinybeans React Vite frontend application.
+This document provides a quick reference for implementing Two-Factor Authentication (2FA) in the Circles React Vite frontend application.
 
 ## Documentation
 

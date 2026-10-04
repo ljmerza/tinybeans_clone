@@ -20,7 +20,7 @@ MEDIA_STORAGE_BACKEND = "minio"
 MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://minio:9020")
 MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
-MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "tinybeans-media")
+MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "circles-media")
 MINIO_USE_SSL = _env_flag("MINIO_USE_SSL", default=False)
 # Base URL browsers use to load media (e.g. an HTTPS reverse proxy in front of
 # MinIO, such as https://media.example.com). Presigned URLs are signed against

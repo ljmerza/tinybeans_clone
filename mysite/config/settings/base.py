@@ -140,9 +140,9 @@ POSTGRES_SSL_MODE = os.environ.get("POSTGRES_SSL_MODE", "require")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "tinybeans"),
-        "USER": os.environ.get("POSTGRES_USER", "tinybeans"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "tinybeans"),
+        "NAME": os.environ.get("POSTGRES_DB", "circles"),
+        "USER": os.environ.get("POSTGRES_USER", "circles"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "circles"),
         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         "CONN_MAX_AGE": POSTGRES_CONN_MAX_AGE,

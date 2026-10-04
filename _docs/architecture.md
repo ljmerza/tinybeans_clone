@@ -1,8 +1,8 @@
-# Tinybeans Fullstack Architecture Document
+# Circles Fullstack Architecture Document
 
 ## Introduction
 
-This document outlines the complete fullstack architecture for Tinybeans, including backend systems, frontend implementation, and their integration. It serves as the single source of truth for AI-driven development, ensuring consistency across the entire technology stack.
+This document outlines the complete fullstack architecture for Circles, including backend systems, frontend implementation, and their integration. It serves as the single source of truth for AI-driven development, ensuring consistency across the entire technology stack.
 
 This unified approach combines what would traditionally be separate backend and frontend architecture documents, streamlining the development process for modern fullstack applications where these concerns are increasingly intertwined.
 
@@ -47,7 +47,7 @@ With pre-production status, we can make bold architectural decisions that optimi
 
 ### Technical Summary
 
-Tinybeans is a family memory-sharing platform built on a modern fullstack architecture combining Django REST Framework for the backend API with a React 19 single-page application for the frontend. The system uses a microservices-inspired approach with dedicated Celery workers handling asynchronous tasks across multiple queues (email, SMS, media processing, and maintenance), all coordinated through Redis as both the message broker and cache layer. 
+Circles is a family memory-sharing platform built on a modern fullstack architecture combining Django REST Framework for the backend API with a React 19 single-page application for the frontend. The system uses a microservices-inspired approach with dedicated Celery workers handling asynchronous tasks across multiple queues (email, SMS, media processing, and maintenance), all coordinated through Redis as both the message broker and cache layer. 
 
 The architecture supports real-time family interactions through a RESTful API, enabling users to create and share "keeps" (moment captures), manage family circles, and communicate securely with integrated 2FA authentication. PostgreSQL provides robust relational data storage for user accounts, family relationships, and moment metadata, while MinIO (S3-compatible) handles media file storage in development with plans for AWS S3 in production.
 
@@ -302,7 +302,7 @@ This is the **DEFINITIVE** technology selection for the entire project. All deve
 
 ## Data Models
 
-This section defines the core data models/entities that power the Tinybeans family sharing platform. These models are shared between frontend TypeScript interfaces and backend Django ORM models.
+This section defines the core data models/entities that power the Circles family sharing platform. These models are shared between frontend TypeScript interfaces and backend Django ORM models.
 
 ### User
 
@@ -605,7 +605,7 @@ export interface CircleInvitation {
 
 ## API Specification
 
-Tinybeans uses a **RESTful API** architecture powered by Django REST Framework with automatic OpenAPI 3.0 schema generation via drf-spectacular. All API endpoints are prefixed with `/api/` and follow RESTful conventions with JSON request/response bodies.
+Circles uses a **RESTful API** architecture powered by Django REST Framework with automatic OpenAPI 3.0 schema generation via drf-spectacular. All API endpoints are prefixed with `/api/` and follow RESTful conventions with JSON request/response bodies.
 
 ### API Documentation
 
@@ -1995,9 +1995,9 @@ DJANGO_SECRET_KEY=your-secret-key-here
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,web
 
 # Database
-POSTGRES_DB=tinybeans
-POSTGRES_USER=tinybeans
-POSTGRES_PASSWORD=tinybeans
+POSTGRES_DB=circles
+POSTGRES_USER=circles
+POSTGRES_PASSWORD=circles
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 
@@ -2024,7 +2024,7 @@ MEDIA_STORAGE_BACKEND=minio
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=tinybeans-media
+MINIO_BUCKET_NAME=circles-media
 
 # 2FA
 TWOFA_ENCRYPTION_KEY=your-fernet-key-here

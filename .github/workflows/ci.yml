@@ -28,6 +28,6 @@ jobs:
       packages: write
     uses: ljmerza/misc-actions/.github/workflows/docker-ci.yml@v2
     with:
-      image-name: ghcr.io/${{ github.repository_owner }}/tinybeans
+      image-name: ghcr.io/${{ github.repository_owner }}/circles
       build-target: production
     secrets: inherit

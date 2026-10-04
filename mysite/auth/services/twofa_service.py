@@ -45,7 +45,7 @@ class TwoFactorService:
         Returns dict with URI and base64 image
         """
         totp = pyotp.TOTP(secret)
-        issuer_name = getattr(settings, "TWOFA_ISSUER_NAME", "Tinybeans")
+        issuer_name = getattr(settings, "TWOFA_ISSUER_NAME", "Circles")
         uri = totp.provisioning_uri(name=user.email, issuer_name=issuer_name)
 
         # Generate QR code image
