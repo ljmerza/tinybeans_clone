@@ -7,6 +7,7 @@ from typing import Callable, Optional
 from django.http import HttpRequest, HttpResponse
 
 from mysite import project_logging
+from mysite.security.ip_utils import get_client_ip
 
 
 class RequestContextMiddleware:
@@ -53,7 +54,6 @@ class RequestContextMiddleware:
 
     @staticmethod
     def _remote_ip(request: HttpRequest) -> Optional[str]:
-        forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR")
+        # The shared resolver: only trusted proxies' X-Forwarded-For counts
+        # outside DEBUG, so a client can't write its own address into the logs.
+        return get_client_ip(request)

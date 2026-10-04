@@ -89,3 +89,38 @@ class TestVerificationFailures:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestAuditLogClientIP:
+    """The 2FA audit log records the proxy-aware client IP, not the proxy's."""
+
+    def setup_method(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(email="audit-ip@example.com", password="testpass")
+        TwoFactorSettings.objects.create(
+            user=self.user, is_enabled=True, preferred_method="totp", totp_secret="JBSWY3DPEHPK3PXP"
+        )
+
+    def _fail_verification(self):
+        with patch("mysite.auth.services.twofa_service.TwoFactorService.verify_totp", return_value=False):
+            self.client.post(
+                "/api/auth/2fa/verify-login/",
+                {"code": "999999", "partial_token": generate_partial_token(self.user), "remember_me": False},
+                HTTP_X_FORWARDED_FOR="198.51.100.66, 203.0.113.7",
+                REMOTE_ADDR="127.0.0.1",
+            )
+        return TwoFactorAuditLog.objects.get(user=self.user, action="2fa_login_failed")
+
+    def test_behind_trusted_proxy_logs_the_client(self, settings):
+        settings.DEBUG = False
+        settings.TRUST_FORWARDED_FOR = True
+        settings.TRUSTED_PROXY_IPS = ["127.0.0.1", "::1"]
+        # The right-most untrusted entry, not the client-written left-most one.
+        assert self._fail_verification().ip_address == "203.0.113.7"
+
+    def test_forwarded_header_from_untrusted_peer_is_ignored(self, settings):
+        settings.DEBUG = False
+        settings.TRUST_FORWARDED_FOR = True
+        settings.TRUSTED_PROXY_IPS = []
+        assert self._fail_verification().ip_address == "127.0.0.1"

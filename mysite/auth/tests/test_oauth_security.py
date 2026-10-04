@@ -17,7 +17,6 @@ from mysite.auth.security.oauth_validators import (
     RedirectURIValidator,
     SecurityLogger,
     StateTokenValidator,
-    get_client_ip,
     get_user_agent,
 )
 
@@ -215,22 +214,6 @@ class TestSecurityLogger(TestCase):
 
 class TestHelperFunctions(TestCase):
     """Test helper utility functions."""
-
-    def test_get_client_ip_from_remote_addr(self):
-        """Test getting IP from REMOTE_ADDR."""
-        request = Mock()
-        request.META = {"REMOTE_ADDR": "192.168.1.1"}
-
-        ip = get_client_ip(request)
-        self.assertEqual(ip, "192.168.1.1")
-
-    def test_get_client_ip_from_x_forwarded_for(self):
-        """Test getting IP from X-Forwarded-For header."""
-        request = Mock()
-        request.META = {"HTTP_X_FORWARDED_FOR": "203.0.113.1, 192.168.1.1", "REMOTE_ADDR": "192.168.1.1"}
-
-        ip = get_client_ip(request)
-        self.assertEqual(ip, "203.0.113.1")  # First IP in chain
 
     def test_get_user_agent(self):
         """Test getting user agent from request."""

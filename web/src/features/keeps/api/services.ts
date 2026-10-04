@@ -18,6 +18,7 @@ import type {
 	PaginatedList,
 	PersonDetail,
 } from "../types";
+import type { UploadLimits } from "../utils/mediaFiles";
 
 const KEEPS_BASE = "/keeps";
 
@@ -163,6 +164,13 @@ export const keepServices = {
 
 	deleteKeep(keepId: string) {
 		return authApi.delete<unknown>(`${KEEPS_BASE}/${keepId}/`);
+	},
+
+	/** Largest accepted photo and video, from the server's settings. */
+	getUploadLimits() {
+		return authApi.get<ApiResponseWithMessages<UploadLimits>>(
+			`${KEEPS_BASE}/upload/limits/`,
+		);
 	},
 
 	getUploadStatus(uploadId: string) {

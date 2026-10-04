@@ -35,4 +35,12 @@ describe("fileProblem", () => {
 		);
 		expect(fileProblem(sized("a.txt", "text/plain", 1))).toBe("type");
 	});
+
+	it("follows the limits it is given", () => {
+		const limits = { max_photo_bytes: 10, max_video_bytes: 20 };
+		expect(fileProblem(sized("a.jpg", "image/jpeg", 10), limits)).toBeNull();
+		expect(fileProblem(sized("a.jpg", "image/jpeg", 11), limits)).toBe("size");
+		expect(fileProblem(sized("a.mp4", "video/mp4", 20), limits)).toBeNull();
+		expect(fileProblem(sized("a.mp4", "video/mp4", 21), limits)).toBe("size");
+	});
 });

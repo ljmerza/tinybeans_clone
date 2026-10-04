@@ -19,6 +19,7 @@ from mysite.notification_utils import (
     rate_limit_response,
     success_response,
 )
+from mysite.security.ip_utils import get_client_ip_address
 
 
 class TwoFactorStatusView(APIView):
@@ -124,7 +125,7 @@ class TwoFactorPreferredMethodView(APIView):
             user=user,
             action="2fa_preferred_method_updated",
             method=method,
-            ip_address=request.META.get("REMOTE_ADDR"),
+            ip_address=get_client_ip_address(request),
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             success=True,
         )
@@ -241,7 +242,7 @@ class TwoFactorMethodRemoveView(APIView):
             user=request.user,
             action="2fa_method_removed",
             method=method,
-            ip_address=request.META.get("REMOTE_ADDR"),
+            ip_address=get_client_ip_address(request),
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             success=True,
         )
@@ -377,7 +378,7 @@ class TwoFactorDisableView(APIView):
             user=user,
             action="2fa_disabled",
             method=settings_obj.preferred_method,
-            ip_address=request.META.get("REMOTE_ADDR"),
+            ip_address=get_client_ip_address(request),
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             success=True,
         )

@@ -5,7 +5,7 @@ import uuid
 
 from django.conf import settings
 from drf_spectacular.utils import OpenApiResponse, extend_schema
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.views import APIView
 
@@ -18,6 +18,18 @@ from .permissions import IsCircleMember
 
 # A browser-captured poster frame is one JPEG; anything near this is not one.
 MAX_POSTER_SIZE = 10 * 1024 * 1024
+# Room for the multipart boundaries and the form fields next to the files.
+MULTIPART_OVERHEAD = 1024 * 1024
+
+
+def max_upload_request_size() -> int:
+    """Largest upload request body the app accepts, in bytes.
+
+    The biggest allowed file plus a poster frame and multipart overhead. A
+    reverse proxy in front of Django must allow at least this much, or it
+    rejects files the app would take and answers before the app can explain.
+    """
+    return max(settings.MAX_UPLOAD_SIZE, settings.MAX_VIDEO_UPLOAD_SIZE) + MAX_POSTER_SIZE + MULTIPART_OVERHEAD
 
 
 def _park_file(uploaded_file, suffix):
@@ -182,6 +194,25 @@ class MediaUploadView(APIView):
                 messages=[create_message("errors.upload_failed")],
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class MediaUploadLimitsView(APIView):
+    """The largest photo and video an upload accepts, so the client can check first."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="Upload limits",
+        description="Largest accepted photo and video, in bytes (MAX_UPLOAD_SIZE / MAX_VIDEO_UPLOAD_SIZE).",
+        responses={200: OpenApiResponse(description="`{max_photo_bytes, max_video_bytes}`")},
+    )
+    def get(self, request):
+        return success_response(
+            {
+                "max_photo_bytes": max_upload_size("photo"),
+                "max_video_bytes": max_upload_size("video"),
+            }
+        )
 
 
 class MediaUploadStatusView(APIView):

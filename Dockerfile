@@ -65,6 +65,7 @@ COPY manage.py /app/manage.py
 COPY mysite /app/mysite
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/upload-limit.conf /etc/nginx/upload-limit.conf
 COPY docker/supervisord.prod.conf /etc/supervisor/conf.d/app.conf
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

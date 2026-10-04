@@ -1,0 +1,172 @@
+# Production stack for Circles. See _docs/guides/deployment/production.md.
+#
+# Runs the CI-built image (nginx + gunicorn) with Celery, Redis and MinIO. Postgres
+# is an existing server reached over an external Docker network. Nothing secret or
+# host-specific lives here; set these in the shell or a compose --env-file:
+#
+#   CIRCLES_IMAGE           image to run, e.g. ghcr.io/ljmerza/circles:<release tag>
+#   CIRCLES_ENV_FILE        app env file (Django, Postgres, Redis, MinIO app user, mail)
+#   CIRCLES_MINIO_ENV_FILE  MinIO root credentials only (MINIO_ROOT_USER/PASSWORD)
+#   CIRCLES_DATA_DIR        host dir for minio, redis, upload-tmp, beat, backups/postgres
+#   CIRCLES_DB_NETWORK      external network the Postgres server is on (default docker_db_network)
+#   CIRCLES_TZ              timezone for the nightly pg_dump (default UTC)
+#   Optional: CIRCLES_WEB_PORT (8110), CIRCLES_FLOWER_PORT (5657), CIRCLES_MINIO_PORT
+#   (9230), CIRCLES_MINIO_CONSOLE_PORT (9231), CIRCLES_BACKEND_NETWORK
+#   (circles_backend), CIRCLES_BUCKET (circles-media), CIRCLES_MINIO_IMAGE,
+#   CIRCLES_MC_IMAGE.
+#
+#   docker compose -f docker-compose.prod.yml --env-file <compose env> up -d
+#
+# Migrations never run on start (RUN_MIGRATIONS=0); run `manage.py migrate` on
+# purpose, as the deployment guide describes.
+
+name: circles
+
+x-app: &app
+  image: ${CIRCLES_IMAGE:?set CIRCLES_IMAGE, e.g. ghcr.io/ljmerza/circles:<tag>}
+  restart: unless-stopped
+  env_file:
+    - ${CIRCLES_ENV_FILE:?set CIRCLES_ENV_FILE to the app env file}
+  environment:
+    # Where web parks uploads until a worker moves them to MinIO; both mount it.
+    UPLOAD_TEMP_DIR: /upload-tmp
+  volumes:
+    - ${CIRCLES_DATA_DIR:?set CIRCLES_DATA_DIR}/upload-tmp:/upload-tmp
+  networks:
+    - circles_backend
+    - db
+  depends_on:
+    - circles-redis
+    - circles-minio
+
+services:
+  circles-web:
+    <<: *app
+    environment:
+      UPLOAD_TEMP_DIR: /upload-tmp
+      # Schema changes are run deliberately, never on container start.
+      RUN_MIGRATIONS: "0"
+    ports:
+      - "${CIRCLES_WEB_PORT:-8110}:80"
+    healthcheck:
+      # Plain HTTP on loopback: /health/ is exempt from the HTTPS redirect, and
+      # 127.0.0.1 must be in DJANGO_ALLOWED_HOSTS.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1/health/', timeout=10)"
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+
+  circles-worker:
+    <<: *app
+    # No -Q: the worker consumes every queue in CELERY_TASK_QUEUES
+    # (email, sms, media, maintenance).
+    command: celery -A mysite worker --concurrency 4 -l INFO
+
+  circles-beat:
+    <<: *app
+    command: celery -A mysite beat -l INFO --schedule /beat/celerybeat-schedule
+    volumes:
+      - ${CIRCLES_DATA_DIR:?set CIRCLES_DATA_DIR}/beat:/beat
+    networks:
+      - circles_backend
+      - db
+
+  # Celery dashboard, LAN only: no public vhost points here. Flower has no auth
+  # of its own; set FLOWER_BASIC_AUTH=<user>:<password> in the app env file.
+  circles-flower:
+    <<: *app
+    command: celery -A mysite flower --port=5555 --address=0.0.0.0
+    volumes: []
+    networks:
+      - circles_backend
+    ports:
+      - "${CIRCLES_FLOWER_PORT:-5657}:5555"
+
+  circles-redis:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - ${CIRCLES_DATA_DIR:?set CIRCLES_DATA_DIR}/redis:/data
+    networks:
+      - circles_backend
+
+  circles-minio:
+    # Pinned by digest. minio/minio no longer serves pulls (Docker Hub and
+    # quay.io both denied them in 2026-10), so this only resolves where the
+    # image is already cached or loaded from a `docker save`; see the guide.
+    image: ${CIRCLES_MINIO_IMAGE:-minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e}
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    # Root credentials only. Never give MinIO the app env file: MinIO reads
+    # MINIO_ACCESS_KEY/MINIO_SECRET_KEY (the app user) as legacy root credentials.
+    env_file:
+      - ${CIRCLES_MINIO_ENV_FILE:?set CIRCLES_MINIO_ENV_FILE to the MinIO root credentials file}
+    volumes:
+      - ${CIRCLES_DATA_DIR:?set CIRCLES_DATA_DIR}/minio:/data
+    networks:
+      - circles_backend
+    ports:
+      - "${CIRCLES_MINIO_PORT:-9230}:9000"  # S3 API, for the media reverse proxy
+      - "127.0.0.1:${CIRCLES_MINIO_CONSOLE_PORT:-9231}:9001"  # console, host only
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Creates the bucket (private: no anonymous policy). Run on demand:
+  #   docker compose -f docker-compose.prod.yml --profile init run --rm circles-minio-init
+  circles-minio-init:
+    # Same availability caveat as circles-minio.
+    image: ${CIRCLES_MC_IMAGE:-minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727}
+    profiles: ["init"]
+    env_file:
+      - ${CIRCLES_MINIO_ENV_FILE:?set CIRCLES_MINIO_ENV_FILE to the MinIO root credentials file}
+    environment:
+      BUCKET: ${CIRCLES_BUCKET:-circles-media}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        until mc alias set prod http://circles-minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null; do
+          echo "waiting for circles-minio..."; sleep 2
+        done
+        mc mb --ignore-existing "prod/$$BUCKET"
+        mc anonymous get "prod/$$BUCKET"
+    networks:
+      - circles_backend
+    depends_on:
+      - circles-minio
+
+  # Nightly pg_dump -Fc of the circles database, keeping 14 days.
+  # Dump now: docker compose -f docker-compose.prod.yml exec circles-pg-backup pg-backup.sh once
+  circles-pg-backup:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/pg-backup.sh"]
+    env_file:
+      - ${CIRCLES_ENV_FILE:?set CIRCLES_ENV_FILE to the app env file}
+    environment:
+      TZ: ${CIRCLES_TZ:-UTC}
+      PG_BACKUP_TIME: "03:30"
+      PG_BACKUP_KEEP_DAYS: "14"
+    volumes:
+      - ./docker/pg-backup.sh:/usr/local/bin/pg-backup.sh:ro
+      - ${CIRCLES_DATA_DIR:?set CIRCLES_DATA_DIR}/backups/postgres:/backups
+    networks:
+      - db
+
+networks:
+  circles_backend:
+    # Fixed name so other projects (e.g. the Tinybeans sync service) can join it.
+    name: ${CIRCLES_BACKEND_NETWORK:-circles_backend}
+  db:
+    external: true
+    name: ${CIRCLES_DB_NETWORK:-docker_db_network}

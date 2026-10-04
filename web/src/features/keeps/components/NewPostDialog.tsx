@@ -28,6 +28,7 @@ import {
 	type PostItem,
 	useCreatePost,
 } from "../hooks/useCreatePost";
+import { useUploadLimits } from "../hooks/useUploadLimits";
 import type { KeepPerson } from "../types";
 import { readExifDate } from "../utils/exifDate";
 import { makeThumbnail } from "../utils/imageThumbnail";
@@ -36,6 +37,7 @@ import {
 	VIDEO_TYPES,
 	fileProblem,
 	mediaTypeOf,
+	sizeLimitFor,
 } from "../utils/mediaFiles";
 import { PeoplePicker } from "./PeoplePicker";
 
@@ -77,7 +79,7 @@ function fileKey(file: File) {
 
 function formatSize(bytes: number) {
 	if (bytes >= 1024 * 1024 * 1024)
-		return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+		return `${Number((bytes / 1024 / 1024 / 1024).toFixed(1))} GB`;
 	if (bytes >= 1024 * 1024) return `${Math.round(bytes / 1024 / 1024)} MB`;
 	return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
@@ -173,6 +175,7 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 		(membership) => membership.circle,
 	);
 	const post = useCreatePost();
+	const uploadLimits = useUploadLimits();
 
 	const [circleId, setCircleId] = useState<number | null>(null);
 	const [items, setItems] = useState<DraftItem[]>([]);
@@ -212,13 +215,20 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const addFiles = (list: FileList | null) => {
 		const picked = Array.from(list ?? []);
 		const problems = picked.flatMap((file) => {
-			const problem = fileProblem(file);
-			return problem
-				? [t(`pages.feed.new_post.rejected_${problem}`, { name: file.name })]
-				: [];
+			const problem = fileProblem(file, uploadLimits);
+			if (!problem) return [];
+			const mediaType = mediaTypeOf(file);
+			const max = mediaType
+				? formatSize(sizeLimitFor(mediaType, uploadLimits))
+				: "";
+			return [
+				t(`pages.feed.new_post.rejected_${problem}`, { name: file.name, max }),
+			];
 		});
 		setRejected(problems);
-		const accepted = picked.filter((file) => fileProblem(file) === null);
+		const accepted = picked.filter(
+			(file) => fileProblem(file, uploadLimits) === null,
+		);
 		setItems((current) => {
 			// Picking the same file twice adds it once.
 			const chosen = new Set(current.map((item) => fileKey(item.file)));
@@ -365,7 +375,10 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 							{t("pages.feed.new_post.add_media")}
 						</Button>
 						<p className="text-xs text-muted-foreground">
-							{t("pages.feed.new_post.media_hint")}
+							{t("pages.feed.new_post.media_hint", {
+								photoMax: formatSize(uploadLimits.max_photo_bytes),
+								videoMax: formatSize(uploadLimits.max_video_bytes),
+							})}
 						</p>
 						{rejected.map((message) => (
 							<p key={message} className="text-sm text-destructive">

@@ -128,6 +128,16 @@ def get_client_ip(request) -> str | None:
     return str(remote_ip)
 
 
+def get_client_ip_address(request) -> str | None:
+    """``get_client_ip``, but only a well-formed address, else None.
+
+    For storing in a ``GenericIPAddressField``: a junk forwarded value (DEBUG
+    trusts the left-most entry as-is) would otherwise fail the insert.
+    """
+    ip = _parse_ip(get_client_ip(request))
+    return str(ip) if ip is not None else None
+
+
 def ratelimit_client_ip(request) -> str:
     """django-ratelimit ``RATELIMIT_IP_META_KEY`` hook (``key="ip"``).
 
@@ -138,4 +148,4 @@ def ratelimit_client_ip(request) -> str:
     return str(ip) if ip is not None else "0.0.0.0"
 
 
-__all__ = ["get_client_ip", "parse_trusted_proxies", "ratelimit_client_ip"]
+__all__ = ["get_client_ip", "get_client_ip_address", "parse_trusted_proxies", "ratelimit_client_ip"]

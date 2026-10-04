@@ -5,6 +5,7 @@ export * from "./hooks/useCalendarMonth";
 export * from "./hooks/useKeepFeed";
 export * from "./hooks/useCreatePost";
 export * from "./hooks/usePeople";
+export * from "./hooks/useUploadLimits";
 export * from "./utils/mediaFiles";
 export * from "./utils/onThisDay";
 export {

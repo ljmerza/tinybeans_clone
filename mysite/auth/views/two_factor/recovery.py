@@ -16,6 +16,7 @@ from mysite.notification_utils import (
     error_response,
     success_response,
 )
+from mysite.security.ip_utils import get_client_ip_address
 
 
 class RecoveryCodeGenerateView(APIView):
@@ -110,7 +111,7 @@ class RecoveryCodeDownloadView(APIView):
             user=user,
             action="recovery_codes_downloaded",
             method=format_type,
-            ip_address=request.META.get("REMOTE_ADDR"),
+            ip_address=get_client_ip_address(request),
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             success=True,
         )

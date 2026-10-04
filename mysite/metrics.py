@@ -2,8 +2,9 @@
 
 ``GET /metrics`` returns the Prometheus text format (version 0.0.4). Only the host's
 Prometheus should read it, so it needs ``Authorization: Bearer <METRICS_TOKEN>``. While
-METRICS_TOKEN is empty the endpoint answers 404. nginx does not proxy /metrics to
-Django, so Prometheus scrapes the web container's published port directly.
+METRICS_TOKEN is empty the endpoint answers 404. Prometheus scrapes the web container's
+published port directly. The public vhost does not route /metrics; the production image's
+own nginx proxies it only for loopback, Docker and private addresses.
 
 Each dependency is checked in its own thread with a short client timeout. A hung
 dependency is then reported as ``circles_dependency_up 0`` and the scrape still returns.

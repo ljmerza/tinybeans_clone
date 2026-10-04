@@ -290,23 +290,6 @@ class SecurityLogger:
         logger.warning(f"Suspicious OAuth activity: {activity_type}", extra=extra)
 
 
-def get_client_ip(request) -> str:
-    """Extract client IP address from request.
-
-    Handles X-Forwarded-For header for proxied requests.
-
-    Args:
-        request: Django request object
-
-    Returns:
-        str: Client IP address
-    """
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    # Take the first IP in the chain when the request came through a proxy.
-    ip = x_forwarded_for.split(",")[0].strip() if x_forwarded_for else request.META.get("REMOTE_ADDR", "0.0.0.0")
-    return ip
-
-
 def get_user_agent(request) -> str:
     """Extract user agent from request.
 

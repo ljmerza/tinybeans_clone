@@ -23,6 +23,7 @@ from .views import (
     KeepMediaListCreateView,
     KeepReactionDetailView,
     KeepReactionListCreateView,
+    MediaUploadLimitsView,
     MediaUploadStatusView,
     MediaUploadView,
     PersonDetailView,
@@ -50,6 +51,7 @@ urlpatterns = [
     path("people/<uuid:person_id>/", PersonDetailView.as_view(), name="person-detail"),
     # Media upload endpoints
     path("upload/", MediaUploadView.as_view(), name="media-upload"),
+    path("upload/limits/", MediaUploadLimitsView.as_view(), name="media-upload-limits"),
     path("upload/<uuid:upload_id>/status/", MediaUploadStatusView.as_view(), name="media-upload-status"),
     # Reaction endpoints
     path("reactions/", KeepReactionListCreateView.as_view(), name="keep-reaction-list-create"),
