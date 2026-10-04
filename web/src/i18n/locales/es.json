@@ -607,6 +607,7 @@
 			"select_circle": "Elige un círculo",
 			"jump_to_month": "Ir a un mes",
 			"jump_to_month_current": "Ir a un mes, mostrando {{month}}",
+			"jump_from_header": "{{month}}, ir a otro mes",
 			"jump_today": "Hoy",
 			"previous_year": "Año anterior",
 			"next_year": "Año siguiente"

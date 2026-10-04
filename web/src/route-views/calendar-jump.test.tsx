@@ -1,6 +1,12 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { act, fireEvent, screen, within } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import type { PhotoCalendarProps } from "react-photo-calendar";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -169,5 +175,36 @@ describe("CalendarRouteView month jump", () => {
 			to: "/calendar",
 			search: { month: "2025-03", circle: "family" },
 		});
+	});
+
+	it("opens from a tapped month header, on that month's year", async () => {
+		const dialog = await openMonthJump();
+		fireEvent.click(dialog.getByRole("button", { name: "Close" }));
+		await waitFor(() =>
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+		);
+
+		expect(calendarProps?.monthHeaderLabel?.("March 2024", "2024-03")).toBe(
+			"March 2024, jump to another month",
+		);
+		act(() => calendarProps?.onMonthHeaderClick?.("2024-03"));
+
+		const fromHeader = within(
+			await screen.findByRole("dialog", { name: "Jump to month" }),
+		);
+		expect(fromHeader.getByText("2024")).toBeInTheDocument();
+		fireEvent.click(fromHeader.getByRole("button", { name: "Close" }));
+		await waitFor(() =>
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+		);
+
+		// The button above the timeline opens on the current month's year again.
+		fireEvent.click(
+			screen.getByRole("button", { name: /Jump to month, showing July 2026/ }),
+		);
+		const fromButton = within(
+			await screen.findByRole("dialog", { name: "Jump to month" }),
+		);
+		expect(fromButton.getByText("2026")).toBeInTheDocument();
 	});
 });

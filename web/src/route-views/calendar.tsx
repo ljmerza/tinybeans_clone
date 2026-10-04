@@ -109,6 +109,11 @@ export function CalendarRouteView() {
 			});
 	};
 
+	// The picker opens from the button above the timeline, or by tapping any
+	// month header in it (on that month's year), so it stays reachable after scrolling.
+	const [jumpOpen, setJumpOpen] = useState(false);
+	const [jumpFocusMonth, setJumpFocusMonth] = useState<string | null>(null);
+
 	if (isLoading && !data) {
 		return (
 			<Layout.Loading
@@ -163,6 +168,12 @@ export function CalendarRouteView() {
 						minMonthKey={shiftMonthKey(maxMonthKey, -TIMELINE_MONTHS_BACK)}
 						maxMonthKey={maxMonthKey}
 						onSelect={jumpToMonth}
+						open={jumpOpen}
+						onOpenChange={(nextOpen) => {
+							setJumpOpen(nextOpen);
+							if (!nextOpen) setJumpFocusMonth(null);
+						}}
+						focusMonthKey={jumpFocusMonth ?? undefined}
 					/>
 					{hasCirclePicker ? (
 						<Select
@@ -196,6 +207,13 @@ export function CalendarRouteView() {
 
 				<PhotoCalendar
 					monthKey={month}
+					onMonthHeaderClick={(headerMonthKey) => {
+						setJumpFocusMonth(headerMonthKey);
+						setJumpOpen(true);
+					}}
+					monthHeaderLabel={(label) =>
+						t("pages.calendar.jump_from_header", { month: label })
+					}
 					navigationMode="auto"
 					virtualScroll="window"
 					virtualOrder="newest-first"

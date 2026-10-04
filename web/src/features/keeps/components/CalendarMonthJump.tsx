@@ -6,7 +6,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 /** Month keys are `YYYY-MM`. Returns the key `delta` months away. */
@@ -33,6 +33,11 @@ interface CalendarMonthJumpProps {
 	maxMonthKey: string;
 	onSelect: (monthKey: string) => void;
 	className?: string;
+	/** Control the picker from outside (e.g. tapping a month header in the timeline). */
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	/** Month whose year the picker opens on; defaults to `monthKey`. */
+	focusMonthKey?: string;
 }
 
 /**
@@ -45,11 +50,24 @@ export function CalendarMonthJump({
 	maxMonthKey,
 	onSelect,
 	className,
+	open: openProp,
+	onOpenChange,
+	focusMonthKey,
 }: CalendarMonthJumpProps) {
 	const { t, i18n } = useTranslation();
 	const locale = i18n.language;
-	const [open, setOpen] = useState(false);
-	const [viewYear, setViewYear] = useState(() => yearOf(monthKey));
+	const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+	const open = openProp ?? uncontrolledOpen;
+	const setOpen = (nextOpen: boolean) => {
+		if (openProp === undefined) setUncontrolledOpen(nextOpen);
+		onOpenChange?.(nextOpen);
+	};
+	const openOnMonthKey = focusMonthKey ?? monthKey;
+	const [viewYear, setViewYear] = useState(() => yearOf(openOnMonthKey));
+	// Open on the year being viewed (or the tapped month's), not wherever the picker was left.
+	useEffect(() => {
+		if (open) setViewYear(yearOf(openOnMonthKey));
+	}, [open, openOnMonthKey]);
 
 	const { monthNames, formatMonth } = useMemo(() => {
 		const short = new Intl.DateTimeFormat(locale, {
@@ -80,14 +98,7 @@ export function CalendarMonthJump({
 	};
 
 	return (
-		<Dialog
-			open={open}
-			onOpenChange={(nextOpen) => {
-				// Open on the year being viewed, not wherever the picker was left.
-				if (nextOpen) setViewYear(yearOf(monthKey));
-				setOpen(nextOpen);
-			}}
-		>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button
 					variant="outline"
