@@ -128,12 +128,23 @@ def _get_session_cookie_config(debug: bool) -> dict:
 
 # Client IP / Proxy trust configuration
 def _get_ip_trust_config(debug: bool) -> dict:
-    """Configure forwarding trust and proxy allowlists."""
+    """Configure forwarding trust and proxy allowlists.
+
+    DJANGO_TRUSTED_PROXY_IPS takes addresses or CIDR ranges (e.g. 172.16.0.0/12).
+    Outside DEBUG, X-Forwarded-For is only read when the immediate peer is in it.
+    """
+    from mysite.security.ip_utils import parse_trusted_proxies
+
     default_trust = debug
     default_proxies = ["127.0.0.1", "::1"] if debug else []
+    trusted_proxies = _env_list("DJANGO_TRUSTED_PROXY_IPS", default=default_proxies)
+    try:
+        parse_trusted_proxies(trusted_proxies)
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"DJANGO_TRUSTED_PROXY_IPS has an invalid address or CIDR range: {exc}") from exc
     return {
         "TRUST_FORWARDED_FOR": _env_flag("DJANGO_TRUST_FORWARDED_FOR", default=default_trust),
-        "TRUSTED_PROXY_IPS": _env_list("DJANGO_TRUSTED_PROXY_IPS", default=default_proxies),
+        "TRUSTED_PROXY_IPS": trusted_proxies,
     }
 
 

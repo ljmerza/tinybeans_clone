@@ -105,8 +105,10 @@ export function clearOAuthState(): void {
 }
 
 /**
- * Get current redirect URI for OAuth
+ * Get current redirect URI for OAuth.
+ * Must match the callback route (routes/auth/google-callback.tsx), the backend
+ * OAUTH_ALLOWED_REDIRECT_URIS and the Google client's authorized redirect URIs.
  */
 export function getRedirectUri(): string {
-	return `${window.location.origin}/auth/google/callback`;
+	return `${window.location.origin}/auth/google-callback`;
 }

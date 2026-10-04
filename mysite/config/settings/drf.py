@@ -19,8 +19,9 @@ def _get_rest_framework_config(debug: bool) -> dict:
             "rest_framework.renderers.JSONRenderer",
         ],
         "DEFAULT_THROTTLE_CLASSES": (
-            "rest_framework.throttling.UserRateThrottle",
-            "rest_framework.throttling.AnonRateThrottle",
+            # Keyed on the proxy-aware client IP (mysite/security/ip_utils.py).
+            "mysite.security.throttling.ClientIPUserRateThrottle",
+            "mysite.security.throttling.ClientIPAnonRateThrottle",
         ),
         "DEFAULT_THROTTLE_RATES": {
             "user": DRF_USER_THROTTLE_RATE,

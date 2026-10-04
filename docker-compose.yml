@@ -78,6 +78,9 @@ services:
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-your-client-id.apps.googleusercontent.com}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-your-client-secret}
       GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://localhost:3053/auth/google/callback}
+      # Comma-separated exact redirect URIs Google sign-in accepts, one per origin
+      # (`<origin>/auth/google-callback`). Empty = localhost defaults (DEBUG only).
+      OAUTH_ALLOWED_REDIRECT_URIS: ${OAUTH_ALLOWED_REDIRECT_URIS:-}
     depends_on:
       - redis
       - postgres
@@ -99,6 +102,8 @@ services:
     environment:
       NODE_ENV: development
       VITE_API_BASE: ${VITE_API_BASE:-/api}
+      # Comma-separated hostnames Vite serves besides localhost/IPs (reverse proxy).
+      VITE_ALLOWED_HOSTS: ${VITE_ALLOWED_HOSTS:-}
     stdin_open: true
     tty: true
 

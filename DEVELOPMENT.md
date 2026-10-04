@@ -24,9 +24,9 @@ Follow these steps to exercise Google sign-up and sign-in flows against the loca
    - Visit <https://console.cloud.google.com/> and create/select a project.
    - Under **APIs & Services → OAuth consent screen**, configure an Internal/External consent screen and add the `openid`, `email`, and `profile` scopes.
    - Under **APIs & Services → Credentials**, create an **OAuth client ID** of type *Web application*.
-   - Add `http://localhost:3053` to **Authorized JavaScript origins** and `http://localhost:3053/auth/google/callback` to **Authorized redirect URIs** (swap in your host IP if different).
+   - Add `http://localhost:3053/auth/google-callback` to **Authorized redirect URIs** (swap in your host or domain if different). **Authorized JavaScript origins** are optional: the browser never calls Google from JavaScript in this flow.
    - Download or copy the generated **Client ID** and **Client secret**.
-   - The backend also only accepts redirect URIs listed in `OAUTH_ALLOWED_REDIRECT_URIS` (`mysite/config/settings/auth.py`), which currently includes `http://localhost:3000/auth/google/callback` but not the `:3053` one. Add yours there too.
+   - The backend also only accepts redirect URIs listed in `OAUTH_ALLOWED_REDIRECT_URIS` (exact match). With `DEBUG=1` it defaults to `http://localhost:3053/auth/google-callback`, `http://127.0.0.1:3053/auth/google-callback` and `http://localhost:3000/auth/google-callback`; any other origin has to be listed (step 2).
 
 2. **Populate local environment variables**
    - Put the values from Google Cloud in `.env` at the repo root (gitignored). `.env.development` doesn't work for these: `docker-compose.yml` sets them in the `web` service's `environment:` block, which overrides `env_file:`.
@@ -36,7 +36,11 @@ Follow these steps to exercise Google sign-up and sign-in flows against the loca
      GOOGLE_OAUTH_CLIENT_SECRET=your-real-secret
      ```
 
-   - There's no redirect URI to configure: the frontend always sends `<browser origin>/auth/google/callback`, so it matches whatever URL you open the app at.
+   - The frontend always sends `<browser origin>/auth/google-callback` as the redirect URI. If you open the app anywhere other than localhost, list that URI in `.env` too (comma-separated, one per origin), and add it to the Google client:
+
+     ```dotenv
+     OAUTH_ALLOWED_REDIRECT_URIS=https://app.example.com/auth/google-callback
+     ```
 
 3. **Recreate the container**
    - Run `docker compose up -d web` so the Django API picks up the new environment variables. `docker compose restart` keeps the old environment.
@@ -54,6 +58,8 @@ By default everything is reached at `http://localhost:<port>`. To put the app be
 | `ACCOUNT_FRONTEND_BASE_URL` | Base URL used in links inside emails (password reset, magic login, email verification, circle invites). | `http://localhost:3053` |
 | `DJANGO_ALLOWED_HOSTS` | Hostnames Django accepts. Include your domain and any LAN IP you browse by. | `localhost,127.0.0.1,[::1],web,localhost` |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | Origins (with scheme) allowed to make CSRF-protected requests. | `http://localhost:3053,http://localhost:3053,http://127.0.0.1:3053` |
+| `OAUTH_ALLOWED_REDIRECT_URIS` | Comma-separated redirect URIs Google sign-in accepts, `<origin>/auth/google-callback` for each origin. | localhost:3053 / 127.0.0.1:3053 / localhost:3000 |
+| `VITE_ALLOWED_HOSTS` | Comma-separated hostnames the Vite dev server answers to (it always allows localhost and bare IPs). Without your domain here, Vite rejects requests through the proxy. | Empty |
 | `MINIO_PUBLIC_ENDPOINT` | Base URL browsers load photos/videos from. Presigned media URLs are signed for this host. The backend itself talks to MinIO via `MINIO_ENDPOINT` (`http://minio:9000`). | `http://localhost:9220` |
 | `DASHY_CONFIG` | Path to the Dashy config to mount, so you can keep a copy with your own links. | `./dashy-config.yml` |
 
@@ -64,6 +70,8 @@ ACCOUNT_FRONTEND_BASE_URL=https://app.example.com
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,[::1],web,192.168.1.10,app.example.com
 DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:3053,http://127.0.0.1:3053,https://app.example.com
 MINIO_PUBLIC_ENDPOINT=https://media.example.com
+OAUTH_ALLOWED_REDIRECT_URIS=https://app.example.com/auth/google-callback
+VITE_ALLOWED_HOSTS=app.example.com
 # cp dashy-config.yml volumes/dashy/conf.yml, then edit the links there (volumes/ is gitignored)
 DASHY_CONFIG=./volumes/dashy/conf.yml
 ```
@@ -72,14 +80,10 @@ DASHY_CONFIG=./volumes/dashy/conf.yml
 
 **Reverse-proxy routing for the app hostname:** send `/api/`, `/admin/`, `/static/`, `/media/` and `/health/` to Django (host port `8100`). Send everything else, including the Vite HMR websocket, to the Vite dev server (host port `3053`).
 
-**Not yet configurable through env vars:**
-- `web/vite.config.ts` → `server.allowedHosts`: add your hostname there, or Vite rejects the request.
-- `mysite/config/settings/auth.py` → `OAUTH_ALLOWED_REDIRECT_URIS`: Google sign-in only accepts the redirect URIs hardcoded in that list. The redirect URI is built from the browser's origin (`<origin>/auth/google/callback`), and `GOOGLE_OAUTH_REDIRECT_URI` is not used for it.
-
 **Apply changes** by recreating the containers. `docker compose restart` keeps the old environment, so use:
 
 ```bash
-docker compose up -d web celery-worker-1 celery-beat   # add `dashy` if you changed DASHY_CONFIG
+docker compose up -d web celery-worker-1 celery-beat   # add `dashy` if you changed DASHY_CONFIG, `web-frontend` if you changed VITE_ALLOWED_HOSTS
 ```
 
 ## Seeding Demo Data
