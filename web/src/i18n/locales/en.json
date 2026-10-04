@@ -95,7 +95,7 @@
 	"email_verification": {
 		"title": "Verify your email",
 		"verifying": "Verifying your email…",
-		"success": "Your email has been verified. Redirecting you back to Tinybeans…",
+		"success": "Your email has been verified. Redirecting you back to Circles…",
 		"success_toast": "Email verified successfully!",
 		"error": "We couldn't verify your email. The link may be invalid or expired.",
 		"invalid_link": "Invalid verification link.",
@@ -358,7 +358,7 @@
 				"description": "Update your account information and preferences.",
 				"theme": {
 					"title": "Appearance",
-					"description": "Choose how Tinybeans looks on your device.",
+					"description": "Choose how Circles looks on your device.",
 					"select_label": "Theme preference",
 					"select_description": "Pick a theme or follow your browser’s color scheme.",
 					"select_placeholder": "Select a theme",
@@ -375,7 +375,7 @@
 						},
 						"system": {
 							"title": "Match browser",
-							"description": "Keep Tinybeans in sync with your browser preference."
+							"description": "Keep Circles in sync with your browser preference."
 						}
 					}
 				},
@@ -394,7 +394,7 @@
 				},
 				"language": {
 					"title": "Language",
-					"description": "Choose the language used across Tinybeans.",
+					"description": "Choose the language used across Circles.",
 					"select_label": "Display language",
 					"select_placeholder": "Select a language",
 					"options": {
@@ -408,7 +408,7 @@
 			"not_enabled_description": "Start by setting up a method below. This will also generate fresh recovery codes.",
 			"remove_title": "Remove {{method}}?",
 			"remove_description": {
-				"totp": "Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
+				"totp": "Removing your authenticator app will unlink it from Circles. Scan a new QR code if you decide to set it up again.",
 				"sms": "Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
 				"email": "Removing email verification will disable receiving verification codes via email. You can set it up again at any time."
 			},
@@ -722,7 +722,7 @@
 				"title": "Invite someone to this circle",
 				"description": "Enter their email, pick their role, and send the invite.",
 				"identifier_label": "Email",
-				"identifier_help_email": "Use the email tied to their Tinybeans account, or one they'll check.",
+				"identifier_help_email": "Use the email tied to their Circles account, or one they'll check.",
 					"role_label": "Role after acceptance",
 					"role_placeholder": "Select a role",
 					"submit": "Send invitation",

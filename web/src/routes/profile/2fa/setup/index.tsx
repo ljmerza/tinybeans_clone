@@ -29,7 +29,7 @@ const METHOD_LABELS: Record<TwoFactorMethod, string> = {
 type RemovableMethod = Exclude<TwoFactorMethod, "email">;
 
 const REMOVAL_CONFIRMATION: Record<RemovableMethod, string> = {
-	totp: "Removing your authenticator app will unlink it from Tinybeans. Scan a new QR code if you decide to set it up again.",
+	totp: "Removing your authenticator app will unlink it from Circles. Scan a new QR code if you decide to set it up again.",
 	sms: "Removing SMS codes will delete your verified phone number. Re-run SMS setup if you want to use text messages again.",
 };
 
