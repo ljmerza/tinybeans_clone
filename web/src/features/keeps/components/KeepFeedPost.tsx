@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
 import { useAdminCircleIds } from "@/features/albums/hooks/useAdminCircleIds";
-import { Images, Trash2 } from "lucide-react";
+import { Images, Trash2, UserRoundPlus } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -47,6 +47,8 @@ import {
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
+import { KeepPeople } from "./KeepPeople";
+import { TagPeopleDialog } from "./TagPeopleDialog";
 import { useKeepPhotoViewer } from "./useKeepPhotoViewer";
 
 /** Comments each "Show more" reveals after the first RECENT_COMMENT_COUNT. */
@@ -94,6 +96,8 @@ export function KeepFeedPost({
 	const [albumsOpen, setAlbumsOpen] = useState(false);
 	// Only circle admins put posts into albums.
 	const canAddToAlbum = useAdminCircleIds().has(keep.circle.id);
+	// Any member of the circle may tag people, like commenting.
+	const [taggingPeople, setTaggingPeople] = useState(false);
 
 	const post = useMemo(
 		() =>
@@ -179,6 +183,7 @@ export function KeepFeedPost({
 				<div className="-mt-1.5 space-y-1 px-[var(--rsf-spacing)] pb-2.5 empty:hidden">
 					<PostTitle />
 					<PostCaption />
+					<KeepPeople people={keep.people} />
 				</div>
 				<PostMedia {...photoViewer.mediaProps}>
 					<PostMediaPrevButton aria-label={t("pages.feed.previous_photo")} />
@@ -201,6 +206,11 @@ export function KeepFeedPost({
 									? t("pages.feed.unfavorite")
 									: t("pages.feed.favorite")
 							}
+						/>
+						<PostAction
+							aria-label={t("pages.people.tag.action")}
+							icon={<UserRoundPlus strokeWidth={1.8} />}
+							onClick={() => setTaggingPeople(true)}
 						/>
 						{canAddToAlbum && (
 							<PostAction
@@ -255,6 +265,9 @@ export function KeepFeedPost({
 			{photoViewer.viewer}
 			{albumsOpen && (
 				<AddToAlbumDialog keep={keep} open onOpenChange={setAlbumsOpen} />
+			)}
+			{taggingPeople && (
+				<TagPeopleDialog keep={keep} open onOpenChange={setTaggingPeople} />
 			)}
 			<Dialog open={likersOpen} onOpenChange={setLikersOpen}>
 				<DialogContent

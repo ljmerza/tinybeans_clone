@@ -37,7 +37,9 @@ class Keep(models.Model):
         updated_at: When the keep was last modified
         is_public: Whether the keep is visible to all circle members
         tags: Comma-separated tags for categorization
-        children: Child profiles this memory is about
+        children: Child profiles this memory is about. Kept for the Tinybeans
+            importer; every link is mirrored into ``people`` (see signals)
+        people: Who is in it, through KeepPerson
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -56,6 +58,13 @@ class Keep(models.Model):
         blank=True,
         related_name="keeps",
         help_text="Children this memory is about",
+    )
+    people = models.ManyToManyField(
+        "keeps.Person",
+        through="keeps.KeepPerson",
+        blank=True,
+        related_name="keeps",
+        help_text="People tagged on this memory",
     )
 
     class Meta:

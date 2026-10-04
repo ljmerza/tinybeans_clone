@@ -6,8 +6,10 @@ from .models import (
     Keep,
     KeepComment,
     KeepMedia,
+    KeepPerson,
     KeepReaction,
     Milestone,
+    Person,
 )
 
 
@@ -296,3 +298,28 @@ class KeepCommentAdmin(admin.ModelAdmin):
         return obj.comment[:50] + "..." if len(obj.comment) > 50 else obj.comment
 
     comment_preview.short_description = "Comment Preview"
+
+
+class KeepPersonInline(admin.TabularInline):
+    """Posts a person is tagged on. Read-only: tag through the app, which also keeps child links in step."""
+
+    model = KeepPerson
+    extra = 0
+    fields = ["keep", "added_by", "added_at"]
+    readonly_fields = fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Person)
+class PersonAdmin(admin.ModelAdmin):
+    """People who can be tagged on posts. Renaming here is the only way to rename one for now."""
+
+    list_display = ["name", "kind", "circle", "created_at"]
+    list_filter = ["circle"]
+    search_fields = ["name"]
+    raw_id_fields = ["child", "user", "pet", "created_by"]
+    readonly_fields = ["created_at"]
+    inlines = [KeepPersonInline]

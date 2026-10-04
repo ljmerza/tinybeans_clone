@@ -1,7 +1,13 @@
 import "@/i18n/config";
 import { circleServices } from "@/features/circles";
 import { renderWithQueryClient } from "@/test-utils";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -71,6 +77,12 @@ beforeEach(() => {
 	vi.spyOn(keepServices, "deleteKeep").mockResolvedValue(undefined);
 	// Visible in the feed on the first check.
 	vi.spyOn(keepServices, "getFeedKeep").mockResolvedValue({} as FeedKeep);
+	vi.spyOn(keepServices, "getCirclePeople").mockImplementation(
+		async (circleId) =>
+			circleId === 7
+				? [{ id: "p-sophia", name: "Sophia M", kind: "child" }]
+				: [{ id: "p-rex", name: "Rex", kind: "pet" }],
+	);
 	URL.createObjectURL = vi.fn(() => "blob:preview");
 	URL.revokeObjectURL = vi.fn();
 	vi.mocked(readExifDate).mockResolvedValue(null);
@@ -249,6 +261,75 @@ describe("NewPostDialog", () => {
 		// Only the failed file's empty post goes; the posted one stays.
 		expect(keepServices.deleteKeep).toHaveBeenCalledTimes(1);
 		expect(keepServices.deleteKeep).toHaveBeenCalledWith("keep-2");
+	});
+
+	it("tags the picked people on every post in the batch", async () => {
+		vi.mocked(uploadMedia).mockImplementation(async (input) => uploaded(input));
+		const { onOpenChange } = renderDialog();
+		await screen.findByRole("button", { name: "Post" });
+
+		pickFiles([photo("beach.jpg"), photo("waves.png")]);
+		const group = screen.getByRole("group", { name: "Who's in these?" });
+		const sophia = await within(group).findByRole("button", {
+			name: "Sophia M",
+		});
+		fireEvent.click(sophia);
+		expect(sophia).toHaveAttribute("aria-pressed", "true");
+		await clickPost("Post 2");
+
+		await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+		expect(
+			vi
+				.mocked(keepServices.createKeep)
+				.mock.calls.map(([input]) => input.people),
+		).toEqual([["p-sophia"], ["p-sophia"]]);
+		expect(keepServices.getCirclePeople).toHaveBeenCalledWith(7);
+	});
+
+	it("drops the picked people when the circle changes", async () => {
+		const other = { id: 8, name: "Cousins", slug: "cousins", member_count: 2 };
+		vi.mocked(circleServices.listMemberships).mockResolvedValue({
+			data: {
+				circles: [
+					{
+						membership_id: 1,
+						circle,
+						role: "member",
+						is_owner: true,
+						created_at: "2026-01-01T00:00:00Z",
+					},
+					{
+						membership_id: 2,
+						circle: other,
+						role: "member",
+						is_owner: false,
+						created_at: "2026-01-01T00:00:00Z",
+					},
+				],
+			},
+		});
+		Element.prototype.scrollIntoView = vi.fn();
+		vi.mocked(uploadMedia).mockImplementation(async (input) => uploaded(input));
+		const { onOpenChange } = renderDialog();
+		await screen.findByRole("button", { name: "Post" });
+		pickFiles([photo("beach.jpg")]);
+		fireEvent.click(await screen.findByRole("button", { name: "Sophia M" }));
+
+		await act(async () =>
+			fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" }),
+		);
+		await act(async () =>
+			fireEvent.click(await screen.findByRole("option", { name: "Cousins" })),
+		);
+		const rex = await screen.findByRole("button", { name: "Rex" });
+		expect(rex).toHaveAttribute("aria-pressed", "false");
+		expect(screen.queryByRole("button", { name: "Sophia M" })).toBeNull();
+		await clickPost();
+
+		await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+		const [input] = vi.mocked(keepServices.createKeep).mock.calls[0];
+		expect(input.circle).toBe(8);
+		expect(input.people).toBeUndefined();
 	});
 
 	it("discards when nothing uploaded", async () => {

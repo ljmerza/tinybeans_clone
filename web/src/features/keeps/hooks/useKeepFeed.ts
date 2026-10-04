@@ -18,6 +18,7 @@ import type {
 	FeedKeep,
 	FeedPage,
 	KeepCommentRecord,
+	KeepPerson,
 } from "../types";
 
 /**
@@ -60,6 +61,21 @@ export function useFavoriteKeeps() {
 	return useInfiniteQuery({
 		queryKey: keepKeys.feedFavorites(),
 		queryFn: ({ pageParam }) => keepServices.getFavorites(pageParam),
+		initialPageParam: undefined as string | undefined,
+		getNextPageParam: (lastPage: FeedPage) => cursorFromNextUrl(lastPage.next),
+		staleTime: 0,
+	});
+}
+
+/**
+ * Posts a person is tagged on, newest memory first. Cached under the feed key,
+ * so likes, favorites, comments, tags and deletes patch it; refetched on every
+ * visit.
+ */
+export function usePersonKeeps(personId: string) {
+	return useInfiniteQuery({
+		queryKey: keepKeys.feedPerson(personId),
+		queryFn: ({ pageParam }) => keepServices.getPersonFeed(personId, pageParam),
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: (lastPage: FeedPage) => cursorFromNextUrl(lastPage.next),
 		staleTime: 0,
@@ -213,6 +229,42 @@ export function useSetKeepFavorited() {
 				message: i18n.t("pages.feed.favorite_failed"),
 				level: "error",
 			});
+		},
+	});
+}
+
+/**
+ * Replace who is tagged on a post; any member of its circle may. Every cached
+ * copy of the post shows the new names. The feeds of everyone added or removed
+ * are only marked stale, not refetched, so a post untagged on a person's page
+ * stays there until the next visit.
+ */
+export function useSetKeepPeople() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ keep, people }: { keep: FeedKeep; people: KeepPerson[] }) =>
+			keepServices.setKeepPeople(
+				keep.id,
+				people.map((person) => person.id),
+			),
+		meta: {
+			toast: { error: { key: "pages.people.tag.save_failed" } },
+		},
+		onSuccess: ({ people }, { keep }) => {
+			patchCachedKeep(queryClient, keep.id, (cached) => ({
+				...cached,
+				people,
+			}));
+			const before = new Set((keep.people ?? []).map((person) => person.id));
+			const after = new Set(people.map((person) => person.id));
+			for (const personId of new Set([...before, ...after])) {
+				if (before.has(personId) && after.has(personId)) continue;
+				void queryClient.invalidateQueries({
+					queryKey: keepKeys.feedPerson(personId),
+					refetchType: "none",
+				});
+			}
 		},
 	});
 }

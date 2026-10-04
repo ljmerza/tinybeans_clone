@@ -2,11 +2,12 @@
 
 import calendar
 import re
+import uuid
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
-from django.db.models.functions import Coalesce, ExtractDay, ExtractMonth
+from django.db.models.functions import Coalesce, ExtractDay, ExtractMonth, Lower
 from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import generics, status
@@ -18,7 +19,7 @@ from rest_framework.views import APIView
 from mysite.circles.models import CircleMembership
 from mysite.users.models import UserRole
 
-from ..models import Keep, KeepComment, KeepFavorite, KeepMedia, KeepReaction, KeepType
+from ..models import Keep, KeepComment, KeepFavorite, KeepMedia, KeepPerson, KeepReaction, KeepType, Person
 from ..serializers.feed import FeedLikerSerializer, KeepFeedSerializer
 
 # Matches the web feed's initial comment count, so it needs no extra fetch.
@@ -77,6 +78,7 @@ def feed_queryset(user):
                 ],
                 to_attr="recent_comments_desc",
             ),
+            Prefetch("people", queryset=Person.objects.order_by(Lower("name"), "id")),
         )
     )
 
@@ -95,6 +97,18 @@ def parse_day(value):
 def filter_by_circle(queryset, circle_slug):
     """Restrict to one circle; the queryset is already limited to the user's circles."""
     return queryset.filter(circle__slug=circle_slug) if circle_slug else queryset
+
+
+def filter_by_person(queryset, person_id):
+    """Restrict to posts tagged with one person; a person from another circle matches nothing."""
+    if not person_id:
+        return queryset
+    try:
+        person_id = uuid.UUID(person_id)
+    except ValueError:
+        raise ValidationError({"person": "Not a valid person id."}) from None
+    # Exists rather than a join, so a post is never listed twice.
+    return queryset.filter(Exists(KeepPerson.objects.filter(keep=OuterRef("pk"), person_id=person_id)))
 
 
 DAY_PARAMETERS = [
@@ -128,6 +142,7 @@ class KeepFeedView(generics.ListAPIView):
         if day:
             start, end = parse_day(day)
             queryset = queryset.filter(date_of_memory__gte=start, date_of_memory__lt=end)
+        queryset = filter_by_person(queryset, self.request.query_params.get("person"))
         return filter_by_circle(queryset, self.request.query_params.get("circle_slug"))
 
     @extend_schema(
@@ -142,10 +157,16 @@ class KeepFeedView(generics.ListAPIView):
                 description="Posts per page (default 10, max 30)",
             ),
             *DAY_PARAMETERS,
+            OpenApiParameter(
+                name="person",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.QUERY,
+                description="Only posts this person is tagged on",
+            ),
         ],
         responses={
             200: OpenApiResponse(response=KeepFeedSerializer(many=True), description="A page of feed posts"),
-            400: OpenApiResponse(description="Invalid date"),
+            400: OpenApiResponse(description="Invalid date or person id"),
         },
     )
     def get(self, request, *args, **kwargs):

@@ -28,6 +28,7 @@ import {
 	type PostItem,
 	useCreatePost,
 } from "../hooks/useCreatePost";
+import type { KeepPerson } from "../types";
 import { readExifDate } from "../utils/exifDate";
 import { makeThumbnail } from "../utils/imageThumbnail";
 import {
@@ -36,6 +37,7 @@ import {
 	fileProblem,
 	mediaTypeOf,
 } from "../utils/mediaFiles";
+import { PeoplePicker } from "./PeoplePicker";
 
 const ACCEPT = [...PHOTO_TYPES, ...VIDEO_TYPES].join(",");
 
@@ -175,6 +177,8 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const [circleId, setCircleId] = useState<number | null>(null);
 	const [items, setItems] = useState<DraftItem[]>([]);
 	const [rejected, setRejected] = useState<string[]>([]);
+	// Tagged on every file in the batch; people belong to one circle.
+	const [people, setPeople] = useState<KeepPerson[]>([]);
 
 	const selectedCircleId = circleId ?? circles[0]?.id ?? null;
 	const busy = post.phase === "posting";
@@ -191,6 +195,7 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const clear = useCallback(() => {
 		setItems([]);
 		setRejected([]);
+		setPeople([]);
 		reset();
 	}, [reset]);
 
@@ -253,7 +258,11 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 	const handleSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
 		if (!canPost || selectedCircleId === null || locked) return;
-		void post.submit(selectedCircleId, items);
+		void post.submit(
+			selectedCircleId,
+			items,
+			people.map((person) => person.id),
+		);
 	};
 
 	const handleCancel = async () => {
@@ -295,7 +304,10 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 										? undefined
 										: String(selectedCircleId)
 								}
-								onValueChange={(value) => setCircleId(Number(value))}
+								onValueChange={(value) => {
+									if (Number(value) !== selectedCircleId) setPeople([]);
+									setCircleId(Number(value));
+								}}
 								disabled={locked}
 							>
 								<SelectTrigger id={`${ids}-circle`} className="w-full">
@@ -310,6 +322,24 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 								</SelectContent>
 							</Select>
 						</div>
+					)}
+
+					{/* Asked once there is something to tag. */}
+					{selectedCircleId !== null && items.length > 0 && (
+						<fieldset className="space-y-1.5">
+							<legend className="mb-1.5 text-sm font-medium leading-none">
+								{t("pages.people.composer.label")}
+							</legend>
+							<PeoplePicker
+								circleId={selectedCircleId}
+								selected={people}
+								onChange={setPeople}
+								disabled={locked}
+							/>
+							<p className="text-xs text-muted-foreground">
+								{t("pages.people.composer.hint")}
+							</p>
+						</fieldset>
 					)}
 
 					<div className="space-y-2">

@@ -26,6 +26,11 @@ from .media import (
     KeepMediaDetailView,
     KeepMediaListCreateView,
 )
+from .people import (
+    CirclePeopleView,
+    KeepFeedPeopleView,
+    PersonDetailView,
+)
 from .permissions import (
     IsCircleAdminOrOwner,
     IsCircleMember,
@@ -58,6 +63,9 @@ __all__ = [
     "KeepListCreateView",
     "KeepMediaDetailView",
     "KeepMediaListCreateView",
+    "CirclePeopleView",
+    "KeepFeedPeopleView",
+    "PersonDetailView",
     "IsCircleAdminOrOwner",
     "IsCircleMember",
     "can_user_post_in_circle",

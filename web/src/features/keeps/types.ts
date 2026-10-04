@@ -48,6 +48,32 @@ export interface FeedComment {
 }
 
 /**
+ * Someone tagged on a post, in name order.
+ */
+export interface KeepPerson {
+	id: string;
+	name: string;
+}
+
+/** What a taggable person stands for. */
+export type PersonKind = "child" | "member" | "pet" | "other";
+
+/**
+ * GET /keeps/circles/<id>/people/: someone who can be tagged on the circle's
+ * posts: a child profile, a member, a pet or just a name ("other").
+ */
+export interface CirclePerson extends KeepPerson {
+	kind: PersonKind;
+}
+
+/**
+ * GET /keeps/people/<id>/: a person with their circle, for the person page.
+ */
+export interface PersonDetail extends CirclePerson {
+	circle: { id: number; name: string; slug: string };
+}
+
+/**
  * One keep as returned by GET /keeps/feed/ and GET /keeps/feed/<id>/.
  */
 export interface FeedKeep {
@@ -70,6 +96,8 @@ export interface FeedKeep {
 	can_delete: boolean;
 	/** The newest two comments, oldest first. */
 	recent_comments: FeedComment[];
+	/** Who is tagged on it, in name order. Missing in data cached before it was added. */
+	people?: KeepPerson[];
 }
 
 /**
@@ -150,6 +178,8 @@ export interface CreateKeepInput {
 	title: string;
 	description: string;
 	date_of_memory: string;
+	/** Ids of people from the circle to tag on the post. */
+	people?: string[];
 }
 
 export interface CreatedKeep extends CreateKeepInput {

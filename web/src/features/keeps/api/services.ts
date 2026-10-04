@@ -3,6 +3,7 @@ import type { ApiResponseWithMessages } from "@/types";
 import type {
 	AdjacentFeedDays,
 	CalendarMonthPayload,
+	CirclePerson,
 	CreateKeepInput,
 	CreatedKeep,
 	FeedFilters,
@@ -10,10 +11,12 @@ import type {
 	FeedPage,
 	KeepCommentRecord,
 	KeepLiker,
+	KeepPerson,
 	KeepReactionRecord,
 	MediaUploadRecord,
 	OnThisDayPayload,
 	PaginatedList,
+	PersonDetail,
 } from "../types";
 
 const KEEPS_BASE = "/keeps";
@@ -48,6 +51,40 @@ export const keepServices = {
 	getFavorites(cursor?: string) {
 		const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
 		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/favorites/${query}`);
+	},
+
+	/** Posts the person is tagged on, newest memory first. */
+	getPersonFeed(personId: string, cursor?: string) {
+		const params = new URLSearchParams({ person: personId });
+		if (cursor) params.set("cursor", cursor);
+		return authApi.get<FeedPage>(`${KEEPS_BASE}/feed/?${params}`);
+	},
+
+	/** Replaces the post's people; every id must be from its circle. */
+	setKeepPeople(keepId: string, people: string[]) {
+		return authApi.patch<{ people: KeepPerson[] }>(
+			`${KEEPS_BASE}/feed/${keepId}/people/`,
+			{ people },
+		);
+	},
+
+	/** Everyone who can be tagged on the circle's posts, in name order. */
+	getCirclePeople(circleId: number) {
+		return authApi.get<CirclePerson[]>(
+			`${KEEPS_BASE}/circles/${circleId}/people/`,
+		);
+	},
+
+	/** Add someone without a profile, e.g. "Grandma Jo". */
+	createPerson(circleId: number, name: string) {
+		return authApi.post<CirclePerson>(
+			`${KEEPS_BASE}/circles/${circleId}/people/`,
+			{ name },
+		);
+	},
+
+	getPerson(personId: string) {
+		return authApi.get<PersonDetail>(`${KEEPS_BASE}/people/${personId}/`);
 	},
 
 	/** Idempotent; rejects with a 404 once the keep is deleted. */
