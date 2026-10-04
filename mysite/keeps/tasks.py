@@ -10,6 +10,7 @@ from PIL import Image, ImageOps
 
 from mysite import project_logging
 
+from .digest import digest_recipient_ids, send_digest
 from .models import KeepMedia, MediaUpload, MediaUploadStatus
 from .notifications import send_activity
 from .storage import get_storage_backend
@@ -422,3 +423,20 @@ def send_activity_notifications(event: str, object_id: str):
     """Notify circle members about a new post, comment, reply or like."""
     with project_logging.log_context(task="keeps.send_activity_notifications", event=event, object_id=object_id):
         send_activity(event, object_id)
+
+
+@shared_task
+def send_new_post_digests():
+    """Queue the daily new-post digest for everyone who opted in (run by beat)."""
+    with project_logging.log_context(task="keeps.send_new_post_digests"):
+        user_ids = digest_recipient_ids()
+        for user_id in user_ids:
+            send_new_post_digest.delay(user_id)
+        logger.info("Queued new-post digests for %s users", len(user_ids))
+
+
+@shared_task
+def send_new_post_digest(user_id: int):
+    """Email one user the posts that are new in their circles since their last digest."""
+    with project_logging.log_context(task="keeps.send_new_post_digest", user_id=user_id):
+        send_digest(user_id)

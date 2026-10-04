@@ -61,6 +61,7 @@ class EmailPreferencesSerializer(serializers.ModelSerializer):
             "notify_replies",
             "notify_likes",
             "channel",
+            "email_digest",
             "circle_id",
             "per_circle_override",
         ]
@@ -70,6 +71,12 @@ class EmailPreferencesSerializer(serializers.ModelSerializer):
         # Phone delivery is not wired up yet; accepting it would silently drop notifications.
         if value == NotificationChannel.SMS and not getattr(settings, "NOTIFICATIONS_SMS_ENABLED", False):
             raise serializers.ValidationError(create_message("errors.notification_channel_unavailable"))
+        return value
+
+    def validate_email_digest(self, value):
+        # The digest covers every circle at once, so only the global row has a say.
+        if self.instance is not None and self.instance.circle_id is not None:
+            raise serializers.ValidationError(create_message("errors.notification_digest_global_only"))
         return value
 
     def get_per_circle_override(self, obj) -> bool:

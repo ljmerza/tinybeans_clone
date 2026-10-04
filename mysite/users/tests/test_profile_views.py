@@ -103,6 +103,34 @@ class NotificationPreferencesViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UserNotificationPreferences.objects.get(user=self.user, circle=None).channel, "sms")
 
+    def test_email_digest_is_off_by_default(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse("user-email-preferences"))
+
+        data = response.data.get("data", response.data)
+        self.assertFalse(data["email_digest"])
+
+    def test_patch_toggles_email_digest(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(reverse("user-email-preferences"), {"email_digest": True}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["data"]["email_digest"])
+        self.assertTrue(UserNotificationPreferences.objects.get(user=self.user, circle=None).email_digest)
+
+        response = self.client.patch(reverse("user-email-preferences"), {"email_digest": False}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(UserNotificationPreferences.objects.get(user=self.user, circle=None).email_digest)
+
+    def test_email_digest_cannot_be_set_per_circle(self):
+        self.client.force_authenticate(user=self.user)
+        url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
+        response = self.client.patch(url, {"email_digest": True}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, email_digest=True).exists())
+
     def test_get_circle_without_override_returns_global_and_creates_nothing(self):
         UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
         self.client.force_authenticate(user=self.user)

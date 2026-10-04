@@ -36,6 +36,11 @@ class UserNotificationPreferences(models.Model):
         notify_replies: Whether to notify when someone replies to (tags) the user in a comment
         notify_likes: Whether to notify when someone likes the user's posts
         channel: Channel notifications are delivered on (email or phone)
+        email_digest: Whether to get the daily email listing new posts across all circles.
+            Global only: the digest reads the user's global row, and the copy a circle
+            override carries is ignored.
+        digest_covered_until: Posts created up to this time were covered by an earlier
+            digest (sent, or skipped because nothing was new). Global row only.
         created_at: When these preferences were created
         updated_at: When these preferences were last modified
     """
@@ -51,6 +56,8 @@ class UserNotificationPreferences(models.Model):
     notify_replies = models.BooleanField(default=True)
     notify_likes = models.BooleanField(default=True)
     channel = models.CharField(max_length=20, choices=NotificationChannel.choices, default=NotificationChannel.EMAIL)
+    email_digest = models.BooleanField(default=False)
+    digest_covered_until = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 

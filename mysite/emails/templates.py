@@ -15,6 +15,7 @@ KEEP_NEW_MEDIA_TEMPLATE = "keeps.notify.new_media"
 KEEP_COMMENT_TEMPLATE = "keeps.notify.comment"
 KEEP_REPLY_TEMPLATE = "keeps.notify.reply"
 KEEP_LIKE_TEMPLATE = "keeps.notify.like"
+KEEP_DIGEST_TEMPLATE = "keeps.notify.digest"
 
 # 2FA-related templates
 TWOFA_CODE_TEMPLATE = "twofa.code"
@@ -36,6 +37,7 @@ EMAIL_TEMPLATE_FILES = {
     KEEP_COMMENT_TEMPLATE: "keep_comment.email.html",
     KEEP_REPLY_TEMPLATE: "keep_reply.email.html",
     KEEP_LIKE_TEMPLATE: "keep_like.email.html",
+    KEEP_DIGEST_TEMPLATE: "keep_digest.email.html",
     TWOFA_CODE_TEMPLATE: "twofa_code.email.html",
     TWOFA_ENABLED_TEMPLATE: "twofa_enabled.email.html",
     TWOFA_DISABLED_TEMPLATE: "twofa_disabled.email.html",
@@ -53,6 +55,7 @@ __all__ = [
     "KEEP_COMMENT_TEMPLATE",
     "KEEP_REPLY_TEMPLATE",
     "KEEP_LIKE_TEMPLATE",
+    "KEEP_DIGEST_TEMPLATE",
     "TWOFA_CODE_TEMPLATE",
     "TWOFA_ENABLED_TEMPLATE",
     "TWOFA_DISABLED_TEMPLATE",

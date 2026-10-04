@@ -881,6 +881,7 @@
 	"errors": {
 		"notification_channel_unavailable": "That notification method isn't available yet.",
 		"notification_circle_required": "Choose a circle to reset.",
+		"notification_digest_global_only": "The daily summary covers all your circles, so it can only be changed in your default settings.",
 		"file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
 		"invalid_file_type": "Invalid file type. Allowed types: {{allowedTypes}}",
 		"email_invalid": "Please enter a valid email address",
@@ -994,6 +995,10 @@
 			"channel_label": "Send notifications by",
 			"channel_description": "More ways to get notified are on the way.",
 			"channel_coming_soon": "{{channel}} (coming soon)",
+			"digest": {
+				"title": "Daily email summary",
+				"description": "One email each morning listing new posts in all your circles."
+			},
 			"channels": {
 				"email": "Email",
 				"sms": "Phone (text message)"

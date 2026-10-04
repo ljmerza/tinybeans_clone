@@ -54,6 +54,8 @@ CELERY_TASK_ROUTES = {
     "mysite.keeps.tasks.cleanup_failed_uploads": {"queue": "media"},
     "mysite.keeps.tasks.validate_media_file": {"queue": "media"},
     "mysite.keeps.tasks.send_activity_notifications": {"queue": "email"},
+    "mysite.keeps.tasks.send_new_post_digests": {"queue": "email"},
+    "mysite.keeps.tasks.send_new_post_digest": {"queue": "email"},
     "mysite.auth.tasks.cleanup_expired_trusted_devices": {"queue": "maintenance"},
     "mysite.auth.tasks.cleanup_expired_oauth_states": {"queue": "maintenance"},
     "mysite.auth.tasks.cleanup_expired_magic_login_tokens": {"queue": "maintenance"},
@@ -85,5 +87,10 @@ CELERY_BEAT_SCHEDULE = {
     "send-circle-invitation-reminders": {
         "task": "mysite.circles.tasks.send_circle_invitation_reminders",
         "schedule": crontab(minute="*/30"),  # Every 30 minutes
+    },
+    "send-new-post-digests": {
+        "task": "mysite.keeps.tasks.send_new_post_digests",
+        # Daily at 7 AM in CELERY_TIMEZONE, after the midnight Tinybeans import
+        "schedule": crontab(hour=7, minute=0),
     },
 }
