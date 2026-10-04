@@ -60,7 +60,7 @@ class Command(BaseCommand):
         user.is_superuser = True
         user.first_name = user.first_name or "Super"
         user.last_name = user.last_name or "Admin"
-        if created or not user.check_password(DEFAULT_PASSWORD):
+        if created:
             user.set_password(DEFAULT_PASSWORD)
         user.save()
         self._mark_verified(user)
@@ -68,7 +68,7 @@ class Command(BaseCommand):
         return user
 
     def _create_primary_circle(self) -> Circle:
-        guardian, _ = User.objects.get_or_create(
+        guardian, created = User.objects.get_or_create(
             email="guardian@example.com",
             defaults={
                 "role": UserRole.CIRCLE_ADMIN,
@@ -79,7 +79,7 @@ class Command(BaseCommand):
         guardian.role = UserRole.CIRCLE_ADMIN
         guardian.first_name = guardian.first_name or "Guardian"
         guardian.last_name = guardian.last_name or "Admin"
-        if not guardian.check_password(DEFAULT_PASSWORD):
+        if created:
             guardian.set_password(DEFAULT_PASSWORD)
         guardian.save()
         self._mark_verified(guardian)
@@ -98,7 +98,7 @@ class Command(BaseCommand):
             defaults={"role": UserRole.CIRCLE_ADMIN},
         )
 
-        member, _ = User.objects.get_or_create(
+        member, created = User.objects.get_or_create(
             email="member@example.com",
             defaults={
                 "role": UserRole.CIRCLE_MEMBER,
@@ -106,7 +106,7 @@ class Command(BaseCommand):
                 "last_name": "Member",
             },
         )
-        if not member.check_password(DEFAULT_PASSWORD):
+        if created:
             member.set_password(DEFAULT_PASSWORD)
         member.first_name = member.first_name or "Family"
         member.last_name = member.last_name or "Member"
@@ -120,7 +120,7 @@ class Command(BaseCommand):
             defaults={"role": UserRole.CIRCLE_MEMBER, "invited_by": guardian},
         )
 
-        teenager, _ = User.objects.get_or_create(
+        teenager, created = User.objects.get_or_create(
             email="teen@example.com",
             defaults={
                 "role": UserRole.CIRCLE_MEMBER,
@@ -128,7 +128,7 @@ class Command(BaseCommand):
                 "last_name": "Member",
             },
         )
-        if not teenager.check_password(DEFAULT_PASSWORD):
+        if created:
             teenager.set_password(DEFAULT_PASSWORD)
         teenager.first_name = teenager.first_name or "Teen"
         teenager.last_name = teenager.last_name or "Member"
@@ -185,7 +185,7 @@ class Command(BaseCommand):
         return circle
 
     def _create_secondary_circle(self) -> Circle:
-        admin_two, _ = User.objects.get_or_create(
+        admin_two, created = User.objects.get_or_create(
             email="second@example.com",
             defaults={
                 "role": UserRole.CIRCLE_ADMIN,
@@ -193,7 +193,7 @@ class Command(BaseCommand):
                 "last_name": "Admin",
             },
         )
-        if not admin_two.check_password(DEFAULT_PASSWORD):
+        if created:
             admin_two.set_password(DEFAULT_PASSWORD)
         admin_two.first_name = admin_two.first_name or "Second"
         admin_two.last_name = admin_two.last_name or "Admin"
@@ -220,7 +220,7 @@ class Command(BaseCommand):
         return circle_two
 
     def _create_user_without_circle(self) -> User:
-        user, _ = User.objects.get_or_create(
+        user, created = User.objects.get_or_create(
             email="solo@example.com",
             defaults={
                 "role": UserRole.CIRCLE_MEMBER,
@@ -228,7 +228,7 @@ class Command(BaseCommand):
                 "last_name": "User",
             },
         )
-        if not user.check_password(DEFAULT_PASSWORD):
+        if created:
             user.set_password(DEFAULT_PASSWORD)
         user.first_name = user.first_name or "Solo"
         user.last_name = user.last_name or "User"
