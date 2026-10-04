@@ -8,7 +8,7 @@ import {
 import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
 import { useAdminCircleIds } from "@/features/albums/hooks/useAdminCircleIds";
 import { Images, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	PostAction,
@@ -58,6 +58,8 @@ export interface KeepFeedPostProps {
 	defaultCommentsExpanded?: boolean;
 	/** Called once the keep is deleted, e.g. to leave its own page. */
 	onDeleted?: () => void;
+	/** Page-specific actions, shown after the post's own actions and before Share. */
+	extraActions?: ReactNode;
 }
 
 /**
@@ -67,6 +69,7 @@ export function KeepFeedPost({
 	keep,
 	defaultCommentsExpanded = false,
 	onDeleted,
+	extraActions,
 }: KeepFeedPostProps) {
 	const { t, i18n } = useTranslation();
 	const setLiked = useSetKeepLiked();
@@ -206,6 +209,7 @@ export function KeepFeedPost({
 								onClick={() => setAlbumsOpen(true)}
 							/>
 						)}
+						{extraActions}
 						<PostShareButton aria-label={t("pages.feed.share")} />
 						{keep.can_delete && (
 							<>

@@ -495,6 +495,13 @@
 				"done": "Fatto",
 				"toggle_failed": "Impossibile aggiornare l'album. Riprova.",
 				"gone": "Quell'album o quel post non esiste più."
+			},
+			"cover": {
+				"set": "Usa come copertina dell'album",
+				"reset": "Torna alla copertina predefinita",
+				"default": "Copertina dell'album (predefinita)",
+				"badge": "Copertina",
+				"failed": "Impossibile cambiare la copertina dell'album. Riprova."
 			}
 		},
 		"feed": {
@@ -693,7 +700,7 @@
 				"error_title": "Impossibile caricare la cerchia",
 				"error_message": "Non riusciamo a caricare questa cerchia in questo momento. Riprova.",
 				"retry": "Riprova",
-				"back_to_list": "← Torna alle cerchie",
+				"back_to_list": "← Torna alle Impostazioni",
 				"title_fallback": "Cerchia",
 				"description": "{{count}} membri in questa cerchia",
 				"description_one": "{{count}} membro in questa cerchia",

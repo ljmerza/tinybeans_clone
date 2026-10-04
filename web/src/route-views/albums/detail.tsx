@@ -1,6 +1,7 @@
 import { ConfirmDialog, Layout, LoadingState } from "@/components";
 import { Button } from "@/components/ui/button";
 import {
+	AlbumCoverAction,
 	AlbumFormDialog,
 	useAlbum,
 	useAlbumKeeps,
@@ -18,8 +19,8 @@ const route = getRouteApi("/albums/$albumId");
 
 /**
  * One album's posts, oldest memory first. Just a compact line with the
- * album's name and count above the posts; its creator or a circle admin also
- * gets edit and delete buttons there.
+ * album's name and count above the posts; circle admins also get edit and
+ * delete buttons there, and can pick any post with a photo as the cover.
  */
 export function AlbumRouteView() {
 	const { t } = useTranslation();
@@ -107,7 +108,8 @@ export function AlbumRouteView() {
 		);
 	}
 
-	const { name, description, post_count: postCount, can_edit } = album.data;
+	const current = album.data;
+	const { name, description, post_count: postCount, can_edit } = current;
 
 	return (
 		<Layout>
@@ -163,7 +165,14 @@ export function AlbumRouteView() {
 					<VirtualFeed
 						items={keeps}
 						getItemKey={(keep) => keep.id}
-						renderItem={(keep) => <KeepFeedPost keep={keep} />}
+						renderItem={(keep) => (
+							<KeepFeedPost
+								keep={keep}
+								extraActions={
+									can_edit && <AlbumCoverAction album={current} keep={keep} />
+								}
+							/>
+						)}
 						// A failed page stops auto-paging; otherwise the list would
 						// re-request it every time the in-flight flag drops.
 						hasMore={hasNextPage && !isFetchNextPageError}

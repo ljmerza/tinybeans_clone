@@ -495,6 +495,13 @@
 				"done": "Listo",
 				"toggle_failed": "No se pudo actualizar el álbum. Inténtalo de nuevo.",
 				"gone": "Ese álbum o esa publicación ya no existe."
+			},
+			"cover": {
+				"set": "Usar como portada del álbum",
+				"reset": "Volver a la portada predeterminada",
+				"default": "Portada del álbum (predeterminada)",
+				"badge": "Portada",
+				"failed": "No se pudo cambiar la portada del álbum. Inténtalo de nuevo."
 			}
 		},
 		"feed": {
@@ -693,7 +700,7 @@
 				"error_title": "No se puede cargar el círculo",
 				"error_message": "No pudimos cargar este círculo. Inténtalo otra vez.",
 				"retry": "Reintentar",
-				"back_to_list": "← Volver a círculos",
+				"back_to_list": "← Volver a Configuración",
 				"title_fallback": "Círculo",
 				"description": "{{count}} miembros en este círculo",
 				"description_one": "{{count}} miembro en este círculo",
