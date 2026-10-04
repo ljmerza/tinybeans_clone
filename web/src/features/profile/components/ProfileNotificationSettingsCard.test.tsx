@@ -21,6 +21,7 @@ const preferences = (
 	notify_replies: true,
 	notify_likes: true,
 	channel: "email",
+	email_digest: false,
 	circle_id: null,
 	per_circle_override: false,
 	...overrides,
@@ -80,6 +81,32 @@ describe("ProfileNotificationSettingsCard", () => {
 		);
 	});
 
+	it("turns on the daily email summary, off by default", async () => {
+		vi.spyOn(profileServices, "getNotificationPreferences").mockResolvedValue({
+			data: preferences(),
+		});
+		const update = vi
+			.spyOn(profileServices, "updateNotificationPreferences")
+			.mockResolvedValue({ data: preferences({ email_digest: true }) });
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+
+		const digest = await screen.findByRole("switch", {
+			name: "Daily email summary",
+		});
+		expect(digest).not.toBeChecked();
+		fireEvent.click(digest);
+
+		await waitFor(() =>
+			expect(update).toHaveBeenCalledWith(null, { email_digest: true }),
+		);
+		await waitFor(() =>
+			expect(
+				screen.getByRole("switch", { name: "Daily email summary" }),
+			).toBeChecked(),
+		);
+	});
+
 	it("offers phone delivery only as coming soon", async () => {
 		vi.spyOn(profileServices, "getNotificationPreferences").mockResolvedValue({
 			data: preferences(),
@@ -124,6 +151,10 @@ describe("ProfileNotificationSettingsCard", () => {
 		expect(
 			screen.getByRole("switch", { name: "New photos and videos" }),
 		).not.toBeChecked();
+		// The summary covers every circle, so it's only on the defaults.
+		expect(
+			screen.queryByRole("switch", { name: "Daily email summary" }),
+		).not.toBeInTheDocument();
 
 		fireEvent.click(screen.getByRole("button", { name: "Use my defaults" }));
 

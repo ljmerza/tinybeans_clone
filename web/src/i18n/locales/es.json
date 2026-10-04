@@ -881,6 +881,7 @@
 	"errors": {
 		"notification_channel_unavailable": "Ese método de notificación aún no está disponible.",
 		"notification_circle_required": "Elige un círculo para restablecer.",
+		"notification_digest_global_only": "El resumen diario incluye todos tus círculos, así que solo se puede cambiar en tu configuración predeterminada.",
 		"file_too_large": "El archivo {{filename}} es demasiado grande. El tamaño máximo es {{maxSize}}.",
 		"invalid_file_type": "Tipo de archivo inválido. Tipos permitidos: {{allowedTypes}}",
 		"email_invalid": "Por favor ingrese una dirección de correo electrónico válida",
@@ -994,6 +995,10 @@
 		"channel_label": "Enviar notificaciones por",
 		"channel_description": "Pronto habrá más formas de recibir notificaciones.",
 		"channel_coming_soon": "{{channel}} (próximamente)",
+		"digest": {
+			"title": "Resumen diario por correo",
+			"description": "Un correo cada mañana con las publicaciones nuevas de todos tus círculos."
+		},
 		"channels": {
 			"email": "Correo electrónico",
 			"sms": "Teléfono (mensaje de texto)"

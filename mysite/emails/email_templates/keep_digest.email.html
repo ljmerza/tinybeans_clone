@@ -1,0 +1,45 @@
+{% block subject %}{% autoescape off %}{{ post_count }} new post{{ post_count|pluralize }} in your circles{% endautoescape %}{% endblock %}
+
+{% block text_body %}{% autoescape off %}
+Hi {{ recipient_name|default:"there" }},
+
+Here's what's new in your circles since your last summary:
+{% for post in posts %}
+- {{ post.actor_name }} {% if post.media_label %}added {{ post.media_label }} to{% else %}posted in{% endif %} {{ post.circle_name }}{% if post.post_summary %}: "{{ post.post_summary }}"{% endif %}
+  {{ post.keep_url }}{% endfor %}
+{% if more_count %}
+...and {{ more_count }} more.{% endif %}
+
+See everything: {{ feed_url }}
+
+--
+Turn off this daily summary: {{ settings_url }}
+{% endautoescape %}{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title="New in your circles" intro_text="Here's what's new since your last summary." email_tag="Daily Summary" %}
+
+<p>Hi {{ recipient_name|default:"there" }},</p>
+<p>{{ post_count }} new post{{ post_count|pluralize }} arrived in your circles:</p>
+
+<ul style="padding-left: 20px;">
+{% for post in posts %}
+    <li style="margin-bottom: 12px;">
+        <strong>{{ post.actor_name }}</strong> {% if post.media_label %}added {{ post.media_label }} to{% else %}posted in{% endif %} <strong>{{ post.circle_name }}</strong>
+        {% if post.post_summary %}<br><span style="color: #444; font-style: italic;">&ldquo;{{ post.post_summary }}&rdquo;</span>{% endif %}
+        <br><a href="{{ post.keep_url }}" style="color: #4F46E5;">See the post</a>
+    </li>
+{% endfor %}
+</ul>
+{% if more_count %}<p>&hellip;and {{ more_count }} more.</p>{% endif %}
+
+<p style="margin: 30px 0;">
+    <a href="{{ feed_url }}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+        See everything
+    </a>
+</p>
+
+<p style="color: #666; font-size: 12px;"><a href="{{ settings_url }}" style="color: #666;">Turn off this daily summary</a></p>
+
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

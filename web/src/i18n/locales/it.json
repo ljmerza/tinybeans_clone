@@ -881,6 +881,7 @@
 	"errors": {
 		"notification_channel_unavailable": "Questo metodo di notifica non è ancora disponibile.",
 		"notification_circle_required": "Scegli una cerchia da reimpostare.",
+		"notification_digest_global_only": "Il riepilogo giornaliero include tutte le tue cerchie, quindi si può modificare solo nelle impostazioni predefinite.",
 		"file_too_large": "Il file {{filename}} è troppo grande. La dimensione massima è {{maxSize}}.",
 		"invalid_file_type": "Tipo di file non valido. Tipi consentiti: {{allowedTypes}}",
 		"email_invalid": "Inserisci un indirizzo email valido",
@@ -994,6 +995,10 @@
 			"channel_label": "Invia notifiche tramite",
 			"channel_description": "Presto arriveranno altri modi per ricevere le notifiche.",
 			"channel_coming_soon": "{{channel}} (in arrivo)",
+			"digest": {
+				"title": "Riepilogo giornaliero via email",
+				"description": "Un'email ogni mattina con i nuovi post di tutte le tue cerchie."
+			},
 			"channels": {
 				"email": "Email",
 				"sms": "Telefono (SMS)"

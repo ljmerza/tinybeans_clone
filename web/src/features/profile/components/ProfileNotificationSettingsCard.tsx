@@ -137,6 +137,28 @@ export function ProfileNotificationSettingsCard() {
 							))}
 						</ul>
 
+						{/* The digest covers every circle, so it's a default-only setting. */}
+						{circleId === null && (
+							<div className="flex items-center justify-between gap-4">
+								<div className="space-y-1">
+									<Label htmlFor="notify-digest">
+										{t("profile.notifications.digest.title")}
+									</Label>
+									<p className="text-sm text-muted-foreground">
+										{t("profile.notifications.digest.description")}
+									</p>
+								</div>
+								<Switch
+									id="notify-digest"
+									checked={prefs.email_digest}
+									disabled={save.isPending}
+									onCheckedChange={(checked) =>
+										save.mutate({ email_digest: checked })
+									}
+								/>
+							</div>
+						)}
+
 						<div className="space-y-2">
 							<Label htmlFor="notification-channel">
 								{t("profile.notifications.channel_label")}

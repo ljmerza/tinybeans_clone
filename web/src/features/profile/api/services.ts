@@ -19,6 +19,8 @@ export interface NotificationPreferences {
 	notify_replies: boolean;
 	notify_likes: boolean;
 	channel: NotificationChannel;
+	/** Daily new-post email; only the default (all circles) preferences have it. */
+	email_digest: boolean;
 	circle_id: number | null;
 	per_circle_override: boolean;
 }
