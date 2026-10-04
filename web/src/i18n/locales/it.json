@@ -95,7 +95,7 @@
 		"email_verification": {
 			"title": "Verifica la tua email",
 			"verifying": "Verifica della tua email in corso…",
-			"success": "La tua email è stata verificata. Ti stiamo riportando su Tinybeans…",
+			"success": "La tua email è stata verificata. Ti stiamo riportando su Circles…",
 			"success_toast": "Email verificata!",
 			"error": "Non siamo riusciti a verificare la tua email. Il link potrebbe non essere valido o essere scaduto.",
 			"invalid_link": "Link di verifica non valido.",
@@ -358,7 +358,7 @@
 				"description": "Aggiorna i dati del tuo account e le tue preferenze.",
 				"theme": {
 					"title": "Aspetto",
-					"description": "Scegli l'aspetto di Tinybeans sul tuo dispositivo.",
+					"description": "Scegli l'aspetto di Circles sul tuo dispositivo.",
 					"select_label": "Tema preferito",
 					"select_description": "Scegli un tema o segui la combinazione di colori del browser.",
 					"select_placeholder": "Seleziona un tema",
@@ -375,7 +375,7 @@
 						},
 						"system": {
 							"title": "Come il browser",
-							"description": "Mantieni Tinybeans allineato alle preferenze del browser."
+							"description": "Mantieni Circles allineato alle preferenze del browser."
 						}
 					}
 				},
@@ -394,7 +394,7 @@
 				},
 				"language": {
 					"title": "Lingua",
-					"description": "Scegli la lingua da usare in Tinybeans.",
+					"description": "Scegli la lingua da usare in Circles.",
 					"select_label": "Lingua dell'interfaccia",
 					"select_placeholder": "Seleziona una lingua",
 					"options": {
@@ -408,7 +408,7 @@
 			"not_enabled_description": "Inizia configurando un metodo qui sotto. Verranno generati anche nuovi codici di recupero.",
 			"remove_title": "Rimuovere {{method}}?",
 			"remove_description": {
-				"totp": "Rimuovendo l'app di autenticazione la scollegherai da Tinybeans. Se vorrai configurarla di nuovo, dovrai scansionare un nuovo codice QR.",
+				"totp": "Rimuovendo l'app di autenticazione la scollegherai da Circles. Se vorrai configurarla di nuovo, dovrai scansionare un nuovo codice QR.",
 				"sms": "Rimuovendo i codici SMS verrà eliminato il tuo numero di telefono verificato. Ripeti la configurazione SMS se vuoi usare di nuovo gli SMS.",
 				"email": "Rimuovendo la verifica via email non riceverai più i codici di verifica per email. Puoi configurarla di nuovo in qualsiasi momento."
 			},
@@ -722,7 +722,7 @@
 					"title": "Invita qualcuno in questa cerchia",
 					"description": "Inserisci la sua email, scegli il ruolo e invia l'invito.",
 					"identifier_label": "Email",
-					"identifier_help_email": "Usa l'email collegata al suo account Tinybeans o una che controlla di sicuro.",
+					"identifier_help_email": "Usa l'email collegata al suo account Circles o una che controlla di sicuro.",
 					"role_label": "Ruolo dopo l'accettazione",
 					"role_placeholder": "Seleziona un ruolo",
 					"submit": "Invia invito",

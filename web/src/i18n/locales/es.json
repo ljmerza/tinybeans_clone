@@ -95,7 +95,7 @@
 	"email_verification": {
 		"title": "Verifica tu correo",
 		"verifying": "Verificando tu correo…",
-		"success": "Tu correo ha sido verificado. Te redirigiremos a Tinybeans…",
+		"success": "Tu correo ha sido verificado. Te redirigiremos a Circles…",
 		"success_toast": "Correo verificado correctamente.",
 		"error": "No pudimos verificar tu correo. Es posible que el enlace sea inválido o haya expirado.",
 		"invalid_link": "Enlace de verificación inválido.",
@@ -358,7 +358,7 @@
 				"description": "Actualiza la información y las preferencias de tu cuenta.",
 				"theme": {
 					"title": "Apariencia",
-					"description": "Elige cómo se ve Tinybeans en tu dispositivo.",
+					"description": "Elige cómo se ve Circles en tu dispositivo.",
 					"select_label": "Preferencia de tema",
 					"select_description": "Elige un tema o sigue el esquema de color de tu navegador.",
 					"select_placeholder": "Selecciona un tema",
@@ -375,7 +375,7 @@
 						},
 						"system": {
 							"title": "Coincidir con el navegador",
-							"description": "Mantén Tinybeans sincronizado con la preferencia de tu navegador."
+							"description": "Mantén Circles sincronizado con la preferencia de tu navegador."
 						}
 					}
 				},
@@ -394,7 +394,7 @@
 				},
 				"language": {
 					"title": "Idioma",
-					"description": "Elige el idioma que se usa en Tinybeans.",
+					"description": "Elige el idioma que se usa en Circles.",
 					"select_label": "Idioma de la interfaz",
 					"select_placeholder": "Selecciona un idioma",
 					"options": {
@@ -408,7 +408,7 @@
 			"not_enabled_description": "Comienza configurando un método a continuación. Esto también generará nuevos códigos de recuperación.",
 			"remove_title": "¿Eliminar {{method}}?",
 			"remove_description": {
-				"totp": "Eliminar tu aplicación de autenticación la desvinculará de Tinybeans. Escanea un nuevo código QR si decides configurarla de nuevo.",
+				"totp": "Eliminar tu aplicación de autenticación la desvinculará de Circles. Escanea un nuevo código QR si decides configurarla de nuevo.",
 				"sms": "Eliminar los códigos SMS borrará tu número verificado. Vuelve a ejecutar la configuración SMS si quieres usar mensajes de texto otra vez.",
 				"email": "Eliminar la verificación por correo deshabilitará el envío de códigos por email. Puedes configurarla de nuevo en cualquier momento."
 			},
@@ -722,7 +722,7 @@
 					"title": "Invitar a alguien a este círculo",
 					"description": "Ingresa su correo electrónico, elige su rol y envía la invitación.",
 					"identifier_label": "Correo electrónico",
-					"identifier_help_email": "Usa el correo asociado a su cuenta de Tinybeans o uno que revise con frecuencia.",
+					"identifier_help_email": "Usa el correo asociado a su cuenta de Circles o uno que revise con frecuencia.",
 					"role_label": "Rol después de aceptar",
 					"role_placeholder": "Selecciona un rol",
 					"submit": "Enviar invitación",

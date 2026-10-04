@@ -55,6 +55,7 @@ x-common-env: &django-common-env
 
 services:
   web:
+    restart: unless-stopped
     build:
       context: .
       target: development
@@ -87,6 +88,7 @@ services:
 
   # Vite dev server for React frontend
   web-frontend:
+    restart: unless-stopped
     image: node:20-alpine
     command: sh -c "npm install && npm run dev"
     working_dir: /app
@@ -101,6 +103,7 @@ services:
     tty: true
 
   celery-worker-1:
+    restart: unless-stopped
     build:
       context: .
       target: development
@@ -119,6 +122,7 @@ services:
       - postgres
 
   celery-beat:
+    restart: unless-stopped
     build:
       context: .
       target: development
@@ -160,6 +164,7 @@ services:
       - "5656:5555"
 
   redis:
+    restart: unless-stopped
     image: redis:7-alpine
     expose:
       - "6379"
@@ -174,6 +179,7 @@ services:
       - redis
 
   postgres:
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tinybeans}
@@ -201,6 +207,7 @@ services:
 
   # MinIO - S3-compatible object storage for local development
   minio:
+    restart: unless-stopped
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
