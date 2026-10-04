@@ -100,7 +100,7 @@ MEDIA_STORAGE_BACKEND = 'minio'
 MINIO_ENDPOINT = 'http://minio:9000'
 MINIO_ACCESS_KEY = 'minioadmin'
 MINIO_SECRET_KEY = 'minioadmin'
-MINIO_BUCKET_NAME = 'tinybeans-media'
+MINIO_BUCKET_NAME = 'circles-media'
 
 # Image processing settings
 IMAGE_SIZES = {
@@ -133,8 +133,8 @@ services:
       /bin/sh -c "
       sleep 10;
       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/tinybeans-media || true;
-      /usr/bin/mc policy set public myminio/tinybeans-media || true;
+      /usr/bin/mc mb myminio/circles-media || true;
+      /usr/bin/mc policy set public myminio/circles-media || true;
       "
 ```
 
@@ -147,9 +147,9 @@ services:
   "status": "completed",
   "progress_percentage": 100,
   "media_urls": {
-    "original": "https://minio:9000/tinybeans-media/...",
-    "thumbnail": "https://minio:9000/tinybeans-media/..._thumb.jpg",
-    "gallery": "https://minio:9000/tinybeans-media/..._gallery.jpg"
+    "original": "https://minio:9000/circles-media/...",
+    "thumbnail": "https://minio:9000/circles-media/..._thumb.jpg",
+    "gallery": "https://minio:9000/circles-media/..._gallery.jpg"
   }
 }
 ```
@@ -221,7 +221,7 @@ setImageSrc(media.urls.thumbnail);
 
 ### MinIO Bucket Organization
 ```
-tinybeans-media/
+circles-media/
 ├── keeps/
 │   ├── 2024/01/15/
 │   │   ├── abc123def456.jpg          # Original
@@ -287,7 +287,7 @@ def migrate_to_s3():
 ```python
 # Switch to S3 backend
 MEDIA_STORAGE_BACKEND = 's3'
-AWS_STORAGE_BUCKET_NAME = 'tinybeans-production'
+AWS_STORAGE_BUCKET_NAME = 'circles-production'
 # ... other S3 settings
 ```
 
@@ -308,4 +308,4 @@ AWS_STORAGE_BUCKET_NAME = 'tinybeans-production'
 2. **Add CDN** for global content delivery
 3. **Implement advanced features** (AI-powered auto-tagging, facial recognition)
 
-The simplified MinIO-based architecture provides a solid foundation for TinyBeans' media handling while maintaining flexibility for future enhancements and cloud migration!
+The simplified MinIO-based architecture provides a solid foundation for Circles' media handling while maintaining flexibility for future enhancements and cloud migration!

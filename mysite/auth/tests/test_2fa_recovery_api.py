@@ -58,7 +58,7 @@ class TestRecoveryCodeAPI:
 
         assert response.status_code == status.HTTP_200_OK
         assert response["Content-Type"] == "text/plain"
-        assert "tinybeans-recovery-codes.txt" in response["Content-Disposition"]
+        assert "circles-recovery-codes.txt" in response["Content-Disposition"]
         body = response.content.decode()
         for code in codes:
             assert code in body
@@ -77,7 +77,7 @@ class TestRecoveryCodeAPI:
 
         assert response.status_code == status.HTTP_200_OK
         assert response["Content-Type"] == "application/pdf"
-        assert "tinybeans-recovery-codes.pdf" in response["Content-Disposition"]
+        assert "circles-recovery-codes.pdf" in response["Content-Disposition"]
 
     def test_download_no_codes(self):
         """Test download when no codes available"""

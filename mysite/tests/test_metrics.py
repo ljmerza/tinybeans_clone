@@ -21,8 +21,8 @@ SAMPLE_LINE = re.compile(r'^[a-zA-Z_:][a-zA-Z0-9_:]*(\{([a-zA-Z_][a-zA-Z0-9_]*="
 
 POSTGRES_DB = {
     "ENGINE": "django.db.backends.postgresql",
-    "NAME": "tinybeans",
-    "USER": "tinybeans",
+    "NAME": "circles",
+    "USER": "circles",
     "PASSWORD": "pw",
     "HOST": "postgres",
     "PORT": "5432",

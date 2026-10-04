@@ -59,7 +59,7 @@ class SMSService:
         Returns:
             bool: True if sent successfully
         """
-        message = f"Your Tinybeans verification code is: {code}\n\nThis code expires in 10 minutes."
+        message = f"Your Circles verification code is: {code}\n\nThis code expires in 10 minutes."
         phone_suffix = phone_number[-4:] if phone_number else None
 
         with project_logging.log_context(phone_last4=phone_suffix):

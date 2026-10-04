@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a roadmap to all Two-Factor Authentication (2FA) documentation in the Tinybeans project.
+This document provides a roadmap to all Two-Factor Authentication (2FA) documentation in the Circles project.
 
 ## Documentation Structure
 

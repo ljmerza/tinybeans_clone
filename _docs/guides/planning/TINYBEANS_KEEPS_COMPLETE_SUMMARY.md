@@ -1,7 +1,7 @@
-# TinyBeans Keeps App - Complete Implementation Summary
+# Circles Keeps App - Complete Implementation Summary
 
 ## Overview
-Successfully created a comprehensive Django app for TinyBeans that stores "keeps" (family memories) with advanced media upload capabilities using MinIO for S3-compatible object storage. The system supports photos with multiple sizes (thumbnail, gallery, full) and videos with asynchronous processing.
+Successfully created a comprehensive Django app for Circles that stores "keeps" (family memories) with advanced media upload capabilities using MinIO for S3-compatible object storage. The system supports photos with multiple sizes (thumbnail, gallery, full) and videos with asynchronous processing.
 
 ## Architecture Summary
 
@@ -92,7 +92,7 @@ class MinIOStorageBackend(MediaStorageBackend):
 # Settings
 MEDIA_STORAGE_BACKEND = 'minio'
 MINIO_ENDPOINT = 'http://minio:9000'
-MINIO_BUCKET_NAME = 'tinybeans-media'
+MINIO_BUCKET_NAME = 'circles-media'
 
 # Image Processing
 IMAGE_SIZES = {
@@ -177,9 +177,9 @@ DELETE /api/keeps/reactions/{id}/     # Delete reaction (admins)
 // API Response
 {
   "urls": {
-    "original": "https://minio:9000/tinybeans-media/keeps/2024/01/15/abc123.jpg",
-    "thumbnail": "https://minio:9000/tinybeans-media/keeps/2024/01/15/abc123_thumb.jpg", 
-    "gallery": "https://minio:9000/tinybeans-media/keeps/2024/01/15/abc123_gallery.jpg"
+    "original": "https://minio:9000/circles-media/keeps/2024/01/15/abc123.jpg",
+    "thumbnail": "https://minio:9000/circles-media/keeps/2024/01/15/abc123_thumb.jpg", 
+    "gallery": "https://minio:9000/circles-media/keeps/2024/01/15/abc123_gallery.jpg"
   }
 }
 ```
@@ -317,7 +317,7 @@ MEDIA_STORAGE_BACKEND = 'minio'
 
 # Future: AWS S3  
 MEDIA_STORAGE_BACKEND = 's3'
-AWS_STORAGE_BUCKET_NAME = 'tinybeans-production'
+AWS_STORAGE_BUCKET_NAME = 'circles-production'
 ```
 
 #### Data Migration Strategy
@@ -432,4 +432,4 @@ def cleanup_failed_uploads():
 - **Modular structure** with separated concerns
 - **Comprehensive error messages** for debugging
 
-The TinyBeans Keeps app provides a robust, scalable foundation for family memory sharing with modern media handling capabilities, security, and an excellent developer experience!
+The Circles Keeps app provides a robust, scalable foundation for family memory sharing with modern media handling capabilities, security, and an excellent developer experience!

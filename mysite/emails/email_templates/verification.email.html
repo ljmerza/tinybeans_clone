@@ -1,4 +1,4 @@
-{% block subject %}Verify your Tinybeans-inspired account{% endblock %}
+{% block subject %}Verify your Circles account{% endblock %}
 
 {% block text_body %}
 Hi {{ full_name|default:"there" }},
@@ -19,7 +19,7 @@ Enter this code in the app to activate your account. If you did not create an ac
 {% endblock %}
 
 {% block html_body %}
-{% include 'emails/partials/header.html' with title="Verify your Tinybeans-inspired account" intro_text="Thanks for signing up! Confirm your email using the link below:" email_tag="Verification" %}
+{% include 'emails/partials/header.html' with title="Verify your Circles account" intro_text="Thanks for signing up! Confirm your email using the link below:" email_tag="Verification" %}
 
 <p>Hi {{ full_name|default:"there" }},</p>
 {% if verification_link %}

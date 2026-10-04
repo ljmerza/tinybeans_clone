@@ -29,7 +29,7 @@ MAILJET_API_KEY = os.environ.get("MAILJET_API_KEY", "")
 MAILJET_API_SECRET = os.environ.get("MAILJET_API_SECRET", "")
 MAILJET_API_URL = os.environ.get("MAILJET_API_URL", "https://api.mailjet.com/v3.1/send")
 MAILJET_FROM_EMAIL = os.environ.get("MAILJET_FROM_EMAIL") or DEFAULT_FROM_EMAIL
-MAILJET_FROM_NAME = os.environ.get("MAILJET_FROM_NAME", "Tinybeans Circles")
+MAILJET_FROM_NAME = os.environ.get("MAILJET_FROM_NAME", "Circles")
 MAILJET_USE_SANDBOX = _env_flag("MAILJET_USE_SANDBOX", default=False)
 MAILJET_ENABLED = bool(MAILJET_API_KEY and MAILJET_API_SECRET)
 

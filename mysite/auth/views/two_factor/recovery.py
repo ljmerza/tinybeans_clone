@@ -99,11 +99,11 @@ class RecoveryCodeDownloadView(APIView):
         if format_type == "pdf":
             pdf_bytes = RecoveryCodeService.export_as_pdf(user, recovery_codes)
             response = HttpResponse(pdf_bytes, content_type="application/pdf")
-            response["Content-Disposition"] = 'attachment; filename="tinybeans-recovery-codes.pdf"'
+            response["Content-Disposition"] = 'attachment; filename="circles-recovery-codes.pdf"'
         else:
             txt_content = RecoveryCodeService.export_as_txt(user, recovery_codes)
             response = HttpResponse(txt_content, content_type="text/plain")
-            response["Content-Disposition"] = 'attachment; filename="tinybeans-recovery-codes.txt"'
+            response["Content-Disposition"] = 'attachment; filename="circles-recovery-codes.txt"'
 
         # Log the download
         TwoFactorAuditLog.objects.create(

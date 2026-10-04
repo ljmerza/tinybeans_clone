@@ -1,7 +1,7 @@
 """User authentication and role management models.
 
 This module defines the custom User model and related authentication classes
-for the Tinybeans application, including user roles and custom user management.
+for the Circles application, including user roles and custom user management.
 """
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -106,7 +106,7 @@ class CircleOnboardingStatus(models.TextChoices):
 
 
 class User(AbstractUser):
-    """Custom user model for the Tinybeans application.
+    """Custom user model for the Circles application.
 
     Extends Django's AbstractUser with additional fields for email verification,
     user roles within circles, and Google OAuth integration.

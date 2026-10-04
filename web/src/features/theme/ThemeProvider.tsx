@@ -31,19 +31,38 @@ interface ThemeContextValue {
 	setColorTheme: (colorTheme: ColorTheme) => void;
 }
 
-const STORAGE_KEY = "tinybeans.themePreference";
-// index.html reads this key before first paint; keep the two in sync.
-const COLOR_THEME_STORAGE_KEY = "tinybeans.colorTheme";
+// index.html reads these keys before first paint; keep the two in sync.
+const STORAGE_KEY = "circles.themePreference";
+const COLOR_THEME_STORAGE_KEY = "circles.colorTheme";
+// Keys used before the app was renamed to Circles. Read once, then moved.
+const LEGACY_STORAGE_KEYS: Record<string, string> = {
+	[STORAGE_KEY]: "tinybeans.themePreference",
+	[COLOR_THEME_STORAGE_KEY]: "tinybeans.colorTheme",
+};
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const isBrowser = () =>
 	typeof window !== "undefined" && typeof document !== "undefined";
 
+/** Read a key, moving a value saved under its pre-rename name to it first. */
+const readStorageKey = (key: string): string | null => {
+	const stored = window.localStorage.getItem(key);
+	if (stored !== null) return stored;
+
+	const legacyKey = LEGACY_STORAGE_KEYS[key];
+	const legacy = legacyKey ? window.localStorage.getItem(legacyKey) : null;
+	if (legacyKey && legacy !== null) {
+		window.localStorage.setItem(key, legacy);
+		window.localStorage.removeItem(legacyKey);
+	}
+	return legacy;
+};
+
 const readStoredPreference = (): ThemePreference => {
 	if (!isBrowser()) return "system";
 
-	const stored = window.localStorage.getItem(STORAGE_KEY);
+	const stored = readStorageKey(STORAGE_KEY);
 	if (stored === "light" || stored === "dark" || stored === "system") {
 		return stored;
 	}
@@ -58,7 +77,7 @@ const isColorTheme = (value: unknown): value is ColorTheme =>
 const readStoredColorTheme = (): ColorTheme => {
 	if (!isBrowser()) return "default";
 
-	const stored = window.localStorage.getItem(COLOR_THEME_STORAGE_KEY);
+	const stored = readStorageKey(COLOR_THEME_STORAGE_KEY);
 	return isColorTheme(stored) ? stored : "default";
 };
 

@@ -1,7 +1,7 @@
 # Internationalization (i18n) Implementation Summary
 
 ## Overview
-This document summarizes the comprehensive internationalization implementation for the Tinybeans frontend application. All user-facing strings have been extracted and moved to translation files, following the existing i18n pattern that was already started.
+This document summarizes the comprehensive internationalization implementation for the Circles frontend application. All user-facing strings have been extracted and moved to translation files, following the existing i18n pattern that was already started.
 
 ## Changes Made
 

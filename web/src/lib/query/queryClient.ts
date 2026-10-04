@@ -11,7 +11,7 @@ import {
 import { createMutationCache } from "./mutationCache";
 
 /**
- * Base query client options tuned for the Tinybeans frontend.
+ * Base query client options tuned for the Circles frontend.
  */
 export const defaultQueryClientOptions: DefaultOptions = {
 	queries: {

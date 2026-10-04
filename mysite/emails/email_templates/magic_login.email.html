@@ -3,7 +3,7 @@
 {% block text_body %}
 Hi {{ full_name|default:"there" }},
 
-You requested a magic login link for your Tinybeans-inspired account.
+You requested a magic login link for your Circles account.
 
 Click the link below to log in instantly (no password required):
 {% if magic_link %}
@@ -15,7 +15,7 @@ This link expires in {{ expires_in_minutes|default:"15" }} minutes.
 For security reasons, this link can only be used once. If you didn't request this login link, you can safely ignore this email.
 
 Stay safe,
-The Tinybeans-inspired Team
+The Circles Team
 {% endblock %}
 
 {% block html_body %}
@@ -23,7 +23,7 @@ The Tinybeans-inspired Team
 
 <p>Hi {{ full_name|default:"there" }},</p>
 
-<p>You requested a magic login link for your Tinybeans-inspired account.</p>
+<p>You requested a magic login link for your Circles account.</p>
 
 {% if magic_link %}
 <p style="margin: 30px 0;">

@@ -120,7 +120,7 @@ class TestRecoveryCodeService:
 
         txt_content = RecoveryCodeService.export_as_txt(user, codes)
 
-        assert "Tinybeans Recovery Codes" in txt_content
+        assert "Circles Recovery Codes" in txt_content
         assert user.display_name in txt_content
         assert "IMPORTANT:" in txt_content
 
