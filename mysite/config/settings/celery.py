@@ -49,6 +49,7 @@ CELERY_TASK_ROUTES = {
     "mysite.emails.tasks.send_email_task": {"queue": "email"},
     "mysite.messaging.tasks.send_sms_async": {"queue": "sms"},
     "mysite.messaging.tasks.send_2fa_sms": {"queue": "sms"},
+    "mysite.messaging.tasks.send_push_async": {"queue": "email"},
     "mysite.keeps.tasks.process_media_upload": {"queue": "media"},
     "mysite.keeps.tasks.generate_image_sizes": {"queue": "media"},
     "mysite.keeps.tasks.cleanup_failed_uploads": {"queue": "media"},

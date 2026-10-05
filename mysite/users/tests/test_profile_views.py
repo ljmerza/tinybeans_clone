@@ -1,10 +1,12 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from mysite.users.models import (
     Circle,
+    NotificationPhone,
     User,
     UserNotificationPreferences,
 )
@@ -72,9 +74,11 @@ class NotificationPreferencesViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
-        for field in ("notify_new_media", "notify_comments", "notify_replies", "notify_likes", "channel"):
+        for field in ("notify_new_media", "notify_comments", "notify_replies", "notify_likes"):
             self.assertIn(field, data)
-        self.assertEqual(data["channel"], "email")
+        self.assertTrue(data["email_enabled"])
+        self.assertFalse(data["sms_enabled"])
+        self.assertFalse(data["push_enabled"])
         self.assertFalse(data["per_circle_override"])
 
     def test_patch_updates_event_preferences(self):
@@ -88,20 +92,51 @@ class NotificationPreferencesViewTests(TestCase):
         self.assertFalse(prefs.notify_comments)
         self.assertTrue(prefs.notify_replies)
 
-    def test_phone_channel_rejected_until_enabled(self):
+    def test_sms_rejected_until_enabled(self):
+        NotificationPhone.objects.create(user=self.user, phone_number="+15551234567", verified_at=timezone.now())
         self.client.force_authenticate(user=self.user)
-        response = self.client.patch(reverse("user-email-preferences"), {"channel": "sms"}, format="json")
+        response = self.client.patch(reverse("user-email-preferences"), {"sms_enabled": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, channel="sms").exists())
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, sms_enabled=True).exists())
 
-    def test_phone_channel_accepted_when_enabled(self):
+    def test_sms_rejected_without_verified_phone(self):
+        NotificationPhone.objects.create(user=self.user, phone_number="+15551234567")
         self.client.force_authenticate(user=self.user)
         with self.settings(NOTIFICATIONS_SMS_ENABLED=True):
-            response = self.client.patch(reverse("user-email-preferences"), {"channel": "sms"}, format="json")
+            response = self.client.patch(reverse("user-email-preferences"), {"sms_enabled": True}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["messages"][0]["i18n_key"], "errors.notification_phone_unverified")
+
+    def test_sms_accepted_with_verified_phone_alongside_email(self):
+        NotificationPhone.objects.create(user=self.user, phone_number="+15551234567", verified_at=timezone.now())
+        self.client.force_authenticate(user=self.user)
+        with self.settings(NOTIFICATIONS_SMS_ENABLED=True):
+            response = self.client.patch(reverse("user-email-preferences"), {"sms_enabled": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(UserNotificationPreferences.objects.get(user=self.user, circle=None).channel, "sms")
+        prefs = UserNotificationPreferences.objects.get(user=self.user, circle=None)
+        self.assertTrue(prefs.sms_enabled)
+        self.assertTrue(prefs.email_enabled)
+
+    def test_push_rejected_without_vapid_keys(self):
+        self.client.force_authenticate(user=self.user)
+        with self.settings(NOTIFICATIONS_PUSH_ENABLED=False):
+            response = self.client.patch(reverse("user-email-preferences"), {"push_enabled": True}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_channels_can_differ_per_circle(self):
+        self.client.force_authenticate(user=self.user)
+        url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
+        with self.settings(NOTIFICATIONS_PUSH_ENABLED=True):
+            response = self.client.patch(url, {"email_enabled": False, "push_enabled": True}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        override = UserNotificationPreferences.objects.get(user=self.user, circle=self.circle)
+        self.assertEqual(override.enabled_channels(), ["push"])
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, circle=None).exists())
 
     def test_email_digest_is_off_by_default(self):
         self.client.force_authenticate(user=self.user)

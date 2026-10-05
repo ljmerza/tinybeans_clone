@@ -21,14 +21,17 @@ export interface ChangePasswordResponse {
 	tokens: { access: string };
 }
 
-export type NotificationChannel = "email" | "sms";
+export type NotificationChannel = "email" | "sms" | "push";
 
 export interface NotificationPreferences {
 	notify_new_media: boolean;
 	notify_comments: boolean;
 	notify_replies: boolean;
 	notify_likes: boolean;
-	channel: NotificationChannel;
+	email_enabled: boolean;
+	/** Texts go only to a verified phone (see NotificationChannels). */
+	sms_enabled: boolean;
+	push_enabled: boolean;
 	/** Daily new-post email; only the default (all circles) preferences have it. */
 	email_digest: boolean;
 	circle_id: number | null;
@@ -38,6 +41,24 @@ export interface NotificationPreferences {
 export type UpdateNotificationPreferencesRequest = Partial<
 	Omit<NotificationPreferences, "circle_id" | "per_circle_override">
 >;
+
+/** What the server offers for each channel, plus this user's phone and devices. */
+export interface NotificationChannels {
+	sms_available: boolean;
+	phone_number: string | null;
+	phone_verified: boolean;
+	phone_verification_pending: boolean;
+	push_available: boolean;
+	/** VAPID public key (base64url) for PushManager.subscribe; empty when push is off. */
+	vapid_public_key: string;
+	push_device_count: number;
+}
+
+/** A browser's PushSubscription.toJSON(). */
+export interface PushSubscriptionPayload {
+	endpoint: string;
+	keys: { p256dh: string; auth: string };
+}
 
 const notificationPreferencesPath = (circleId: number | null) =>
 	circleId === null
@@ -91,6 +112,49 @@ export const profileServices = {
 		return authApi.delete<ApiResponseWithMessages<NotificationPreferences>>(
 			notificationPreferencesPath(circleId),
 			undefined,
+			{ suppressSuccessToast: true },
+		);
+	},
+
+	getNotificationChannels() {
+		return authApi.get<ApiResponseWithMessages<NotificationChannels>>(
+			"/users/me/notification-channels/",
+		);
+	},
+
+	/** Save the phone notification texts go to and text it a code. */
+	startPhoneVerification(phoneNumber: string) {
+		return authApi.post<ApiResponseWithMessages<NotificationChannels>>(
+			"/users/me/notification-phone/",
+			{ phone_number: phoneNumber },
+		);
+	},
+
+	verifyPhone(code: string) {
+		return authApi.post<ApiResponseWithMessages<NotificationChannels>>(
+			"/users/me/notification-phone/verify/",
+			{ code },
+		);
+	},
+
+	removePhone() {
+		return authApi.delete<ApiResponseWithMessages<NotificationChannels>>(
+			"/users/me/notification-phone/",
+		);
+	},
+
+	savePushSubscription(subscription: PushSubscriptionPayload) {
+		return authApi.post<ApiResponseWithMessages<NotificationChannels>>(
+			"/users/me/push-subscriptions/",
+			subscription,
+			{ suppressSuccessToast: true },
+		);
+	},
+
+	removePushSubscription(endpoint: string) {
+		return authApi.delete<ApiResponseWithMessages<NotificationChannels>>(
+			"/users/me/push-subscriptions/",
+			{ endpoint },
 			{ suppressSuccessToast: true },
 		);
 	},

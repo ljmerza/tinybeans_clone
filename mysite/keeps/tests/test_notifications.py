@@ -13,7 +13,7 @@ from rest_framework.test import APIClient
 from mysite.circles.models import Circle, CircleMembership
 from mysite.keeps.models import Keep, KeepComment, KeepMedia, KeepReaction, KeepType
 from mysite.keeps.notifications import ActivityEvent, media_label, send_activity
-from mysite.users.models import NotificationChannel, UserNotificationPreferences
+from mysite.users.models import UserNotificationPreferences
 
 User = get_user_model()
 
@@ -133,9 +133,9 @@ class TestNewMedia:
 
         assert mail.outbox == []
 
-    def test_phone_channel_sends_no_email(self, keep, grandma):
+    def test_email_switched_off_sends_no_email(self, keep, grandma):
         add_media(keep, "photo")
-        UserNotificationPreferences.objects.create(user=grandma, channel=NotificationChannel.SMS)
+        UserNotificationPreferences.objects.create(user=grandma, email_enabled=False, sms_enabled=True)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 

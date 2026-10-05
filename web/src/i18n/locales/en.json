@@ -960,6 +960,11 @@
 		"preferences": {
 			"updated": "Preferences updated successfully"
 		},
+		"notification_phone": {
+			"code_sent": "We texted you a code.",
+			"verified": "Your phone number is confirmed.",
+			"removed": "Phone number removed."
+		},
 		"circle": {
 			"created": "Circle created successfully",
 			"updated": "Circle updated successfully",
@@ -1018,6 +1023,11 @@
 		"notification_channel_unavailable": "That notification method isn't available yet.",
 		"notification_circle_required": "Choose a circle to reset.",
 		"notification_digest_global_only": "The daily summary covers all your circles, so it can only be changed in your default settings.",
+		"notification_phone_unverified": "Confirm a phone number before turning on text messages.",
+		"notification_phone_invalid": "Enter a mobile number with its country code, like +1 555 123 4567.",
+		"notification_phone_country_unsupported": "Text messages can't be sent to numbers in that country.",
+		"notification_phone_code_invalid": "That code is wrong or has expired. Request a new one and try again.",
+		"push_endpoint_unsupported": "This browser's push service isn't supported.",
 		"file_too_large": "File {{filename}} is too large. Maximum size is {{maxSize}}.",
 		"invalid_file_type": "Invalid file type. Allowed types: {{allowedTypes}}",
 		"email_invalid": "Please enter a valid email address",
@@ -1133,16 +1143,49 @@
 			"circle_override": "This circle has its own settings.",
 			"use_default": "Use my defaults",
 			"load_error": "We couldn't load your notification settings. Please try again.",
-			"channel_label": "Send notifications by",
-			"channel_description": "More ways to get notified are on the way.",
-			"channel_coming_soon": "{{channel}} (coming soon)",
+			"channels_title": "How notifications reach you",
+			"channels_description": "Turn on as many as you like.",
+			"sms_needs_phone": "Add and confirm a phone number below to turn this on.",
+			"sms_needs_phone_default": "Add and confirm a phone number in your default settings to turn this on.",
 			"digest": {
 				"title": "Daily email summary",
 				"description": "One email each morning listing new posts in all your circles."
 			},
 			"channels": {
 				"email": "Email",
-				"sms": "Phone (text message)"
+				"sms": "Text message",
+				"push": "Push notifications"
+			},
+			"channel_descriptions": {
+				"email": "Sent to your account's email address.",
+				"sms": "A short text with a link to the post. Message and data rates may apply.",
+				"push": "Alerts on each phone or computer where you turn on push."
+			},
+			"phone": {
+				"title": "Phone for text messages",
+				"label": "Mobile number",
+				"placeholder": "+1 555 123 4567",
+				"send_code": "Text me a code",
+				"code_label": "Code",
+				"code_sent": "Enter the 6-digit code we texted to {{phone}}.",
+				"confirm": "Confirm",
+				"resend": "Send a new code",
+				"use_different": "Use a different number",
+				"verified": "Texts go to {{phone}}.",
+				"change": "Change number",
+				"remove": "Remove"
+			},
+			"push": {
+				"title": "Push on this device",
+				"enable": "Enable push on this device",
+				"disable": "Turn off on this device",
+				"enabled": "Push is on for this device.",
+				"device_count_one": "Push is on for {{count}} of your devices.",
+				"device_count_other": "Push is on for {{count}} of your devices.",
+				"unsupported": "This browser can't receive push notifications.",
+				"install_required": "On iPhone and iPad, push only works in the Circles app on your Home Screen (iOS 16.4 or later). Tap Share, then Add to Home Screen, open Circles from there and come back to this page.",
+				"denied": "Notifications are blocked for this site. Allow them in your browser or phone settings, then try again.",
+				"failed": "We couldn't turn on push for this device. Please try again."
 			},
 			"events": {
 				"new_media": {

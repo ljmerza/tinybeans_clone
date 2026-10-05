@@ -12,11 +12,11 @@ import { Switch } from "@/components/ui/switch";
 import { useCircleMemberships } from "@/features/circles";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { NotificationChannel } from "../api/services";
 import {
 	useNotificationPreferences,
 	useNotificationPreferencesMutation,
 } from "../hooks/useNotificationPreferences";
+import { NotificationChannelSettings } from "./NotificationChannelSettings";
 
 const DEFAULT_SCOPE = "default";
 
@@ -26,12 +26,6 @@ const EVENTS = [
 	{ field: "notify_replies", key: "replies" },
 	{ field: "notify_likes", key: "likes" },
 ] as const;
-
-// Phone delivery isn't built yet; the API rejects it until it is.
-const CHANNELS: { value: NotificationChannel; available: boolean }[] = [
-	{ value: "email", available: true },
-	{ value: "sms", available: false },
-];
 
 export function ProfileNotificationSettingsCard() {
 	const { t } = useTranslation();
@@ -159,38 +153,15 @@ export function ProfileNotificationSettingsCard() {
 							</div>
 						)}
 
-						<div className="space-y-2">
-							<Label htmlFor="notification-channel">
-								{t("profile.notifications.channel_label")}
-							</Label>
-							<p className="text-sm text-muted-foreground">
-								{t("profile.notifications.channel_description")}
-							</p>
-							<Select
-								value={prefs.channel}
-								disabled={save.isPending}
-								onValueChange={(channel) =>
-									save.mutate({ channel: channel as NotificationChannel })
-								}
-							>
-								<SelectTrigger id="notification-channel" className="w-full">
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									{CHANNELS.map(({ value, available }) => (
-										<SelectItem key={value} value={value} disabled={!available}>
-											{available
-												? t(`profile.notifications.channels.${value}`)
-												: t("profile.notifications.channel_coming_soon", {
-														channel: t(
-															`profile.notifications.channels.${value}`,
-														),
-													})}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
+						<NotificationChannelSettings
+							preferences={prefs}
+							isDefaultScope={circleId === null}
+							saving={save.isPending}
+							onChange={(change) => save.mutate(change)}
+							onPushSubscribed={() => {
+								if (!prefs.push_enabled) save.mutate({ push_enabled: true });
+							}}
+						/>
 					</>
 				)}
 			</div>

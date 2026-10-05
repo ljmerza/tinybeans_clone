@@ -18,6 +18,12 @@ from .circles import (
     CircleMemberRemoveView,
     UserCircleListView,
 )
+from .notification_channels import (
+    NotificationChannelsView,
+    NotificationPhoneVerifyView,
+    NotificationPhoneView,
+    PushSubscriptionView,
+)
 from .onboarding import CircleOnboardingSkipView, CircleOnboardingStatusView
 from .pets import CirclePetListView, PetProfileDetailView
 from .profile import EmailPreferencesView, UserProfileView
@@ -40,6 +46,10 @@ __all__ = [
     "CirclePetListView",
     "PetProfileDetailView",
     "EmailPreferencesView",
+    "NotificationChannelsView",
+    "NotificationPhoneView",
+    "NotificationPhoneVerifyView",
+    "PushSubscriptionView",
     "UserProfileView",
     "CircleOnboardingStatusView",
     "CircleOnboardingSkipView",

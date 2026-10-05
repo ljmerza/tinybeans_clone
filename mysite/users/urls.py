@@ -18,7 +18,11 @@ from .views import (
     CircleOnboardingStatusView,
     CirclePetListView,
     EmailPreferencesView,
+    NotificationChannelsView,
+    NotificationPhoneVerifyView,
+    NotificationPhoneView,
     PetProfileDetailView,
+    PushSubscriptionView,
     UserCircleListView,
     UserProfileView,
 )
@@ -26,6 +30,10 @@ from .views import (
 urlpatterns = [
     path("me/", UserProfileView.as_view(), name="user-profile"),
     path("me/email-preferences/", EmailPreferencesView.as_view(), name="user-email-preferences"),
+    path("me/notification-channels/", NotificationChannelsView.as_view(), name="user-notification-channels"),
+    path("me/notification-phone/", NotificationPhoneView.as_view(), name="user-notification-phone"),
+    path("me/notification-phone/verify/", NotificationPhoneVerifyView.as_view(), name="user-notification-phone-verify"),
+    path("me/push-subscriptions/", PushSubscriptionView.as_view(), name="user-push-subscriptions"),
     path("circle-onboarding/", CircleOnboardingStatusView.as_view(), name="circle-onboarding-status"),
     path("circle-onboarding/skip/", CircleOnboardingSkipView.as_view(), name="circle-onboarding-skip"),
     path("circles/", UserCircleListView.as_view(), name="user-circle-list"),

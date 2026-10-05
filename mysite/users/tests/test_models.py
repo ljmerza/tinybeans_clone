@@ -272,7 +272,7 @@ class UserNotificationPreferencesModelTests(TestCase):
         self.assertTrue(prefs.notify_comments)
         self.assertTrue(prefs.notify_replies)
         self.assertFalse(prefs.notify_likes)
-        self.assertEqual(prefs.channel, NotificationChannel.EMAIL)
+        self.assertEqual(prefs.enabled_channels(), [NotificationChannel.EMAIL])
         self.assertFalse(prefs.is_circle_override)
 
     def test_create_circle_specific_preferences(self):
