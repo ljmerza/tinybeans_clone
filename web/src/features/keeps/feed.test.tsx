@@ -312,6 +312,7 @@ describe("KeepFeedPost", () => {
 			makeKeep().id,
 			"Love it",
 			undefined,
+			[],
 		);
 		expect(await screen.findByText("Love it")).toBeInTheDocument();
 	});
@@ -334,10 +335,12 @@ describe("KeepFeedPost", () => {
 			fireEvent.click(screen.getByRole("button", { name: "Post" })),
 		);
 
+		// The @tag of the person replied to (user 8) is sent as a mention.
 		expect(addComment).toHaveBeenCalledWith(
 			makeKeep().id,
 			"@Grandma thank you",
 			5,
+			[8],
 		);
 		const reply = await screen.findByText("@Grandma thank you");
 		expect(

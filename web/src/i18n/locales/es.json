@@ -604,6 +604,7 @@
 			"reply": "Responder",
 			"replying_to": "Respondiendo a {{name}}",
 			"cancel_reply": "Cancelar",
+			"mention_suggestions": "Personas para mencionar",
 			"delete_comment": "Eliminar comentario",
 			"delete_comment_title": "¿Eliminar este comentario?",
 			"delete_comment_description": "No se puede deshacer.",
@@ -1071,8 +1072,8 @@
 				"description": "Alguien comenta algo que publicaste."
 			},
 			"replies": {
-				"title": "Respuestas para mí",
-				"description": "Alguien responde a tu comentario o te etiqueta en uno."
+				"title": "Respuestas y menciones",
+				"description": "Alguien responde a tu comentario o te menciona en uno."
 			},
 			"likes": {
 				"title": "Me gusta en mis publicaciones",

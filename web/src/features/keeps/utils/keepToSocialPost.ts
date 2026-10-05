@@ -43,7 +43,8 @@ export function keepToSocialPost(
 		commentCount: keep.comment_count,
 		comments: (comments ?? keep.recent_comments).map((comment) => ({
 			id: String(comment.id),
-			author: { name: comment.user_display_name },
+			// The id lets a reply's @tag of this author count as a mention.
+			author: { id: String(comment.user), name: comment.user_display_name },
 			text: comment.comment,
 			createdAt: comment.created_at,
 			parentId: comment.parent === null ? undefined : String(comment.parent),

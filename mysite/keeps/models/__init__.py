@@ -10,7 +10,7 @@ from .keep import Keep, KeepType
 from .media import KeepMedia, MediaUpload, MediaUploadStatus
 from .milestone import Milestone, MilestoneType
 from .people import PERSON_NAME_MAX_LENGTH, KeepPerson, Person, PersonKind
-from .social import KeepComment, KeepFavorite, KeepReaction
+from .social import KeepComment, KeepCommentMention, KeepFavorite, KeepReaction
 
 __all__ = [
     "Keep",
@@ -26,6 +26,7 @@ __all__ = [
     "PERSON_NAME_MAX_LENGTH",
     "KeepReaction",
     "KeepComment",
+    "KeepCommentMention",
     "KeepFavorite",
     "ImportRecord",
     "ImportObjectType",

@@ -4,12 +4,17 @@ import uuid
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import generics, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from mysite.circles.models import Circle
+from mysite.users.models import User
 
 from ..models import KeepComment
-from ..notifications import notify_new_comment
+from ..notifications import notify_new_comment, notify_new_mentions
 from ..serializers import KeepCommentSerializer
+from ..serializers.comments import MENTIONS_SCHEMA
+from .people import get_member_circle_or_404
 from .permissions import IsCircleAdminOrOwner, IsCircleMember, is_circle_admin
 
 
@@ -30,7 +35,11 @@ class KeepCommentListCreateView(generics.ListCreateAPIView):
 
         user_circles = Circle.objects.filter(memberships__user=self.request.user)
 
-        queryset = KeepComment.objects.filter(keep__circle__in=user_circles).select_related("user", "keep")
+        queryset = (
+            KeepComment.objects.filter(keep__circle__in=user_circles)
+            .select_related("user", "keep")
+            .prefetch_related("mentions__user")
+        )
 
         # Filter to one keep's thread if specified
         keep_id = self.request.query_params.get("keep")
@@ -104,7 +113,11 @@ class KeepCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         user_circles = Circle.objects.filter(memberships__user=self.request.user)
 
-        return KeepComment.objects.filter(keep__circle__in=user_circles).select_related("user", "keep")
+        return (
+            KeepComment.objects.filter(keep__circle__in=user_circles)
+            .select_related("user", "keep")
+            .prefetch_related("mentions__user")
+        )
 
     def perform_update(self, serializer):
         """Allow creators and circle admins to update comments."""
@@ -114,7 +127,10 @@ class KeepCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
         # Check if user is creator or circle admin
         if comment.user != user and not is_circle_admin(user, comment.keep.circle):
             raise permissions.PermissionDenied("You can only update your own comments or as a circle admin.")
-        serializer.save()
+        # Only members the edit newly mentions hear about it.
+        mentioned_before = set(comment.mentions.values_list("user_id", flat=True))
+        comment = serializer.save()
+        notify_new_mentions(comment.mentions.exclude(user_id__in=mentioned_before))
 
     def perform_destroy(self, instance):
         """Allow creators and circle admins to delete comments."""
@@ -172,3 +188,24 @@ class KeepCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
+
+
+class CircleMentionableView(APIView):
+    """Circle members the viewer can @mention in comments."""
+
+    @extend_schema(
+        summary="Mentionable members",
+        description="The circle's members other than the viewer, as `{id, display_name}` in name order, for "
+        "the comment composer's @mention suggestions. Only members, since they're who can be notified; child "
+        "profiles and other tagged people aren't included. 404 unless the user is a member.",
+        responses={
+            200: OpenApiResponse(response=MENTIONS_SCHEMA, description="The circle's other members"),
+            404: OpenApiResponse(description="Not found or not a member"),
+        },
+    )
+    def get(self, request, circle_id):
+        circle = get_member_circle_or_404(request.user, circle_id)
+        users = User.objects.filter(circle_memberships__circle=circle, is_active=True).exclude(id=request.user.id)
+        members = [{"id": user.id, "display_name": user.display_name} for user in users]
+        members.sort(key=lambda member: (member["display_name"].casefold(), member["id"]))
+        return Response(members)

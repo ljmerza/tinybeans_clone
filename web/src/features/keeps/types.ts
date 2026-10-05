@@ -36,12 +36,23 @@ export interface FeedMedia {
 	caption: string;
 }
 
+/**
+ * A circle member @mentioned in a comment. GET /keeps/circles/<id>/mentionable/
+ * lists the members the viewer can mention in the same shape.
+ */
+export interface CommentMention {
+	id: number;
+	display_name: string;
+}
+
 export interface FeedComment {
 	id: number;
 	user: number;
 	user_display_name: string;
 	parent: number | null;
 	comment: string;
+	/** Members it @mentions. Missing in data cached before mentions were added. */
+	mentions?: CommentMention[];
 	/** The viewer wrote it or admins its circle. */
 	can_delete: boolean;
 	created_at: string;

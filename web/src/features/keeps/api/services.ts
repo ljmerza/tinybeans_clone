@@ -4,6 +4,7 @@ import type {
 	AdjacentFeedDays,
 	CalendarMonthPayload,
 	CirclePerson,
+	CommentMention,
 	CreateKeepInput,
 	CreatedKeep,
 	FeedFilters,
@@ -151,13 +152,29 @@ export const keepServices = {
 		return authApi.delete<unknown>(`${KEEPS_BASE}/reactions/${reactionId}/`);
 	},
 
-	/** `parent` is the comment being replied to; omit it for a top-level comment. */
-	addComment(keepId: string, comment: string, parent?: number) {
+	/**
+	 * `parent` is the comment being replied to; omit it for a top-level comment.
+	 * `mentionIds` are the user ids of the members it @mentions.
+	 */
+	addComment(
+		keepId: string,
+		comment: string,
+		parent?: number,
+		mentionIds: number[] = [],
+	) {
 		return authApi.post<KeepCommentRecord>(`${KEEPS_BASE}/comments/`, {
 			keep: keepId,
 			comment,
 			...(parent !== undefined && { parent }),
+			...(mentionIds.length > 0 && { mention_ids: mentionIds }),
 		});
+	},
+
+	/** The circle's members other than the viewer, in name order. */
+	getMentionableMembers(circleId: number) {
+		return authApi.get<CommentMention[]>(
+			`${KEEPS_BASE}/circles/${circleId}/mentionable/`,
+		);
 	},
 
 	createKeep(input: CreateKeepInput) {

@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    CircleMentionableView,
     CirclePeopleView,
     KeepByCircleView,
     KeepByTypeView,
@@ -59,6 +60,8 @@ urlpatterns = [
     # Comment endpoints
     path("comments/", KeepCommentListCreateView.as_view(), name="keep-comment-list-create"),
     path("comments/<int:comment_id>/", KeepCommentDetailView.as_view(), name="keep-comment-detail"),
+    # Members who can be @mentioned in comments
+    path("circles/<int:circle_id>/mentionable/", CircleMentionableView.as_view(), name="circle-mentionable"),
     # Media endpoints
     path("media/", KeepMediaListCreateView.as_view(), name="keep-media-list-create"),
     path("media/<int:media_id>/", KeepMediaDetailView.as_view(), name="keep-media-detail"),

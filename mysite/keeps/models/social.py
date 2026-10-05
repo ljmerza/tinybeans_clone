@@ -83,6 +83,32 @@ class KeepComment(models.Model):
         return f"Comment by {self.user} on {self.keep}"
 
 
+class KeepCommentMention(models.Model):
+    """A circle member @mentioned in a comment.
+
+    The comment composer sends the ids of the members it mentions; only
+    members of the keep's circle are stored (see ``KeepCommentSerializer``).
+    A reply's prefilled @tag of the person replied to is one of these too.
+    Imported comments have none.
+
+    Attributes:
+        comment: The comment the mention is in
+        user: The member mentioned
+        created_at: When the mention was added; an edit can add more later
+    """
+
+    comment = models.ForeignKey(KeepComment, on_delete=models.CASCADE, related_name="mentions")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="keep_comment_mentions")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("comment", "user")
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.user} mentioned in comment {self.comment_id}"
+
+
 class KeepFavorite(models.Model):
     """A keep a user saved to their private favorites list.
 

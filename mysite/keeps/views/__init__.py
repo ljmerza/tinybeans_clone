@@ -4,6 +4,7 @@ from .calendar import (
     KeepCalendarView,
 )
 from .comments import (
+    CircleMentionableView,
     KeepCommentDetailView,
     KeepCommentListCreateView,
 )
@@ -52,6 +53,7 @@ __all__ = [
     "KeepFeedAdjacentDaysView",
     "KeepFeedFavoritesView",
     "KeepFeedFavoriteView",
+    "CircleMentionableView",
     "KeepCommentDetailView",
     "KeepCommentListCreateView",
     "KeepFeedItemView",

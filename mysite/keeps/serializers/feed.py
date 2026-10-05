@@ -12,7 +12,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from ..models import Keep, KeepComment, KeepReaction
-from .comments import can_delete_comment
+from .comments import MENTIONS_SCHEMA, can_delete_comment, comment_mentions
 
 # Presign for a day (instead of the 1h default). The virtualized feed remounts
 # images as they scroll back into view, so short-lived URLs would break on a
@@ -29,12 +29,17 @@ class FeedCommentSerializer(serializers.ModelSerializer):
     """A comment in a feed item's preview."""
 
     user_display_name = serializers.CharField(source="user.display_name", read_only=True)
+    mentions = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
 
     class Meta:
         model = KeepComment
-        fields = ["id", "user", "user_display_name", "parent", "comment", "can_delete", "created_at"]
+        fields = ["id", "user", "user_display_name", "parent", "comment", "mentions", "can_delete", "created_at"]
         read_only_fields = fields
+
+    @extend_schema_field(MENTIONS_SCHEMA)
+    def get_mentions(self, obj):
+        return comment_mentions(obj)
 
     def get_can_delete(self, obj) -> bool:
         return can_delete_comment(obj, self.context)

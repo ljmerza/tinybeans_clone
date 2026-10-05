@@ -15,6 +15,7 @@ MAGIC_LOGIN_TEMPLATE = "users.magic.login"
 KEEP_NEW_MEDIA_TEMPLATE = "keeps.notify.new_media"
 KEEP_COMMENT_TEMPLATE = "keeps.notify.comment"
 KEEP_REPLY_TEMPLATE = "keeps.notify.reply"
+KEEP_MENTION_TEMPLATE = "keeps.notify.mention"
 KEEP_LIKE_TEMPLATE = "keeps.notify.like"
 KEEP_DIGEST_TEMPLATE = "keeps.notify.digest"
 
@@ -38,6 +39,7 @@ EMAIL_TEMPLATE_FILES = {
     KEEP_NEW_MEDIA_TEMPLATE: "keep_new_media.email.html",
     KEEP_COMMENT_TEMPLATE: "keep_comment.email.html",
     KEEP_REPLY_TEMPLATE: "keep_reply.email.html",
+    KEEP_MENTION_TEMPLATE: "keep_mention.email.html",
     KEEP_LIKE_TEMPLATE: "keep_like.email.html",
     KEEP_DIGEST_TEMPLATE: "keep_digest.email.html",
     TWOFA_CODE_TEMPLATE: "twofa_code.email.html",
@@ -57,6 +59,7 @@ __all__ = [
     "KEEP_NEW_MEDIA_TEMPLATE",
     "KEEP_COMMENT_TEMPLATE",
     "KEEP_REPLY_TEMPLATE",
+    "KEEP_MENTION_TEMPLATE",
     "KEEP_LIKE_TEMPLATE",
     "KEEP_DIGEST_TEMPLATE",
     "TWOFA_CODE_TEMPLATE",
