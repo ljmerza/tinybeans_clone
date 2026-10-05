@@ -17,6 +17,8 @@ export interface AuthUser {
 	email_verified?: boolean;
 	language?: string;
 	color_theme?: string;
+	/** "imperial" (default) or "metric", for growth measurements. */
+	measurement_units?: string;
 	role?: string;
 	circle_onboarding_status?: CircleOnboardingStatus;
 	circle_onboarding_updated_at?: string | null;

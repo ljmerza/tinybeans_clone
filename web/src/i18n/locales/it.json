@@ -402,6 +402,10 @@
 						"es": "Español",
 						"it": "Italiano"
 					}
+				},
+				"measurement_units": {
+					"title": "Unità di misura",
+					"description": "Come vengono mostrati altezze e pesi nei grafici di crescita. Viene salvata nel tuo account e puoi cambiarla anche dalla pagina di un bambino."
 				}
 			},
 			"not_enabled_title": "La 2FA non è attiva.",
@@ -539,6 +543,78 @@
 				"empty_title": "Ancora nessun post",
 				"empty_message": "Qui compaiono i post in cui è taggato/a {{name}}.",
 				"aria_label": "Post con {{name}}"
+			},
+			"stats": {
+				"title": "In breve",
+				"loading": "Caricamento statistiche…",
+				"age_label": "Età",
+				"age": {
+					"years_one": "{{count}} anno",
+					"years_other": "{{count}} anni",
+					"months_one": "{{count}} mese",
+					"months_other": "{{count}} mesi",
+					"days_one": "{{count}} giorno",
+					"days_other": "{{count}} giorni"
+				},
+				"posts": "Post",
+				"photos": "Foto",
+				"photos_and_videos": "Foto · video",
+				"per_month_title": "Post al mese, ultimi 12 mesi",
+				"per_month_label": "Post con {{name}} al mese negli ultimi 12 mesi",
+				"month_posts_one": "{{month}}: {{count}} post",
+				"month_posts_other": "{{month}}: {{count}} post",
+				"first_post": "Primo post",
+				"most_liked_post": "Il più apprezzato",
+				"likes_one": "{{count}} mi piace",
+				"likes_other": "{{count}} mi piace",
+				"untitled": "Post senza titolo"
+			},
+			"growth": {
+				"title": "Crescita",
+				"height": "Altezza",
+				"weight": "Peso",
+				"add": "Aggiungi",
+				"loading": "Caricamento crescita…",
+				"error": "Impossibile caricare il registro di crescita.",
+				"empty": "Ancora nessuna misurazione.",
+				"empty_admin": "Ancora nessuna misurazione. Aggiungi la prima.",
+				"chart_empty_height": "Nessuna altezza registrata.",
+				"chart_empty_weight": "Nessun peso registrato.",
+				"chart_label_height": "Altezza di {{name}} nel tempo",
+				"chart_label_weight": "Peso di {{name}} nel tempo",
+				"list_label": "Misurazioni",
+				"edit": "Modifica la misurazione del {{date}}",
+				"age": {
+					"months": "{{count}} m",
+					"years": "{{count}} a"
+				},
+				"units": {
+					"label": "Unità",
+					"imperial": "lb · in",
+					"metric": "kg · cm"
+				},
+				"form": {
+					"add_title": "Aggiungi una misurazione",
+					"edit_title": "Modifica misurazione",
+					"date": "Data",
+					"height": "Altezza",
+					"weight": "Peso",
+					"note": "Nota (facoltativa)",
+					"note_placeholder": "Controllo dei 4 mesi",
+					"need_value": "Inserisci un'altezza, un peso o entrambi.",
+					"need_date": "Scegli una data.",
+					"invalid_number": "Usa solo numeri, ad es. 7 e 8,5.",
+					"save": "Salva",
+					"saving": "Salvataggio…",
+					"save_failed": "Impossibile salvare la misurazione. Riprova."
+				},
+				"delete": {
+					"action": "Elimina la misurazione del {{date}}",
+					"title": "Eliminare questa misurazione?",
+					"description": "La misurazione del {{date}} sparisce per tutti nella cerchia.",
+					"confirm": "Elimina",
+					"failed": "Impossibile eliminare la misurazione. Riprova."
+				}
 			}
 		},
 		"feed": {

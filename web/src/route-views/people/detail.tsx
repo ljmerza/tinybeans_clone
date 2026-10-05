@@ -1,14 +1,44 @@
 import { Layout, LoadingState } from "@/components";
 import { Button } from "@/components/ui/button";
+import { PersonInsights } from "@/features/growth";
 import { KeepFeedPost, usePerson, usePersonKeeps } from "@/features/keeps";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "react-social-feed/styles.css";
 import { VirtualFeed } from "react-social-feed/virtual";
 
 const route = getRouteApi("/people/$personId");
+
+/**
+ * The feed's distance from the top of the page, for its window virtualizer.
+ * The feed measures this itself only once, but the stats and growth sections
+ * right above it grow as they load, so it is re-measured whenever they resize.
+ */
+function useFeedTop(above: HTMLElement | null) {
+	const [top, setTop] = useState<number>();
+	useLayoutEffect(() => {
+		if (!above) return;
+		const measure = () => {
+			// The feed is the next element after the sections.
+			const feed = above.nextElementSibling;
+			if (feed) setTop(feed.getBoundingClientRect().top + window.scrollY);
+		};
+		measure();
+		window.addEventListener("resize", measure);
+		const observer =
+			typeof ResizeObserver === "undefined"
+				? null
+				: new ResizeObserver(measure);
+		observer?.observe(above);
+		return () => {
+			window.removeEventListener("resize", measure);
+			observer?.disconnect();
+		};
+	}, [above]);
+	return top;
+}
 
 /**
  * The home feed filtered to one person: every post they are tagged on, newest
@@ -27,6 +57,11 @@ export function PersonRouteView() {
 		isFetchingNextPage,
 		isFetchNextPageError,
 	} = usePersonKeeps(personId);
+
+	const [insightsElement, setInsightsElement] = useState<HTMLElement | null>(
+		null,
+	);
+	const feedTop = useFeedTop(insightsElement);
 
 	const keeps = useMemo(
 		() => data?.pages.flatMap((page) => page.results) ?? [],
@@ -100,6 +135,13 @@ export function PersonRouteView() {
 					</span>
 				</div>
 
+				<div
+					ref={setInsightsElement}
+					className="mx-auto max-w-[var(--rsf-post-max-width)]"
+				>
+					<PersonInsights person={person.data} />
+				</div>
+
 				{error && !data ? (
 					<div className="space-y-3 py-6 text-center">
 						<p className="text-sm text-muted-foreground">
@@ -112,6 +154,7 @@ export function PersonRouteView() {
 				) : (
 					<VirtualFeed
 						items={keeps}
+						scrollMargin={feedTop}
 						getItemKey={(keep) => keep.id}
 						renderItem={(keep) => <KeepFeedPost keep={keep} />}
 						// A failed page stops auto-paging; otherwise the list would

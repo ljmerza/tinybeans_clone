@@ -17,6 +17,10 @@ from .feed import (
     KeepFeedOnThisDayView,
     KeepFeedView,
 )
+from .growth import (
+    PersonGrowthDetailView,
+    PersonGrowthView,
+)
 from .keeps import (
     KeepByCircleView,
     KeepByTypeView,
@@ -31,6 +35,7 @@ from .people import (
     CirclePeopleView,
     KeepFeedPeopleView,
     PersonDetailView,
+    PersonStatsView,
 )
 from .permissions import (
     IsCircleAdminOrOwner,
@@ -69,6 +74,9 @@ __all__ = [
     "CirclePeopleView",
     "KeepFeedPeopleView",
     "PersonDetailView",
+    "PersonStatsView",
+    "PersonGrowthView",
+    "PersonGrowthDetailView",
     "IsCircleAdminOrOwner",
     "IsCircleMember",
     "can_user_post_in_circle",

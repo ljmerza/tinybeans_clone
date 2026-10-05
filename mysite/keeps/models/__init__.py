@@ -1,5 +1,6 @@
 """Import all models to maintain backwards compatibility."""
 
+from .growth import GrowthMeasurement
 from .imports import (
     ImportObjectType,
     ImportRecord,
@@ -20,6 +21,7 @@ __all__ = [
     "MediaUploadStatus",
     "Milestone",
     "MilestoneType",
+    "GrowthMeasurement",
     "Person",
     "PersonKind",
     "KeepPerson",
