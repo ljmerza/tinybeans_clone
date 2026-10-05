@@ -1940,7 +1940,7 @@ class SecurityEventMonitor:
                     'severity': 'critical',
                     'event_type': event_type,
                     'context': context,
-                    'application': 'tinybeans-oauth'
+                    'application': 'circles-oauth'
                 }
                 
                 response = requests.post(

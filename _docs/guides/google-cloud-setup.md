@@ -37,9 +37,9 @@ This guide walks through setting up Google OAuth 2.0 credentials for the Circles
 - **App name**: `Circles` (or your app name)
 - **User support email**: Your email address
 - **App logo**: (Optional) Upload your app logo
-- **Application home page**: `https://tinybeans.app` (or your domain)
-- **Application privacy policy**: `https://tinybeans.app/privacy`
-- **Application terms of service**: `https://tinybeans.app/terms`
+- **Application home page**: `https://circles.example.com` (or your domain)
+- **Application privacy policy**: `https://circles.example.com/privacy`
+- **Application terms of service**: `https://circles.example.com/terms`
 
 ### Developer Contact Information
 - **Email addresses**: Your developer email
@@ -83,16 +83,16 @@ This guide walks through setting up Google OAuth 2.0 credentials for the Circles
 ### For Staging
 - **Name**: `Circles Web Client - Staging`
 - **Authorized JavaScript origins**:
-  - `https://staging.tinybeans.app`
+  - `https://staging.circles.example.com`
 - **Authorized redirect URIs**:
-  - `https://staging.tinybeans.app/auth/google/callback`
+  - `https://staging.circles.example.com/auth/google/callback`
 
 ### For Production
 - **Name**: `Circles Web Client - Production`
 - **Authorized JavaScript origins**:
-  - `https://tinybeans.app`
+  - `https://circles.example.com`
 - **Authorized redirect URIs**:
-  - `https://tinybeans.app/auth/google/callback`
+  - `https://circles.example.com/auth/google/callback`
 
 5. Click "Create"
 

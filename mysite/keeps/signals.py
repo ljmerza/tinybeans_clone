@@ -56,7 +56,7 @@ def delete_media_files(sender, instance: KeepMedia, **kwargs) -> None:
 def mirror_children_to_people(sender, instance, action, reverse, pk_set, **kwargs) -> None:
     """Mirror ``Keep.children`` into the post's people tags.
 
-    The Tinybeans importer only knows ``children``: linking a child tags the
+    The journal importer only knows ``children``: linking a child tags the
     child's person in the keep's circle (created if needed), and unlinking or
     clearing untags it, so the two stay in step. Works from either side of the
     relation. Only tags are written here, never ``children``, so it can't loop.

@@ -2,7 +2,7 @@
 
 Views call the ``notify_*`` helpers after a write. Those queue
 ``send_activity_notifications``, which works out who should hear about it and
-hands each recipient to the sender for the channel they picked. The Tinybeans
+hands each recipient to the sender for the channel they picked. The journal
 import writes rows straight to the database and never calls these helpers, so
 imported history doesn't notify anyone.
 """

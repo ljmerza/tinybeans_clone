@@ -2,7 +2,7 @@ type AnalyticsPayload = Record<string, unknown> | undefined;
 
 declare global {
 	interface Window {
-		tinybeansAnalytics?: {
+		circlesAnalytics?: {
 			track: (event: string, payload?: AnalyticsPayload) => void;
 		};
 		dataLayer?: Array<Record<string, unknown>>;
@@ -20,8 +20,8 @@ export function trackCircleInviteEvent(
 	if (typeof window === "undefined") return;
 
 	try {
-		if (window.tinybeansAnalytics?.track) {
-			window.tinybeansAnalytics.track(event, payload);
+		if (window.circlesAnalytics?.track) {
+			window.circlesAnalytics.track(event, payload);
 			return;
 		}
 

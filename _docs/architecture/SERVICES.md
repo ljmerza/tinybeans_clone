@@ -25,7 +25,7 @@ All services are accessible through the unified dashboard at the link above!
 | RedisInsight | http://localhost:8182 | No login required (connects on first use) |
 
 ### PostgreSQL Connection (for pgAdmin)
-Defaults shown; dev volumes created before the rename to Circles use `tinybeans` for all three (set via `.env`).
+Defaults shown; dev volumes created before the rename to Circles keep their original names for all three (pinned in `.env`).
 
 - **Host**: `postgres`
 - **Port**: `5432`

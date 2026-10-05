@@ -5,7 +5,7 @@
 - Related Artifacts: `docs/prd.md`, `docs/brownfield-architecture.md`
 
 ## Context
-- Tinybeans Circles intentionally relies on email-only invitations to keep authentication aligned with the broader email-only identity plan.
+- Circles intentionally relies on email-only invitations to keep authentication aligned with the broader email-only identity plan.
 - Authentication is multi-surface (magic link, Google OAuth, 2FA, recovery codes, trusted devices) and must stay consistent when onboarding invited users.
 - Admins need visibility into invitation status and safeguards against abuse as circles expand.
 - Documentation has been rebooted in `docs/`, requiring new canonical records for architectural decisions.

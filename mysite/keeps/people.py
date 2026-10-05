@@ -1,6 +1,6 @@
 """Tagging people on posts: the circle's taggable people, and setting a post's tags.
 
-A post's people and its ``children`` (the Tinybeans importer's child links)
+A post's people and its ``children`` (the journal importer's child links)
 are kept in step both ways: tagging a child's person here also links the
 child, and linking a child (e.g. by the importer) tags its person through the
 ``m2m_changed`` mirror in ``signals``. The mirror never writes ``children``,

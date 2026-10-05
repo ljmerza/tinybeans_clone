@@ -37,7 +37,7 @@ class Keep(models.Model):
         updated_at: When the keep was last modified
         is_public: Whether the keep is visible to all circle members
         tags: Comma-separated tags for categorization
-        children: Child profiles this memory is about. Kept for the Tinybeans
+        children: Child profiles this memory is about. Kept for the journal
             importer; every link is mirrored into ``people`` (see signals)
         people: Who is in it, through KeepPerson
     """

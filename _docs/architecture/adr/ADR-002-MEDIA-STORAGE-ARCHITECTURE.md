@@ -5,7 +5,7 @@ Accepted
 
 ## Context
 
-The Tinybeans application needs to store and serve media files (photos and videos) associated with family memories ("keeps"). We need a solution that:
+The Circles application needs to store and serve media files (photos and videos) associated with family memories ("keeps"). We need a solution that:
 
 1. Handles large files efficiently (photos up to 20MB, videos up to 100MB)
 2. Supports multiple file formats (JPEG, PNG, GIF, WebP for images; MP4, MOV, AVI, WebM for videos)
@@ -106,8 +106,8 @@ minio:
   image: minio/minio:RELEASE.2024-09-13T20-26-02Z
   command: server /data --console-address ":9001"
   environment:
-    - MINIO_ROOT_USER=tinybeans
-    - MINIO_ROOT_PASSWORD=tinybeans123
+    - MINIO_ROOT_USER=circles
+    - MINIO_ROOT_PASSWORD=circles123
   ports:
     - "9000:9000"
     - "9001:9001"
@@ -120,9 +120,9 @@ minio-init:
     - minio
   entrypoint: >
     /bin/sh -c "
-    until (/usr/bin/mc config host add myminio http://minio:9000 tinybeans tinybeans123) do echo '...waiting...' && sleep 1; done;
-    /usr/bin/mc mb myminio/tinybeans-media;
-    /usr/bin/mc policy set public myminio/tinybeans-media;
+    until (/usr/bin/mc config host add myminio http://minio:9000 circles circles123) do echo '...waiting...' && sleep 1; done;
+    /usr/bin/mc mb myminio/circles-media;
+    /usr/bin/mc policy set public myminio/circles-media;
     echo 'MinIO bucket setup complete'
     "
 ```
@@ -135,9 +135,9 @@ MEDIA_STORAGE_BACKEND = env('MEDIA_STORAGE_BACKEND', default='minio')
 
 # MinIO settings
 MINIO_ENDPOINT = env('MINIO_ENDPOINT', default='localhost:9000')
-MINIO_ACCESS_KEY = env('MINIO_ACCESS_KEY', default='tinybeans')
-MINIO_SECRET_KEY = env('MINIO_SECRET_KEY', default='tinybeans123')
-MINIO_BUCKET_NAME = env('MINIO_BUCKET_NAME', default='tinybeans-media')
+MINIO_ACCESS_KEY = env('MINIO_ACCESS_KEY', default='circles')
+MINIO_SECRET_KEY = env('MINIO_SECRET_KEY', default='circles123')
+MINIO_BUCKET_NAME = env('MINIO_BUCKET_NAME', default='circles-media')
 MINIO_USE_HTTPS = env.bool('MINIO_USE_HTTPS', default=False)
 
 # AWS S3 settings (production)

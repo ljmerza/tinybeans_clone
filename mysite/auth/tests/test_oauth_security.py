@@ -27,19 +27,19 @@ class TestRedirectURIValidator(TestCase):
     def setUp(self):
         """Set up test redirect URIs."""
         self.allowed_uris = [
-            "https://tinybeans.app/auth/google/callback",
+            "https://circles.example.com/auth/google/callback",
             "http://localhost:3000/auth/google/callback",
         ]
 
     def test_valid_redirect_uri_exact_match(self):
         """Test that exact match redirect URI is valid."""
-        uri = "https://tinybeans.app/auth/google/callback"
+        uri = "https://circles.example.com/auth/google/callback"
         result = RedirectURIValidator.validate(uri, self.allowed_uris)
         self.assertTrue(result)
 
     def test_valid_redirect_uri_with_subpath(self):
         """Test that subpath of allowed URI is valid."""
-        uri = "https://tinybeans.app/auth/google/callback/extra"
+        uri = "https://circles.example.com/auth/google/callback/extra"
         result = RedirectURIValidator.validate(uri, self.allowed_uris)
         self.assertTrue(result)
 
@@ -51,19 +51,19 @@ class TestRedirectURIValidator(TestCase):
 
     def test_invalid_redirect_uri_different_scheme(self):
         """Test that different scheme is rejected."""
-        uri = "http://tinybeans.app/auth/google/callback"  # http instead of https
+        uri = "http://circles.example.com/auth/google/callback"  # http instead of https
         result = RedirectURIValidator.validate(uri, self.allowed_uris)
         self.assertFalse(result)
 
     def test_invalid_redirect_uri_subdomain_attack(self):
         """Test that subdomain attack is rejected."""
-        uri = "https://evil.tinybeans.app/auth/google/callback"
+        uri = "https://evil.circles.example.com/auth/google/callback"
         result = RedirectURIValidator.validate(uri, self.allowed_uris)
         self.assertFalse(result)
 
     def test_invalid_redirect_uri_missing_scheme(self):
         """Test that URI without scheme is rejected."""
-        uri = "tinybeans.app/auth/google/callback"
+        uri = "circles.example.com/auth/google/callback"
         result = RedirectURIValidator.validate(uri, self.allowed_uris)
         self.assertFalse(result)
 

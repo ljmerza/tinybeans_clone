@@ -8,7 +8,7 @@
 
 ### Background
 
-Tinybeans Circles sends transactional email for every authentication and membership surface: email verification, magic login, password reset, 2FA codes and security alerts, trusted-device notices, circle invitations and reminders, and child-upgrade notices. Production needs a real delivery provider. Resend was chosen as that provider; this ADR records how it plugs into the existing email pipeline.
+Circles sends transactional email for every authentication and membership surface: email verification, magic login, password reset, 2FA codes and security alerts, trusted-device notices, circle invitations and reminders, and child-upgrade notices. Production needs a real delivery provider. Resend was chosen as that provider; this ADR records how it plugs into the existing email pipeline.
 
 ### Current State
 
@@ -126,7 +126,7 @@ Tinybeans Circles sends transactional email for every authentication and members
 | `RESEND_API_KEY` | `RESEND_API_KEY` | `''` | Required when `EMAIL_PROVIDER=resend`; otherwise `ImproperlyConfigured` at import. |
 | `RESEND_API_URL` | `RESEND_API_URL` | `https://api.resend.com/emails` | Overridable for tests / mocks. |
 | `RESEND_FROM_EMAIL` | `RESEND_FROM_EMAIL` | `DEFAULT_FROM_EMAIL` | Must be on a verified Resend domain. |
-| `RESEND_FROM_NAME` | `RESEND_FROM_NAME` | `Tinybeans Circles` | Rendered as `Name <email>` in `from`. |
+| `RESEND_FROM_NAME` | `RESEND_FROM_NAME` | `Circles` | Rendered as `Name <email>` in `from`. |
 | `RESEND_TIMEOUT_SECONDS` | `RESEND_TIMEOUT_SECONDS` | `10` | Passed to `requests.post(timeout=)`. |
 
 All `MAILJET_*` settings are removed. `mysite/config/settings/test.py` sets `EMAIL_PROVIDER = 'django'`.

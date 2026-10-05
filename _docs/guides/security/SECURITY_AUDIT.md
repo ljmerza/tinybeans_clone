@@ -564,8 +564,8 @@ class LoginView(APIView):
 ## 📞 SUPPORT
 
 For security concerns or vulnerabilities, contact:
-- Security Team: security@tinybeans.com
-- CISO: ciso@tinybeans.com
+- Security Team: security@example.com
+- CISO: ciso@example.com
 
 **Do NOT disclose vulnerabilities publicly before remediation.**
 

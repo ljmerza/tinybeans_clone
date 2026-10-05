@@ -234,7 +234,7 @@ class TestComments:
         assert recipients() == ["poster@example.com"]
 
     def test_rows_written_directly_do_not_notify(self, keep, grandma, django_capture_on_commit_callbacks):
-        """The Tinybeans import writes rows through the ORM; imported history must stay quiet."""
+        """The journal import writes rows through the ORM; imported history must stay quiet."""
         with django_capture_on_commit_callbacks(execute=True):
             KeepComment.objects.create(keep=keep, user=grandma, comment="Imported")
             KeepReaction.objects.create(keep=keep, user=grandma)

@@ -165,7 +165,7 @@ services:
 
 networks:
   circles_backend:
-    # Fixed name so other projects (e.g. the Tinybeans sync service) can join it.
+    # Fixed name so other projects (e.g. the journal sync service) can join it.
     name: ${CIRCLES_BACKEND_NETWORK:-circles_backend}
   db:
     external: true

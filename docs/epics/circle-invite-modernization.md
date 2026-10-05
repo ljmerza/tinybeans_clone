@@ -6,7 +6,7 @@
 - Related ADRs: `docs/adrs/0001-circle-invite-flow.md`
 
 ## Overview
-Modernize the Tinybeans Circles invitation experience so admins invite by email only, invitees explicitly accept before joining, and onboarding respects the existing auth stack (magic link, Google OAuth, 2FA). The epic coordinates backend, frontend, and notification updates while maintaining compatibility with earlier flows.
+Modernize the Circles invitation experience so admins invite by email only, invitees explicitly accept before joining, and onboarding respects the existing auth stack (magic link, Google OAuth, 2FA). The epic coordinates backend, frontend, and notification updates while maintaining compatibility with earlier flows.
 
 ## Goals & Success Metrics
 - Admins send invites using email with clear status feedback.

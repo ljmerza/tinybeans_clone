@@ -18,7 +18,7 @@ Copy `.env.example` into `.env` for backend settings and `web/.env.local` for fr
 ## Project Primer for Agents
 
 ### Overview
-- Privacy-first Tinybeans-inspired journal: Django 5.2 + DRF powers the API, while a Vite/TanStack Router SPA ships the member experience.
+- Privacy-first family journal: Django 5.2 + DRF powers the API, while a Vite/TanStack Router SPA ships the member experience.
 - Authentication now spans username/password, passwordless magic links, Google OAuth 2.0 (initiate/callback/link/unlink), and rich 2FA flows (TOTP, SMS, email) with trusted devices.
 - Redis backs token storage and rate limiting; Celery + Flower handle async work; Mailjet/Mailpit and an SMS provider abstraction (Twilio-ready) deliver notifications.
 - Keeps service processes photo/video uploads asynchronously via MinIO/S3-compatible storage, thumbnail generation, and Celery-driven status tracking.
@@ -44,8 +44,8 @@ Copy `.env.example` into `.env` for backend settings and `web/.env.local` for fr
 - `docs/features/2fa/2FA_DOCUMENTATION_INDEX.md` — end-to-end 2FA architecture, services, and troubleshooting.
 - `docs/features/oauth/GOOGLE_OAUTH_IMPLEMENTATION.md` — Google OAuth flow details, error codes, and security notes.
 - `docs/features/media-storage/MEDIA_STORAGE_IMPLEMENTATION_SUMMARY.md` — async media pipeline and storage backends.
-- `docs/guides/planning/TINYBEANS_KEEPS_COMPLETE_SUMMARY.md` — keeps domain overview and API surface.
-- The Tinybeans import (the `TinybeansImportRecord`/`TinybeansSyncRun` rows) is run by the separate [tinybeans_circles_migration](https://github.com/ljmerza/tinybeans_circles_migration) service; its accounts, schedule and sync UI are documented there.
+- `docs/guides/planning/KEEPS_COMPLETE_SUMMARY.md` — keeps domain overview and API surface.
+- The journal import (the `ImportRecord`/`ImportSyncRun` rows) is run by the separate [tinybeans_circles_migration](https://github.com/ljmerza/tinybeans_circles_migration) service; its accounts, schedule and sync UI are documented there.
 - `DEVELOPMENT.md` — local setup, seeded accounts, OAuth configuration, and testing commands.
 
 ### Dev Environment Notes

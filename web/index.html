@@ -33,26 +33,14 @@
       (function () {
         try {
           var root = document.documentElement;
-          // Read a key, moving a value saved under its pre-rename
-          // "tinybeans.*" name to it first.
-          var read = function (key) {
-            var value = localStorage.getItem("circles." + key);
-            if (value !== null) return value;
-            value = localStorage.getItem("tinybeans." + key);
-            if (value !== null) {
-              localStorage.setItem("circles." + key, value);
-              localStorage.removeItem("tinybeans." + key);
-            }
-            return value;
-          };
-          var mode = read("themePreference");
+          var mode = localStorage.getItem("circles.themePreference");
           var dark =
             mode === "dark" ||
             (mode !== "light" &&
               window.matchMedia("(prefers-color-scheme: dark)").matches);
           root.classList.toggle("dark", dark);
           root.style.colorScheme = dark ? "dark" : "light";
-          var color = read("colorTheme");
+          var color = localStorage.getItem("circles.colorTheme");
           if (color && color !== "default") {
             root.setAttribute("data-color-theme", color);
           }

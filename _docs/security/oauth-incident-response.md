@@ -163,7 +163,7 @@ This runbook provides step-by-step procedures for responding to OAuth-related se
 
 ## Emergency Contacts
 
-**Security Team**: security@tinybeans.app  
+**Security Team**: security@example.com  
 **On-Call Engineer**: [Phone Number]  
 **Incident Commander**: [Name]  
 **Google OAuth Support**: [If exists]

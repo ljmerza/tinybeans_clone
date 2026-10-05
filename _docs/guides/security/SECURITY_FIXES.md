@@ -409,4 +409,4 @@ After implementing fixes:
 
 See full audit: `docs/SECURITY_AUDIT.md`
 
-Contact: security@tinybeans.com
+Contact: security@example.com

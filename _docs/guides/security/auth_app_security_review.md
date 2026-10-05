@@ -1,4 +1,4 @@
-# Tinybeans Auth App – Security & Architecture Review
+# Circles Auth App – Security & Architecture Review
 
 ## Scope & Context
 - Codebase: `mysite/auth` Django app plus supporting settings in `mysite/settings.py`.

@@ -5,7 +5,7 @@ Implemented
 
 ## Context
 
-The Tinybeans application uses Django REST Framework for the backend API and React (with TanStack Router/Query) for the frontend. Django enforces CSRF (Cross-Site Request Forgery) protection for state-changing operations (POST, PUT, PATCH, DELETE requests) by default. The frontend needs to obtain and properly send CSRF tokens with authenticated requests to prevent 403 Forbidden errors.
+The Circles application uses Django REST Framework for the backend API and React (with TanStack Router/Query) for the frontend. Django enforces CSRF (Cross-Site Request Forgery) protection for state-changing operations (POST, PUT, PATCH, DELETE requests) by default. The frontend needs to obtain and properly send CSRF tokens with authenticated requests to prevent 403 Forbidden errors.
 
 ### Security Requirements
 
@@ -283,14 +283,14 @@ CSRF_COOKIE_HTTPONLY = False   # Allow JavaScript to read
 CSRF_COOKIE_SAMESITE = 'Strict'  # Strict same-site policy
 CSRF_COOKIE_SECURE = True      # HTTPS only
 CSRF_TRUSTED_ORIGINS = [
-    'https://tinybeans.com',
-    'https://www.tinybeans.com',
+    'https://circles.example.com',
+    'https://www.circles.example.com',
 ]
 
 # CORS Settings (if needed for subdomains)
 CORS_ALLOWED_ORIGINS = [
-    'https://tinybeans.com',
-    'https://www.tinybeans.com',
+    'https://circles.example.com',
+    'https://www.circles.example.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
 ```

@@ -201,6 +201,6 @@ The auth app is **well-built with strong security practices**. The identified is
 
 ---
 
-**Questions?** Contact: security@tinybeans.com
+**Questions?** Contact: security@example.com
 
 **Last Updated**: October 1, 2024

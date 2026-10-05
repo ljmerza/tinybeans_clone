@@ -221,7 +221,7 @@ All changes follow:
 ## 📞 Contact
 
 Questions or issues? Contact:
-- Security Team: security@tinybeans.com
+- Security Team: security@example.com
 - Documentation: `docs/` directory
 - Code Review: Pull request comments
 

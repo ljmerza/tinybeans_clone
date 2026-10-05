@@ -82,7 +82,7 @@ Project planning and enhancement proposals
 - Technical decision documentation
 
 **Key Files:**
-- [TINYBEANS_KEEPS_COMPLETE_SUMMARY.md](./guides/planning/TINYBEANS_KEEPS_COMPLETE_SUMMARY.md) - Complete project summary
+- [KEEPS_COMPLETE_SUMMARY.md](./guides/planning/KEEPS_COMPLETE_SUMMARY.md) - Complete project summary
 - [USERS_APP_ENHANCEMENT_IDEAS.md](./guides/planning/USERS_APP_ENHANCEMENT_IDEAS.md)
 - [email_queue_plan.md](./guides/planning/email_queue_plan.md)
 - [users_app_plan.md](./guides/planning/users_app_plan.md)
@@ -108,7 +108,7 @@ Security audits, fixes, and improvements
 
 ## 📋 Quick Navigation
 
-- **New to the project?** Start with [TINYBEANS_KEEPS_COMPLETE_SUMMARY.md](./guides/planning/TINYBEANS_KEEPS_COMPLETE_SUMMARY.md)
+- **New to the project?** Start with [KEEPS_COMPLETE_SUMMARY.md](./guides/planning/KEEPS_COMPLETE_SUMMARY.md)
 - **Setting up 2FA?** Check [2FA_DOCUMENTATION_INDEX.md](./features/2fa/2FA_DOCUMENTATION_INDEX.md)
 - **Understanding architecture?** Review the [architecture/adr/](./architecture/adr/) folder
 - **Security concerns?** See [SECURITY_IMPROVEMENTS_QUICKSTART.md](./guides/security/SECURITY_IMPROVEMENTS_QUICKSTART.md)
