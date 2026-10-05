@@ -502,7 +502,8 @@
 				"default": "Copertina dell'album (predefinita)",
 				"badge": "Copertina",
 				"failed": "Impossibile cambiare la copertina dell'album. Riprova."
-			}
+			},
+			"recap_badge": "Riepilogo"
 		},
 		"people": {
 			"with": "Con",
@@ -768,7 +769,12 @@
 				"no_members": "Invita il primo membro per iniziare.",
 				"no_members_title": "Ancora nessun membro",
 				"no_members_description": "Invia un invito, così questa cerchia non resta vuota.",
-				"no_members_action": "Invita qualcuno"
+				"no_members_action": "Invita qualcuno",
+				"recap": {
+					"title": "Album riepilogo del mese",
+					"description": "Il 1° di ogni mese viene creato un album con le 12 foto del mese precedente con più Mi piace e commenti. Tutti nella cerchia possono vederlo.",
+					"save_failed": "Impossibile salvare l'impostazione. Riprova."
+				}
 			},
 			"invites": {
 				"form": {

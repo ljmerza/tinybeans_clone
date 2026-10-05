@@ -502,7 +502,8 @@
 				"default": "Album cover (default)",
 				"badge": "Cover",
 				"failed": "Couldn't change the album cover. Please try again."
-			}
+			},
+			"recap_badge": "Recap"
 		},
 		"people": {
 			"with": "With",
@@ -768,7 +769,12 @@
 				"no_members": "Invite your first member to get started.",
 				"no_members_title": "No members yet",
 				"no_members_description": "Send an invitation so this circle isn't empty.",
-				"no_members_action": "Invite someone"
+				"no_members_action": "Invite someone",
+				"recap": {
+					"title": "Monthly recap album",
+					"description": "On the 1st of each month, make an album of last month's 12 photos with the most likes and comments. Everyone in the circle can see it.",
+					"save_failed": "Couldn't save the setting. Please try again."
+				}
 			},
 			"invites": {
 			"form": {

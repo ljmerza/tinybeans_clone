@@ -1,4 +1,5 @@
 import { ConfirmDialog, Layout, LoadingState } from "@/components";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	AlbumCoverAction,
@@ -109,7 +110,13 @@ export function AlbumRouteView() {
 	}
 
 	const current = album.data;
-	const { name, description, post_count: postCount, can_edit } = current;
+	const {
+		name,
+		description,
+		post_count: postCount,
+		can_edit,
+		recap_month: recapMonth,
+	} = current;
 
 	return (
 		<Layout>
@@ -119,6 +126,11 @@ export function AlbumRouteView() {
 					<div className="flex items-center gap-1">
 						{backLink}
 						<h1 className="min-w-0 truncate text-base font-semibold">{name}</h1>
+						{recapMonth && (
+							<Badge variant="accent" className="ml-1 shrink-0">
+								{t("pages.albums.recap_badge")}
+							</Badge>
+						)}
 						<span className="shrink-0 text-sm text-muted-foreground">
 							· {t("pages.albums.post_count", { count: postCount })}
 						</span>
