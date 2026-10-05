@@ -89,14 +89,10 @@ class GoogleOAuthLinkView(APIView):
 
             response_data = {"message": "Google account linked successfully", "user": UserSerializer(updated_user).data}
 
-            response_serializer = OAuthLinkResponseSerializer(data=response_data)
-            response_serializer.is_valid(raise_exception=True)
-
             logger.info("Google account linked", extra={"user_id": request.user.id, "ip": ip_address})
 
-            return success_response(
-                response_serializer.data, messages=[create_message("notifications.oauth.account_linked", {})]
-            )
+            # response_data is already serialized; don't validate it as input (see callback.py).
+            return success_response(response_data, messages=[create_message("notifications.oauth.account_linked", {})])
 
         except InvalidStateError:
             logger.warning(
@@ -170,13 +166,11 @@ class GoogleOAuthUnlinkView(APIView):
                 "user": UserSerializer(updated_user).data,
             }
 
-            response_serializer = OAuthUnlinkResponseSerializer(data=response_data)
-            response_serializer.is_valid(raise_exception=True)
-
             logger.info("Google account unlinked", extra={"user_id": request.user.id})
 
+            # response_data is already serialized; don't validate it as input (see callback.py).
             return success_response(
-                response_serializer.data, messages=[create_message("notifications.oauth.account_unlinked", {})]
+                response_data, messages=[create_message("notifications.oauth.account_unlinked", {})]
             )
 
         except OAuthError:
