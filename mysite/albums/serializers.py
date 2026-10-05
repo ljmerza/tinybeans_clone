@@ -20,9 +20,10 @@ def cover_url(media):
 class AlbumSerializer(serializers.ModelSerializer):
     """An album card: name, cover and how many posts it holds.
 
-    ``post_count``, ``can_edit``, ``cover_media_id`` and (when filtering by a
-    keep) ``has_keep`` are annotated by ``views.visible_albums``, and the cover
-    media rows are attached in bulk, so a page costs a fixed number of queries.
+    ``post_count``, ``can_edit``, ``cover_media_id``, ``recap_month`` and (when
+    filtering by a keep) ``has_keep`` are annotated by ``views.visible_albums``,
+    and the cover media rows are attached in bulk, so a page costs a fixed
+    number of queries.
     """
 
     circle = serializers.SerializerMethodField()
@@ -33,6 +34,9 @@ class AlbumSerializer(serializers.ModelSerializer):
         read_only=True, help_text="Whether the viewer may rename or delete it: its creator or a circle admin"
     )
     has_keep = serializers.SerializerMethodField()
+    recap_month = serializers.DateField(
+        read_only=True, allow_null=True, help_text="First day of the month a monthly recap covers; null otherwise"
+    )
 
     class Meta:
         model = Album
@@ -48,6 +52,7 @@ class AlbumSerializer(serializers.ModelSerializer):
             "post_count",
             "can_edit",
             "has_keep",
+            "recap_month",
             "created_at",
             "updated_at",
         ]

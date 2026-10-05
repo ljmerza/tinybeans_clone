@@ -72,7 +72,7 @@ class CircleDetailView(APIView):
     serializer_class = CircleCreateSerializer
 
     @extend_schema(
-        description="Update circle metadata (name, slug) for an owned circle.",
+        description="Update circle metadata (name, slug) or the monthly recap setting for an owned circle.",
         request=CircleCreateSerializer,
         responses={
             200: OpenApiResponse(

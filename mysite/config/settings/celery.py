@@ -93,4 +93,9 @@ CELERY_BEAT_SCHEDULE = {
         # Daily at 7 AM in CELERY_TIMEZONE, after the midnight journal import
         "schedule": crontab(hour=7, minute=0),
     },
+    "create-monthly-recaps": {
+        "task": "mysite.albums.tasks.create_monthly_recaps",
+        # 8 AM on the 1st in CELERY_TIMEZONE, after the midnight Tinybeans import
+        "schedule": crontab(day_of_month=1, hour=8, minute=0),
+    },
 }

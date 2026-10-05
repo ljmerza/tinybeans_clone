@@ -18,6 +18,10 @@ class Circle(models.Model):
         related_name="circles_created",
     )
     created_at = models.DateTimeField(default=timezone.now)
+    monthly_recap_enabled = models.BooleanField(
+        default=False,
+        help_text="On the 1st of each month, make an album of last month's most-liked photos",
+    )
 
     class Meta:
         # Keep legacy ownership under the users app until migrations relocate.
