@@ -13,12 +13,15 @@ export const profileKeys = {
 		profileKeysFactory.tag("notification-preferences"),
 	notificationPreferences: (circleId: number | null) =>
 		profileKeysFactory.tag("notification-preferences", circleId ?? "default"),
+	notificationChannels: () => profileKeysFactory.tag("notification-channels"),
 	mutation: mutationKey,
 	mutations: {
 		updateProfile: () => mutationKey("update-profile"),
 		updateNotificationPreferences: () =>
 			mutationKey("update-notification-preferences"),
 		changePassword: () => mutationKey("change-password"),
+		notificationPhone: () => mutationKey("notification-phone"),
+		pushSubscription: () => mutationKey("push-subscription"),
 	},
 };
 

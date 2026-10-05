@@ -33,6 +33,7 @@ dependencies = [
     "google-auth-httplib2==0.1.1",
     "user-agents==2.2.0",
     "tzdata==2025.2",
+    "pywebpush==2.3.0",
 ]
 
 [dependency-groups]

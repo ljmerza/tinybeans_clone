@@ -6,6 +6,7 @@ from celery import shared_task
 
 from mysite import project_logging
 
+from .push import send_web_push
 from .services import SMSService
 
 logger = logging.getLogger(__name__)
@@ -75,3 +76,20 @@ def send_2fa_sms(phone_number: str, code: str):
             },
         )
         return result
+
+
+# Shares the email queue with the activity notifications that queue it.
+@shared_task(queue="email")
+def send_push_async(user_id: int, payload: dict):
+    """
+    Async task to push a notification to every device a user subscribed
+
+    Args:
+        user_id: Recipient's user id
+        payload: JSON-serializable notification (title, body, url, tag)
+
+    Returns:
+        int: Devices the push service accepted it for
+    """
+    with project_logging.log_context(task="messaging.send_push_async", user_id=user_id):
+        return send_web_push(user_id, payload)

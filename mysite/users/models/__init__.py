@@ -8,7 +8,13 @@ from .child_profile import (
     GuardianConsentMethod,
 )
 from .circle import Circle, CircleInvitation, CircleInvitationStatus, CircleMembership
-from .notifications import NotificationChannel, UserNotificationPreferences
+from .notifications import (
+    CHANNEL_FIELDS,
+    NotificationChannel,
+    NotificationPhone,
+    PushSubscription,
+    UserNotificationPreferences,
+)
 from .pet_profile import PetProfile, PetType
 from .user import CircleOnboardingStatus, User, UserManager, UserRole
 from .utils import generate_unique_slug
@@ -32,5 +38,8 @@ __all__ = [
     "PetType",
     "UserNotificationPreferences",
     "NotificationChannel",
+    "CHANNEL_FIELDS",
+    "NotificationPhone",
+    "PushSubscription",
     "generate_unique_slug",
 ]

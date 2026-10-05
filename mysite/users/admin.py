@@ -238,10 +238,21 @@ class UserNotificationPreferencesAdmin(admin.ModelAdmin):
         "notify_comments",
         "notify_replies",
         "notify_likes",
-        "channel",
+        "email_enabled",
+        "sms_enabled",
+        "push_enabled",
         "email_digest",
     )
-    list_filter = ("channel", "notify_new_media", "notify_comments", "notify_replies", "notify_likes", "email_digest")
+    list_filter = (
+        "email_enabled",
+        "sms_enabled",
+        "push_enabled",
+        "notify_new_media",
+        "notify_comments",
+        "notify_replies",
+        "notify_likes",
+        "email_digest",
+    )
 
 
 @admin.register(ChildUpgradeAuditLog)

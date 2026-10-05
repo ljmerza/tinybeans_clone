@@ -40,7 +40,34 @@ TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "")
 
 # Circle activity notifications
-# Phone delivery isn't built yet; users can't pick it until this is on.
+# Texting notifications costs money per message, so it's off until this is on:
+# the SMS switch, phone verification and sending all check it.
 NOTIFICATIONS_SMS_ENABLED = _env_flag("NOTIFICATIONS_SMS_ENABLED", default=False)
+# Most activity texts one user gets per day; the rest are dropped.
+NOTIFICATIONS_SMS_DAILY_LIMIT = int(os.environ.get("NOTIFICATIONS_SMS_DAILY_LIMIT", 20))
+# E.164 prefixes a notification phone may start with (empty allows every
+# country). Keeps verification codes away from premium international ranges.
+NOTIFICATIONS_SMS_ALLOWED_PREFIXES = [
+    prefix.strip() for prefix in os.environ.get("NOTIFICATIONS_SMS_ALLOWED_PREFIXES", "+1").split(",") if prefix.strip()
+]
+# Verification codes one user can request (django-ratelimit rate).
+NOTIFICATION_PHONE_CODE_RATELIMIT = os.environ.get("NOTIFICATION_PHONE_CODE_RATELIMIT", "3/15m")
+
+# Web push. VAPID keys are base64url; the subject is a mailto: or https: URL.
+# Push stays off unless all three are set.
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "")
+NOTIFICATIONS_PUSH_ENABLED = bool(VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY and VAPID_SUBJECT)
+# Host suffixes a push subscription endpoint may point at. The server POSTs to
+# the endpoint, so arbitrary URLs would let a user make it call anything.
+PUSH_ALLOWED_ENDPOINT_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "PUSH_ALLOWED_ENDPOINT_HOSTS",
+        "fcm.googleapis.com,push.services.mozilla.com,push.apple.com,notify.windows.com",
+    ).split(",")
+    if host.strip()
+]
 # New-photo notices wait this long so the post's uploads can finish first.
 NOTIFICATIONS_NEW_MEDIA_DELAY_SECONDS = int(os.environ.get("NOTIFICATIONS_NEW_MEDIA_DELAY_SECONDS", 600))

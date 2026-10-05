@@ -2,7 +2,7 @@
 
 Views call the ``notify_*`` helpers after a write. Those queue
 ``send_activity_notifications``, which works out who should hear about it and
-hands each recipient to the sender for the channel they picked. The journal
+hands each recipient to the sender of every channel they turned on. The journal
 import writes rows straight to the database and never calls these helpers, so
 imported history doesn't notify anyone.
 """
@@ -14,9 +14,11 @@ import logging
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
+from django.utils import timezone
 from django.utils.text import Truncator
 
 from mysite.circles.models import CircleMembership
+from mysite.emails.services import email_dispatch_service
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import (
     KEEP_COMMENT_TEMPLATE,
@@ -25,7 +27,14 @@ from mysite.emails.templates import (
     KEEP_NEW_MEDIA_TEMPLATE,
     KEEP_REPLY_TEMPLATE,
 )
-from mysite.users.models import NotificationChannel, User, UserNotificationPreferences
+from mysite.messaging.tasks import send_push_async, send_sms_async
+from mysite.users.models import (
+    NotificationChannel,
+    NotificationPhone,
+    PushSubscription,
+    User,
+    UserNotificationPreferences,
+)
 
 from .models import Keep, KeepComment, KeepCommentMention, KeepReaction
 
@@ -60,6 +69,8 @@ EMAIL_TEMPLATES = {
 
 # Unliking and liking again inside this window doesn't notify a second time.
 LIKE_REPEAT_WINDOW_SECONDS = 24 * 60 * 60
+# The daily text counter outlives its day by a little, then expires.
+SMS_ALLOWANCE_WINDOW_SECONDS = 25 * 60 * 60
 
 
 def _queue(event: str, object_id, countdown: int = 0) -> None:
@@ -202,11 +213,8 @@ def _deliver(event: str, keep: Keep, actor, candidates, extra: dict) -> None:
         prefs = preferences[recipient.id]
         if not getattr(prefs, PREFERENCE_FIELDS[event]):
             continue
-        sender = CHANNEL_SENDERS.get(prefs.channel)
-        if sender is None:
-            logger.warning("No sender for notification channel %s", prefs.channel)
-            continue
-        sender(recipient, event, context)
+        for channel in prefs.enabled_channels():
+            CHANNEL_SENDERS[channel](recipient, event, context)
 
 
 def _send_email(recipient, event: str, context: dict) -> None:
@@ -219,13 +227,58 @@ def _send_email(recipient, event: str, context: dict) -> None:
     )
 
 
+def _summary(event: str, context: dict) -> str:
+    """One line describing the activity: the email's subject, e.g. "Pat liked your post in Smith Family"."""
+    return email_dispatch_service.get_template(EMAIL_TEMPLATES[event]).render(context).subject
+
+
 def _send_sms(recipient, event: str, context: dict) -> None:
-    # Phone delivery isn't built yet; the preferences API won't let anyone pick it
-    # unless NOTIFICATIONS_SMS_ENABLED is on.
-    logger.info("Skipping %s notification for user %s: phone delivery is not available yet", event, recipient.id)
+    # Texts cost money: only when switched on server-side, only to a number the
+    # user proved is theirs, and only up to a daily cap.
+    if not settings.NOTIFICATIONS_SMS_ENABLED:
+        return
+    phone = NotificationPhone.objects.filter(user=recipient, verified_at__isnull=False).first()
+    if phone is None:
+        return
+    if not _take_sms_allowance(recipient):
+        logger.warning("Daily text limit reached; not texting %s notification to user %s", event, recipient.id)
+        return
+    # The summary and a link only: comment text stays out of texts.
+    send_sms_async.delay(phone.phone_number, f"Circles: {_summary(event, context)} {context['keep_url']}")
+
+
+def _take_sms_allowance(recipient) -> bool:
+    """Count one text against the recipient's daily limit; False once it's used up."""
+    key = f"notifications:sms:{recipient.id}:{timezone.localdate().isoformat()}"
+    cache.add(key, 0, SMS_ALLOWANCE_WINDOW_SECONDS)
+    try:
+        sent = cache.incr(key)
+    except ValueError:
+        # The key expired between add and incr.
+        cache.set(key, 1, SMS_ALLOWANCE_WINDOW_SECONDS)
+        sent = 1
+    return sent <= settings.NOTIFICATIONS_SMS_DAILY_LIMIT
+
+
+def _send_push(recipient, event: str, context: dict) -> None:
+    if not settings.NOTIFICATIONS_PUSH_ENABLED:
+        return
+    if not PushSubscription.objects.filter(user=recipient).exists():
+        return
+    send_push_async.delay(
+        recipient.id,
+        {
+            "title": _summary(event, context),
+            "body": context.get("comment_text") or context["post_summary"],
+            "url": context["keep_url"],
+            # Later notices about the same post replace earlier ones on the device.
+            "tag": context["keep_url"],
+        },
+    )
 
 
 CHANNEL_SENDERS = {
     NotificationChannel.EMAIL: _send_email,
     NotificationChannel.SMS: _send_sms,
+    NotificationChannel.PUSH: _send_push,
 }

@@ -960,6 +960,11 @@
 		"preferences": {
 			"updated": "Preferencias actualizadas exitosamente"
 		},
+		"notification_phone": {
+			"code_sent": "Te enviamos un código por mensaje de texto.",
+			"verified": "Tu número de teléfono está confirmado.",
+			"removed": "Número de teléfono eliminado."
+		},
 		"circle": {
 			"created": "Círculo creado exitosamente",
 			"updated": "Círculo actualizado exitosamente",
@@ -1018,6 +1023,11 @@
 		"notification_channel_unavailable": "Ese método de notificación aún no está disponible.",
 		"notification_circle_required": "Elige un círculo para restablecer.",
 		"notification_digest_global_only": "El resumen diario incluye todos tus círculos, así que solo se puede cambiar en tu configuración predeterminada.",
+		"notification_phone_unverified": "Confirma un número de teléfono antes de activar los mensajes de texto.",
+		"notification_phone_invalid": "Escribe un número de móvil con su código de país, por ejemplo +1 555 123 4567.",
+		"notification_phone_country_unsupported": "No se pueden enviar mensajes de texto a números de ese país.",
+		"notification_phone_code_invalid": "Ese código es incorrecto o ha caducado. Pide uno nuevo e inténtalo otra vez.",
+		"push_endpoint_unsupported": "El servicio de notificaciones push de este navegador no es compatible.",
 		"file_too_large": "El archivo {{filename}} es demasiado grande. El tamaño máximo es {{maxSize}}.",
 		"invalid_file_type": "Tipo de archivo inválido. Tipos permitidos: {{allowedTypes}}",
 		"email_invalid": "Por favor ingrese una dirección de correo electrónico válida",
@@ -1133,16 +1143,49 @@
 		"circle_override": "Este círculo tiene su propia configuración.",
 		"use_default": "Usar mi configuración predeterminada",
 		"load_error": "No pudimos cargar tu configuración de notificaciones. Intenta nuevamente.",
-		"channel_label": "Enviar notificaciones por",
-		"channel_description": "Pronto habrá más formas de recibir notificaciones.",
-		"channel_coming_soon": "{{channel}} (próximamente)",
+		"channels_title": "Cómo te llegan las notificaciones",
+		"channels_description": "Activa todas las que quieras.",
+		"sms_needs_phone": "Añade y confirma un número de teléfono abajo para activarlo.",
+		"sms_needs_phone_default": "Añade y confirma un número de teléfono en tu configuración predeterminada para activarlo.",
 		"digest": {
 			"title": "Resumen diario por correo",
 			"description": "Un correo cada mañana con las publicaciones nuevas de todos tus círculos."
 		},
 		"channels": {
 			"email": "Correo electrónico",
-			"sms": "Teléfono (mensaje de texto)"
+			"sms": "Mensaje de texto",
+			"push": "Notificaciones push"
+		},
+		"channel_descriptions": {
+			"email": "Se envían al correo electrónico de tu cuenta.",
+			"sms": "Un texto corto con un enlace a la publicación. Pueden aplicarse tarifas de mensajes y datos.",
+			"push": "Avisos en cada teléfono u ordenador donde actives las notificaciones push."
+		},
+		"phone": {
+			"title": "Teléfono para mensajes de texto",
+			"label": "Número de móvil",
+			"placeholder": "+1 555 123 4567",
+			"send_code": "Envíame un código",
+			"code_label": "Código",
+			"code_sent": "Escribe el código de 6 dígitos que enviamos a {{phone}}.",
+			"confirm": "Confirmar",
+			"resend": "Enviar un código nuevo",
+			"use_different": "Usar otro número",
+			"verified": "Los mensajes se envían a {{phone}}.",
+			"change": "Cambiar número",
+			"remove": "Eliminar"
+		},
+		"push": {
+			"title": "Push en este dispositivo",
+			"enable": "Activar push en este dispositivo",
+			"disable": "Desactivar en este dispositivo",
+			"enabled": "Las notificaciones push están activadas en este dispositivo.",
+			"device_count_one": "Las notificaciones push están activadas en {{count}} de tus dispositivos.",
+			"device_count_other": "Las notificaciones push están activadas en {{count}} de tus dispositivos.",
+			"unsupported": "Este navegador no puede recibir notificaciones push.",
+			"install_required": "En iPhone y iPad, las notificaciones push solo funcionan en la app Circles de tu pantalla de inicio (iOS 16.4 o posterior). Toca Compartir y luego Añadir a pantalla de inicio, abre Circles desde ahí y vuelve a esta página.",
+			"denied": "Las notificaciones están bloqueadas para este sitio. Permítelas en la configuración del navegador o del teléfono y vuelve a intentarlo.",
+			"failed": "No pudimos activar las notificaciones push en este dispositivo. Inténtalo de nuevo."
 		},
 		"events": {
 			"new_media": {

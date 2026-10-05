@@ -960,6 +960,11 @@
 		"preferences": {
 			"updated": "Preferenze aggiornate"
 		},
+		"notification_phone": {
+			"code_sent": "Ti abbiamo inviato un codice via SMS.",
+			"verified": "Il tuo numero di telefono è confermato.",
+			"removed": "Numero di telefono rimosso."
+		},
 		"circle": {
 			"created": "Cerchia creata",
 			"updated": "Cerchia aggiornata",
@@ -1018,6 +1023,11 @@
 		"notification_channel_unavailable": "Questo metodo di notifica non è ancora disponibile.",
 		"notification_circle_required": "Scegli una cerchia da reimpostare.",
 		"notification_digest_global_only": "Il riepilogo giornaliero include tutte le tue cerchie, quindi si può modificare solo nelle impostazioni predefinite.",
+		"notification_phone_unverified": "Conferma un numero di telefono prima di attivare gli SMS.",
+		"notification_phone_invalid": "Inserisci un numero di cellulare con il prefisso internazionale, ad esempio +1 555 123 4567.",
+		"notification_phone_country_unsupported": "Non è possibile inviare SMS ai numeri di quel paese.",
+		"notification_phone_code_invalid": "Il codice è sbagliato o scaduto. Richiedine uno nuovo e riprova.",
+		"push_endpoint_unsupported": "Il servizio di notifiche push di questo browser non è supportato.",
 		"file_too_large": "Il file {{filename}} è troppo grande. La dimensione massima è {{maxSize}}.",
 		"invalid_file_type": "Tipo di file non valido. Tipi consentiti: {{allowedTypes}}",
 		"email_invalid": "Inserisci un indirizzo email valido",
@@ -1133,16 +1143,49 @@
 			"circle_override": "Questa cerchia ha impostazioni proprie.",
 			"use_default": "Usa le mie impostazioni predefinite",
 			"load_error": "Non siamo riusciti a caricare le impostazioni delle notifiche. Riprova.",
-			"channel_label": "Invia notifiche tramite",
-			"channel_description": "Presto arriveranno altri modi per ricevere le notifiche.",
-			"channel_coming_soon": "{{channel}} (in arrivo)",
+			"channels_title": "Come ti arrivano le notifiche",
+			"channels_description": "Attivane quante vuoi.",
+			"sms_needs_phone": "Aggiungi e conferma un numero di telefono qui sotto per attivarlo.",
+			"sms_needs_phone_default": "Aggiungi e conferma un numero di telefono nelle impostazioni predefinite per attivarlo.",
 			"digest": {
 				"title": "Riepilogo giornaliero via email",
 				"description": "Un'email ogni mattina con i nuovi post di tutte le tue cerchie."
 			},
 			"channels": {
 				"email": "Email",
-				"sms": "Telefono (SMS)"
+				"sms": "SMS",
+				"push": "Notifiche push"
+			},
+			"channel_descriptions": {
+				"email": "Inviate all'indirizzo email del tuo account.",
+				"sms": "Un breve SMS con il link al post. Potrebbero essere applicati costi per messaggi e dati.",
+				"push": "Avvisi su ogni telefono o computer dove attivi le notifiche push."
+			},
+			"phone": {
+				"title": "Telefono per gli SMS",
+				"label": "Numero di cellulare",
+				"placeholder": "+1 555 123 4567",
+				"send_code": "Inviami un codice",
+				"code_label": "Codice",
+				"code_sent": "Inserisci il codice di 6 cifre che abbiamo inviato a {{phone}}.",
+				"confirm": "Conferma",
+				"resend": "Invia un nuovo codice",
+				"use_different": "Usa un altro numero",
+				"verified": "Gli SMS vengono inviati a {{phone}}.",
+				"change": "Cambia numero",
+				"remove": "Rimuovi"
+			},
+			"push": {
+				"title": "Push su questo dispositivo",
+				"enable": "Attiva le notifiche push su questo dispositivo",
+				"disable": "Disattiva su questo dispositivo",
+				"enabled": "Le notifiche push sono attive su questo dispositivo.",
+				"device_count_one": "Le notifiche push sono attive su {{count}} dei tuoi dispositivi.",
+				"device_count_other": "Le notifiche push sono attive su {{count}} dei tuoi dispositivi.",
+				"unsupported": "Questo browser non può ricevere notifiche push.",
+				"install_required": "Su iPhone e iPad le notifiche push funzionano solo nell'app Circles nella schermata Home (iOS 16.4 o successivo). Tocca Condividi, poi Aggiungi alla schermata Home, apri Circles da lì e torna a questa pagina.",
+				"denied": "Le notifiche sono bloccate per questo sito. Consentile nelle impostazioni del browser o del telefono, poi riprova.",
+				"failed": "Non siamo riusciti ad attivare le notifiche push su questo dispositivo. Riprova."
 			},
 			"events": {
 				"new_media": {

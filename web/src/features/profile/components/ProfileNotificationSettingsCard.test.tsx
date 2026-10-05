@@ -20,7 +20,9 @@ const preferences = (
 	notify_comments: true,
 	notify_replies: true,
 	notify_likes: true,
-	channel: "email",
+	email_enabled: true,
+	sms_enabled: false,
+	push_enabled: false,
 	email_digest: false,
 	circle_id: null,
 	per_circle_override: false,
@@ -40,6 +42,17 @@ beforeEach(() => {
 	Element.prototype.scrollIntoView = vi.fn();
 	vi.spyOn(circleServices, "listMemberships").mockResolvedValue({
 		data: { circles: [membership] },
+	});
+	vi.spyOn(profileServices, "getNotificationChannels").mockResolvedValue({
+		data: {
+			sms_available: false,
+			phone_number: null,
+			phone_verified: false,
+			phone_verification_pending: false,
+			push_available: false,
+			vapid_public_key: "",
+			push_device_count: 0,
+		},
 	});
 });
 
@@ -105,20 +118,6 @@ describe("ProfileNotificationSettingsCard", () => {
 				screen.getByRole("switch", { name: "Daily email summary" }),
 			).toBeChecked(),
 		);
-	});
-
-	it("offers phone delivery only as coming soon", async () => {
-		vi.spyOn(profileServices, "getNotificationPreferences").mockResolvedValue({
-			data: preferences(),
-		});
-
-		renderWithQueryClient(<ProfileNotificationSettingsCard />);
-		await openSelect(/send notifications by/i);
-
-		const phone = await screen.findByRole("option", {
-			name: "Phone (text message) (coming soon)",
-		});
-		expect(phone).toHaveAttribute("aria-disabled", "true");
 	});
 
 	it("edits a circle's override and can reset it to the defaults", async () => {
