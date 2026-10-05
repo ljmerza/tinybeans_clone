@@ -1,7 +1,12 @@
 import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
-import { CircleInvitationManager, CircleMemberList, useCircleMembers } from "@/features/circles";
+import {
+	CircleInvitationManager,
+	CircleMemberList,
+	CircleRecapSetting,
+	useCircleMembers,
+} from "@/features/circles";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -93,6 +98,13 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 						</div>
 					</div>
 				</div>
+
+				{isAdmin && (
+					<CircleRecapSetting
+						circleId={circleId}
+						enabled={circle?.monthly_recap_enabled ?? false}
+					/>
+				)}
 
 				<CircleInvitationManager circleId={circleId} />
 

@@ -35,6 +35,16 @@ export const circleServices = {
 		);
 	},
 
+	updateCircle(
+		circleId: number | string,
+		body: { name?: string; monthly_recap_enabled?: boolean },
+	) {
+		return authApi.patch<ApiResponseWithMessages<{ circle: CircleSummary }>>(
+			`${USERS_BASE}/circles/${circleId}/`,
+			body,
+		);
+	},
+
 	startInvitationOnboarding(token: string) {
 		return publicApi.post<
 			ApiResponseWithMessages<CircleInvitationOnboardingStart>

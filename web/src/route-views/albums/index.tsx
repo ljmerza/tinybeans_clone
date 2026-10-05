@@ -1,4 +1,5 @@
 import { EmptyState, Layout } from "@/components";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	type Album,
@@ -22,7 +23,7 @@ function AlbumCard({
 			params={{ albumId: album.id }}
 			className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 		>
-			<div className="aspect-square overflow-hidden rounded-lg bg-muted">
+			<div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
 				{album.cover ? (
 					<img
 						src={album.cover.url}
@@ -39,6 +40,11 @@ function AlbumCard({
 							aria-hidden="true"
 						/>
 					</div>
+				)}
+				{album.recap_month && (
+					<Badge variant="accent" className="absolute left-2 top-2 shadow-sm">
+						{t("pages.albums.recap_badge")}
+					</Badge>
 				)}
 			</div>
 			<p className="mt-1.5 truncate text-sm font-medium">{album.name}</p>

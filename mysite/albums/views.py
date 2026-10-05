@@ -2,7 +2,7 @@
 
 import uuid
 
-from django.db.models import Count, Exists, IntegerField, OuterRef, Q, Subquery
+from django.db.models import Count, Exists, F, IntegerField, OuterRef, Q, Subquery
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -36,6 +36,7 @@ def visible_albums(user, *, keep=None):
     the chosen ``cover_keep``'s first displayable photo while that post is still
     in the album, else the first displayable photo of the album's first post.
     With ``keep``, ``has_keep`` says whether that keep is in each album.
+    ``recap_month`` is set on monthly recap albums (see ``recaps``).
     """
     displayable = _displayable_media()
     visible_entries = AlbumKeep.objects.filter(album=OuterRef("pk")).filter(
@@ -69,6 +70,7 @@ def visible_albums(user, *, keep=None):
                 Subquery(default_cover.values("id")[:1]),
             ),
             can_edit=Exists(circle_admin),
+            recap_month=F("recap__month"),
         )
     )
     if keep is not None:

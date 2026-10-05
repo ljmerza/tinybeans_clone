@@ -153,6 +153,28 @@ describe("AlbumRouteView", () => {
 		expect(await screen.findByText("This album is empty")).toBeInTheDocument();
 	});
 
+	it("marks a monthly recap album", async () => {
+		vi.spyOn(albumServices, "get").mockResolvedValue(
+			makeAlbum({
+				id: ALBUM_ID,
+				name: "September 2026",
+				recap_month: "2026-09-01",
+			}),
+		);
+		vi.spyOn(albumServices, "getKeeps").mockResolvedValue({
+			next: null,
+			previous: null,
+			results: [],
+		});
+
+		renderWithQueryClient(<AlbumRouteView />);
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "September 2026" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("Recap")).toBeInTheDocument();
+	});
+
 	it("lets its creator rename it", async () => {
 		const album = makeAlbum({ id: ALBUM_ID, can_edit: true });
 		vi.spyOn(albumServices, "get").mockResolvedValue(album);

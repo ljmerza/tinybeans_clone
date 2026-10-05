@@ -113,3 +113,39 @@ class AlbumKeep(models.Model):
         super().clean()
         if self.album.circle_id != self.keep.circle_id:
             raise ValidationError({"keep": "Only posts from the album's circle can be added."})
+
+
+class MonthlyRecap(models.Model):
+    """Records that a circle's recap album for one month was made (see ``recaps``).
+
+    One row per (circle, month), so reruns and retries never make a second
+    album. The row outlives its album: when an admin deletes a recap album,
+    ``album`` goes null and the month is not made again.
+
+    Attributes:
+        circle: The circle the recap is for
+        month: First day of the month it covers
+        album: The recap album; null once an admin deletes it
+        created_at: When the recap was made
+    """
+
+    circle = models.ForeignKey("users.Circle", on_delete=models.CASCADE, related_name="monthly_recaps")
+    month = models.DateField(help_text="First day of the month the recap covers")
+    album = models.OneToOneField(
+        Album,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="recap",
+        help_text="The recap album; null once it was deleted, which stops it being made again",
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-month"]
+        constraints = [
+            models.UniqueConstraint(fields=["circle", "month"], name="albums_unique_monthly_recap"),
+        ]
+
+    def __str__(self):
+        return f"{self.month:%Y-%m} recap of {self.circle}"

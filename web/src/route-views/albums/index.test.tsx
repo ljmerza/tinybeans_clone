@@ -108,6 +108,27 @@ describe("AlbumsRouteView", () => {
 		expect(screen.queryByRole("heading")).toBeNull();
 	});
 
+	it("marks monthly recap albums", async () => {
+		vi.spyOn(albumServices, "list").mockResolvedValue(
+			albumPage([
+				makeAlbum({
+					id: "aaaaaaaa-0000-0000-0000-000000000003",
+					name: "September 2026",
+					recap_month: "2026-09-01",
+				}),
+				xmas,
+			]),
+		);
+
+		renderWithQueryClient(<AlbumsRouteView />);
+
+		const grid = await screen.findByRole("list", { name: "Albums" });
+		const [recap, plain] = within(grid).getAllByRole("link");
+		expect(recap).toHaveTextContent("Recap");
+		expect(recap).toHaveTextContent("September 2026");
+		expect(plain).not.toHaveTextContent("Recap");
+	});
+
 	it("names each album's circle when they span several", async () => {
 		vi.spyOn(albumServices, "list").mockResolvedValue(
 			albumPage([

@@ -5,6 +5,8 @@ export interface CircleSummary {
 	name: string;
 	slug: string;
 	member_count: number;
+	/** Admins turn on the album of last month's most-liked photos made on the 1st. */
+	monthly_recap_enabled?: boolean;
 }
 
 export interface CircleOnboardingPayload {

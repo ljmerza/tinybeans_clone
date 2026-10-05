@@ -29,6 +29,8 @@ export interface Album {
 	can_edit: boolean;
 	/** With `?keep=`: whether that post is in the album; otherwise null. */
 	has_keep: boolean | null;
+	/** Monthly recap albums: first day (YYYY-MM-DD) of the month; otherwise null. */
+	recap_month: string | null;
 	created_at: string;
 	updated_at: string;
 }

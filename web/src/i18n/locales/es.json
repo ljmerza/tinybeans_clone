@@ -502,7 +502,8 @@
 				"default": "Portada del álbum (predeterminada)",
 				"badge": "Portada",
 				"failed": "No se pudo cambiar la portada del álbum. Inténtalo de nuevo."
-			}
+			},
+			"recap_badge": "Resumen"
 		},
 		"people": {
 			"with": "Con",
@@ -768,7 +769,12 @@
 				"no_members": "Invita a tu primer miembro para comenzar.",
 				"no_members_title": "Aún no hay miembros",
 				"no_members_description": "Envía una invitación para que el círculo no quede vacío.",
-				"no_members_action": "Invitar a alguien"
+				"no_members_action": "Invitar a alguien",
+				"recap": {
+					"title": "Álbum resumen del mes",
+					"description": "El día 1 de cada mes, se crea un álbum con las 12 fotos del mes anterior con más me gusta y comentarios. Todos en el círculo pueden verlo.",
+					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo."
+				}
 			},
 			"invites": {
 				"form": {
