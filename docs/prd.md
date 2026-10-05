@@ -1,4 +1,4 @@
-# Tinybeans Circles Brownfield Enhancement PRD
+# Circles Brownfield Enhancement PRD
 
 ## Intro Project Analysis and Context
 
@@ -7,7 +7,7 @@
 IDE-based fresh analysis (referencing `docs/brownfield-architecture.md` for technical detail).
 
 **Current Project State**  
-Tinybeans Circles is a Tinybeans-inspired platform where users gather in “circles” to share photos, videos, notes, and comments. The backend lives in `mysite/` (Django REST, Celery, Redis) with domain apps for auth, users, keeps, messaging, and emails. The frontend is a React 19/Vite/TanStack application in `web/`, and `docker-compose.yml` orchestrates Django, Postgres, Redis, Celery workers/beat, Flower, Mailpit, MinIO, pgAdmin, RedisInsight, and the Vite dev server. Authentication spans magic links, Google OAuth, 2FA, recovery codes, and trusted devices—making it the most intricate surface in the current system.
+Circles is a private sharing platform where users gather in “circles” to share photos, videos, notes, and comments. The backend lives in `mysite/` (Django REST, Celery, Redis) with domain apps for auth, users, keeps, messaging, and emails. The frontend is a React 19/Vite/TanStack application in `web/`, and `docker-compose.yml` orchestrates Django, Postgres, Redis, Celery workers/beat, Flower, Mailpit, MinIO, pgAdmin, RedisInsight, and the Vite dev server. Authentication spans magic links, Google OAuth, 2FA, recovery codes, and trusted devices—making it the most intricate surface in the current system.
 
 ### Available Documentation Analysis
 Using existing project analysis from `docs/brownfield-architecture.md` (generated via document-project reset).
@@ -50,7 +50,7 @@ Introduce a robust invite flow that lets circle admins invite by email only, sen
 - Rate limiting and abuse controls protect the system as sharing expands.
 
 **Background Context**  
-Tinybeans Circles reimagines the Tinybeans family-sharing experience for broader social circles. Current circle membership relies on email-only invites with manual onboarding, which clashes with the richer identity surface and security measures already built. Admins need a dependable way to invite both existing and new users while maintaining explicit acceptance, audit trails, and consistent notification coverage.
+Circles extends private family-style sharing to broader social circles. Current circle membership relies on email-only invites with manual onboarding, which clashes with the richer identity surface and security measures already built. Admins need a dependable way to invite both existing and new users while maintaining explicit acceptance, audit trails, and consistent notification coverage.
 
 The invite modernization removes username search entirely, doubles down on email as the sole identifier, and still delivers onboarding handoffs for new accounts plus stronger status/notification feedback so backend services and the React UI stay synchronized across acceptance, decline, or expiration.
 

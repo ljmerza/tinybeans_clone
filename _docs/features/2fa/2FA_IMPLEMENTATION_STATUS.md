@@ -127,7 +127,7 @@ python manage.py migrate
 
 # Set environment variables (optional)
 export TWOFA_ENABLED=True
-export TWOFA_ISSUER_NAME="Tinybeans"
+export TWOFA_ISSUER_NAME="Circles"
 export TWOFA_TRUSTED_DEVICE_MAX_AGE_DAYS=30
 export SMS_PROVIDER=twilio
 export TWILIO_ACCOUNT_SID=your_sid

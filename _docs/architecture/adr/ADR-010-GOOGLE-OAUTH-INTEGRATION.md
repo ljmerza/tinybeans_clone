@@ -10,7 +10,7 @@
 ## Context
 
 ### Background
-Tinybeans currently uses a manual authentication system where users create accounts with email/username/password. Users must verify their email addresses, and the system uses JWT tokens for session management. While functional, this approach creates friction during signup and login, potentially reducing conversion rates.
+Circles currently uses a manual authentication system where users create accounts with email/username/password. Users must verify their email addresses, and the system uses JWT tokens for session management. While functional, this approach creates friction during signup and login, potentially reducing conversion rates.
 
 ### Current State
 - **Authentication Method**: Manual registration with email/password only
@@ -285,8 +285,8 @@ GOOGLE_OAUTH_REDIRECT_URI = env('GOOGLE_OAUTH_REDIRECT_URI',
 
 # Security: Allowed redirect URIs (whitelist)
 OAUTH_ALLOWED_REDIRECT_URIS = [
-    'https://tinybeans.app/auth/google/callback',
-    'https://staging.tinybeans.app/auth/google/callback',
+    'https://circles.example.com/auth/google/callback',
+    'https://staging.circles.example.com/auth/google/callback',
     'http://localhost:3000/auth/google/callback',  # Development only
 ]
 
@@ -519,7 +519,7 @@ POST /api/auth/google/initiate/
 Content-Type: application/json
 
 {
-  "redirect_uri": "https://tinybeans.app/auth/google/callback"
+  "redirect_uri": "https://circles.example.com/auth/google/callback"
 }
 
 Response 200:

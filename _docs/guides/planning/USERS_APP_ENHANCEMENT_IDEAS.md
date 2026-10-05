@@ -222,7 +222,7 @@ Regular user feedback and usage analytics should guide which features to impleme
 Ideas beyond the users app, written after the calendar timeline, full-size photo viewer and day-swipe work. Each item notes what already exists. Pick one and lay out 2–3 implementation options before building.
 
 ### Quick wins
-- **On this day**: a card at the top of the home feed with photos from this date in past years. With years of synced Tinybeans history this is likely the most-used addition. Nothing like it exists yet.
+- **On this day**: a card at the top of the home feed with photos from this date in past years. With years of imported journal history this is likely the most-used addition. Nothing like it exists yet.
 - **Download original**: a download button in the full-size photo viewer. The feed already returns `original_url`, and `yet-another-react-lightbox` ships a download plugin.
 - **Install as an app (PWA)**: manifest icons + `display: standalone` so it opens like an app on phones; offline caching of recent months later. A `manifest.json` exists but there is no service worker.
 - **Jump to a month/year in the calendar**: a year/month picker over the virtualized timeline, so reaching 2018 doesn't take a long scroll.

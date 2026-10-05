@@ -8,7 +8,7 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import type { Query } from "@tanstack/react-query";
 import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 
-const PERSIST_KEY = "tinybeans-query-cache";
+const PERSIST_KEY = "circles-query-cache";
 const PERSIST_BUSTER = "v1";
 
 /**

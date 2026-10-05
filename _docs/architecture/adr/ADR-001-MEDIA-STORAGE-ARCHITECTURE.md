@@ -1,11 +1,11 @@
-# ADR-001: Media Storage Architecture for TinyBeans
+# ADR-001: Media Storage Architecture for Circles
 
 ## Status
 **Accepted** - *Date: 2024-12-28*
 
 ## Context
 
-TinyBeans requires a robust media storage solution for family photos and videos uploaded as part of "keeps" (family memories). The system needs to:
+Circles requires a robust media storage solution for family photos and videos uploaded as part of "keeps" (family memories). The system needs to:
 
 1. **Handle large file uploads** efficiently without blocking the main application
 2. **Support multiple storage backends** (local filesystem now, AWS S3 later)
@@ -143,8 +143,8 @@ minio-init:
   entrypoint: >
     /bin/sh -c "
     /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-    /usr/bin/mc mb myminio/tinybeans-media;
-    /usr/bin/mc policy set public myminio/tinybeans-media;
+    /usr/bin/mc mb myminio/circles-media;
+    /usr/bin/mc policy set public myminio/circles-media;
     "
 ```
 
@@ -169,7 +169,7 @@ MEDIA_STORAGE_SETTINGS = {
         'endpoint': os.environ.get('MINIO_ENDPOINT', 'http://minio:9000'),
         'access_key': os.environ.get('MINIO_ACCESS_KEY', 'minioadmin'),
         'secret_key': os.environ.get('MINIO_SECRET_KEY', 'minioadmin'),
-        'bucket_name': os.environ.get('MINIO_BUCKET_NAME', 'tinybeans-media'),
+        'bucket_name': os.environ.get('MINIO_BUCKET_NAME', 'circles-media'),
     }
 }
 ```
@@ -293,4 +293,4 @@ The pluggable media storage architecture provides the right balance of **immedia
 
 The async processing pipeline ensures **scalability** and **user experience** while the storage abstraction provides **portability** and **testability**.
 
-This decision supports TinyBeans' growth trajectory while maintaining development velocity and operational simplicity.
+This decision supports Circles' growth trajectory while maintaining development velocity and operational simplicity.

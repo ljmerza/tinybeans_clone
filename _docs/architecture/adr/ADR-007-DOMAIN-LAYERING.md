@@ -4,7 +4,7 @@
 **Proposed** - *Date: 2025-10-02*
 
 ## Context
-Tinybeans runs a Django monolith with REST endpoints, Celery workers, and background jobs that all rely on the same ORM models. Django's idiomatic "fat model" pattern encourages placing business rules, query helpers, and persistence logic together on the model classes themselves. Over time, this has produced tightly coupled code that is difficult to unit test, expensive to refactor, and risky to scale across teams.
+Circles runs a Django monolith with REST endpoints, Celery workers, and background jobs that all rely on the same ORM models. Django's idiomatic "fat model" pattern encourages placing business rules, query helpers, and persistence logic together on the model classes themselves. Over time, this has produced tightly coupled code that is difficult to unit test, expensive to refactor, and risky to scale across teams.
 
 ### Pain Points Observed
 - Model methods blend validation, side effects, outbound integrations, and persistence in one place, making behavior hard to reason about.

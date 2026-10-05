@@ -822,8 +822,8 @@ X-CSRFToken: abc123...
     {
       "id": "550e8400-e29b-41d4-a716-446655440000",
       "mediaType": "photo",
-      "url": "https://cdn.tinybeans.com/media/...",
-      "thumbnailUrl": "https://cdn.tinybeans.com/thumbnails/..."
+      "url": "https://cdn.circles.example.com/media/...",
+      "thumbnailUrl": "https://cdn.circles.example.com/thumbnails/..."
     }
   ],
   "creator": {
@@ -2102,7 +2102,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build Docker image
-        run: docker build -t tinybeans:${{ github.sha }} .
+        run: docker build -t circles:${{ github.sha }} .
       - name: Build frontend
         run: |
           cd web
@@ -2115,8 +2115,8 @@ jobs:
 | Environment | Frontend URL | Backend URL | Purpose |
 |-------------|--------------|-------------|---------|
 | **Development** | http://localhost:3053 | http://localhost:8100 | Local development |
-| **Staging** | https://staging.tinybeans.app | https://api-staging.tinybeans.app | Pre-production testing |
-| **Production** | https://tinybeans.app | https://api.tinybeans.app | Live environment |
+| **Staging** | https://staging.circles.example.com | https://api-staging.circles.example.com | Pre-production testing |
+| **Production** | https://circles.example.com | https://api.circles.example.com | Live environment |
 
 ## Security and Performance
 

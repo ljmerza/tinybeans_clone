@@ -134,7 +134,7 @@ class TestPersonModel:
 
 @pytest.mark.django_db
 class TestChildrenMirror:
-    """``Keep.children`` (written by the Tinybeans importer) is mirrored into people tags."""
+    """``Keep.children`` (written by the journal importer) is mirrored into people tags."""
 
     def test_linking_a_child_tags_their_person(self, circle, user, sophia):
         keep = make_keep(circle, user)

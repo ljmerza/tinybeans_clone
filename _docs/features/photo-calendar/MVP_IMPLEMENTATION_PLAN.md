@@ -196,7 +196,7 @@ Phase 6: Docs, Stories, Tests (Week 4)
 - **Build tool**: ✅ Vite
 - **Testing**: Vitest (to match Vite ecosystem)
 - **Location**: ✅ Separate top-level folder initially, split to npm package later
-- **Package name**: `@photo-calendar/react` (can be scoped to @tinybeans later)
+- **Package name**: `@photo-calendar/react` (can be scoped later)
 
 ### Responsive Behavior (DECIDED)
 Based on Q&A session 2025-10-27:

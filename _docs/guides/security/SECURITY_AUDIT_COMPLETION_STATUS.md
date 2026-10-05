@@ -423,7 +423,7 @@ Consider the remaining low-priority item:
 - Quick Start: `docs/SECURITY_IMPROVEMENTS_QUICKSTART.md`
 
 ### Security Concerns
-- Report to: security@tinybeans.com
+- Report to: security@example.com
 - Review: `docs/SECURITY_AUDIT.md`
 
 ---

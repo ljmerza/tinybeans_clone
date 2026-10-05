@@ -90,7 +90,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "send-new-post-digests": {
         "task": "mysite.keeps.tasks.send_new_post_digests",
-        # Daily at 7 AM in CELERY_TIMEZONE, after the midnight Tinybeans import
+        # Daily at 7 AM in CELERY_TIMEZONE, after the midnight journal import
         "schedule": crontab(hour=7, minute=0),
     },
 }

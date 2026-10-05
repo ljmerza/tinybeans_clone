@@ -5,7 +5,7 @@ Proposed
 
 ## Context
 
-The Tinybeans application needs to implement Two-Factor Authentication (2FA) to enhance security for user accounts. This additional layer of security is critical for protecting sensitive family data, photos, and personal information.
+The Circles application needs to implement Two-Factor Authentication (2FA) to enhance security for user accounts. This additional layer of security is critical for protecting sensitive family data, photos, and personal information.
 
 ### Requirements
 
@@ -503,7 +503,7 @@ TWOFA_MAX_ATTEMPTS = 5
 TWOFA_RATE_LIMIT_WINDOW = 900  # 15 minutes in seconds
 TWOFA_RATE_LIMIT_MAX = 3
 TWOFA_RECOVERY_CODE_COUNT = 10
-TWOFA_ISSUER_NAME = 'Tinybeans'  # For TOTP QR codes
+TWOFA_ISSUER_NAME = 'Circles'  # For TOTP QR codes
 
 # Trusted Devices (Remember Me)
 TWOFA_TRUSTED_DEVICE_ENABLED = env.bool('TWOFA_TRUSTED_DEVICE_ENABLED', default=True)
@@ -855,7 +855,7 @@ Response 200:
 {
   "method": "totp",
   "secret": "JBSWY3DPEHPK3PXP",
-  "qr_code": "otpauth://totp/Tinybeans:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Tinybeans",
+  "qr_code": "otpauth://totp/Circles:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Circles",
   "qr_code_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU...",
   "message": "Scan QR code with your authenticator app"
 }
@@ -910,9 +910,9 @@ Authorization: Bearer <access_token>
 
 Response 200:
 Content-Type: text/plain
-Content-Disposition: attachment; filename="tinybeans-recovery-codes.txt"
+Content-Disposition: attachment; filename="circles-recovery-codes.txt"
 
-Tinybeans Recovery Codes
+Circles Recovery Codes
 Generated: 2024-10-01 14:30:00 UTC
 User: user@example.com
 
@@ -936,7 +936,7 @@ Authorization: Bearer <access_token>
 
 Response 200:
 Content-Type: application/pdf
-Content-Disposition: attachment; filename="tinybeans-recovery-codes.pdf"
+Content-Disposition: attachment; filename="circles-recovery-codes.pdf"
 
 [PDF file with formatted recovery codes]
 ```
@@ -1002,7 +1002,7 @@ Response 200:
   
   <p>If you didn't request this code, please ignore this email or contact support if you're concerned about your account security.</p>
   
-  <p>Best regards,<br>The Tinybeans Team</p>
+  <p>Best regards,<br>The Circles Team</p>
 </body>
 </html>
 ```
@@ -1091,7 +1091,7 @@ class RecoveryCodeService:
     def export_as_txt(user, recovery_codes: list) -> str:
         """Export recovery codes as plain text"""
         lines = [
-            "Tinybeans Recovery Codes",
+            "Circles Recovery Codes",
             "=" * 50,
             f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC')}",
             f"User: {user.email}",
@@ -1123,7 +1123,7 @@ class RecoveryCodeService:
         story = []
         
         # Title
-        title = Paragraph("Tinybeans Recovery Codes", styles['Heading1'])
+        title = Paragraph("Circles Recovery Codes", styles['Heading1'])
         story.append(title)
         story.append(Spacer(1, 0.3*inch))
         
@@ -1206,11 +1206,11 @@ class RecoveryCodeDownloadView(APIView):
         if format_type == 'pdf':
             pdf_bytes = RecoveryCodeService.export_as_pdf(user, recovery_codes)
             response = HttpResponse(pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="tinybeans-recovery-codes.pdf"'
+            response['Content-Disposition'] = 'attachment; filename="circles-recovery-codes.pdf"'
         else:
             txt_content = RecoveryCodeService.export_as_txt(user, recovery_codes)
             response = HttpResponse(txt_content, content_type='text/plain')
-            response['Content-Disposition'] = 'attachment; filename="tinybeans-recovery-codes.txt"'
+            response['Content-Disposition'] = 'attachment; filename="circles-recovery-codes.txt"'
         
         # Log the download
         TwoFactorAuditLog.objects.create(

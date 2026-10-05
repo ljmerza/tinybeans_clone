@@ -55,7 +55,7 @@ backend/
 ## Implementation Plan
 
 ### Phase 0 – Discovery & Decisions
-- Confirm final package root name (`mysite` vs `tinybeans_backend`) and whether domain apps should sit under an `apps/` prefix.
+- Confirm final package root name (`mysite` vs `circles_backend`) and whether domain apps should sit under an `apps/` prefix.
 - Inventory external consumers (scripts, management commands, CI jobs) that import from `mysite.*` or call `python -m …`.
 - Document required environment variables/settings that must survive the migration.
 - Decide whether to keep domain apps as direct children of the project package (matching Django's default `startapp` output) or consolidate them under `mysite/apps/` while updating `INSTALLED_APPS` accordingly.

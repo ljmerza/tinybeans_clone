@@ -1,10 +1,10 @@
-# ADR-006: Logging Framework Strategy for Tinybeans
+# ADR-006: Logging Framework Strategy for Circles
 
 ## Status
 **Proposed** - *Date: 2025-10-02*
 
 ## Context
-Tinybeans spans a Django REST API, asynchronous workers, a React frontend, and third-party integrations. The current logging approach mixes unstructured print statements, container stdout, and ad-hoc tracing, which makes root-cause analysis slow and inconsistent across environments.
+Circles spans a Django REST API, asynchronous workers, a React frontend, and third-party integrations. The current logging approach mixes unstructured print statements, container stdout, and ad-hoc tracing, which makes root-cause analysis slow and inconsistent across environments.
 
 ### Observability Goals
 - Emit structured, contextual logs from every runtime (web, worker, and frontend consoles where feasible)
@@ -17,7 +17,7 @@ Tinybeans spans a Django REST API, asynchronous workers, a React frontend, and t
 - Backend services run in containers in all environments; local developers rely on Docker Compose
 - Existing infrastructure already ships metrics via Prometheus and traces via OpenTelemetry SDKs
 - Network egress from production is locked down; outbound integrations must use TLS and static endpoints
-- Cost is a material consideration; Tinybeans wants optionality between self-hosted OSS and commercial SaaS
+- Cost is a material consideration; Circles wants optionality between self-hosted OSS and commercial SaaS
 
 ## Decision
 Adopt an **OpenTelemetry-first logging pipeline** that produces structured JSON logs in code, forwards them directly to a shared OpenTelemetry Collector (OTel Collector) in every environment, and routes those logs to downstream providers (Grafana Loki locally; Datadog or AWS CloudWatch in production).
