@@ -847,6 +847,8 @@
 		"password_required": "Se requiere contraseña",
 		"password_min_length": "La contraseña debe tener al menos 8 caracteres",
 		"passwords_match": "Las contraseñas no coinciden",
+		"passwords_must_match": "Las contraseñas no coinciden",
+		"confirm_password_required": "Confirma tu contraseña",
 		"confirm_password": "Confirmar contraseña",
 		"field_required": "Este campo es obligatorio",
 		"circle_name_min": "El nombre del círculo debe tener al menos 2 caracteres",

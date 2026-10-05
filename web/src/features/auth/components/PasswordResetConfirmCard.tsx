@@ -25,6 +25,12 @@ export function PasswordResetConfirmCard({
 	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 	const [successMessage, setSuccessMessage] = useState("");
 
+	const clearFieldError = (name: string) => {
+		if (fieldErrors[name]) {
+			setFieldErrors(({ [name]: _cleared, ...rest }) => rest);
+		}
+	};
+
 	const form = useForm({
 		defaultValues: {
 			password: "",
@@ -145,9 +151,10 @@ export function PasswordResetConfirmCard({
 										type="password"
 										autoComplete="new-password"
 										value={fieldApi.state.value}
-										onChange={(event) =>
-											fieldApi.handleChange(event.target.value)
-										}
+										onChange={(event) => {
+											fieldApi.handleChange(event.target.value);
+											clearFieldError("password");
+										}}
 										onBlur={fieldApi.handleBlur}
 										disabled={confirmReset.isPending}
 										required
@@ -177,9 +184,10 @@ export function PasswordResetConfirmCard({
 										type="password"
 										autoComplete="new-password"
 										value={fieldApi.state.value}
-										onChange={(event) =>
-											fieldApi.handleChange(event.target.value)
-										}
+										onChange={(event) => {
+											fieldApi.handleChange(event.target.value);
+											clearFieldError("password_confirm");
+										}}
 										onBlur={fieldApi.handleBlur}
 										disabled={confirmReset.isPending}
 										required

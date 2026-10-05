@@ -35,7 +35,7 @@ from ..token_utils import (
     set_refresh_cookie,
     store_token,
 )
-from .constants import EMAIL_VERIFICATION_TOKEN_TTL_SECONDS
+from .constants import EMAIL_VERIFICATION_TOKEN_TTL_SECONDS, body_field_key
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class SignupView(APIView):
         },
     )
     @method_decorator(ratelimit(key="ip", rate="5/m", method="POST", block=False))
-    @method_decorator(ratelimit(key="post:email", rate="3/30m", method="POST", block=False))
+    @method_decorator(ratelimit(key=body_field_key("email"), rate="3/30m", method="POST", block=False))
     def post(self, request):
         if getattr(request, "limited", False):
             return rate_limit_response("errors.rate_limit")
@@ -141,7 +141,7 @@ class LoginView(APIView):
         },
     )
     @method_decorator(ratelimit(key="ip", rate="10/h", method="POST", block=True))
-    @method_decorator(ratelimit(key="post:email", rate="5/h", method="POST", block=True))
+    @method_decorator(ratelimit(key=body_field_key("email"), rate="5/h", method="POST", block=True))
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

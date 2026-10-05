@@ -11,6 +11,8 @@ from mysite.notification_utils import create_message
 from mysite.users.models import User
 from mysite.users.models.user import Language
 
+from ..token_utils import peek_token
+
 
 class PreferredLanguageField(serializers.CharField):
     """Optional UI language for a new account.
@@ -91,12 +93,24 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, min_length=8)
+    # Length and strength come from AUTH_PASSWORD_VALIDATORS in validate().
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
+        errors = {}
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError({"password_confirm": create_message("errors.password_mismatch")})
+            errors["password_confirm"] = create_message("errors.password_mismatch")
+        # Look the token up without consuming it, so a rejected password doesn't
+        # burn the emailed link. An unknown token is reported by the view.
+        payload = peek_token("password-reset", attrs["token"])
+        user = User.objects.filter(id=payload["user_id"]).first() if payload else None
+        if user is not None:
+            password_messages = password_validation_messages(attrs["password"], user)
+            if password_messages:
+                errors["password"] = password_messages
+        if errors:
+            raise serializers.ValidationError(errors)
         return attrs
 
 
