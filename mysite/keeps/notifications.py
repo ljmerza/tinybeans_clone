@@ -1,4 +1,4 @@
-"""Circle activity notifications: new photos, comments, replies and likes.
+"""Circle activity notifications: new photos, comments, replies, mentions and likes.
 
 Views call the ``notify_*`` helpers after a write. Those queue
 ``send_activity_notifications``, which works out who should hear about it and
@@ -21,12 +21,13 @@ from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import (
     KEEP_COMMENT_TEMPLATE,
     KEEP_LIKE_TEMPLATE,
+    KEEP_MENTION_TEMPLATE,
     KEEP_NEW_MEDIA_TEMPLATE,
     KEEP_REPLY_TEMPLATE,
 )
 from mysite.users.models import NotificationChannel, User, UserNotificationPreferences
 
-from .models import Keep, KeepComment, KeepReaction
+from .models import Keep, KeepComment, KeepCommentMention, KeepReaction
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class ActivityEvent:
     NEW_MEDIA = "new_media"
     COMMENT = "comment"
     REPLY = "reply"
+    MENTION = "mention"
     LIKE = "like"
 
 
@@ -43,6 +45,8 @@ PREFERENCE_FIELDS = {
     ActivityEvent.NEW_MEDIA: "notify_new_media",
     ActivityEvent.COMMENT: "notify_comments",
     ActivityEvent.REPLY: "notify_replies",
+    # Shown as "Replies and mentions" in settings.
+    ActivityEvent.MENTION: "notify_replies",
     ActivityEvent.LIKE: "notify_likes",
 }
 
@@ -50,6 +54,7 @@ EMAIL_TEMPLATES = {
     ActivityEvent.NEW_MEDIA: KEEP_NEW_MEDIA_TEMPLATE,
     ActivityEvent.COMMENT: KEEP_COMMENT_TEMPLATE,
     ActivityEvent.REPLY: KEEP_REPLY_TEMPLATE,
+    ActivityEvent.MENTION: KEEP_MENTION_TEMPLATE,
     ActivityEvent.LIKE: KEEP_LIKE_TEMPLATE,
 }
 
@@ -71,8 +76,14 @@ def notify_new_post(keep: Keep) -> None:
 
 
 def notify_new_comment(comment: KeepComment) -> None:
-    """Tell the post's author, and the person replied to, about a comment."""
+    """Tell the post's author, the person replied to and anyone mentioned about a comment."""
     _queue(ActivityEvent.COMMENT, comment.id)
+
+
+def notify_new_mentions(mentions) -> None:
+    """Tell members an edit newly mentions about the comment."""
+    for mention in mentions:
+        _queue(ActivityEvent.MENTION, mention.id)
 
 
 def notify_new_like(reaction: KeepReaction) -> None:
@@ -107,12 +118,40 @@ def send_activity(event: str, object_id: str) -> None:
             return
         keep = comment.keep
         extra = {"comment_text": Truncator(comment.comment).chars(280)}
+        # One notice per person per comment: a reply beats a mention (a reply's
+        # @tag of the person replied to is a mention too), and both beat the
+        # post author's comment notice.
         replied_to = comment.parent.user if comment.parent_id else None
+        notified = set()
         if replied_to is not None:
             _deliver(ActivityEvent.REPLY, keep, comment.user, [replied_to], extra)
-        # The person replied to already heard about it; don't send them a second notice.
-        if keep.created_by != replied_to:
+            notified.add(replied_to.id)
+        mentioned = [
+            mention.user for mention in comment.mentions.select_related("user") if mention.user_id not in notified
+        ]
+        if mentioned:
+            _deliver(ActivityEvent.MENTION, keep, comment.user, mentioned, extra)
+            notified.update(user.id for user in mentioned)
+        if keep.created_by_id not in notified:
             _deliver(ActivityEvent.COMMENT, keep, comment.user, [keep.created_by], extra)
+
+    elif event == ActivityEvent.MENTION:
+        # Someone an edit added to a comment's mentions.
+        mention = (
+            KeepCommentMention.objects.select_related(
+                "user", "comment__keep__circle", "comment__keep__created_by", "comment__user", "comment__parent"
+            )
+            .filter(id=object_id)
+            .first()
+        )
+        if mention is None:
+            return
+        comment = mention.comment
+        # The post's author and the person replied to heard about the comment when it was posted.
+        if mention.user_id in (comment.keep.created_by_id, comment.parent.user_id if comment.parent_id else None):
+            return
+        extra = {"comment_text": Truncator(comment.comment).chars(280)}
+        _deliver(event, comment.keep, comment.user, [mention.user], extra)
 
     elif event == ActivityEvent.LIKE:
         reaction = (

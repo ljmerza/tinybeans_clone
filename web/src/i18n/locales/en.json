@@ -604,6 +604,7 @@
 			"reply": "Reply",
 			"replying_to": "Replying to {{name}}",
 			"cancel_reply": "Cancel",
+			"mention_suggestions": "People to mention",
 			"delete_comment": "Delete comment",
 			"delete_comment_title": "Delete this comment?",
 			"delete_comment_description": "This can't be undone.",
@@ -1071,8 +1072,8 @@
 					"description": "Someone comments on something you posted."
 				},
 				"replies": {
-					"title": "Replies to me",
-					"description": "Someone replies to your comment or tags you in one."
+					"title": "Replies and mentions",
+					"description": "Someone replies to your comment or mentions you in one."
 				},
 				"likes": {
 					"title": "Likes on my posts",

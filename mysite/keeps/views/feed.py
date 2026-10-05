@@ -73,9 +73,9 @@ def feed_queryset(user):
             Prefetch("reactions", queryset=KeepReaction.objects.filter(user=user), to_attr="viewer_reactions"),
             Prefetch(
                 "comments",
-                queryset=KeepComment.objects.select_related("user").order_by("-created_at", "-id")[
-                    :RECENT_COMMENT_COUNT
-                ],
+                queryset=KeepComment.objects.select_related("user")
+                .prefetch_related("mentions__user")
+                .order_by("-created_at", "-id")[:RECENT_COMMENT_COUNT],
                 to_attr="recent_comments_desc",
             ),
             Prefetch("people", queryset=Person.objects.order_by(Lower("name"), "id")),

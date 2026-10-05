@@ -30,5 +30,8 @@ export const keepKeys = {
 	circlePeople: (circleId: number) =>
 		keepKeysFactory.tag("circle-people", circleId),
 	person: (personId: string) => keepKeysFactory.tag("person", personId),
+	/** Members the viewer can @mention in a circle's comments. */
+	mentionable: (circleId: number) =>
+		keepKeysFactory.tag("mentionable", circleId),
 	uploadLimits: () => keepKeysFactory.tag("upload-limits"),
 };

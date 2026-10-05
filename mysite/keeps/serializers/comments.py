@@ -1,12 +1,25 @@
 """Serializers for Keep comments."""
 
+from django.db import transaction
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from mysite.circles.models import CircleMembership
 from mysite.notification_utils import create_message
 from mysite.users.models import UserRole
 
-from ..models import Keep, KeepComment
+from ..models import Keep, KeepComment, KeepCommentMention
+
+# More than anyone would mention in one family comment; bounds the write.
+MAX_MENTIONS = 50
+
+MENTIONS_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {"id": {"type": "integer"}, "display_name": {"type": "string"}},
+    },
+}
 
 
 def can_delete_comment(comment, context):
@@ -29,6 +42,14 @@ def can_delete_comment(comment, context):
     return comment.keep.circle_id in context["admin_circle_ids"]
 
 
+def comment_mentions(comment):
+    """The members `comment` @mentions, as `{id, display_name}`, in the order they were added.
+
+    Prefetch ``mentions__user`` when serializing many comments.
+    """
+    return [{"id": mention.user_id, "display_name": mention.user.display_name} for mention in comment.mentions.all()]
+
+
 class KeepCommentSerializer(serializers.ModelSerializer):
     """Serializer for keep comments."""
 
@@ -41,6 +62,15 @@ class KeepCommentSerializer(serializers.ModelSerializer):
         allow_null=True,
         help_text="Id of the comment this one replies to; omit for a top-level comment",
     )
+    mentions = serializers.SerializerMethodField()
+    mention_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        max_length=MAX_MENTIONS,
+        help_text="User ids of the circle members the comment @mentions. Anyone outside the keep's circle is "
+        "dropped rather than rejected. On an update, omit it to keep the current mentions.",
+    )
 
     class Meta:
         model = KeepComment
@@ -51,14 +81,20 @@ class KeepCommentSerializer(serializers.ModelSerializer):
             "user_display_name",
             "parent",
             "comment",
+            "mentions",
+            "mention_ids",
             "can_delete",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "user", "can_delete", "created_at", "updated_at"]
+        read_only_fields = ["id", "user", "mentions", "can_delete", "created_at", "updated_at"]
 
     def get_can_delete(self, obj) -> bool:
         return can_delete_comment(obj, self.context)
+
+    @extend_schema_field(MENTIONS_SCHEMA)
+    def get_mentions(self, obj):
+        return comment_mentions(obj)
 
     def validate_keep(self, keep):
         user = self.context["request"].user
@@ -76,4 +112,37 @@ class KeepCommentSerializer(serializers.ModelSerializer):
             while parent.parent_id is not None:
                 parent = parent.parent
             attrs["parent"] = parent
+        mention_ids = attrs.get("mention_ids")
+        if mention_ids is not None and keep is not None:
+            # Drop non-members instead of failing the comment: someone may have
+            # left the circle after the composer listed them.
+            member_ids = set(
+                CircleMembership.objects.filter(circle=keep.circle, user_id__in=mention_ids).values_list(
+                    "user_id", flat=True
+                )
+            )
+            attrs["mention_ids"] = [user_id for user_id in dict.fromkeys(mention_ids) if user_id in member_ids]
         return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        mention_ids = validated_data.pop("mention_ids", [])
+        comment = super().create(validated_data)
+        KeepCommentMention.objects.bulk_create(
+            [KeepCommentMention(comment=comment, user_id=user_id) for user_id in mention_ids]
+        )
+        return comment
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        mention_ids = validated_data.pop("mention_ids", None)
+        comment = super().update(instance, validated_data)
+        if mention_ids is not None:
+            # Keep the rows of members still mentioned, so their notification
+            # isn't sent again (see ``KeepCommentDetailView.perform_update``).
+            comment.mentions.exclude(user_id__in=mention_ids).delete()
+            KeepCommentMention.objects.bulk_create(
+                [KeepCommentMention(comment=comment, user_id=user_id) for user_id in mention_ids],
+                ignore_conflicts=True,
+            )
+        return comment

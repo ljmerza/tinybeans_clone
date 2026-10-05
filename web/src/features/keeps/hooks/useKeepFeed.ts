@@ -412,6 +412,7 @@ const toFeedComment = ({
 	user_display_name,
 	parent,
 	comment,
+	mentions,
 	can_delete,
 	created_at,
 }: KeepCommentRecord): FeedComment => ({
@@ -420,6 +421,7 @@ const toFeedComment = ({
 	user_display_name,
 	parent,
 	comment,
+	mentions,
 	can_delete,
 	created_at,
 });
@@ -432,11 +434,14 @@ export function useAddKeepComment() {
 			keepId,
 			text,
 			parentId,
+			mentionIds,
 		}: {
 			keepId: string;
 			text: string;
 			parentId?: number;
-		}) => keepServices.addComment(keepId, text, parentId),
+			/** User ids of the members the comment @mentions. */
+			mentionIds?: number[];
+		}) => keepServices.addComment(keepId, text, parentId, mentionIds),
 		meta: {
 			toast: { error: { key: "pages.feed.comment_failed" } },
 		},

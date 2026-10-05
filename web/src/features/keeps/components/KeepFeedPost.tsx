@@ -8,7 +8,7 @@ import {
 import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
 import { useAdminCircleIds } from "@/features/albums/hooks/useAdminCircleIds";
 import { Images, Pencil, Trash2, UserRoundPlus } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	PostAction,
@@ -18,7 +18,6 @@ import {
 	PostAvatar,
 	PostCaption,
 	PostCommentButton,
-	PostCommentForm,
 	PostComments,
 	PostFavoriteButton,
 	PostHeader,
@@ -48,7 +47,9 @@ import {
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
 import { EditPostDialog } from "./EditPostDialog";
+import { KeepCommentRow } from "./KeepCommentRow";
 import { KeepPeople } from "./KeepPeople";
+import { MentionCommentForm } from "./MentionCommentForm";
 import { TagPeopleDialog } from "./TagPeopleDialog";
 import { useKeepPhotoViewer } from "./useKeepPhotoViewer";
 
@@ -88,6 +89,8 @@ export function KeepFeedPost({
 		defaultCommentsExpanded,
 	);
 	const thread = useKeepComments(keep.id, showAllComments);
+	// Set by the composer just before it submits; see MentionCommentForm.
+	const mentionIdsRef = useRef<number[]>([]);
 	const [likersOpen, setLikersOpen] = useState(false);
 	const likers = useKeepLikers(keep.id, likersOpen);
 	const likersHidden = likers.data
@@ -112,6 +115,17 @@ export function KeepFeedPost({
 				origin: window.location.origin,
 			}),
 		[keep, showAllComments, thread.data, t],
+	);
+
+	// The same comments the post shows, by id, for highlighting their mentions.
+	const mentionsByComment = useMemo(
+		() =>
+			new Map(
+				(
+					(showAllComments ? thread.data : undefined) ?? keep.recent_comments
+				).map((comment) => [String(comment.id), comment.mentions]),
+			),
+		[keep, showAllComments, thread.data],
 	);
 
 	// Memories are stored as UTC dates; render them the way the calendar does.
@@ -165,6 +179,7 @@ export function KeepFeedPost({
 						keepId: keep.id,
 						text,
 						parentId: parentId === undefined ? undefined : Number(parentId),
+						mentionIds: mentionIdsRef.current,
 					})
 				}
 				onCommentDelete={setPendingDelete}
@@ -257,13 +272,24 @@ export function KeepFeedPost({
 								thread.isError ? undefined : t("pages.feed.loading_comments")
 							}
 							hideLabel={t("pages.feed.hide_comments")}
-							replyLabel={t("pages.feed.reply")}
-							deleteLabel={t("pages.feed.delete_comment")}
+							renderComment={(comment) => (
+								<KeepCommentRow
+									comment={comment}
+									mentions={mentionsByComment.get(comment.id)}
+									replyLabel={t("pages.feed.reply")}
+									deleteLabel={t("pages.feed.delete_comment")}
+								/>
+							)}
 						/>
-						<PostCommentForm
+						<MentionCommentForm
+							circleId={keep.circle.id}
+							onSubmitMentions={(userIds) => {
+								mentionIdsRef.current = userIds;
+							}}
 							placeholder={t("pages.feed.comment_placeholder")}
 							inputLabel={t("pages.feed.comment_label")}
 							submitLabel={t("pages.feed.post_comment")}
+							suggestionsLabel={t("pages.feed.mention_suggestions")}
 							replyingToLabel={(name) => t("pages.feed.replying_to", { name })}
 							cancelReplyLabel={t("pages.feed.cancel_reply")}
 						/>

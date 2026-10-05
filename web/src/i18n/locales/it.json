@@ -604,6 +604,7 @@
 			"reply": "Rispondi",
 			"replying_to": "In risposta a {{name}}",
 			"cancel_reply": "Annulla",
+			"mention_suggestions": "Persone da menzionare",
 			"delete_comment": "Elimina commento",
 			"delete_comment_title": "Eliminare questo commento?",
 			"delete_comment_description": "Questa azione non può essere annullata.",
