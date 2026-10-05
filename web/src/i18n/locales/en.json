@@ -402,6 +402,10 @@
 						"es": "Español",
 						"it": "Italiano"
 					}
+				},
+				"measurement_units": {
+					"title": "Measurement units",
+					"description": "How heights and weights show on growth charts. It’s saved to your account, and you can also switch it on a child’s page."
 				}
 			},
 			"not_enabled_title": "2FA is not enabled.",
@@ -539,6 +543,78 @@
 				"empty_title": "No posts yet",
 				"empty_message": "Posts {{name}} is tagged in show up here.",
 				"aria_label": "Posts with {{name}}"
+			},
+			"stats": {
+				"title": "At a glance",
+				"loading": "Loading stats…",
+				"age_label": "Age",
+				"age": {
+					"years_one": "{{count}} year",
+					"years_other": "{{count}} years",
+					"months_one": "{{count}} month",
+					"months_other": "{{count}} months",
+					"days_one": "{{count}} day",
+					"days_other": "{{count}} days"
+				},
+				"posts": "Posts",
+				"photos": "Photos",
+				"photos_and_videos": "Photos · videos",
+				"per_month_title": "Posts per month, last 12 months",
+				"per_month_label": "Posts with {{name}} per month over the last 12 months",
+				"month_posts_one": "{{month}}: {{count}} post",
+				"month_posts_other": "{{month}}: {{count}} posts",
+				"first_post": "First post",
+				"most_liked_post": "Most liked",
+				"likes_one": "{{count}} like",
+				"likes_other": "{{count}} likes",
+				"untitled": "Untitled post"
+			},
+			"growth": {
+				"title": "Growth",
+				"height": "Height",
+				"weight": "Weight",
+				"add": "Add",
+				"loading": "Loading growth…",
+				"error": "Couldn't load the growth log.",
+				"empty": "No measurements yet.",
+				"empty_admin": "No measurements yet. Add the first one.",
+				"chart_empty_height": "No heights logged yet.",
+				"chart_empty_weight": "No weights logged yet.",
+				"chart_label_height": "{{name}}'s height over time",
+				"chart_label_weight": "{{name}}'s weight over time",
+				"list_label": "Measurements",
+				"edit": "Edit the measurement from {{date}}",
+				"age": {
+					"months": "{{count}} mo",
+					"years": "{{count}} y"
+				},
+				"units": {
+					"label": "Units",
+					"imperial": "lb · in",
+					"metric": "kg · cm"
+				},
+				"form": {
+					"add_title": "Add a measurement",
+					"edit_title": "Edit measurement",
+					"date": "Date",
+					"height": "Height",
+					"weight": "Weight",
+					"note": "Note (optional)",
+					"note_placeholder": "4 month checkup",
+					"need_value": "Enter a height, a weight or both.",
+					"need_date": "Pick a date.",
+					"invalid_number": "Use numbers only, e.g. 7 and 8.5.",
+					"save": "Save",
+					"saving": "Saving…",
+					"save_failed": "Couldn't save the measurement. Please try again."
+				},
+				"delete": {
+					"action": "Delete the measurement from {{date}}",
+					"title": "Delete this measurement?",
+					"description": "The measurement from {{date}} goes away for everyone in the circle.",
+					"confirm": "Delete",
+					"failed": "Couldn't delete the measurement. Please try again."
+				}
 			}
 		},
 		"feed": {

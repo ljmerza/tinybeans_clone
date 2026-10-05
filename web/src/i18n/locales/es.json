@@ -402,6 +402,10 @@
 						"es": "Español",
 						"it": "Italiano"
 					}
+				},
+				"measurement_units": {
+					"title": "Unidades de medida",
+					"description": "Cómo se muestran las alturas y los pesos en las gráficas de crecimiento. Se guarda en tu cuenta y también puedes cambiarlo en la página de un niño."
 				}
 			},
 			"not_enabled_title": "2FA no está habilitado.",
@@ -539,6 +543,78 @@
 				"empty_title": "Aún no hay publicaciones",
 				"empty_message": "Aquí aparecen las publicaciones en las que está etiquetado/a {{name}}.",
 				"aria_label": "Publicaciones con {{name}}"
+			},
+			"stats": {
+				"title": "De un vistazo",
+				"loading": "Cargando estadísticas…",
+				"age_label": "Edad",
+				"age": {
+					"years_one": "{{count}} año",
+					"years_other": "{{count}} años",
+					"months_one": "{{count}} mes",
+					"months_other": "{{count}} meses",
+					"days_one": "{{count}} día",
+					"days_other": "{{count}} días"
+				},
+				"posts": "Publicaciones",
+				"photos": "Fotos",
+				"photos_and_videos": "Fotos · vídeos",
+				"per_month_title": "Publicaciones por mes, últimos 12 meses",
+				"per_month_label": "Publicaciones con {{name}} por mes en los últimos 12 meses",
+				"month_posts_one": "{{month}}: {{count}} publicación",
+				"month_posts_other": "{{month}}: {{count}} publicaciones",
+				"first_post": "Primera publicación",
+				"most_liked_post": "Con más me gusta",
+				"likes_one": "{{count}} me gusta",
+				"likes_other": "{{count}} me gusta",
+				"untitled": "Publicación sin título"
+			},
+			"growth": {
+				"title": "Crecimiento",
+				"height": "Altura",
+				"weight": "Peso",
+				"add": "Añadir",
+				"loading": "Cargando crecimiento…",
+				"error": "No se pudo cargar el registro de crecimiento.",
+				"empty": "Aún no hay medidas.",
+				"empty_admin": "Aún no hay medidas. Añade la primera.",
+				"chart_empty_height": "Aún no hay alturas registradas.",
+				"chart_empty_weight": "Aún no hay pesos registrados.",
+				"chart_label_height": "Altura de {{name}} a lo largo del tiempo",
+				"chart_label_weight": "Peso de {{name}} a lo largo del tiempo",
+				"list_label": "Medidas",
+				"edit": "Editar la medida del {{date}}",
+				"age": {
+					"months": "{{count}} m",
+					"years": "{{count}} a"
+				},
+				"units": {
+					"label": "Unidades",
+					"imperial": "lb · in",
+					"metric": "kg · cm"
+				},
+				"form": {
+					"add_title": "Añadir una medida",
+					"edit_title": "Editar medida",
+					"date": "Fecha",
+					"height": "Altura",
+					"weight": "Peso",
+					"note": "Nota (opcional)",
+					"note_placeholder": "Revisión de los 4 meses",
+					"need_value": "Introduce una altura, un peso o ambos.",
+					"need_date": "Elige una fecha.",
+					"invalid_number": "Usa solo números, p. ej. 7 y 8,5.",
+					"save": "Guardar",
+					"saving": "Guardando…",
+					"save_failed": "No se pudo guardar la medida. Inténtalo de nuevo."
+				},
+				"delete": {
+					"action": "Eliminar la medida del {{date}}",
+					"title": "¿Eliminar esta medida?",
+					"description": "La medida del {{date}} desaparece para todos en el círculo.",
+					"confirm": "Eliminar",
+					"failed": "No se pudo eliminar la medida. Inténtalo de nuevo."
+				}
 			}
 		},
 		"feed": {

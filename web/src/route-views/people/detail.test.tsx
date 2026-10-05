@@ -40,8 +40,20 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 	),
 }));
 
+import { setAccessToken } from "@/features/auth";
+import { growthServices } from "@/features/growth";
+import {
+	makeGrowthLog,
+	makeMeasurement,
+	makeStats,
+	mockSignedInUser,
+	withSession,
+} from "@/features/growth/testData";
 import { type FeedKeep, keepServices } from "@/features/keeps";
 import { PersonRouteView } from "./detail";
+
+const renderPage = () =>
+	renderWithQueryClient(<PersonRouteView />, { wrapper: withSession });
 
 const sophia = { id: PERSON_ID, name: "Sophia M" };
 
@@ -80,10 +92,14 @@ beforeEach(() => {
 		kind: "child",
 		circle: { id: 1, name: "Family", slug: "family" },
 	});
+	mockSignedInUser();
+	vi.spyOn(growthServices, "getStats").mockResolvedValue(makeStats());
+	vi.spyOn(growthServices, "getLog").mockResolvedValue(makeGrowthLog());
 });
 
 afterEach(() => {
 	vi.restoreAllMocks();
+	setAccessToken(null);
 });
 
 describe("PersonRouteView", () => {
@@ -96,7 +112,7 @@ describe("PersonRouteView", () => {
 					: page([keep(1)], "http://web:8000/api/keeps/feed/?cursor=abc"),
 			);
 
-		renderWithQueryClient(<PersonRouteView />);
+		renderPage();
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Sophia M" }),
@@ -128,7 +144,7 @@ describe("PersonRouteView", () => {
 	it("shows an empty state", async () => {
 		vi.spyOn(keepServices, "getPersonFeed").mockResolvedValue(page([]));
 
-		renderWithQueryClient(<PersonRouteView />);
+		renderPage();
 
 		expect(await screen.findByText("No posts yet")).toBeInTheDocument();
 		expect(
@@ -140,8 +156,75 @@ describe("PersonRouteView", () => {
 		vi.mocked(keepServices.getPerson).mockRejectedValue(notFound());
 		vi.spyOn(keepServices, "getPersonFeed").mockResolvedValue(page([]));
 
-		renderWithQueryClient(<PersonRouteView />);
+		renderPage();
 
 		expect(await screen.findByText("Person not found")).toBeInTheDocument();
+	});
+
+	it("shows the person's stats and, for a child, their growth", async () => {
+		vi.spyOn(keepServices, "getPersonFeed").mockResolvedValue(page([keep(1)]));
+		vi.mocked(growthServices.getStats).mockResolvedValue(
+			makeStats({
+				birthdate: "2024-08-20",
+				age: { years: 2, months: 1, days: 15 },
+				post_count: 12,
+				photo_count: 30,
+				posts_per_month: [
+					{ month: "2026-09", count: 3 },
+					{ month: "2026-10", count: 1 },
+				],
+				first_post: {
+					id: keep(1).id,
+					title: "First smile",
+					date_of_memory: "2024-09-01T12:00:00Z",
+					like_count: null,
+					thumbnail_url: null,
+				},
+			}),
+		);
+		vi.mocked(growthServices.getLog).mockResolvedValue(
+			makeGrowthLog({ measurements: [makeMeasurement()] }),
+		);
+
+		renderPage();
+
+		expect(await screen.findByText("2 years, 1 month")).toBeInTheDocument();
+		expect(screen.getByText("12")).toBeInTheDocument();
+		expect(screen.getByText("30")).toBeInTheDocument();
+		expect(
+			screen.getByRole("img", {
+				name: "Posts with Sophia M per month over the last 12 months",
+			}),
+		).toBeInTheDocument();
+		expect(screen.getByText("First smile")).toBeInTheDocument();
+		expect(
+			await screen.findByRole("heading", { name: "Growth" }),
+		).toBeInTheDocument();
+		expect(
+			await screen.findByRole("list", { name: "Measurements" }),
+		).toBeInTheDocument();
+		expect(growthServices.getStats).toHaveBeenCalledWith(PERSON_ID);
+	});
+
+	it("has no growth log for someone who isn't a child", async () => {
+		vi.mocked(keepServices.getPerson).mockResolvedValue({
+			...sophia,
+			kind: "member",
+			circle: { id: 1, name: "Family", slug: "family" },
+		});
+		vi.spyOn(keepServices, "getPersonFeed").mockResolvedValue(page([]));
+		vi.mocked(growthServices.getStats).mockResolvedValue(
+			makeStats({ post_count: 0 }),
+		);
+
+		renderPage();
+
+		expect(
+			await screen.findByRole("heading", { name: "At a glance" }),
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("heading", { name: "Growth" }),
+		).not.toBeInTheDocument();
+		expect(growthServices.getLog).not.toHaveBeenCalled();
 	});
 });

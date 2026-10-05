@@ -97,6 +97,17 @@ class ColorTheme(models.TextChoices):
     MIDNIGHT = "midnight", "Midnight"
 
 
+class MeasurementUnits(models.TextChoices):
+    """Units for entering and showing measurements such as a child's growth.
+
+    Measurements are always stored metric; this only changes how they are
+    entered and shown.
+    """
+
+    IMPERIAL = "imperial", "Imperial (lb/oz, ft/in)"
+    METRIC = "metric", "Metric (kg, cm)"
+
+
 class CircleOnboardingStatus(models.TextChoices):
     """Onboarding status choices for first-circle flow."""
 
@@ -161,6 +172,12 @@ class User(AbstractUser):
         choices=ColorTheme.choices,
         default=ColorTheme.DEFAULT,
         help_text="User's preferred color palette for the interface",
+    )
+    measurement_units = models.CharField(
+        max_length=10,
+        choices=MeasurementUnits.choices,
+        default=MeasurementUnits.IMPERIAL,
+        help_text="Units the user enters and reads measurements in",
     )
 
     circle_onboarding_status = models.CharField(

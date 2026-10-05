@@ -15,6 +15,7 @@ from mysite.circles.models import Circle
 
 from ..models import Person
 from ..people import ensure_circle_people, resolve_circle_people, set_keep_people
+from ..person_stats import POSTS_PER_MONTH_SPAN, person_stats
 from ..serializers.people import (
     KeepPeopleUpdateSerializer,
     PersonCreateSerializer,
@@ -93,6 +94,30 @@ class PersonDetailView(APIView):
         if person is None:
             raise Http404
         return Response(PersonDetailSerializer(person).data)
+
+
+class PersonStatsView(APIView):
+    """Stats for the person page, in one request."""
+
+    @extend_schema(
+        summary="Person stats",
+        description="How many posts, photos and videos the person is tagged in (only posts their feed "
+        f"shows), posts per UTC month for the last {POSTS_PER_MONTH_SPAN} months (oldest first, "
+        "`YYYY-MM`), their first post and their most-liked post (any reaction counts; null when "
+        "nothing is liked). For a child with a birthdate, also the birthdate and age as whole "
+        "`{years, months, days}`. 404 unless the person is in one of the user's circles.",
+        responses={
+            200: OpenApiResponse(description="The person's stats"),
+            404: OpenApiResponse(description="Not found or not in one of the user's circles"),
+        },
+    )
+    def get(self, request, person_id):
+        person = (
+            Person.objects.filter(id=person_id, circle__memberships__user=request.user).select_related("child").first()
+        )
+        if person is None:
+            raise Http404
+        return Response(person_stats(person))
 
 
 class KeepFeedPeopleView(APIView):

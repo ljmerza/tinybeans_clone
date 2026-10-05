@@ -35,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "language",
             "color_theme",
+            "measurement_units",
             "circle_onboarding_status",
             "circle_onboarding_updated_at",
             "needs_circle_onboarding",

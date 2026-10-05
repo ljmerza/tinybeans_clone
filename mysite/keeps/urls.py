@@ -28,6 +28,9 @@ from .views import (
     MediaUploadStatusView,
     MediaUploadView,
     PersonDetailView,
+    PersonGrowthDetailView,
+    PersonGrowthView,
+    PersonStatsView,
 )
 
 app_name = "keeps"
@@ -50,6 +53,13 @@ urlpatterns = [
     # People who can be tagged on posts
     path("circles/<int:circle_id>/people/", CirclePeopleView.as_view(), name="circle-people"),
     path("people/<uuid:person_id>/", PersonDetailView.as_view(), name="person-detail"),
+    path("people/<uuid:person_id>/stats/", PersonStatsView.as_view(), name="person-stats"),
+    path("people/<uuid:person_id>/growth/", PersonGrowthView.as_view(), name="person-growth"),
+    path(
+        "people/<uuid:person_id>/growth/<uuid:measurement_id>/",
+        PersonGrowthDetailView.as_view(),
+        name="person-growth-detail",
+    ),
     # Media upload endpoints
     path("upload/", MediaUploadView.as_view(), name="media-upload"),
     path("upload/limits/", MediaUploadLimitsView.as_view(), name="media-upload-limits"),

@@ -1,5 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { useAuthSession } from "@/features/auth";
+import { MeasurementUnitsToggle } from "@/features/growth/components/MeasurementUnitsToggle";
 import { ThemePreferenceSelect, useTheme } from "@/features/theme";
 import { useTranslation } from "react-i18next";
 import { ColorThemePicker } from "./ColorThemePicker";
@@ -88,6 +89,18 @@ export function ProfileGeneralSettingsCard() {
 						</p>
 					</div>
 					<LanguagePreferenceSelect />
+				</div>
+
+				<div className="space-y-4 border-t border-border pt-6">
+					<div className="space-y-1">
+						<h3 className="text-base font-medium">
+							{t("twofa.settings.general.measurement_units.title")}
+						</h3>
+						<p className="text-sm text-muted-foreground">
+							{t("twofa.settings.general.measurement_units.description")}
+						</p>
+					</div>
+					<MeasurementUnitsToggle />
 				</div>
 			</div>
 		</div>
