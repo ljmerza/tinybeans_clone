@@ -22,11 +22,11 @@ class NotificationPreferencesEdgeCaseTests(TestCase):
     def test_create_multiple_global_preferences(self):
         """Test that multiple global preference objects can be created (no unique constraint)."""
         # Create first preference
-        UserNotificationPreferences.objects.create(user=self.user, notify_new_media=True)
+        UserNotificationPreferences.objects.create(user=self.user, new_media_email=True)
 
         # Create second preference - this might be allowed depending on implementation
         try:
-            UserNotificationPreferences.objects.create(user=self.user, notify_new_media=False)
+            UserNotificationPreferences.objects.create(user=self.user, new_media_email=False)
             # If creation succeeds, verify both exist
             self.assertEqual(UserNotificationPreferences.objects.filter(user=self.user, circle=None).count(), 2)
         except Exception:
@@ -42,8 +42,8 @@ class NotificationPreferencesEdgeCaseTests(TestCase):
             reverse("user-profile"),
             {
                 "notification_preferences": {
-                    "notify_new_media": True,
-                    "notify_likes": False,
+                    "new_media_email": True,
+                    "likes_email": False,
                     "channel": NotificationChannel.EMAIL,
                 }
             },
@@ -64,7 +64,7 @@ class NotificationPreferencesEdgeCaseTests(TestCase):
             reverse("user-profile"),
             {
                 "notification_preferences": {
-                    f"circle_{self.circle.id}": {"notify_new_media": False, "notify_likes": False}
+                    f"circle_{self.circle.id}": {"new_media_email": False, "likes_email": False}
                 }
             },
             format="json",

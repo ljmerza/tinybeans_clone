@@ -259,8 +259,8 @@ class Command(BaseCommand):
                         user=user,
                         circle=circle_membership.circle,
                         defaults={
-                            "notify_new_media": True,
-                            "notify_likes": False,
+                            "new_media_email": True,
+                            "likes_email": False,
                         },
                     )
 

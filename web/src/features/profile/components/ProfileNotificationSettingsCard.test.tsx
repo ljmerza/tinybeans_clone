@@ -1,6 +1,6 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The loading state renders Layout, which needs the auth session.
@@ -16,13 +16,18 @@ import { ProfileNotificationSettingsCard } from "./ProfileNotificationSettingsCa
 const preferences = (
 	overrides: Partial<NotificationPreferences> = {},
 ): NotificationPreferences => ({
-	notify_new_media: true,
-	notify_comments: true,
-	notify_replies: true,
-	notify_likes: true,
-	email_enabled: true,
-	sms_enabled: false,
-	push_enabled: false,
+	new_media_email: true,
+	new_media_sms: false,
+	new_media_push: false,
+	comments_email: true,
+	comments_sms: false,
+	comments_push: false,
+	replies_email: true,
+	replies_sms: false,
+	replies_push: false,
+	likes_email: true,
+	likes_sms: false,
+	likes_push: false,
 	email_digest: false,
 	circle_id: null,
 	per_circle_override: false,
@@ -60,6 +65,13 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
+function emailToggle(event: string) {
+	return within(screen.getByRole("group", { name: event })).getByRole(
+		"button",
+		{ name: "Email" },
+	);
+}
+
 async function openSelect(label: RegExp) {
 	const trigger = await screen.findByRole("combobox", { name: label });
 	// jsdom drops pointer event details, so open it the keyboard way.
@@ -74,23 +86,23 @@ describe("ProfileNotificationSettingsCard", () => {
 		});
 		const update = vi
 			.spyOn(profileServices, "updateNotificationPreferences")
-			.mockResolvedValue({ data: preferences({ notify_likes: false }) });
+			.mockResolvedValue({ data: preferences({ likes_email: false }) });
 
 		renderWithQueryClient(<ProfileNotificationSettingsCard />);
 
-		const likes = await screen.findByRole("switch", {
-			name: "Likes on my posts",
-		});
-		expect(likes).toBeChecked();
+		await screen.findByRole("group", { name: "Likes on my posts" });
+		const likes = emailToggle("Likes on my posts");
+		expect(likes).toHaveAttribute("aria-pressed", "true");
 		fireEvent.click(likes);
 
 		await waitFor(() =>
-			expect(update).toHaveBeenCalledWith(null, { notify_likes: false }),
+			expect(update).toHaveBeenCalledWith(null, { likes_email: false }),
 		);
 		await waitFor(() =>
-			expect(
-				screen.getByRole("switch", { name: "Likes on my posts" }),
-			).not.toBeChecked(),
+			expect(emailToggle("Likes on my posts")).toHaveAttribute(
+				"aria-pressed",
+				"false",
+			),
 		);
 	});
 
@@ -129,7 +141,7 @@ describe("ProfileNotificationSettingsCard", () => {
 						? preferences({
 								circle_id: 7,
 								per_circle_override: true,
-								notify_new_media: false,
+								new_media_email: false,
 							})
 						: preferences(),
 			}));
@@ -147,9 +159,12 @@ describe("ProfileNotificationSettingsCard", () => {
 		expect(
 			await screen.findByText("This circle has its own settings."),
 		).toBeInTheDocument();
-		expect(
-			screen.getByRole("switch", { name: "New photos and videos" }),
-		).not.toBeChecked();
+		await waitFor(() =>
+			expect(emailToggle("New photos and videos")).toHaveAttribute(
+				"aria-pressed",
+				"false",
+			),
+		);
 		// The summary covers every circle, so it's only on the defaults.
 		expect(
 			screen.queryByRole("switch", { name: "Daily email summary" }),

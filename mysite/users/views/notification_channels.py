@@ -16,7 +16,13 @@ from mysite.auth.permissions import IsEmailVerified
 from mysite.messaging.tasks import send_sms_async
 from mysite.notification_utils import create_message, error_response, rate_limit_response, success_response
 
-from ..models import NotificationPhone, PushSubscription, UserNotificationPreferences
+from ..models import (
+    NotificationChannel,
+    NotificationPhone,
+    PushSubscription,
+    UserNotificationPreferences,
+    channel_fields,
+)
 from ..serializers.notification_channels import (
     NotificationPhoneSerializer,
     NotificationPhoneVerifySerializer,
@@ -112,8 +118,10 @@ class NotificationPhoneView(APIView):
     )
     def delete(self, request):
         NotificationPhone.objects.filter(user=request.user).delete()
-        # No number left to text, so don't leave the switch looking on.
-        UserNotificationPreferences.objects.filter(user=request.user).update(sms_enabled=False)
+        # No number left to text, so don't leave the switches looking on.
+        UserNotificationPreferences.objects.filter(user=request.user).update(
+            **dict.fromkeys(channel_fields(NotificationChannel.SMS), False)
+        )
         return success_response(
             channels_payload(request.user),
             messages=[create_message("notifications.notification_phone.removed")],

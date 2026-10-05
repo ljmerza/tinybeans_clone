@@ -1,6 +1,6 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The loading state renders Layout, which needs the auth session.
@@ -20,13 +20,18 @@ import { ProfileNotificationSettingsCard } from "./ProfileNotificationSettingsCa
 const preferences = (
 	overrides: Partial<NotificationPreferences> = {},
 ): NotificationPreferences => ({
-	notify_new_media: true,
-	notify_comments: true,
-	notify_replies: true,
-	notify_likes: true,
-	email_enabled: true,
-	sms_enabled: false,
-	push_enabled: false,
+	new_media_email: true,
+	new_media_sms: false,
+	new_media_push: false,
+	comments_email: true,
+	comments_sms: false,
+	comments_push: false,
+	replies_email: true,
+	replies_sms: false,
+	replies_push: false,
+	likes_email: true,
+	likes_sms: false,
+	likes_push: false,
 	email_digest: false,
 	circle_id: null,
 	per_circle_override: false,
@@ -125,46 +130,114 @@ afterEach(() => {
 	Reflect.deleteProperty(navigator, "serviceWorker");
 });
 
-describe("notification channel switches", () => {
-	it("shows only email when the server offers nothing else", async () => {
+const EVENT_TITLES = [
+	"New photos and videos",
+	"Comments on my posts",
+	"Replies and mentions",
+	"Likes on my posts",
+];
+
+/** The toggle for one event (by its row title) on one channel (by its label). */
+async function findToggle(event: string, channel: string) {
+	const row = await screen.findByRole("group", { name: event });
+	return within(row).findByRole("button", { name: channel });
+}
+
+function allToggles(channel: string) {
+	return screen.queryAllByRole("button", { name: channel });
+}
+
+describe("event and channel toggles", () => {
+	it("shows only the email column when the server offers nothing else", async () => {
 		mockPreferences();
 		mockChannels();
 		const update = vi
 			.spyOn(profileServices, "updateNotificationPreferences")
-			.mockResolvedValue({ data: preferences({ email_enabled: false }) });
+			.mockResolvedValue({ data: preferences({ new_media_email: false }) });
 
 		renderWithQueryClient(<ProfileNotificationSettingsCard />);
 
-		const email = await screen.findByRole("switch", { name: "Email" });
-		expect(email).toBeChecked();
-		expect(
-			screen.queryByRole("switch", { name: "Text message" }),
-		).not.toBeInTheDocument();
-		expect(
-			screen.queryByRole("switch", { name: "Push notifications" }),
-		).not.toBeInTheDocument();
+		const email = await findToggle("New photos and videos", "Email");
+		expect(email).toHaveAttribute("aria-pressed", "true");
 
 		fireEvent.click(email);
 		await waitFor(() =>
-			expect(update).toHaveBeenCalledWith(null, { email_enabled: false }),
+			expect(update).toHaveBeenCalledWith(null, { new_media_email: false }),
+		);
+		await waitFor(() => expect(email).toHaveAttribute("aria-pressed", "false"));
+		// The channels have loaded by now.
+		expect(profileServices.getNotificationChannels).toHaveBeenCalled();
+		expect(allToggles("Email")).toHaveLength(4);
+		expect(allToggles("Text message")).toHaveLength(0);
+		expect(allToggles("Push")).toHaveLength(0);
+		expect(
+			screen.queryByText(/Message and data rates may apply/),
+		).not.toBeInTheDocument();
+	});
+
+	it("sends only the pair that was toggled", async () => {
+		mockPreferences();
+		mockChannels({
+			sms_available: true,
+			phone_number: "+15551234567",
+			phone_verified: true,
+			push_available: true,
+			vapid_public_key: VAPID_KEY,
+			push_device_count: 1,
+		});
+		const update = vi
+			.spyOn(profileServices, "updateNotificationPreferences")
+			.mockResolvedValue({ data: preferences({ likes_push: true }) });
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+
+		const likesPush = await findToggle("Likes on my posts", "Push");
+		await waitFor(() => expect(likesPush).toBeEnabled());
+		for (const title of EVENT_TITLES) {
+			const row = screen.getByRole("group", { name: title });
+			expect(
+				within(row)
+					.getAllByRole("button")
+					.map((button) => button.getAttribute("aria-label")),
+			).toEqual(["Email", "Text message", "Push"]);
+		}
+		expect(likesPush).toHaveAttribute("aria-pressed", "false");
+		fireEvent.click(likesPush);
+
+		await waitFor(() =>
+			expect(update).toHaveBeenCalledWith(null, { likes_push: true }),
+		);
+		expect(update).toHaveBeenCalledTimes(1);
+		await waitFor(() =>
+			expect(likesPush).toHaveAttribute("aria-pressed", "true"),
+		);
+		expect(await findToggle("New photos and videos", "Push")).toHaveAttribute(
+			"aria-pressed",
+			"false",
 		);
 	});
 
 	it("keeps text messages off until a phone is confirmed", async () => {
-		mockPreferences({ sms_enabled: true });
+		mockPreferences({ replies_sms: true });
 		mockChannels({ sms_available: true });
 
 		renderWithQueryClient(<ProfileNotificationSettingsCard />);
 
-		const sms = await screen.findByRole("switch", { name: "Text message" });
-		expect(sms).toBeDisabled();
-		expect(sms).not.toBeChecked();
+		const replies = await findToggle("Replies and mentions", "Text message");
+		expect(replies).toHaveAttribute("aria-pressed", "false");
+		for (const toggle of allToggles("Text message")) {
+			expect(toggle).toBeDisabled();
+		}
+		expect(allToggles("Text message")).toHaveLength(4);
 		expect(
-			screen.getByText("Add and confirm a phone number below to turn this on."),
+			screen.getByText("To get texts, add and confirm a phone number below."),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(/Message and data rates may apply/),
 		).toBeInTheDocument();
 	});
 
-	it("adds and confirms a phone, then turns texts on", async () => {
+	it("adds and confirms a phone, then turns texts on for one event", async () => {
 		mockPreferences();
 		mockChannels({ sms_available: true });
 		const start = vi
@@ -185,7 +258,7 @@ describe("notification channel switches", () => {
 		});
 		const update = vi
 			.spyOn(profileServices, "updateNotificationPreferences")
-			.mockResolvedValue({ data: preferences({ sms_enabled: true }) });
+			.mockResolvedValue({ data: preferences({ comments_sms: true }) });
 
 		renderWithQueryClient(<ProfileNotificationSettingsCard />);
 
@@ -204,12 +277,67 @@ describe("notification channel switches", () => {
 		expect(
 			await screen.findByText("Texts go to +15551234567."),
 		).toBeInTheDocument();
-		const sms = screen.getByRole("switch", { name: "Text message" });
+		expect(
+			screen.queryByText(/To get texts, add and confirm/),
+		).not.toBeInTheDocument();
+		const sms = await findToggle("Comments on my posts", "Text message");
 		await waitFor(() => expect(sms).toBeEnabled());
 		fireEvent.click(sms);
 		await waitFor(() =>
-			expect(update).toHaveBeenCalledWith(null, { sms_enabled: true }),
+			expect(update).toHaveBeenCalledWith(null, { comments_sms: true }),
 		);
+	});
+
+	it("disables push until a device is subscribed", async () => {
+		installPushBrowser("granted");
+		mockPreferences({ likes_push: true });
+		mockChannels({ push_available: true, vapid_public_key: VAPID_KEY });
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+
+		const likes = await findToggle("Likes on my posts", "Push");
+		expect(likes).toBeDisabled();
+		expect(likes).toHaveAttribute("aria-pressed", "false");
+		for (const toggle of allToggles("Push")) {
+			expect(toggle).toBeDisabled();
+		}
+		expect(
+			screen.getByText(
+				"To get push notifications, turn on push for this device below.",
+			),
+		).toBeInTheDocument();
+	});
+
+	it("points to another device when this browser can't receive push", async () => {
+		mockPreferences();
+		mockChannels({ push_available: true, vapid_public_key: VAPID_KEY });
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+
+		expect(
+			await screen.findByText(
+				"To get push notifications, turn on push from a phone or computer that supports it.",
+			),
+		).toBeInTheDocument();
+		expect(await findToggle("Comments on my posts", "Push")).toBeDisabled();
+	});
+
+	it("lets push be chosen here once another device is subscribed", async () => {
+		mockPreferences({ likes_push: true });
+		mockChannels({
+			push_available: true,
+			vapid_public_key: VAPID_KEY,
+			push_device_count: 1,
+		});
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+
+		const likes = await findToggle("Likes on my posts", "Push");
+		await waitFor(() => expect(likes).toBeEnabled());
+		expect(likes).toHaveAttribute("aria-pressed", "true");
+		expect(
+			screen.queryByText(/To get push notifications/),
+		).not.toBeInTheDocument();
 	});
 
 	it("sets up phones and devices only in the default settings", async () => {
@@ -227,14 +355,49 @@ describe("notification channel switches", () => {
 
 		expect(
 			await screen.findByText(
-				"Add and confirm a phone number in your default settings to turn this on.",
+				"To get texts, add and confirm a phone number in your default settings.",
 			),
 		).toBeInTheDocument();
 		expect(screen.queryByLabelText("Mobile number")).not.toBeInTheDocument();
 		expect(screen.queryByText("Push on this device")).not.toBeInTheDocument();
-		expect(
-			screen.getByRole("switch", { name: "Push notifications" }),
-		).toBeInTheDocument();
+		expect(allToggles("Push")).toHaveLength(4);
+		expect(allToggles("Text message")).toHaveLength(4);
+	});
+
+	it("saves a circle's pair to that circle", async () => {
+		mockPreferences({ per_circle_override: true });
+		mockChannels({
+			push_available: true,
+			vapid_public_key: VAPID_KEY,
+			push_device_count: 1,
+		});
+		const update = vi
+			.spyOn(profileServices, "updateNotificationPreferences")
+			.mockResolvedValue({
+				data: preferences({
+					circle_id: 7,
+					per_circle_override: true,
+					new_media_push: true,
+				}),
+			});
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+		const trigger = await screen.findByRole("combobox", {
+			name: /settings for/i,
+		});
+		fireEvent.keyDown(trigger, { key: "ArrowDown" });
+		fireEvent.click(
+			await screen.findByRole("option", { name: "Smith Family" }),
+		);
+		await screen.findByText("This circle has its own settings.");
+
+		const push = await findToggle("New photos and videos", "Push");
+		await waitFor(() => expect(push).toBeEnabled());
+		fireEvent.click(push);
+
+		await waitFor(() =>
+			expect(update).toHaveBeenCalledWith(7, { new_media_push: true }),
+		);
 	});
 });
 
@@ -268,7 +431,14 @@ describe("push on this device", () => {
 			});
 		const update = vi
 			.spyOn(profileServices, "updateNotificationPreferences")
-			.mockResolvedValue({ data: preferences({ push_enabled: true }) });
+			.mockResolvedValue({
+				data: preferences({
+					new_media_push: true,
+					comments_push: true,
+					replies_push: true,
+					likes_push: true,
+				}),
+			});
 
 		renderWithQueryClient(<ProfileNotificationSettingsCard />);
 		fireEvent.click(
@@ -290,11 +460,74 @@ describe("push on this device", () => {
 			applicationServerKey: new Uint8Array([4, 16, 65]),
 		});
 		await waitFor(() =>
-			expect(update).toHaveBeenCalledWith(null, { push_enabled: true }),
+			expect(update).toHaveBeenCalledWith(null, {
+				new_media_push: true,
+				comments_push: true,
+				replies_push: true,
+				likes_push: true,
+			}),
 		);
 		expect(
 			await screen.findByText("Push is on for this device."),
 		).toBeInTheDocument();
+		const likes = await findToggle("Likes on my posts", "Push");
+		await waitFor(() => expect(likes).toBeEnabled());
+		expect(likes).toHaveAttribute("aria-pressed", "true");
+	});
+
+	it("switches push on only for events that already reach this person", async () => {
+		installPushBrowser("granted");
+		mockPreferences({ likes_email: false, comments_email: false });
+		mockChannels({ push_available: true, vapid_public_key: VAPID_KEY });
+		vi.spyOn(profileServices, "savePushSubscription").mockResolvedValue({
+			data: channels({
+				push_available: true,
+				vapid_public_key: VAPID_KEY,
+				push_device_count: 1,
+			}),
+		});
+		const update = vi
+			.spyOn(profileServices, "updateNotificationPreferences")
+			.mockResolvedValue({ data: preferences() });
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+		fireEvent.click(
+			await screen.findByRole("button", { name: "Enable push on this device" }),
+		);
+
+		await waitFor(() =>
+			expect(update).toHaveBeenCalledWith(null, {
+				new_media_push: true,
+				replies_push: true,
+			}),
+		);
+	});
+
+	it("leaves push choices alone when some event already uses push", async () => {
+		installPushBrowser("granted");
+		mockPreferences({ likes_push: true });
+		mockChannels({ push_available: true, vapid_public_key: VAPID_KEY });
+		const save = vi
+			.spyOn(profileServices, "savePushSubscription")
+			.mockResolvedValue({
+				data: channels({
+					push_available: true,
+					vapid_public_key: VAPID_KEY,
+					push_device_count: 1,
+				}),
+			});
+		const update = vi.spyOn(profileServices, "updateNotificationPreferences");
+
+		renderWithQueryClient(<ProfileNotificationSettingsCard />);
+		fireEvent.click(
+			await screen.findByRole("button", { name: "Enable push on this device" }),
+		);
+
+		await waitFor(() => expect(save).toHaveBeenCalled());
+		expect(
+			await screen.findByText("Push is on for this device."),
+		).toBeInTheDocument();
+		expect(update).not.toHaveBeenCalled();
 	});
 
 	it("explains how to unblock when permission is denied", async () => {
@@ -324,7 +557,7 @@ describe("push on this device", () => {
 		browser.serviceWorker.getRegistration.mockResolvedValue({
 			pushManager: { getSubscription: async () => subscription },
 		});
-		mockPreferences({ push_enabled: true });
+		mockPreferences({ likes_push: true });
 		mockChannels({
 			push_available: true,
 			vapid_public_key: VAPID_KEY,

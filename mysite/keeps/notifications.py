@@ -2,9 +2,9 @@
 
 Views call the ``notify_*`` helpers after a write. Those queue
 ``send_activity_notifications``, which works out who should hear about it and
-hands each recipient to the sender of every channel they turned on. The journal
-import writes rows straight to the database and never calls these helpers, so
-imported history doesn't notify anyone.
+hands each recipient to the sender of every channel they turned on for that
+event. The journal import writes rows straight to the database and never calls
+these helpers, so imported history doesn't notify anyone.
 """
 
 from __future__ import annotations
@@ -49,14 +49,14 @@ class ActivityEvent:
     LIKE = "like"
 
 
-# Preference flag that switches each event on or off.
-PREFERENCE_FIELDS = {
-    ActivityEvent.NEW_MEDIA: "notify_new_media",
-    ActivityEvent.COMMENT: "notify_comments",
-    ActivityEvent.REPLY: "notify_replies",
+# The preferences event (see ``NOTIFICATION_EVENTS``) whose channel switches cover each activity.
+PREFERENCE_EVENTS = {
+    ActivityEvent.NEW_MEDIA: "new_media",
+    ActivityEvent.COMMENT: "comments",
+    ActivityEvent.REPLY: "replies",
     # Shown as "Replies and mentions" in settings.
-    ActivityEvent.MENTION: "notify_replies",
-    ActivityEvent.LIKE: "notify_likes",
+    ActivityEvent.MENTION: "replies",
+    ActivityEvent.LIKE: "likes",
 }
 
 EMAIL_TEMPLATES = {
@@ -210,10 +210,7 @@ def _deliver(event: str, keep: Keep, actor, candidates, extra: dict) -> None:
         **extra,
     }
     for recipient in recipients:
-        prefs = preferences[recipient.id]
-        if not getattr(prefs, PREFERENCE_FIELDS[event]):
-            continue
-        for channel in prefs.enabled_channels():
+        for channel in preferences[recipient.id].channels_for(PREFERENCE_EVENTS[event]):
             CHANNEL_SENDERS[channel](recipient, event, context)
 
 

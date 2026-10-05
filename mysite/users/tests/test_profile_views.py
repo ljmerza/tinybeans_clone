@@ -68,43 +68,43 @@ class NotificationPreferencesViewTests(TestCase):
         self.circle = Circle.objects.create(name="Notif Circle", created_by=self.user)
         # Membership for user is auto-created by the post_save signal on Circle
 
-    def test_get_preferences_returns_event_fields(self):
+    def test_get_preferences_returns_a_switch_per_event_and_channel(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse("user-email-preferences"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
-        for field in ("notify_new_media", "notify_comments", "notify_replies", "notify_likes"):
-            self.assertIn(field, data)
-        self.assertTrue(data["email_enabled"])
-        self.assertFalse(data["sms_enabled"])
-        self.assertFalse(data["push_enabled"])
+        for event in ("new_media", "comments", "replies", "likes"):
+            self.assertTrue(data[f"{event}_email"])
+            self.assertFalse(data[f"{event}_sms"])
+            self.assertFalse(data[f"{event}_push"])
         self.assertFalse(data["per_circle_override"])
 
     def test_patch_updates_event_preferences(self):
         self.client.force_authenticate(user=self.user)
-        payload = {"notify_likes": False, "notify_comments": False}
+        payload = {"likes_email": False, "comments_email": False}
         response = self.client.patch(reverse("user-email-preferences"), payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         prefs = UserNotificationPreferences.objects.get(user=self.user, circle__isnull=True)
-        self.assertFalse(prefs.notify_likes)
-        self.assertFalse(prefs.notify_comments)
-        self.assertTrue(prefs.notify_replies)
+        self.assertFalse(prefs.likes_email)
+        self.assertFalse(prefs.comments_email)
+        self.assertTrue(prefs.replies_email)
 
     def test_sms_rejected_until_enabled(self):
         NotificationPhone.objects.create(user=self.user, phone_number="+15551234567", verified_at=timezone.now())
         self.client.force_authenticate(user=self.user)
-        response = self.client.patch(reverse("user-email-preferences"), {"sms_enabled": True}, format="json")
+        response = self.client.patch(reverse("user-email-preferences"), {"likes_sms": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, sms_enabled=True).exists())
+        self.assertEqual(response.data["messages"][0]["i18n_key"], "errors.notification_channel_unavailable")
+        self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, likes_sms=True).exists())
 
     def test_sms_rejected_without_verified_phone(self):
         NotificationPhone.objects.create(user=self.user, phone_number="+15551234567")
         self.client.force_authenticate(user=self.user)
         with self.settings(NOTIFICATIONS_SMS_ENABLED=True):
-            response = self.client.patch(reverse("user-email-preferences"), {"sms_enabled": True}, format="json")
+            response = self.client.patch(reverse("user-email-preferences"), {"replies_sms": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["messages"][0]["i18n_key"], "errors.notification_phone_unverified")
@@ -113,29 +113,40 @@ class NotificationPreferencesViewTests(TestCase):
         NotificationPhone.objects.create(user=self.user, phone_number="+15551234567", verified_at=timezone.now())
         self.client.force_authenticate(user=self.user)
         with self.settings(NOTIFICATIONS_SMS_ENABLED=True):
-            response = self.client.patch(reverse("user-email-preferences"), {"sms_enabled": True}, format="json")
+            response = self.client.patch(reverse("user-email-preferences"), {"replies_sms": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         prefs = UserNotificationPreferences.objects.get(user=self.user, circle=None)
-        self.assertTrue(prefs.sms_enabled)
-        self.assertTrue(prefs.email_enabled)
+        self.assertTrue(prefs.replies_sms)
+        self.assertTrue(prefs.replies_email)
+        self.assertFalse(prefs.likes_sms)
 
     def test_push_rejected_without_vapid_keys(self):
         self.client.force_authenticate(user=self.user)
         with self.settings(NOTIFICATIONS_PUSH_ENABLED=False):
-            response = self.client.patch(reverse("user-email-preferences"), {"push_enabled": True}, format="json")
+            response = self.client.patch(reverse("user-email-preferences"), {"new_media_push": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["messages"][0]["i18n_key"], "errors.notification_channel_unavailable")
+
+    def test_turning_sms_or_push_off_needs_no_setup(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {"likes_sms": False, "likes_push": False}
+        with self.settings(NOTIFICATIONS_SMS_ENABLED=False, NOTIFICATIONS_PUSH_ENABLED=False):
+            response = self.client.patch(reverse("user-email-preferences"), payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_channels_can_differ_per_circle(self):
         self.client.force_authenticate(user=self.user)
         url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
         with self.settings(NOTIFICATIONS_PUSH_ENABLED=True):
-            response = self.client.patch(url, {"email_enabled": False, "push_enabled": True}, format="json")
+            response = self.client.patch(url, {"likes_email": False, "likes_push": True}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         override = UserNotificationPreferences.objects.get(user=self.user, circle=self.circle)
-        self.assertEqual(override.enabled_channels(), ["push"])
+        self.assertEqual(override.channels_for("likes"), ["push"])
+        self.assertEqual(override.channels_for("comments"), ["email"])
         self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, circle=None).exists())
 
     def test_email_digest_is_off_by_default(self):
@@ -167,33 +178,33 @@ class NotificationPreferencesViewTests(TestCase):
         self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, email_digest=True).exists())
 
     def test_get_circle_without_override_returns_global_and_creates_nothing(self):
-        UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
+        UserNotificationPreferences.objects.create(user=self.user, likes_email=False)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse("user-email-preferences"), {"circle_id": self.circle.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
         self.assertFalse(data["per_circle_override"])
-        self.assertFalse(data["notify_likes"])
+        self.assertFalse(data["likes_email"])
         self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, circle=self.circle).exists())
 
     def test_patch_circle_creates_override_seeded_from_global(self):
-        UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
+        UserNotificationPreferences.objects.create(user=self.user, likes_email=False)
         self.client.force_authenticate(user=self.user)
         url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
-        response = self.client.patch(url, {"notify_new_media": False}, format="json")
+        response = self.client.patch(url, {"new_media_email": False}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
         self.assertTrue(data["per_circle_override"])
         override = UserNotificationPreferences.objects.get(user=self.user, circle=self.circle)
-        self.assertFalse(override.notify_new_media)
-        self.assertFalse(override.notify_likes)  # copied from the global row
+        self.assertFalse(override.new_media_email)
+        self.assertFalse(override.likes_email)  # copied from the global row
         global_prefs = UserNotificationPreferences.objects.get(user=self.user, circle=None)
-        self.assertTrue(global_prefs.notify_new_media)
+        self.assertTrue(global_prefs.new_media_email)
 
     def test_delete_circle_override_restores_global(self):
-        UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, notify_likes=False)
+        UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, likes_email=False)
         self.client.force_authenticate(user=self.user)
         url = f"{reverse('user-email-preferences')}?circle_id={self.circle.id}"
         response = self.client.delete(url)
@@ -201,7 +212,7 @@ class NotificationPreferencesViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get("data", response.data)
         self.assertFalse(data["per_circle_override"])
-        self.assertTrue(data["notify_likes"])
+        self.assertTrue(data["likes_email"])
         self.assertFalse(UserNotificationPreferences.objects.filter(user=self.user, circle=self.circle).exists())
 
     def test_delete_without_circle_is_rejected(self):

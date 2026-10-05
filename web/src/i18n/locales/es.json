@@ -1143,10 +1143,11 @@
 		"circle_override": "Este círculo tiene su propia configuración.",
 		"use_default": "Usar mi configuración predeterminada",
 		"load_error": "No pudimos cargar tu configuración de notificaciones. Intenta nuevamente.",
-		"channels_title": "Cómo te llegan las notificaciones",
-		"channels_description": "Activa todas las que quieras.",
-		"sms_needs_phone": "Añade y confirma un número de teléfono abajo para activarlo.",
-		"sms_needs_phone_default": "Añade y confirma un número de teléfono en tu configuración predeterminada para activarlo.",
+		"sms_needs_phone": "Para recibir mensajes de texto, añade y confirma un número de teléfono abajo.",
+		"sms_needs_phone_default": "Para recibir mensajes de texto, añade y confirma un número de teléfono en tu configuración predeterminada.",
+		"push_needs_device": "Para recibir notificaciones push, actívalas en este dispositivo abajo.",
+		"push_needs_device_default": "Para recibir notificaciones push, actívalas en este dispositivo en tu configuración predeterminada.",
+		"push_unsupported": "Para recibir notificaciones push, actívalas desde un teléfono u ordenador compatible.",
 		"digest": {
 			"title": "Resumen diario por correo",
 			"description": "Un correo cada mañana con las publicaciones nuevas de todos tus círculos."
@@ -1154,12 +1155,15 @@
 		"channels": {
 			"email": "Correo electrónico",
 			"sms": "Mensaje de texto",
-			"push": "Notificaciones push"
+			"push": "Push"
+		},
+		"channels_short": {
+			"email": "Correo",
+			"sms": "SMS",
+			"push": "Push"
 		},
 		"channel_descriptions": {
-			"email": "Se envían al correo electrónico de tu cuenta.",
-			"sms": "Un texto corto con un enlace a la publicación. Pueden aplicarse tarifas de mensajes y datos.",
-			"push": "Avisos en cada teléfono u ordenador donde actives las notificaciones push."
+			"sms": "Un texto corto con un enlace a la publicación. Pueden aplicarse tarifas de mensajes y datos."
 		},
 		"phone": {
 			"title": "Teléfono para mensajes de texto",

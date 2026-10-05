@@ -10,7 +10,13 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from mysite.users.models import NotificationPhone, PushSubscription, User, UserNotificationPreferences
+from mysite.users.models import (
+    NOTIFICATION_EVENTS,
+    NotificationPhone,
+    PushSubscription,
+    User,
+    UserNotificationPreferences,
+)
 from mysite.users.models.notifications import PHONE_CODE_MAX_ATTEMPTS
 
 PHONE = "+15551234567"
@@ -189,14 +195,15 @@ class NotificationPhoneTests(TestCase):
 
     def test_remove_phone_turns_texts_off(self):
         NotificationPhone.objects.create(user=self.user, phone_number=PHONE, verified_at=timezone.now())
-        UserNotificationPreferences.objects.create(user=self.user, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=self.user, new_media_sms=True, likes_sms=True)
 
         response = self.client.delete(reverse("user-notification-phone"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(payload(response)["phone_number"])
         self.assertFalse(NotificationPhone.objects.exists())
-        self.assertFalse(UserNotificationPreferences.objects.get(user=self.user).sms_enabled)
+        prefs = UserNotificationPreferences.objects.get(user=self.user)
+        self.assertEqual([prefs.channels_for(event) for event in NOTIFICATION_EVENTS], [["email"]] * 4)
 
     def test_requires_authentication(self):
         self.client.force_authenticate(user=None)

@@ -13,7 +13,7 @@
 - The web app is installable (manifest + iOS tags in `index.html`) but has **no service worker**.
 
 ## Data Model
-- `UserNotificationPreferences`: replace `channel` with `email_enabled` (default on), `sms_enabled` (default off) and `push_enabled` (default off). They live on every row, so a circle override can pick its own channels, exactly like the event flags. `enabled_channels()` returns the channels that are on.
+- `UserNotificationPreferences`: replace `channel` with `email_enabled` (default on), `sms_enabled` (default off) and `push_enabled` (default off). They live on every row, so a circle override can pick its own channels, exactly like the event flags. `enabled_channels()` returns the channels that are on. *(Superseded by the per-event channels below: the event flags and these three switches are now one switch per event and channel.)*
 - `NotificationChannel` stays as the list of channel names (`email`, `sms`, `push`), used as the sender keys.
 - New `NotificationPhone` (one per user): `phone_number` (E.164), `verified_at`, and the pending code (`code_hash`, `code_expires_at`, `code_attempts`).
 - New `PushSubscription` (one per browser/device): `user`, `endpoint` (unique), `p256dh`, `auth`, `user_agent`, `created_at`, `last_used_at`.
@@ -27,6 +27,11 @@ One `users` migration:
 
 Rows that picked SMS keep SMS on, but nothing is texted until that person verifies a phone number. That matches today: SMS was never delivered.
 
+### Per-Event Channels (`users/0010`–`0012`)
+A follow-up replaced the four event flags (`notify_new_media`, `notify_comments`, `notify_replies`, `notify_likes`) and the three channel switches with 12 switches, one per event and channel: `new_media_email`, `new_media_sms`, `new_media_push`, `comments_*`, `replies_*` (also covers @mentions) and `likes_*`. Every event defaults to email on, SMS and push off, which is what the old defaults sent. `NOTIFICATION_EVENTS` lists the events, `preference_field(event, channel)` / `channel_fields(channel)` build the names, and `channels_for(event)` returns the channels an event goes out on.
+
+Three migrations do this: `0010` adds the 12 fields, `0011` sets `<event>_<channel> = notify_<event> AND <channel>_enabled` on every row (global and per-circle), and `0012` removes the 7 old fields. They're separate because Postgres won't ALTER a table in the same transaction that updated its rows ("pending trigger events"); a single migration passed on SQLite but failed on Postgres. Reverse sets `notify_<event>` when any of that event's channels is on and `<channel>_enabled` when any event uses that channel. Reverse can turn on combinations nobody picked (likes by push only comes back as likes on every channel that any event used), but it never stops a notification that was being sent.
+
 ## Phone Number Source and Verification
 **Decision: a separate, notification-only phone with its own code check. Don't reuse the 2FA phone.**
 
@@ -34,10 +39,10 @@ Rows that picked SMS keep SMS on, but nothing is texted until that person verifi
 - The new flow is small and reuses the existing messaging service:
   - `POST /api/users/me/notification-phone/ {phone_number}` saves the number as unverified and texts a 6-digit code through `send_sms_async`. The code is stored hashed (HMAC) and expires after 10 minutes.
   - `POST /api/users/me/notification-phone/verify/ {code}` checks it in constant time. After 5 wrong tries the code is dead.
-  - `DELETE /api/users/me/notification-phone/` removes the number and turns `sms_enabled` off on every row.
+  - `DELETE /api/users/me/notification-phone/` removes the number and turns every `*_sms` switch off on every row.
   - Changing the number clears `verified_at`, so texts stop until the new number is verified.
 - SMS goes **only** to a number with `verified_at` set. The sender checks this on every send, not just when the switch is turned on.
-- Turning `sms_enabled` on is rejected unless SMS is enabled server-side and the user has a verified number.
+- Turning any `*_sms` switch on is rejected unless SMS is enabled server-side and the user has a verified number. Turning any `*_push` switch on is rejected unless push is enabled server-side.
 
 ## SMS Delivery
 - `_send_sms` texts `Circles: <one-line summary> <post link>`, for example `Circles: Pat added 2 new photos to Smith Family https://…/keeps/<id>`. The summary is the event's email subject line, so any new event that has an email template gets SMS and push text for free. Comment text is never included, which keeps texts short (one segment where possible) and private.
@@ -49,7 +54,7 @@ Rows that picked SMS keep SMS on, but nothing is texted until that person verifi
 - Verification codes are rate-limited per user (`NOTIFICATION_PHONE_CODE_RATELIMIT`, default `3/15m`), and a code dies after 5 wrong tries.
 - `NOTIFICATIONS_SMS_ALLOWED_PREFIXES` (default `+1`) limits which countries numbers can be in. This blocks SMS-pumping/toll-fraud to premium international ranges. Set it to an empty value to allow every country.
 - `NOTIFICATIONS_SMS_DAILY_LIMIT` (default 20) caps activity texts per user per day. Anything over the cap is dropped and logged.
-- Event switches apply to every channel on that row. There is no per-channel event matrix (for example "likes by push only"); that's out of scope.
+- Each event has its own channel switches, so "likes by push only" works. Every guard above applies per text, whatever event triggered it.
 
 ## Web Push Design
 - **Keys:** VAPID keys come from env: `VAPID_PUBLIC_KEY` (base64url, uncompressed P-256 point, which the browser uses as `applicationServerKey`), `VAPID_PRIVATE_KEY` (base64url raw 32-byte key, or DER), and `VAPID_SUBJECT` (`mailto:you@example.com` or an `https:` URL). Push is **off** unless all three are set (`NOTIFICATIONS_PUSH_ENABLED` is derived from them).
@@ -68,15 +73,16 @@ Rows that picked SMS keep SMS on, but nothing is texted until that person verifi
 ## API Summary
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET/PATCH/DELETE | `/api/users/me/email-preferences/[?circle_id=]` | Existing. Now returns/accepts `email_enabled`, `sms_enabled`, `push_enabled` instead of `channel`. |
+| GET/PATCH/DELETE | `/api/users/me/email-preferences/[?circle_id=]` | Existing. Returns/accepts the 12 `<event>_<channel>` switches (e.g. `likes_push`) plus `email_digest`. |
 | GET | `/api/users/me/notification-channels/` | Channel availability, phone status, VAPID public key, device count. |
 | POST / DELETE | `/api/users/me/notification-phone/` | Start verification for a number / remove it. |
 | POST | `/api/users/me/notification-phone/verify/` | Confirm the 6-digit code. |
 | POST / DELETE | `/api/users/me/push-subscriptions/` | Save / remove this device's push subscription. |
 
 ## Frontend Plan
-- The profile notifications card replaces the "Send notifications by" dropdown with three switches (Email, Text message, Push). They're per scope, so a circle override can pick different channels.
-- **Text message:** shown only when the server says SMS is available. In the default scope, a phone form sends a code, takes the code, and then shows the verified number with a "Remove" option. The SMS switch stays disabled until the number is verified.
+- The profile notifications card shows one row per event with three icon toggle buttons (email, text message, push; `aria-pressed`, labelled per channel inside a group named after the event). They're per scope, so a circle override can pick different channels per event.
+- **Text message:** the column shows only when the server says SMS is available. In the default scope, a phone form sends a code, takes the code, and then shows the verified number with a "Remove" option. The SMS toggles stay disabled, with a hint pointing at the phone setup, until the number is verified.
+- **Push toggles:** the column shows only when the server says push is available. The toggles are disabled, with a hint, until at least one device is subscribed (`push_device_count > 0`); the hint says when this browser can't receive push at all. Enabling push on a device while no event has push on in the default settings turns push on for every event that has email or text on there (the events the person already hears about). If push is already on for some event, nothing changes.
 - **Push:** shown only when the server says push is available. In the default scope, "Enable push on this device" registers `/sw.js`, asks for permission, subscribes with the VAPID key and posts the subscription. The UI covers four states: unsupported browser, iOS not installed, permission denied, and already on for this device (with "Turn off on this device").
 - New strings live in `en`/`es`/`it` locale files.
 
@@ -110,4 +116,5 @@ Changing the keys makes every existing subscription stop working. Browsers have 
 - Dispatch: every enabled channel gets the event. Per-circle overrides change channels. SMS goes only to verified numbers, only with the flag on, and only under the daily cap.
 - Phone verification: send code (console provider), wrong/expired/used codes, country allowlist, rate limit.
 - Push: subscribe (upsert, endpoint host allowlist), unsubscribe, sending with `pywebpush` mocked, and deleting the row on 404/410 while keeping it on other errors.
-- Frontend (vitest): channel switches, SMS hidden when unavailable, phone flow, push enable plus unsupported/denied states.
+- Migrations (0010–0012): event flag AND channel switch → per-event channel; circle overrides; reverse mapping.
+- Frontend (vitest): channel switches, SMS hidden when unavailable, phone flow, push enable plus unsupported/denied states. With per-event channels: toggling a pair sends that one field, SMS column hidden or disabled, push disabled without a subscribed device, per-circle scope.

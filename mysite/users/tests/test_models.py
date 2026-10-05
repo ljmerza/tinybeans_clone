@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from mysite.users.models import (
+    NOTIFICATION_EVENTS,
     ChildGuardianConsent,
     ChildProfile,
     ChildProfileUpgradeStatus,
@@ -262,22 +263,28 @@ class UserNotificationPreferencesModelTests(TestCase):
         """Test creating global notification preferences."""
         prefs = UserNotificationPreferences.objects.create(
             user=self.user,
-            notify_new_media=True,
-            notify_likes=False,
+            new_media_email=True,
+            likes_email=False,
+            likes_push=True,
         )
 
         self.assertEqual(prefs.user, self.user)
         self.assertIsNone(prefs.circle)
-        self.assertTrue(prefs.notify_new_media)
-        self.assertTrue(prefs.notify_comments)
-        self.assertTrue(prefs.notify_replies)
-        self.assertFalse(prefs.notify_likes)
-        self.assertEqual(prefs.enabled_channels(), [NotificationChannel.EMAIL])
+        self.assertEqual(prefs.channels_for("new_media"), [NotificationChannel.EMAIL])
+        self.assertEqual(prefs.channels_for("comments"), [NotificationChannel.EMAIL])
+        self.assertEqual(prefs.channels_for("replies"), [NotificationChannel.EMAIL])
+        self.assertEqual(prefs.channels_for("likes"), [NotificationChannel.PUSH])
         self.assertFalse(prefs.is_circle_override)
+
+    def test_defaults_are_email_only_for_every_event(self):
+        prefs = UserNotificationPreferences(user=self.user)
+
+        for event in NOTIFICATION_EVENTS:
+            self.assertEqual(prefs.channels_for(event), [NotificationChannel.EMAIL])
 
     def test_create_circle_specific_preferences(self):
         """Test creating circle-specific notification preferences."""
-        prefs = UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, notify_new_media=False)
+        prefs = UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, new_media_email=False)
 
         self.assertEqual(prefs.circle, self.circle)
         self.assertTrue(prefs.is_circle_override)
@@ -286,8 +293,8 @@ class UserNotificationPreferencesModelTests(TestCase):
         other_circle = Circle.objects.create(name="Friends", created_by=self.user)
         self.assertIsNone(UserNotificationPreferences.effective_for(self.user, self.circle).pk)
 
-        global_prefs = UserNotificationPreferences.objects.create(user=self.user, notify_likes=False)
-        override = UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, notify_likes=True)
+        global_prefs = UserNotificationPreferences.objects.create(user=self.user, likes_email=False)
+        override = UserNotificationPreferences.objects.create(user=self.user, circle=self.circle, likes_email=True)
 
         self.assertEqual(UserNotificationPreferences.effective_for(self.user, self.circle), override)
         self.assertEqual(UserNotificationPreferences.effective_for(self.user, other_circle), global_prefs)
