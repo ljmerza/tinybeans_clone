@@ -83,6 +83,12 @@ beforeEach(() => {
 				? [{ id: "p-sophia", name: "Sophia M", kind: "child" }]
 				: [{ id: "p-rex", name: "Rex", kind: "pet" }],
 	);
+	vi.spyOn(keepServices, "getUploadLimits").mockResolvedValue({
+		data: {
+			max_photo_bytes: 100 * 1024 * 1024,
+			max_video_bytes: 1024 * 1024 * 1024,
+		},
+	});
 	URL.createObjectURL = vi.fn(() => "blob:preview");
 	URL.revokeObjectURL = vi.fn();
 	vi.mocked(readExifDate).mockResolvedValue(null);
@@ -215,8 +221,34 @@ describe("NewPostDialog", () => {
 		expect(
 			screen.getByText("notes.txt isn't a supported photo or video type."),
 		).toBeInTheDocument();
-		expect(screen.getByText("huge.jpg is too large.")).toBeInTheDocument();
+		expect(
+			screen.getByText("huge.jpg is too large. The limit is 100 MB."),
+		).toBeInTheDocument();
 		expect(screen.queryByRole("list")).not.toBeInTheDocument();
+	});
+
+	it("uses the server's upload limits", async () => {
+		vi.mocked(keepServices.getUploadLimits).mockResolvedValue({
+			data: {
+				max_photo_bytes: 90 * 1024 * 1024,
+				max_video_bytes: 90 * 1024 * 1024,
+			},
+		});
+		renderDialog();
+		expect(
+			await screen.findByText(
+				"Photos up to 90 MB (JPEG, PNG, GIF, WebP). Videos up to 90 MB (MP4, MOV, AVI).",
+			),
+		).toBeInTheDocument();
+		const video = new File(["v"], "long.mp4", { type: "video/mp4" });
+		Object.defineProperty(video, "size", { value: 91 * 1024 * 1024 });
+
+		pickFiles([video]);
+
+		expect(
+			screen.getByText("long.mp4 is too large. The limit is 90 MB."),
+		).toBeInTheDocument();
+		expect(uploadMedia).not.toHaveBeenCalled();
 	});
 
 	it("retries a failed upload into the same post", async () => {

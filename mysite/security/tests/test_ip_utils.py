@@ -10,7 +10,8 @@ from django_ratelimit.core import is_ratelimited
 from rest_framework.request import Request
 
 from mysite.config.settings.security import _get_ip_trust_config
-from mysite.security.ip_utils import get_client_ip, ratelimit_client_ip
+from mysite.middleware import RequestContextMiddleware
+from mysite.security.ip_utils import get_client_ip, get_client_ip_address, ratelimit_client_ip
 from mysite.security.throttling import ClientIPAnonRateThrottle
 
 CLIENT = "203.0.113.7"
@@ -136,3 +137,35 @@ class TrustedProxySettingTests(SimpleTestCase):
             self.assertRaises(ImproperlyConfigured),
         ):
             _get_ip_trust_config(debug=False)
+
+
+class GetClientIPAddressTests(SimpleTestCase):
+    @override_settings(**PROD)
+    def test_returns_the_resolved_client(self):
+        self.assertEqual(get_client_ip_address(_request(xff=f"{SPOOFED}, {CLIENT}")), CLIENT)
+
+    @override_settings(DEBUG=True, TRUST_FORWARDED_FOR=True, TRUSTED_PROXY_IPS=[])
+    def test_junk_forwarded_value_is_none_not_a_bad_address(self):
+        # DEBUG trusts the left-most entry as-is; a GenericIPAddressField can't take it.
+        request = _request(xff="unknown, 10.0.0.1")
+        self.assertEqual(get_client_ip(request), "unknown")
+        self.assertIsNone(get_client_ip_address(request))
+
+
+class RequestLogContextIPTests(SimpleTestCase):
+    """The log context's remote_ip uses the shared resolver."""
+
+    @override_settings(**PROD)
+    def test_spoofed_left_most_entry_is_not_logged(self):
+        request = _request(xff=f"{SPOOFED}, {CLIENT}")
+        self.assertEqual(RequestContextMiddleware._remote_ip(request), CLIENT)
+
+    @override_settings(DEBUG=False, TRUST_FORWARDED_FOR=True, TRUSTED_PROXY_IPS=["127.0.0.1"])
+    def test_untrusted_peer_logs_its_own_address(self):
+        request = _request(remote_addr="192.168.1.50", xff=SPOOFED)
+        self.assertEqual(RequestContextMiddleware._remote_ip(request), "192.168.1.50")
+
+    @override_settings(DEBUG=True, TRUST_FORWARDED_FOR=True, TRUSTED_PROXY_IPS=[])
+    def test_debug_keeps_the_left_most_entry(self):
+        request = _request(remote_addr="172.18.0.1", xff=f"{CLIENT}, 172.18.0.5")
+        self.assertEqual(RequestContextMiddleware._remote_ip(request), CLIENT)

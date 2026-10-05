@@ -19,6 +19,7 @@ from mysite.audit import AuditEvent, log_audit_event, log_security_event
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import EMAIL_VERIFICATION_TEMPLATE
 from mysite.notification_utils import create_message, error_response, rate_limit_response, success_response
+from mysite.security.ip_utils import get_client_ip
 from mysite.users.models import User
 from mysite.users.serializers import PublicUserSerializer
 
@@ -189,7 +190,7 @@ class EmailVerificationConfirmView(APIView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        client_ip = self._get_client_ip(request)
+        client_ip = get_client_ip(request)
         with project_logging.log_context(user_id=user.id):
             logger.info(
                 "Email verification confirmed with auto-login",
@@ -216,10 +217,3 @@ class EmailVerificationConfirmView(APIView):
         )
         set_refresh_cookie(response, refresh_token)
         return response
-
-    @staticmethod
-    def _get_client_ip(request):
-        forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR")

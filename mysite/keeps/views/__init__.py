@@ -42,6 +42,7 @@ from .reactions import (
     KeepReactionListCreateView,
 )
 from .uploads import (
+    MediaUploadLimitsView,
     MediaUploadStatusView,
     MediaUploadView,
 )
@@ -72,6 +73,7 @@ __all__ = [
     "is_circle_admin",
     "KeepReactionDetailView",
     "KeepReactionListCreateView",
+    "MediaUploadLimitsView",
     "MediaUploadStatusView",
     "MediaUploadView",
 ]

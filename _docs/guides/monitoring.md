@@ -16,7 +16,11 @@ Code: `mysite/metrics.py`. Tests: `mysite/tests/test_metrics.py`.
 - **Not behind nginx.** The circles nginx vhost only proxies `/api/`, `/admin/`, `/static/`,
   `/media/` and `/health/` to Django. Everything else, including `/metrics`, goes to the SPA.
   Prometheus scrapes the web container's published port (`192.168.1.76:8100`) directly.
-  Don't add a `/metrics` location to nginx.
+  Don't add a `/metrics` location to the public vhost.
+- **Production image.** Its own nginx proxies `location = /metrics` to Django, but only for
+  loopback, Docker and private (RFC 1918) client addresses; everyone else gets 403. Prometheus
+  scrapes the prod web container's published port over plain HTTP (`/metrics` is exempt from the
+  HTTPS redirect). See [deployment/production.md](deployment/production.md).
 
 ## Metrics
 

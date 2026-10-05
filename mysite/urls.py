@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/keeps/", include("mysite.keeps.urls")),
     path("api/albums/", include("mysite.albums.urls")),
     path("health/", include("health_check.urls")),
-    # Prometheus scrape target; token-protected and not proxied by nginx.
+    # Prometheus scrape target; token-protected. The prod image's nginx proxies it
+    # for loopback, Docker and private addresses only (docker/nginx.conf).
     path("metrics", metrics_view, name="metrics"),
 ]

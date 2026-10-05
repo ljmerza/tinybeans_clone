@@ -28,4 +28,5 @@ export const keepKeys = {
 	circlePeople: (circleId: number) =>
 		keepKeysFactory.tag("circle-people", circleId),
 	person: (personId: string) => keepKeysFactory.tag("person", personId),
+	uploadLimits: () => keepKeysFactory.tag("upload-limits"),
 };
