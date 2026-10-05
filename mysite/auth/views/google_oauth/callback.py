@@ -110,11 +110,10 @@ class GoogleOAuthCallbackView(APIView):
                 "account_action": account_action,
             }
 
-            response_serializer = OAuthCallbackResponseSerializer(data=response_data)
-            response_serializer.is_valid(raise_exception=True)
-
-            # Create response with refresh token cookie
-            response = success_response(response_serializer.data)
+            # Create response with refresh token cookie. response_data is already serialized;
+            # validating it as input would re-run UserSerializer's unique-email check against
+            # this very user and fail for every existing account.
+            response = success_response(response_data)
             set_refresh_cookie(response, tokens["refresh"])
 
             logger.info(
