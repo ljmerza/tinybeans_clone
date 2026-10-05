@@ -4,6 +4,7 @@ This module provides serializers for creating, updating, and retrieving
 family memories (keeps) with their associated data.
 """
 
+from django.db import transaction
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -36,6 +37,13 @@ class KeepSerializer(serializers.ModelSerializer):
     comment_count = serializers.SerializerMethodField()
     tag_list = serializers.SerializerMethodField()
     children = KeepChildSerializer(many=True, read_only=True)
+    people = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        write_only=True,
+        max_length=200,
+        help_text="On update, ids of people from the keep's circle; replaces who is tagged",
+    )
 
     class Meta:
         model = Keep
@@ -58,9 +66,12 @@ class KeepSerializer(serializers.ModelSerializer):
             "media_count",
             "reaction_count",
             "comment_count",
+            "people",
         ]
         read_only_fields = [
             "id",
+            # A keep stays in its circle; moving it would skip the membership check.
+            "circle",
             "created_by",
             "created_at",
             "updated_at",
@@ -69,6 +80,21 @@ class KeepSerializer(serializers.ModelSerializer):
             "reaction_count",
             "comment_count",
         ]
+
+    def validate(self, data):
+        """Swap people ids for the people themselves; all must be from the keep's circle."""
+        if "people" in data and self.instance is not None:
+            data["people"] = resolve_circle_people(self.instance.circle_id, data["people"])
+        return data
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        """Update the keep's fields and, when given, replace who is tagged."""
+        people = validated_data.pop("people", None)
+        keep = super().update(instance, validated_data)
+        if people is not None:
+            set_keep_people(keep, people, self.context["request"].user)
+        return keep
 
     @extend_schema_field({"type": "integer"})
     def get_media_count(self, obj):

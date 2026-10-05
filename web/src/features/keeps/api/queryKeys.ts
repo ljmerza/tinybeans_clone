@@ -21,6 +21,8 @@ export const keepKeys = {
 		keepKeysFactory.tag("feed", "on-this-day", date),
 	adjacentFeedDays: (date: string, circleSlug?: string) =>
 		keepKeysFactory.tag("adjacent-feed-days", circleSlug ?? "all", date),
+	/** Every cached adjacent-days lookup, e.g. once a post moves to another day. */
+	adjacentFeedDaysAll: () => keepKeysFactory.tag("adjacent-feed-days"),
 	feedKeep: (keepId: string) => keepKeysFactory.tag("feed-keep", keepId),
 	comments: (keepId: string) => keepKeysFactory.tag("comments", keepId),
 	likers: (keepId: string) => keepKeysFactory.tag("likers", keepId),

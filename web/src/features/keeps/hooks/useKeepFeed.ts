@@ -19,6 +19,7 @@ import type {
 	FeedPage,
 	KeepCommentRecord,
 	KeepPerson,
+	UpdateKeepInput,
 } from "../types";
 
 /**
@@ -264,6 +265,71 @@ export function useSetKeepPeople() {
 					queryKey: keepKeys.feedPerson(personId),
 					refetchType: "none",
 				});
+			}
+		},
+	});
+}
+
+/** A post's edit: its new fields, and the post as it was before. */
+export interface KeepEdit extends Omit<UpdateKeepInput, "people"> {
+	keep: FeedKeep;
+	people: KeepPerson[];
+}
+
+/** The UTC day (`YYYY-MM-DD`) of a memory, like the calendar's cells. */
+export function memoryDay(dateOfMemory: string) {
+	return new Date(dateOfMemory).toISOString().slice(0, 10);
+}
+
+/**
+ * Edit a post's title, caption, date and people; only its creator or a circle
+ * admin may. Every cached copy of the post shows the edit, its people in name
+ * order like the server lists them. The feeds of everyone tagged or untagged
+ * are only marked stale, as when tagging. A post moved to another day changes
+ * which day feed, feed position and calendar cell it belongs in, so the feeds
+ * on screen, the day arrows and the calendar refetch.
+ */
+export function useUpdateKeep() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ keep, people, ...fields }: KeepEdit) =>
+			keepServices.updateKeep(keep.id, {
+				...fields,
+				people: people.map((person) => person.id),
+			}),
+		meta: {
+			toast: {
+				success: { key: "pages.feed.edit_post.saved" },
+				error: { key: "pages.feed.edit_post.save_failed" },
+			},
+		},
+		onSuccess: (saved, { keep, people }) => {
+			const sortedPeople = [...people].sort((a, b) =>
+				a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+			);
+			patchCachedKeep(queryClient, keep.id, (cached) => ({
+				...cached,
+				title: saved.title,
+				description: saved.description,
+				date_of_memory: saved.date_of_memory,
+				people: sortedPeople,
+			}));
+			const before = new Set((keep.people ?? []).map((person) => person.id));
+			const after = new Set(people.map((person) => person.id));
+			for (const personId of new Set([...before, ...after])) {
+				if (before.has(personId) && after.has(personId)) continue;
+				void queryClient.invalidateQueries({
+					queryKey: keepKeys.feedPerson(personId),
+					refetchType: "none",
+				});
+			}
+			if (memoryDay(saved.date_of_memory) !== memoryDay(keep.date_of_memory)) {
+				void queryClient.invalidateQueries({ queryKey: keepKeys.feed() });
+				void queryClient.invalidateQueries({
+					queryKey: keepKeys.adjacentFeedDaysAll(),
+				});
+				void queryClient.invalidateQueries({ queryKey: keepKeys.calendar() });
 			}
 		},
 	});
