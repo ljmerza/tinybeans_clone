@@ -163,6 +163,30 @@ def get_tokens_for_user(user: User) -> dict[str, str]:
     return {"refresh": str(refresh), "access": str(refresh.access_token)}
 
 
+def revoke_refresh_tokens(user: User) -> int:
+    """Blacklist every unexpired refresh token issued to ``user``.
+
+    simplejwt records each issued and rotated refresh token as an
+    ``OutstandingToken``, so this signs the user out of every device once
+    their current access token (30 minutes at most) expires.
+
+    Returns:
+        The number of tokens newly blacklisted.
+    """
+    from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
+    outstanding = OutstandingToken.objects.filter(
+        user=user,
+        expires_at__gt=timezone.now(),
+        blacklistedtoken__isnull=True,
+    )
+    created = BlacklistedToken.objects.bulk_create(
+        [BlacklistedToken(token=token) for token in outstanding],
+        ignore_conflicts=True,
+    )
+    return len(created)
+
+
 def get_client_ip(request) -> str:
     """Extract client IP address from request.
 
@@ -270,6 +294,7 @@ __all__ = [
     "set_refresh_cookie",
     "clear_refresh_cookie",
     "get_tokens_for_user",
+    "revoke_refresh_tokens",
     "generate_partial_token",
     "verify_partial_token",
     "get_client_ip",

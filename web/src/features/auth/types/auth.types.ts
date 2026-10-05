@@ -21,6 +21,8 @@ export interface AuthUser {
 	circle_onboarding_status?: CircleOnboardingStatus;
 	circle_onboarding_updated_at?: string | null;
 	needs_circle_onboarding?: boolean;
+	/** False for accounts that sign in only by email link or Google. */
+	has_usable_password?: boolean;
 	[key: string]: unknown;
 }
 

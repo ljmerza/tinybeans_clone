@@ -2,6 +2,7 @@ import { Layout } from "@/components";
 import { requireAuth, requireCircleOnboardingComplete } from "@/features/auth";
 import {
 	ProfileGeneralSettingsCard,
+	ProfilePasswordSettingsCard,
 	ProfileSettingsTabs,
 	profileKeys,
 	profileServices,
@@ -13,7 +14,12 @@ function ProfileGeneralSettingsPage() {
 	return (
 		<Layout>
 			<ProfileSettingsTabs
-				general={<ProfileGeneralSettingsCard />}
+				general={
+					<div className="space-y-6">
+						<ProfileGeneralSettingsCard />
+						<ProfilePasswordSettingsCard />
+					</div>
+				}
 				twoFactor={null}
 			/>
 		</Layout>

@@ -1,13 +1,7 @@
+import type { SetupServerApi } from "msw/node";
 import { handlers } from "./handlers";
 
-interface MockServer {
-	listen: (options?: {
-		onUnhandledRequest?: "error" | "warn" | "bypass";
-	}) => void;
-	close: () => void;
-	resetHandlers: (...nextHandlers: unknown[]) => void;
-	use: (...nextHandlers: unknown[]) => void;
-}
+type MockServer = SetupServerApi;
 
 let serverPromise: Promise<MockServer | null> | null = null;
 

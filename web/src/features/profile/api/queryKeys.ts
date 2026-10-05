@@ -18,6 +18,7 @@ export const profileKeys = {
 		updateProfile: () => mutationKey("update-profile"),
 		updateNotificationPreferences: () =>
 			mutationKey("update-notification-preferences"),
+		changePassword: () => mutationKey("change-password"),
 	},
 };
 
