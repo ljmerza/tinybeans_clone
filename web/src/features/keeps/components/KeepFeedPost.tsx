@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddToAlbumDialog } from "@/features/albums/components/AddToAlbumDialog";
 import { useAdminCircleIds } from "@/features/albums/hooks/useAdminCircleIds";
-import { Images, Trash2, UserRoundPlus } from "lucide-react";
+import { Images, Pencil, Trash2, UserRoundPlus } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -47,6 +47,7 @@ import {
 } from "../hooks/useKeepFeed";
 import type { FeedKeep } from "../types";
 import { keepToSocialPost } from "../utils/keepToSocialPost";
+import { EditPostDialog } from "./EditPostDialog";
 import { KeepPeople } from "./KeepPeople";
 import { TagPeopleDialog } from "./TagPeopleDialog";
 import { useKeepPhotoViewer } from "./useKeepPhotoViewer";
@@ -98,6 +99,8 @@ export function KeepFeedPost({
 	const canAddToAlbum = useAdminCircleIds().has(keep.circle.id);
 	// Any member of the circle may tag people, like commenting.
 	const [taggingPeople, setTaggingPeople] = useState(false);
+	// Whoever may delete the post (its creator or a circle admin) may edit it.
+	const [editingPost, setEditingPost] = useState(false);
 
 	const post = useMemo(
 		() =>
@@ -229,6 +232,11 @@ export function KeepFeedPost({
 									className="mx-0.5 h-5 w-px bg-border"
 								/>
 								<PostAction
+									aria-label={t("pages.feed.edit_post.action")}
+									icon={<Pencil strokeWidth={1.8} />}
+									onClick={() => setEditingPost(true)}
+								/>
+								<PostAction
 									className="bg-transparent! text-muted-foreground! hover:bg-destructive/10! hover:text-destructive! focus-visible:text-destructive!"
 									aria-label={t("pages.feed.delete_post")}
 									icon={<Trash2 strokeWidth={1.8} />}
@@ -268,6 +276,9 @@ export function KeepFeedPost({
 			)}
 			{taggingPeople && (
 				<TagPeopleDialog keep={keep} open onOpenChange={setTaggingPeople} />
+			)}
+			{editingPost && (
+				<EditPostDialog keep={keep} open onOpenChange={setEditingPost} />
 			)}
 			<Dialog open={likersOpen} onOpenChange={setLikersOpen}>
 				<DialogContent

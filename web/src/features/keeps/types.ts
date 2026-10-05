@@ -92,7 +92,7 @@ export interface FeedKeep {
 	viewer_reaction: { id: number; reaction_type: string } | null;
 	/** Whether the viewer favorited it. Favorites are private to the viewer. */
 	favorited: boolean;
-	/** The viewer created it or admins its circle. */
+	/** The viewer created it or admins its circle, so may also edit it. */
 	can_delete: boolean;
 	/** The newest two comments, oldest first. */
 	recent_comments: FeedComment[];
@@ -185,6 +185,25 @@ export interface CreateKeepInput {
 export interface CreatedKeep extends CreateKeepInput {
 	id: string;
 }
+
+/**
+ * PATCH /keeps/<id>/: what the edit form changes; only its poster or a circle
+ * admin may. `people` replaces who is tagged.
+ */
+export interface UpdateKeepInput {
+	title: string;
+	description: string;
+	/** ISO; left out when the day didn't change, so the time of day stays. */
+	date_of_memory?: string;
+	/** Ids of people from the post's circle. */
+	people: string[];
+}
+
+/** The edited fields as saved. */
+export type UpdatedKeep = Pick<
+	FeedKeep,
+	"id" | "title" | "description" | "date_of_memory"
+>;
 
 export type MediaUploadStatus =
 	| "pending"

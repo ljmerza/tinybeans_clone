@@ -62,7 +62,7 @@ class KeepFeedSerializer(serializers.ModelSerializer):
     viewer_reaction = serializers.SerializerMethodField()
     favorited = serializers.BooleanField(read_only=True, help_text="Whether the viewer favorited this keep")
     can_delete = serializers.BooleanField(
-        read_only=True, help_text="Whether the viewer may delete this keep: its creator or a circle admin"
+        read_only=True, help_text="Whether the viewer may edit or delete this keep: its creator or a circle admin"
     )
     recent_comments = serializers.SerializerMethodField()
     people = serializers.SerializerMethodField()

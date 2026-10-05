@@ -33,4 +33,8 @@ export {
 	TagPeopleDialog,
 	type TagPeopleDialogProps,
 } from "./components/TagPeopleDialog";
+export {
+	EditPostDialog,
+	type EditPostDialogProps,
+} from "./components/EditPostDialog";
 export { keepSharePath, keepToSocialPost } from "./utils/keepToSocialPost";

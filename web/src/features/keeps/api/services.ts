@@ -17,6 +17,8 @@ import type {
 	OnThisDayPayload,
 	PaginatedList,
 	PersonDetail,
+	UpdateKeepInput,
+	UpdatedKeep,
 } from "../types";
 import type { UploadLimits } from "../utils/mediaFiles";
 
@@ -160,6 +162,11 @@ export const keepServices = {
 
 	createKeep(input: CreateKeepInput) {
 		return authApi.post<CreatedKeep>(`${KEEPS_BASE}/`, input);
+	},
+
+	/** Only its poster or a circle admin may. */
+	updateKeep(keepId: string, input: UpdateKeepInput) {
+		return authApi.patch<UpdatedKeep>(`${KEEPS_BASE}/${keepId}/`, input);
 	},
 
 	deleteKeep(keepId: string) {
