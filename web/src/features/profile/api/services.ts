@@ -23,15 +23,27 @@ export interface ChangePasswordResponse {
 
 export type NotificationChannel = "email" | "sms" | "push";
 
-export interface NotificationPreferences {
-	notify_new_media: boolean;
-	notify_comments: boolean;
-	notify_replies: boolean;
-	notify_likes: boolean;
-	email_enabled: boolean;
-	/** Texts go only to a verified phone (see NotificationChannels). */
-	sms_enabled: boolean;
-	push_enabled: boolean;
+/** The activity a preferences row covers; "replies" also covers @mentions. */
+export type NotificationEvent = "new_media" | "comments" | "replies" | "likes";
+
+export const NOTIFICATION_EVENTS: readonly NotificationEvent[] = [
+	"new_media",
+	"comments",
+	"replies",
+	"likes",
+];
+
+/** One switch per event and channel, e.g. `likes_push`. */
+export type NotificationEventChannelField =
+	`${NotificationEvent}_${NotificationChannel}`;
+
+/**
+ * Each `<event>_<channel>` switch sends that event on that channel. Texts go
+ * only to a verified phone and pushes only to subscribed devices (see
+ * NotificationChannels).
+ */
+export interface NotificationPreferences
+	extends Record<NotificationEventChannelField, boolean> {
 	/** Daily new-post email; only the default (all circles) preferences have it. */
 	email_digest: boolean;
 	circle_id: number | null;

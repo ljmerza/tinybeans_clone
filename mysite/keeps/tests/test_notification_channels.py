@@ -10,7 +10,7 @@ from django.test import override_settings
 from django.utils import timezone
 
 from mysite.circles.models import Circle, CircleMembership
-from mysite.keeps.models import Keep, KeepComment, KeepMedia, KeepType
+from mysite.keeps.models import Keep, KeepComment, KeepCommentMention, KeepMedia, KeepType
 from mysite.keeps.notifications import ActivityEvent, send_activity
 from mysite.messaging.providers.console import ConsoleSMSProvider
 from mysite.messaging.services import SMSService
@@ -89,9 +89,7 @@ def emailed():
 @pytest.mark.django_db
 class TestChannelFanOut:
     def test_sends_on_every_enabled_channel(self, keep, grandma, sms, push):
-        UserNotificationPreferences.objects.create(
-            user=grandma, email_enabled=True, sms_enabled=True, push_enabled=True
-        )
+        UserNotificationPreferences.objects.create(user=grandma, new_media_sms=True, new_media_push=True)
         verified_phone(grandma)
         subscribe(grandma)
 
@@ -122,7 +120,7 @@ class TestChannelFanOut:
         push.assert_not_called()
 
     def test_no_channels_sends_nothing(self, keep, grandma, sms, push):
-        UserNotificationPreferences.objects.create(user=grandma, email_enabled=False)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=False)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
@@ -130,21 +128,81 @@ class TestChannelFanOut:
         sms.assert_not_called()
         push.assert_not_called()
 
-    def test_event_switched_off_sends_on_no_channel(self, keep, grandma, sms, push):
-        UserNotificationPreferences.objects.create(user=grandma, notify_new_media=False, sms_enabled=True)
+    def test_other_events_channels_do_not_apply(self, keep, grandma, sms, push):
+        UserNotificationPreferences.objects.create(
+            user=grandma, new_media_email=False, likes_sms=True, comments_push=True
+        )
         verified_phone(grandma)
+        subscribe(grandma)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
         assert mail.outbox == []
         sms.assert_not_called()
+        push.assert_not_called()
+
+
+@pytest.mark.django_db
+class TestPerEventChannels:
+    def test_each_event_goes_out_on_its_own_channels(self, keep, poster, grandma, sms, push):
+        UserNotificationPreferences.objects.create(user=poster, likes_email=False, likes_push=True, comments_sms=True)
+        verified_phone(poster)
+        subscribe(poster)
+        like = keep.reactions.create(user=grandma)
+        comment = KeepComment.objects.create(keep=keep, user=grandma, comment="So cute")
+
+        send_activity(ActivityEvent.LIKE, str(like.id))
+
+        assert mail.outbox == []
+        sms.assert_not_called()
+        push.assert_called_once()
+
+        push.reset_mock()
+        send_activity(ActivityEvent.COMMENT, str(comment.id))
+
+        assert emailed() == ["poster@example.com"]
+        sms.assert_called_once()
+        push.assert_not_called()
+
+    def test_mentions_use_the_replies_channels(self, keep, poster, grandma, sms, push):
+        UserNotificationPreferences.objects.create(
+            user=grandma, replies_email=False, replies_sms=True, comments_push=True
+        )
+        verified_phone(grandma)
+        subscribe(grandma)
+        comment = KeepComment.objects.create(keep=keep, user=poster, comment="@Grandma look")
+        mention = KeepCommentMention.objects.create(comment=comment, user=grandma)
+
+        send_activity(ActivityEvent.MENTION, str(mention.id))
+
+        assert mail.outbox == []
+        sms.assert_called_once()
+        assert sms.call_args.args[1].startswith("Circles: Pat mentioned you in Smith Family")
+        push.assert_not_called()
+
+    def test_reply_that_also_mentions_notifies_once_per_channel(self, keep, poster, grandma, sms, push):
+        UserNotificationPreferences.objects.create(user=grandma, replies_sms=True, replies_push=True)
+        verified_phone(grandma)
+        subscribe(grandma)
+        parent = KeepComment.objects.create(keep=keep, user=grandma, comment="So sweet")
+        reply = KeepComment.objects.create(keep=keep, user=poster, parent=parent, comment="@Grandma thanks")
+        KeepCommentMention.objects.create(comment=reply, user=grandma)
+
+        send_activity(ActivityEvent.COMMENT, str(reply.id))
+
+        assert emailed() == ["grandma@example.com"]
+        sms.assert_called_once()
+        push.assert_called_once()
+        assert push.call_args.args[1]["title"] == "Pat replied to you in Smith Family"
 
 
 @pytest.mark.django_db
 class TestCircleOverrides:
     def test_circle_override_picks_its_own_channels(self, keep, circle, grandma, sms, push):
-        UserNotificationPreferences.objects.create(user=grandma, email_enabled=True)
-        UserNotificationPreferences.objects.create(user=grandma, circle=circle, email_enabled=False, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=True)
+        UserNotificationPreferences.objects.create(
+            user=grandma, circle=circle, new_media_email=False, new_media_sms=True
+        )
         verified_phone(grandma)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
@@ -155,8 +213,8 @@ class TestCircleOverrides:
     def test_global_channels_apply_to_circles_without_override(self, keep, poster, grandma, sms, push):
         other = Circle.objects.create(name="Other", created_by=poster)
         CircleMembership.objects.create(circle=other, user=grandma)
-        UserNotificationPreferences.objects.create(user=grandma, email_enabled=False, push_enabled=True)
-        UserNotificationPreferences.objects.create(user=grandma, circle=other, email_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=False, new_media_push=True)
+        UserNotificationPreferences.objects.create(user=grandma, circle=other, new_media_email=True)
         subscribe(grandma)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
@@ -168,7 +226,7 @@ class TestCircleOverrides:
 @pytest.mark.django_db
 class TestSms:
     def test_only_verified_phones_get_texts(self, keep, grandma, sms):
-        UserNotificationPreferences.objects.create(user=grandma, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_sms=True)
         NotificationPhone.objects.create(user=grandma, phone_number=PHONE)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
@@ -176,14 +234,14 @@ class TestSms:
         sms.assert_not_called()
 
     def test_no_phone_gets_no_text(self, keep, grandma, sms):
-        UserNotificationPreferences.objects.create(user=grandma, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_sms=True)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
         sms.assert_not_called()
 
     def test_server_flag_off_sends_no_text(self, keep, grandma, sms):
-        UserNotificationPreferences.objects.create(user=grandma, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_sms=True)
         verified_phone(grandma)
 
         with override_settings(NOTIFICATIONS_SMS_ENABLED=False):
@@ -193,7 +251,7 @@ class TestSms:
 
     @override_settings(NOTIFICATIONS_SMS_DAILY_LIMIT=1)
     def test_daily_limit_caps_texts(self, keep, grandma, sms):
-        UserNotificationPreferences.objects.create(user=grandma, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_sms=True)
         verified_phone(grandma)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
@@ -202,7 +260,7 @@ class TestSms:
         assert sms.call_count == 1
 
     def test_comment_text_stays_out_of_texts(self, keep, poster, grandma, sms):
-        UserNotificationPreferences.objects.create(user=poster, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=poster, comments_sms=True)
         verified_phone(poster)
         comment = KeepComment.objects.create(keep=keep, user=grandma, comment="A private thought")
 
@@ -216,7 +274,7 @@ class TestSms:
 
     @override_settings(SMS_PROVIDER="console")
     def test_text_goes_through_the_console_provider(self, keep, grandma):
-        UserNotificationPreferences.objects.create(user=grandma, email_enabled=False, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=False, new_media_sms=True)
         verified_phone(grandma)
         provider = ConsoleSMSProvider()
 
@@ -233,7 +291,7 @@ class TestSms:
 @pytest.mark.django_db
 class TestPush:
     def test_comment_push_shows_the_comment(self, keep, poster, grandma, push):
-        UserNotificationPreferences.objects.create(user=poster, email_enabled=False, push_enabled=True)
+        UserNotificationPreferences.objects.create(user=poster, comments_email=False, comments_push=True)
         subscribe(poster)
         comment = KeepComment.objects.create(keep=keep, user=grandma, comment="So cute")
 
@@ -244,14 +302,14 @@ class TestPush:
         assert payload["body"] == "So cute"
 
     def test_no_devices_queues_nothing(self, keep, grandma, push):
-        UserNotificationPreferences.objects.create(user=grandma, push_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_push=True)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
         push.assert_not_called()
 
     def test_push_off_server_side_queues_nothing(self, keep, grandma, push):
-        UserNotificationPreferences.objects.create(user=grandma, push_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_push=True)
         subscribe(grandma)
 
         with override_settings(NOTIFICATIONS_PUSH_ENABLED=False):

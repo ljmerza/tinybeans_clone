@@ -105,9 +105,9 @@ class TestNewMedia:
 
     def test_respects_global_and_circle_preferences(self, keep, circle, grandma, uncle):
         add_media(keep, "photo")
-        UserNotificationPreferences.objects.create(user=grandma, notify_new_media=False)
-        UserNotificationPreferences.objects.create(user=uncle, notify_new_media=True)
-        UserNotificationPreferences.objects.create(user=uncle, circle=circle, notify_new_media=False)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=False)
+        UserNotificationPreferences.objects.create(user=uncle, new_media_email=True)
+        UserNotificationPreferences.objects.create(user=uncle, circle=circle, new_media_email=False)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
@@ -115,8 +115,8 @@ class TestNewMedia:
 
     def test_circle_override_can_turn_on_what_global_turns_off(self, keep, circle, grandma):
         add_media(keep, "photo")
-        UserNotificationPreferences.objects.create(user=grandma, notify_new_media=False)
-        UserNotificationPreferences.objects.create(user=grandma, circle=circle, notify_new_media=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=False)
+        UserNotificationPreferences.objects.create(user=grandma, circle=circle, new_media_email=True)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
@@ -135,7 +135,7 @@ class TestNewMedia:
 
     def test_email_switched_off_sends_no_email(self, keep, grandma):
         add_media(keep, "photo")
-        UserNotificationPreferences.objects.create(user=grandma, email_enabled=False, sms_enabled=True)
+        UserNotificationPreferences.objects.create(user=grandma, new_media_email=False, new_media_sms=True)
 
         send_activity(ActivityEvent.NEW_MEDIA, str(keep.id))
 
@@ -224,7 +224,7 @@ class TestComments:
         assert mail.outbox[0].subject == "Grandma replied to you in Smith Family"
 
     def test_replies_can_be_turned_off(self, api_client, keep, grandma, uncle, django_capture_on_commit_callbacks):
-        UserNotificationPreferences.objects.create(user=grandma, notify_replies=False)
+        UserNotificationPreferences.objects.create(user=grandma, replies_email=False)
         parent = KeepComment.objects.create(keep=keep, user=grandma, comment="So sweet")
 
         self.post_comment(
@@ -265,7 +265,7 @@ class TestLikes:
         assert len(mail.outbox) == 1
 
     def test_likes_can_be_turned_off(self, api_client, keep, poster, grandma, django_capture_on_commit_callbacks):
-        UserNotificationPreferences.objects.create(user=poster, notify_likes=False)
+        UserNotificationPreferences.objects.create(user=poster, likes_email=False)
 
         self.like(api_client, grandma, keep, django_capture_on_commit_callbacks)
 

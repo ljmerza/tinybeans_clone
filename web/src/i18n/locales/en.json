@@ -1143,10 +1143,11 @@
 			"circle_override": "This circle has its own settings.",
 			"use_default": "Use my defaults",
 			"load_error": "We couldn't load your notification settings. Please try again.",
-			"channels_title": "How notifications reach you",
-			"channels_description": "Turn on as many as you like.",
-			"sms_needs_phone": "Add and confirm a phone number below to turn this on.",
-			"sms_needs_phone_default": "Add and confirm a phone number in your default settings to turn this on.",
+			"sms_needs_phone": "To get texts, add and confirm a phone number below.",
+			"sms_needs_phone_default": "To get texts, add and confirm a phone number in your default settings.",
+			"push_needs_device": "To get push notifications, turn on push for this device below.",
+			"push_needs_device_default": "To get push notifications, turn on push for this device in your default settings.",
+			"push_unsupported": "To get push notifications, turn on push from a phone or computer that supports it.",
 			"digest": {
 				"title": "Daily email summary",
 				"description": "One email each morning listing new posts in all your circles."
@@ -1154,12 +1155,15 @@
 			"channels": {
 				"email": "Email",
 				"sms": "Text message",
-				"push": "Push notifications"
+				"push": "Push"
+			},
+			"channels_short": {
+				"email": "Email",
+				"sms": "Text",
+				"push": "Push"
 			},
 			"channel_descriptions": {
-				"email": "Sent to your account's email address.",
-				"sms": "A short text with a link to the post. Message and data rates may apply.",
-				"push": "Alerts on each phone or computer where you turn on push."
+				"sms": "A short text with a link to the post. Message and data rates may apply."
 			},
 			"phone": {
 				"title": "Phone for text messages",

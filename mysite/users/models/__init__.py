@@ -9,11 +9,13 @@ from .child_profile import (
 )
 from .circle import Circle, CircleInvitation, CircleInvitationStatus, CircleMembership
 from .notifications import (
-    CHANNEL_FIELDS,
+    NOTIFICATION_EVENTS,
     NotificationChannel,
     NotificationPhone,
     PushSubscription,
     UserNotificationPreferences,
+    channel_fields,
+    preference_field,
 )
 from .pet_profile import PetProfile, PetType
 from .user import CircleOnboardingStatus, User, UserManager, UserRole
@@ -38,7 +40,9 @@ __all__ = [
     "PetType",
     "UserNotificationPreferences",
     "NotificationChannel",
-    "CHANNEL_FIELDS",
+    "NOTIFICATION_EVENTS",
+    "channel_fields",
+    "preference_field",
     "NotificationPhone",
     "PushSubscription",
     "generate_unique_slug",

@@ -1143,10 +1143,11 @@
 			"circle_override": "Questa cerchia ha impostazioni proprie.",
 			"use_default": "Usa le mie impostazioni predefinite",
 			"load_error": "Non siamo riusciti a caricare le impostazioni delle notifiche. Riprova.",
-			"channels_title": "Come ti arrivano le notifiche",
-			"channels_description": "Attivane quante vuoi.",
-			"sms_needs_phone": "Aggiungi e conferma un numero di telefono qui sotto per attivarlo.",
-			"sms_needs_phone_default": "Aggiungi e conferma un numero di telefono nelle impostazioni predefinite per attivarlo.",
+			"sms_needs_phone": "Per ricevere SMS, aggiungi e conferma un numero di telefono qui sotto.",
+			"sms_needs_phone_default": "Per ricevere SMS, aggiungi e conferma un numero di telefono nelle impostazioni predefinite.",
+			"push_needs_device": "Per ricevere notifiche push, attivale su questo dispositivo qui sotto.",
+			"push_needs_device_default": "Per ricevere notifiche push, attivale su questo dispositivo nelle impostazioni predefinite.",
+			"push_unsupported": "Per ricevere notifiche push, attivale da un telefono o computer compatibile.",
 			"digest": {
 				"title": "Riepilogo giornaliero via email",
 				"description": "Un'email ogni mattina con i nuovi post di tutte le tue cerchie."
@@ -1154,12 +1155,15 @@
 			"channels": {
 				"email": "Email",
 				"sms": "SMS",
-				"push": "Notifiche push"
+				"push": "Push"
+			},
+			"channels_short": {
+				"email": "Email",
+				"sms": "SMS",
+				"push": "Push"
 			},
 			"channel_descriptions": {
-				"email": "Inviate all'indirizzo email del tuo account.",
-				"sms": "Un breve SMS con il link al post. Potrebbero essere applicati costi per messaggi e dati.",
-				"push": "Avvisi su ogni telefono o computer dove attivi le notifiche push."
+				"sms": "Un breve SMS con il link al post. Potrebbero essere applicati costi per messaggi e dati."
 			},
 			"phone": {
 				"title": "Telefono per gli SMS",

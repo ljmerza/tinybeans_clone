@@ -5,7 +5,19 @@ from django.db import connection, migrations
 from django.db.migrations.loader import MigrationLoader
 from django.test import override_settings
 
-from mysite.users.models import User
+from mysite.users.models import User, UserNotificationPreferences
+
+# Columns this migration's models have that later migrations dropped.
+OLD_COLUMNS = (
+    "channel varchar(20) NOT NULL DEFAULT 'email'",
+    "notify_new_media boolean NOT NULL DEFAULT TRUE",
+    "notify_comments boolean NOT NULL DEFAULT TRUE",
+    "notify_replies boolean NOT NULL DEFAULT TRUE",
+    "notify_likes boolean NOT NULL DEFAULT TRUE",
+    "email_enabled boolean NOT NULL DEFAULT TRUE",
+    "sms_enabled boolean NOT NULL DEFAULT FALSE",
+    "push_enabled boolean NOT NULL DEFAULT FALSE",
+)
 
 
 def _find_migration():
@@ -24,10 +36,10 @@ def _find_migration():
 
 @pytest.fixture
 def historical():
-    """Historical apps just before the data step, with the old ``channel`` column back in the table.
+    """Historical apps just before the data step, with the old columns back in the table.
 
     Tests run without migrations, so the table has the current schema; the
-    column is re-added inside the test transaction and rolled back after.
+    columns are re-added inside the test transaction and rolled back after.
     """
     loader, key, migration, run_python = _find_migration()
     state = loader.project_state(key, at_end=False)
@@ -36,18 +48,28 @@ def historical():
             break
         operation.state_forwards("users", state)
     with connection.cursor() as cursor:
-        cursor.execute(
-            "ALTER TABLE users_usernotificationpreferences ADD COLUMN channel varchar(20) NOT NULL DEFAULT 'email'"
-        )
+        for column in OLD_COLUMNS:
+            cursor.execute(f"ALTER TABLE users_usernotificationpreferences ADD COLUMN {column}")
     return state.apps, run_python
+
+
+def create_row(apps, user, circle_id=None, **old_values):
+    """A preferences row with ``old_values`` set, as the historical model.
+
+    Inserted through the current model, which fills in the columns later
+    migrations added (the historical model doesn't know them).
+    """
+    row = UserNotificationPreferences.objects.create(user=user, circle_id=circle_id)
+    Preferences = apps.get_model("users", "UserNotificationPreferences")
+    Preferences.objects.filter(pk=row.pk).update(**old_values)
+    return Preferences.objects.get(pk=row.pk)
 
 
 @pytest.mark.django_db
 def test_channel_choice_becomes_its_switch(historical):
     apps, run_python = historical
-    Preferences = apps.get_model("users", "UserNotificationPreferences")
-    by_email = Preferences.objects.create(user_id=User.objects.create_user(email="e@example.com").id, channel="email")
-    by_sms = Preferences.objects.create(user_id=User.objects.create_user(email="s@example.com").id, channel="sms")
+    by_email = create_row(apps, User.objects.create_user(email="e@example.com"), channel="email")
+    by_sms = create_row(apps, User.objects.create_user(email="s@example.com"), channel="sms")
 
     run_python.code(apps, None)
 
@@ -60,12 +82,11 @@ def test_channel_choice_becomes_its_switch(historical):
 @pytest.mark.django_db
 def test_circle_overrides_are_mapped_too(historical):
     apps, run_python = historical
-    Preferences = apps.get_model("users", "UserNotificationPreferences")
     Circle = apps.get_model("users", "Circle")
     user = User.objects.create_user(email="o@example.com")
     circle = Circle.objects.create(name="Family", slug="family", created_by_id=user.id)
-    Preferences.objects.create(user_id=user.id, channel="email")
-    override = Preferences.objects.create(user_id=user.id, circle_id=circle.id, channel="sms")
+    create_row(apps, user, channel="email")
+    override = create_row(apps, user, circle_id=circle.id, channel="sms")
 
     run_python.code(apps, None)
 
@@ -76,13 +97,8 @@ def test_circle_overrides_are_mapped_too(historical):
 @pytest.mark.django_db
 def test_reverse_keeps_texting_users_on_sms(historical):
     apps, run_python = historical
-    Preferences = apps.get_model("users", "UserNotificationPreferences")
-    texting = Preferences.objects.create(
-        user_id=User.objects.create_user(email="t@example.com").id, sms_enabled=True, email_enabled=True
-    )
-    pushing = Preferences.objects.create(
-        user_id=User.objects.create_user(email="p@example.com").id, email_enabled=False, push_enabled=True
-    )
+    texting = create_row(apps, User.objects.create_user(email="t@example.com"), sms_enabled=True, email_enabled=True)
+    pushing = create_row(apps, User.objects.create_user(email="p@example.com"), email_enabled=False, push_enabled=True)
 
     run_python.reverse_code(apps, None)
 

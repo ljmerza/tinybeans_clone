@@ -7,7 +7,13 @@ from rest_framework import serializers
 
 from mysite.notification_utils import create_message
 
-from ..models import NotificationPhone, User, UserNotificationPreferences
+from ..models import (
+    NotificationChannel,
+    NotificationPhone,
+    User,
+    UserNotificationPreferences,
+    channel_fields,
+)
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -63,31 +69,39 @@ class EmailPreferencesSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserNotificationPreferences
         fields = [
-            "notify_new_media",
-            "notify_comments",
-            "notify_replies",
-            "notify_likes",
-            "email_enabled",
-            "sms_enabled",
-            "push_enabled",
+            "new_media_email",
+            "new_media_sms",
+            "new_media_push",
+            "comments_email",
+            "comments_sms",
+            "comments_push",
+            "replies_email",
+            "replies_sms",
+            "replies_push",
+            "likes_email",
+            "likes_sms",
+            "likes_push",
             "email_digest",
             "circle_id",
             "per_circle_override",
         ]
         read_only_fields = ["circle_id", "per_circle_override"]
 
-    def validate_sms_enabled(self, value):
-        # Accepting texts that can't be sent would silently drop notifications.
-        if value and not getattr(settings, "NOTIFICATIONS_SMS_ENABLED", False):
-            raise serializers.ValidationError(create_message("errors.notification_channel_unavailable"))
-        if value and not NotificationPhone.objects.filter(user=self.instance.user, verified_at__isnull=False).exists():
-            raise serializers.ValidationError(create_message("errors.notification_phone_unverified"))
-        return value
-
-    def validate_push_enabled(self, value):
-        if value and not getattr(settings, "NOTIFICATIONS_PUSH_ENABLED", False):
-            raise serializers.ValidationError(create_message("errors.notification_channel_unavailable"))
-        return value
+    def validate(self, attrs):
+        # Accepting texts or pushes that can't be sent would silently drop notifications.
+        errors = {}
+        sms_on = [field for field in channel_fields(NotificationChannel.SMS) if attrs.get(field)]
+        if sms_on:
+            if not getattr(settings, "NOTIFICATIONS_SMS_ENABLED", False):
+                errors.update(dict.fromkeys(sms_on, create_message("errors.notification_channel_unavailable")))
+            elif not NotificationPhone.objects.filter(user=self.instance.user, verified_at__isnull=False).exists():
+                errors.update(dict.fromkeys(sms_on, create_message("errors.notification_phone_unverified")))
+        push_on = [field for field in channel_fields(NotificationChannel.PUSH) if attrs.get(field)]
+        if push_on and not getattr(settings, "NOTIFICATIONS_PUSH_ENABLED", False):
+            errors.update(dict.fromkeys(push_on, create_message("errors.notification_channel_unavailable")))
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
 
     def validate_email_digest(self, value):
         # The digest covers every circle at once, so only the global row has a say.

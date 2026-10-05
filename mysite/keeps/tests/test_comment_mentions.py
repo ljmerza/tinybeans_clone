@@ -295,15 +295,15 @@ class TestMentionNotifications:
         assert "grandma@example.com" not in subjects()
 
     def test_mentions_follow_the_replies_setting(self, post_comment, grandma, uncle):
-        UserNotificationPreferences.objects.create(user=grandma, notify_replies=False)
+        UserNotificationPreferences.objects.create(user=grandma, replies_email=False)
 
         post_comment(uncle, "@Grandma look", mention_ids=[grandma.id])
 
         assert "grandma@example.com" not in subjects()
 
     def test_circle_override_can_turn_mentions_back_on(self, post_comment, circle, grandma, uncle):
-        UserNotificationPreferences.objects.create(user=grandma, notify_replies=False)
-        UserNotificationPreferences.objects.create(user=grandma, circle=circle, notify_replies=True)
+        UserNotificationPreferences.objects.create(user=grandma, replies_email=False)
+        UserNotificationPreferences.objects.create(user=grandma, circle=circle, replies_email=True)
 
         post_comment(uncle, "@Grandma look", mention_ids=[grandma.id])
 

@@ -28,12 +28,19 @@ class NotificationChannel(models.TextChoices):
     PUSH = "push", "Push"
 
 
-# The preferences switch that turns each channel on.
-CHANNEL_FIELDS = {
-    NotificationChannel.EMAIL: "email_enabled",
-    NotificationChannel.SMS: "sms_enabled",
-    NotificationChannel.PUSH: "push_enabled",
-}
+# The activity a preferences row covers. Each event has one switch per channel,
+# named ``<event>_<channel>`` (e.g. ``likes_push``).
+NOTIFICATION_EVENTS = ("new_media", "comments", "replies", "likes")
+
+
+def preference_field(event: str, channel: str) -> str:
+    """The preferences switch that sends ``event`` on ``channel``."""
+    return f"{event}_{channel}"
+
+
+def channel_fields(channel: str) -> list[str]:
+    """Every event's switch for ``channel``."""
+    return [preference_field(event, channel) for event in NOTIFICATION_EVENTS]
 
 
 class UserNotificationPreferences(models.Model):
@@ -45,13 +52,14 @@ class UserNotificationPreferences(models.Model):
     Attributes:
         user: The user these preferences belong to
         circle: Specific circle these preferences apply to (None for global)
-        notify_new_media: Whether to notify about new photos/videos in the circle
-        notify_comments: Whether to notify about comments on the user's posts
-        notify_replies: Whether to notify when someone replies to (tags) the user in a comment
-        notify_likes: Whether to notify when someone likes the user's posts
-        email_enabled: Whether notifications are sent by email
-        sms_enabled: Whether notifications are texted to the user's verified phone
-        push_enabled: Whether notifications are pushed to the user's subscribed devices
+        new_media_email, new_media_sms, new_media_push: Whether new photos/videos in the
+            circle are sent by email, texted to the user's verified phone, or pushed to
+            the user's subscribed devices
+        comments_email, comments_sms, comments_push: The same, for comments on the user's posts
+        replies_email, replies_sms, replies_push: The same, for replies to the user's comments
+            and @mentions of the user ("Replies and mentions" in settings)
+        likes_email, likes_sms, likes_push: The same, for likes on the user's posts.
+            Every event defaults to email only.
         email_digest: Whether to get the daily email listing new posts across all circles.
             Global only: the digest reads the user's global row, and the copy a circle
             override carries is ignored.
@@ -67,13 +75,18 @@ class UserNotificationPreferences(models.Model):
     circle = models.ForeignKey(
         Circle, on_delete=models.CASCADE, related_name="notification_preferences", null=True, blank=True
     )
-    notify_new_media = models.BooleanField(default=True)
-    notify_comments = models.BooleanField(default=True)
-    notify_replies = models.BooleanField(default=True)
-    notify_likes = models.BooleanField(default=True)
-    email_enabled = models.BooleanField(default=True)
-    sms_enabled = models.BooleanField(default=False)
-    push_enabled = models.BooleanField(default=False)
+    new_media_email = models.BooleanField(default=True)
+    new_media_sms = models.BooleanField(default=False)
+    new_media_push = models.BooleanField(default=False)
+    comments_email = models.BooleanField(default=True)
+    comments_sms = models.BooleanField(default=False)
+    comments_push = models.BooleanField(default=False)
+    replies_email = models.BooleanField(default=True)
+    replies_sms = models.BooleanField(default=False)
+    replies_push = models.BooleanField(default=False)
+    likes_email = models.BooleanField(default=True)
+    likes_sms = models.BooleanField(default=False)
+    likes_push = models.BooleanField(default=False)
     email_digest = models.BooleanField(default=False)
     digest_covered_until = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -95,9 +108,9 @@ class UserNotificationPreferences(models.Model):
         """
         return self.circle_id is not None
 
-    def enabled_channels(self) -> list[str]:
-        """The channels these preferences send on, in a stable order."""
-        return [channel for channel, field in CHANNEL_FIELDS.items() if getattr(self, field)]
+    def channels_for(self, event: str) -> list[str]:
+        """The channels ``event`` (one of ``NOTIFICATION_EVENTS``) is sent on, in a stable order."""
+        return [channel for channel in NotificationChannel if getattr(self, preference_field(event, channel))]
 
     @classmethod
     def effective_for(cls, user, circle=None) -> "UserNotificationPreferences":

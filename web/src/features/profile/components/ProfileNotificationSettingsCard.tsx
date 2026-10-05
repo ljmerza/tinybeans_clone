@@ -13,19 +13,36 @@ import { useCircleMemberships } from "@/features/circles";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+	NOTIFICATION_EVENTS,
+	type NotificationPreferences,
+	type UpdateNotificationPreferencesRequest,
+} from "../api/services";
+import {
 	useNotificationPreferences,
 	useNotificationPreferencesMutation,
 } from "../hooks/useNotificationPreferences";
-import { NotificationChannelSettings } from "./NotificationChannelSettings";
+import {
+	NotificationChannelSettings,
+	NotificationChannelSetup,
+} from "./NotificationChannelSettings";
 
 const DEFAULT_SCOPE = "default";
 
-const EVENTS = [
-	{ field: "notify_new_media", key: "new_media" },
-	{ field: "notify_comments", key: "comments" },
-	{ field: "notify_replies", key: "replies" },
-	{ field: "notify_likes", key: "likes" },
-] as const;
+/**
+ * After a device subscribes, turn push on for the events this person already
+ * hears about (email or text on), unless they already chose push for some
+ * event. Returns null when nothing should change.
+ */
+function pushChangeAfterSubscribing(
+	prefs: NotificationPreferences,
+): UpdateNotificationPreferencesRequest | null {
+	if (NOTIFICATION_EVENTS.some((event) => prefs[`${event}_push`])) return null;
+	const events = NOTIFICATION_EVENTS.filter(
+		(event) => prefs[`${event}_email`] || prefs[`${event}_sms`],
+	);
+	if (events.length === 0) return null;
+	return Object.fromEntries(events.map((event) => [`${event}_push`, true]));
+}
 
 export function ProfileNotificationSettingsCard() {
 	const { t } = useTranslation();
@@ -105,31 +122,12 @@ export function ProfileNotificationSettingsCard() {
 							</div>
 						)}
 
-						<ul className="divide-y divide-border">
-							{EVENTS.map(({ field, key }) => (
-								<li
-									key={field}
-									className="flex items-center justify-between gap-4 py-3"
-								>
-									<div className="space-y-1">
-										<Label htmlFor={`notify-${key}`}>
-											{t(`profile.notifications.events.${key}.title`)}
-										</Label>
-										<p className="text-sm text-muted-foreground">
-											{t(`profile.notifications.events.${key}.description`)}
-										</p>
-									</div>
-									<Switch
-										id={`notify-${key}`}
-										checked={prefs[field]}
-										disabled={save.isPending}
-										onCheckedChange={(checked) =>
-											save.mutate({ [field]: checked })
-										}
-									/>
-								</li>
-							))}
-						</ul>
+						<NotificationChannelSettings
+							preferences={prefs}
+							isDefaultScope={circleId === null}
+							saving={save.isPending}
+							onChange={(change) => save.mutate(change)}
+						/>
 
 						{/* The digest covers every circle, so it's a default-only setting. */}
 						{circleId === null && (
@@ -153,15 +151,15 @@ export function ProfileNotificationSettingsCard() {
 							</div>
 						)}
 
-						<NotificationChannelSettings
-							preferences={prefs}
-							isDefaultScope={circleId === null}
-							saving={save.isPending}
-							onChange={(change) => save.mutate(change)}
-							onPushSubscribed={() => {
-								if (!prefs.push_enabled) save.mutate({ push_enabled: true });
-							}}
-						/>
+						{/* The phone and devices are shared by every circle. */}
+						{circleId === null && (
+							<NotificationChannelSetup
+								onPushSubscribed={() => {
+									const change = pushChangeAfterSubscribing(prefs);
+									if (change) save.mutate(change);
+								}}
+							/>
+						)}
 					</>
 				)}
 			</div>
