@@ -171,6 +171,9 @@ RATELIMIT_IP_META_KEY = "mysite.security.ip_utils.ratelimit_client_ip"
 
 PASSWORD_RESET_RATELIMIT = os.environ.get("PASSWORD_RESET_RATELIMIT", "5/15m")
 PASSWORD_RESET_CONFIRM_RATELIMIT = os.environ.get("PASSWORD_RESET_CONFIRM_RATELIMIT", "10/15m")
+# Applied per user and per client IP; every attempt counts, so it also caps
+# current-password guessing from a stolen session.
+PASSWORD_CHANGE_RATELIMIT = os.environ.get("PASSWORD_CHANGE_RATELIMIT", "5/15m")
 EMAIL_VERIFICATION_RESEND_RATELIMIT = os.environ.get("EMAIL_VERIFICATION_RESEND_RATELIMIT", "5/15m")
 EMAIL_VERIFICATION_CONFIRM_RATELIMIT = os.environ.get("EMAIL_VERIFICATION_CONFIRM_RATELIMIT", "10/15m")
 CIRCLE_INVITE_RATELIMIT = os.environ.get("CIRCLE_INVITE_RATELIMIT", "10/15m")

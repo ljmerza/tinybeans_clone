@@ -4,6 +4,7 @@ from __future__ import annotations
 
 EMAIL_VERIFICATION_TEMPLATE = "users.email.verification"
 PASSWORD_RESET_TEMPLATE = "users.password.reset"
+PASSWORD_CHANGED_TEMPLATE = "users.password.changed"
 CIRCLE_INVITATION_TEMPLATE = "users.circle.invitation"
 CIRCLE_INVITATION_REMINDER_TEMPLATE = "users.circle.invitation_reminder"
 CIRCLE_INVITATION_ACCEPTED_TEMPLATE = "users.circle.invitation_accepted"
@@ -28,6 +29,7 @@ TWOFA_RECOVERY_CODE_USED_TEMPLATE = "twofa.recovery_code_used"
 EMAIL_TEMPLATE_FILES = {
     EMAIL_VERIFICATION_TEMPLATE: "verification.email.html",
     PASSWORD_RESET_TEMPLATE: "password_reset.email.html",
+    PASSWORD_CHANGED_TEMPLATE: "password_changed.email.html",
     CIRCLE_INVITATION_TEMPLATE: "circle_invitation.email.html",
     CIRCLE_INVITATION_REMINDER_TEMPLATE: "circle_invitation_reminder.email.html",
     CIRCLE_INVITATION_ACCEPTED_TEMPLATE: "circle_invitation_accepted.email.html",
@@ -48,6 +50,7 @@ EMAIL_TEMPLATE_FILES = {
 __all__ = [
     "EMAIL_VERIFICATION_TEMPLATE",
     "PASSWORD_RESET_TEMPLATE",
+    "PASSWORD_CHANGED_TEMPLATE",
     "CIRCLE_INVITATION_TEMPLATE",
     "CHILD_UPGRADE_TEMPLATE",
     "MAGIC_LOGIN_TEMPLATE",

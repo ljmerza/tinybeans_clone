@@ -11,6 +11,16 @@ export type UpdateUserProfileRequest = Partial<AuthUser> & {
 	[key: string]: unknown;
 };
 
+export interface ChangePasswordRequest {
+	current_password: string;
+	password: string;
+	password_confirm: string;
+}
+
+export interface ChangePasswordResponse {
+	tokens: { access: string };
+}
+
 export type NotificationChannel = "email" | "sms";
 
 export interface NotificationPreferences {
@@ -46,6 +56,17 @@ export const profileServices = {
 			"/users/me/",
 			body,
 			options,
+		);
+	},
+
+	/**
+	 * Change the signed-in user's password. The server revokes every refresh
+	 * token, sets a new refresh cookie, and returns the matching access token.
+	 */
+	changePassword(body: ChangePasswordRequest) {
+		return authApi.post<ApiResponseWithMessages<ChangePasswordResponse>>(
+			"/auth/password/change/",
+			body,
 		);
 	},
 

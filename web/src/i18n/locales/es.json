@@ -923,6 +923,10 @@
 		"email_invalid": "Por favor ingrese una dirección de correo electrónico válida",
 		"password_too_short": "La contraseña debe tener al menos {{minLength}} caracteres",
 		"password_mismatch": "Las contraseñas no coinciden",
+		"password_too_common": "Esta contraseña es demasiado común. Elige una más difícil de adivinar.",
+		"password_entirely_numeric": "Tu contraseña no puede contener solo números.",
+		"password_too_similar": "Tu contraseña se parece demasiado a tu nombre o correo electrónico.",
+		"password_change_rate_limit": "Demasiados intentos de cambio de contraseña. Espera unos minutos e inténtalo de nuevo.",
 		"required_field": "Este campo es obligatorio",
 		"email_taken": "Este correo electrónico ya está registrado",
 		"email_verification_failed": "Falló la verificación del correo. Inténtalo de nuevo.",
@@ -991,7 +995,8 @@
 			"state_mismatch": "La validación de seguridad falló. Por favor intente iniciar sesión de nuevo."
 		},
 		"auth": {
-			"invalid_password": "Contraseña inválida"
+			"invalid_password": "Contraseña inválida",
+			"password_not_set": "Tu cuenta todavía no tiene contraseña. Usa el enlace que te enviamos por correo para crear una."
 		},
 		"twofa": {
 			"invalid_method": "Método 2FA inválido",
@@ -1073,6 +1078,24 @@
 			"unverified_cta": "¿Necesitas reenviar el enlace o actualizar tu dirección?",
 			"go_to_verification": "Abrir página de verificación"
 		}
+	},
+	"password": {
+		"title": "Contraseña",
+		"description": "Cambia la contraseña con la que inicias sesión. Se cerrará la sesión en tus otros dispositivos.",
+		"current_password": "Contraseña actual",
+		"new_password": "Nueva contraseña",
+		"new_password_help": "Al menos 8 caracteres. Evita contraseñas comunes o parecidas a tu nombre o correo electrónico.",
+		"confirm_password": "Confirmar nueva contraseña",
+		"submit": "Cambiar contraseña",
+		"submitting": "Cambiando…",
+		"changed": "Contraseña cambiada. Se cerró la sesión en tus otros dispositivos.",
+		"failed": "No pudimos cambiar tu contraseña. Inténtalo de nuevo.",
+		"set_title": "Crear una contraseña",
+		"set_description": "Inicias sesión con un enlace por correo o con Google, así que tu cuenta todavía no tiene contraseña. Te enviaremos por correo un enlace seguro para crear una.",
+		"send_link": "Enviarme un enlace",
+		"sending_link": "Enviando…",
+		"link_sent": "Revisa {{email}}: te enviamos un enlace para crear tu contraseña.",
+		"link_failed": "No pudimos enviar el correo. Inténtalo de nuevo."
 	}
 }
 }

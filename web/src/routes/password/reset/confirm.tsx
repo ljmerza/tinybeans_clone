@@ -1,11 +1,11 @@
-import { requireGuest } from "@/features/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { PasswordResetConfirmCard } from "@/features/auth";
 
+// Open to signed-in users too: accounts without a password get this link from
+// profile settings ("Set a password") and are usually still signed in.
 export const Route = createFileRoute("/password/reset/confirm")({
-	beforeLoad: requireGuest,
 	validateSearch: (search) =>
 		z.object({ token: z.string().optional() }).parse(search),
 	component: PasswordResetConfirmRoute,

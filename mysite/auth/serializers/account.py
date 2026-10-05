@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from mysite.notification_utils import create_message
@@ -98,17 +100,48 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return attrs
 
 
+PASSWORD_VALIDATOR_I18N_KEYS = {
+    "password_too_common": "errors.password_too_common",
+    "password_entirely_numeric": "errors.password_entirely_numeric",
+    "password_too_similar": "errors.password_too_similar",
+}
+
+
+def password_validation_messages(password: str, user: User) -> list[dict]:
+    """Run ``AUTH_PASSWORD_VALIDATORS`` and return i18n messages for any failures."""
+    try:
+        validate_password(password, user=user)
+    except DjangoValidationError as exc:
+        messages = []
+        for error in exc.error_list:
+            if error.code == "password_too_short":
+                messages.append(create_message("errors.password_too_short", {"minLength": error.params["min_length"]}))
+            elif error.code in PASSWORD_VALIDATOR_I18N_KEYS:
+                messages.append(create_message(PASSWORD_VALIDATOR_I18N_KEYS[error.code]))
+            else:
+                messages.append(create_message("errors.validation_error", {"message": " ".join(error.messages)}))
+        return messages
+    return []
+
+
 class PasswordChangeSerializer(serializers.Serializer):
     current_password = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, min_length=8)
+    # Length and strength come from AUTH_PASSWORD_VALIDATORS in validate().
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
         user = self.context["request"].user
         if not user.check_password(attrs["current_password"]):
             raise serializers.ValidationError({"current_password": create_message("errors.auth.invalid_password")})
+        errors = {}
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError({"password_confirm": create_message("errors.password_mismatch")})
+            errors["password_confirm"] = create_message("errors.password_mismatch")
+        password_messages = password_validation_messages(attrs["password"], user)
+        if password_messages:
+            errors["password"] = password_messages
+        if errors:
+            raise serializers.ValidationError(errors)
         return attrs
 
 

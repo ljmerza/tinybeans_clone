@@ -923,6 +923,10 @@
 		"email_invalid": "Please enter a valid email address",
 		"password_too_short": "Password must be at least {{minLength}} characters",
 		"password_mismatch": "Passwords do not match",
+		"password_too_common": "This password is too common. Choose something harder to guess.",
+		"password_entirely_numeric": "Your password can't be only numbers.",
+		"password_too_similar": "Your password is too similar to your name or email.",
+		"password_change_rate_limit": "Too many password change attempts. Please wait a few minutes and try again.",
 		"required_field": "This field is required",
 		"email_taken": "This email is already registered",
 		"email_verification_failed": "Email verification failed. Please try again.",
@@ -992,7 +996,8 @@
 			"state_mismatch": "Security validation failed. Please try signing in again."
 		},
 		"auth": {
-			"invalid_password": "Invalid password"
+			"invalid_password": "Invalid password",
+			"password_not_set": "Your account doesn't have a password yet. Use the emailed link to set one."
 		},
 		"twofa": {
 			"invalid_method": "Invalid 2FA method",
@@ -1073,6 +1078,24 @@
 				"unverified_cta": "Need to resend the link or update your address?",
 				"go_to_verification": "Open verification page"
 			}
+		},
+		"password": {
+			"title": "Password",
+			"description": "Change the password you use to sign in. Your other devices will be signed out.",
+			"current_password": "Current password",
+			"new_password": "New password",
+			"new_password_help": "At least 8 characters. Avoid common passwords and anything close to your name or email.",
+			"confirm_password": "Confirm new password",
+			"submit": "Change password",
+			"submitting": "Changing…",
+			"changed": "Password changed. Your other devices have been signed out.",
+			"failed": "We couldn't change your password. Please try again.",
+			"set_title": "Set a password",
+			"set_description": "You sign in with an email link or Google, so your account doesn't have a password yet. We'll email you a secure link to set one.",
+			"send_link": "Email me a link",
+			"sending_link": "Sending…",
+			"link_sent": "Check {{email}} for a link to set your password.",
+			"link_failed": "We couldn't send the email. Please try again."
 		}
 	}
 }

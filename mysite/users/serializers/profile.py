@@ -13,6 +13,7 @@ from ..models import NotificationChannel, User, UserNotificationPreferences
 class UserProfileSerializer(serializers.ModelSerializer):
     needs_circle_onboarding = serializers.SerializerMethodField()
     display_name = serializers.SerializerMethodField()
+    has_usable_password = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -30,6 +31,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "circle_onboarding_status",
             "circle_onboarding_updated_at",
             "needs_circle_onboarding",
+            "has_usable_password",
         ]
         read_only_fields = [
             "id",
@@ -47,6 +49,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_display_name(self, obj) -> str:
         return obj.display_name
+
+    def get_has_usable_password(self, obj) -> bool:
+        """False for Google / magic-link / imported accounts that never set a password."""
+        return obj.has_usable_password()
 
 
 class EmailPreferencesSerializer(serializers.ModelSerializer):

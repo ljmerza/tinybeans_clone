@@ -2,6 +2,7 @@ export * from "./components";
 
 export * from "./hooks/useUserProfile";
 export { useUpdateUserProfileMutation } from "./hooks/useUpdateUserProfileMutation";
+export { useChangePasswordMutation } from "./hooks/useChangePasswordMutation";
 export {
 	useNotificationPreferences,
 	useNotificationPreferencesMutation,
@@ -9,6 +10,8 @@ export {
 export { profileKeys, userKeys } from "./api/queryKeys";
 export {
 	profileServices,
+	type ChangePasswordRequest,
+	type ChangePasswordResponse,
 	type NotificationChannel,
 	type NotificationPreferences,
 	type UpdateNotificationPreferencesRequest,

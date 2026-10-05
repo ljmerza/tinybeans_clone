@@ -7,17 +7,19 @@ import math
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from drf_spectacular.utils import OpenApiResponse, OpenApiTypes, extend_schema
 from rest_framework import permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 
 from mysite import project_logging
 from mysite.audit import AuditEvent, log_audit_event, log_security_event
 from mysite.emails.tasks import send_email_task
-from mysite.emails.templates import PASSWORD_RESET_TEMPLATE
+from mysite.emails.templates import PASSWORD_CHANGED_TEMPLATE, PASSWORD_RESET_TEMPLATE
 from mysite.notification_utils import create_message, error_response, rate_limit_response, success_response
 from mysite.users.models import User
 
@@ -29,12 +31,14 @@ from ..serializers import (
 )
 from ..token_utils import (
     TOKEN_TTL_SECONDS,
+    get_client_ip,
     get_tokens_for_user,
     pop_token,
+    revoke_refresh_tokens,
     set_refresh_cookie,
     store_token,
 )
-from .constants import PASSWORD_RESET_CONFIRM_RATE, PASSWORD_RESET_RATE
+from .constants import PASSWORD_CHANGE_RATE, PASSWORD_RESET_CONFIRM_RATE, PASSWORD_RESET_RATE
 
 logger = logging.getLogger(__name__)
 
@@ -209,30 +213,73 @@ class PasswordChangeView(APIView):
 
     @extend_schema(
         description=(
-            "Allow an authenticated user to change their password and rotate tokens (refresh token stored "
-            "in HTTP-only cookie)."
+            "Change the authenticated user's password. Requires the current password and runs the "
+            "configured password validators. Every existing refresh token is revoked (other devices are "
+            "signed out once their access token expires); this device gets a new access token in the body "
+            "and a new refresh token in the HTTP-only cookie. A security notice is emailed to the user. "
+            "Accounts without a usable password get 400 `password_not_set` and should use the reset flow."
         ),
         request=PasswordChangeSerializer,
         responses={
             200: OpenApiResponse(
                 response=OpenApiTypes.OBJECT, description="Password changed successfully with new tokens"
-            )
+            ),
+            400: OpenApiResponse(description="Validation failed, or the account has no password to change"),
+            429: OpenApiResponse(description="Too many password change attempts"),
         },
     )
+    @method_decorator(ratelimit(key="ip", rate=PASSWORD_CHANGE_RATE, method="POST", block=False))
+    @method_decorator(ratelimit(key="user", rate=PASSWORD_CHANGE_RATE, method="POST", block=False))
     def post(self, request):
-        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
         user = request.user
-        user.set_password(serializer.validated_data["password"])
-        user.save(update_fields=["password"])
-        tokens = get_tokens_for_user(user)
+        if getattr(request, "limited", False):
+            logger.warning(
+                "Password change rate limited",
+                extra={"event": "auth.password_change.rate_limited", "extra": {"user_id": user.id}},
+            )
+            log_security_event(
+                "user.password_change.rate_limited",
+                actor_id=str(user.id),
+                status="denied",
+                severity="warning",
+            )
+            return rate_limit_response("errors.password_change_rate_limit")
+
+        if not user.has_usable_password():
+            # Google / magic-link / imported accounts. Setting a first password
+            # without proof of the current one would let a stolen session mint a
+            # permanent credential, so they go through the emailed reset link.
+            return error_response(
+                "password_not_set", [create_message("errors.auth.password_not_set")], status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            if "current_password" in serializer.errors:
+                log_security_event(
+                    "user.password_change.failed",
+                    actor_id=str(user.id),
+                    status="denied",
+                    severity="warning",
+                    metadata={"reason": "invalid_current_password"},
+                )
+            raise ValidationError(serializer.errors)
+
+        with transaction.atomic():
+            user.set_password(serializer.validated_data["password"])
+            user.save(update_fields=["password"])
+            revoked = revoke_refresh_tokens(user)
+            tokens = get_tokens_for_user(user)
+
+        changed_at = timezone.now()
+        _send_password_changed_email(user, ip_address=get_client_ip(request), changed_at=changed_at)
 
         with project_logging.log_context(user_id=user.id):
             logger.info(
                 "Password changed by authenticated user",
                 extra={
                     "event": "auth.password_change.success",
-                    "extra": {"user_id": user.id},
+                    "extra": {"user_id": user.id, "revoked_refresh_tokens": revoked},
                 },
             )
             log_audit_event(
@@ -242,6 +289,7 @@ class PasswordChangeView(APIView):
                     target_id=str(user.id),
                     status="success",
                     severity="info",
+                    metadata={"revoked_refresh_tokens": revoked},
                 )
             )
             log_security_event(
@@ -257,3 +305,27 @@ class PasswordChangeView(APIView):
         )
         set_refresh_cookie(response, tokens["refresh"])
         return response
+
+
+def _send_password_changed_email(user: User, *, ip_address: str, changed_at) -> None:
+    """Queue the "your password was changed" notice; never fail the request over it."""
+    base_url = (
+        getattr(settings, "ACCOUNT_FRONTEND_BASE_URL", "http://localhost:3000") or "http://localhost:3000"
+    ).rstrip("/")
+    try:
+        send_email_task.delay(
+            to_email=user.email,
+            template_id=PASSWORD_CHANGED_TEMPLATE,
+            context={
+                "email": user.email,
+                "full_name": user.display_name,
+                "changed_at": changed_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "ip_address": ip_address,
+                "reset_link": f"{base_url}/password/reset/request",
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Failed to queue password changed email",
+            extra={"event": "auth.password_change.email_failed", "extra": {"user_id": user.id}},
+        )

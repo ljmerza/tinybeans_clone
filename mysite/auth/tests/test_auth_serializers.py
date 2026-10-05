@@ -292,6 +292,19 @@ class PasswordChangeSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("password_confirm", serializer.errors)
 
+    def test_common_new_password_rejected_by_validators(self):
+        """AUTH_PASSWORD_VALIDATORS run against the new password."""
+        data = {"current_password": "oldpassword", "password": "password1", "password_confirm": "password1"}
+
+        from unittest.mock import Mock
+
+        mock_request = Mock()
+        mock_request.user = self.user
+
+        serializer = PasswordChangeSerializer(data=data, context={"request": mock_request})
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(str(serializer.errors["password"][0]["i18n_key"]), "errors.password_too_common")
+
 
 class PasswordResetRequestSerializerTests(TestCase):
     def test_valid_identifier_email(self):
