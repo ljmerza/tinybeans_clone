@@ -361,6 +361,8 @@ export function usePasswordResetRequest() {
 }
 
 export function usePasswordResetConfirm() {
+	const qc = useQueryClient();
+
 	return useMutation<
 		ApiResponseWithMessages,
 		ApiError,
@@ -371,6 +373,12 @@ export function usePasswordResetConfirm() {
 		}
 	>({
 		mutationFn: (body) => authServices.confirmPasswordReset(body),
+		onSuccess: () => {
+			// The reset revoked every refresh token, including a signed-in
+			// visitor's own, so drop the local session and log in afresh.
+			setAccessToken(null);
+			qc.removeQueries({ queryKey: authKeys.session(), exact: true });
+		},
 		onError: (error) => {
 			console.error("Password reset confirm error:", error);
 		},

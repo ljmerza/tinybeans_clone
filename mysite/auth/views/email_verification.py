@@ -30,6 +30,7 @@ from .constants import (
     EMAIL_VERIFICATION_CONFIRM_RATE,
     EMAIL_VERIFICATION_RESEND_RATE,
     EMAIL_VERIFICATION_TOKEN_TTL_SECONDS,
+    body_field_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -133,7 +134,7 @@ class EmailVerificationConfirmView(APIView):
     )
     @method_decorator(
         ratelimit(
-            key="post:token",
+            key=body_field_key("token"),
             rate=EMAIL_VERIFICATION_CONFIRM_RATE,
             method="POST",
             block=False,

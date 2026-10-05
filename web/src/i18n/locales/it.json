@@ -847,6 +847,8 @@
 		"password_required": "La password è obbligatoria",
 		"password_min_length": "La password deve contenere almeno 8 caratteri",
 		"passwords_match": "Le password non corrispondono",
+		"passwords_must_match": "Le password non corrispondono",
+		"confirm_password_required": "Conferma la password",
 		"confirm_password": "Conferma la password",
 		"field_required": "Questo campo è obbligatorio",
 		"circle_name_min": "Il nome della cerchia deve contenere almeno 2 caratteri",

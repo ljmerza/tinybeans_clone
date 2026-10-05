@@ -92,6 +92,11 @@ def pop_token(prefix: str, token: str):
     return payload
 
 
+def peek_token(prefix: str, token: str):
+    """Return a token's payload without consuming it, or None if not found."""
+    return cache.get(token_cache_key(prefix, token))
+
+
 def delete_token(prefix: str, token: str) -> None:
     """Delete a token from the cache without retrieving its payload.
 

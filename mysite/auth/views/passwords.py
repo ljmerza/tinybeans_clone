@@ -38,7 +38,7 @@ from ..token_utils import (
     set_refresh_cookie,
     store_token,
 )
-from .constants import PASSWORD_CHANGE_RATE, PASSWORD_RESET_CONFIRM_RATE, PASSWORD_RESET_RATE
+from .constants import PASSWORD_CHANGE_RATE, PASSWORD_RESET_CONFIRM_RATE, PASSWORD_RESET_RATE, body_field_key
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class PasswordResetRequestView(APIView):
     )
     @method_decorator(
         ratelimit(
-            key="post:identifier",
+            key=body_field_key("email"),
             rate=PASSWORD_RESET_RATE,
             method="POST",
             block=False,
@@ -129,7 +129,12 @@ class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
 
     @extend_schema(
-        description="Complete a password reset using a valid reset token.",
+        description=(
+            "Complete a password reset using a valid reset token. Runs the configured password validators "
+            "(a rejected password leaves the token usable). On success every refresh token is revoked, "
+            "password login is enabled (Google-linked accounts become `hybrid`) and a security notice is "
+            "emailed. The user is not signed in; they log in with the new password."
+        ),
         request=PasswordResetConfirmSerializer,
         responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description="Password reset completed")},
     )
@@ -143,7 +148,7 @@ class PasswordResetConfirmView(APIView):
     )
     @method_decorator(
         ratelimit(
-            key="post:token",
+            key=body_field_key("token"),
             rate=PASSWORD_RESET_CONFIRM_RATE,
             method="POST",
             block=False,
@@ -179,14 +184,19 @@ class PasswordResetConfirmView(APIView):
             return error_response(
                 "user_not_found", [create_message("errors.user_not_found")], status.HTTP_404_NOT_FOUND
             )
-        user.set_password(serializer.validated_data["password"])
-        user.save(update_fields=["password"])
+        with transaction.atomic():
+            user.set_password(serializer.validated_data["password"])
+            user.save(update_fields=["password", *_enable_password_login(user)])
+            revoked = revoke_refresh_tokens(user)
+
+        _send_password_changed_email(user, ip_address=get_client_ip(request), changed_at=timezone.now(), reset=True)
+
         with project_logging.log_context(user_id=user.id):
             logger.info(
                 "Password reset completed",
                 extra={
                     "event": "auth.password_reset.success",
-                    "extra": {"user_id": user.id},
+                    "extra": {"user_id": user.id, "revoked_refresh_tokens": revoked},
                 },
             )
             log_audit_event(
@@ -196,6 +206,7 @@ class PasswordResetConfirmView(APIView):
                     target_id=str(user.id),
                     status="success",
                     severity="warning",
+                    metadata={"revoked_refresh_tokens": revoked},
                 )
             )
             log_security_event(
@@ -307,8 +318,24 @@ class PasswordChangeView(APIView):
         return response
 
 
-def _send_password_changed_email(user: User, *, ip_address: str, changed_at) -> None:
-    """Queue the "your password was changed" notice; never fail the request over it."""
+def _enable_password_login(user: User) -> list[str]:
+    """Let an account that now has a password sign in with it.
+
+    Google sign-ups start with ``password_login_enabled=False``, which also
+    blocks unlinking Google. Returns the fields changed, for ``save()``.
+    """
+    changed = []
+    if not user.password_login_enabled:
+        user.password_login_enabled = True
+        changed.append("password_login_enabled")
+    if user.google_id and user.auth_provider != "hybrid":
+        user.auth_provider = "hybrid"
+        changed.append("auth_provider")
+    return changed
+
+
+def _send_password_changed_email(user: User, *, ip_address: str, changed_at, reset: bool = False) -> None:
+    """Queue the "your password was changed/reset" notice; never fail the request over it."""
     base_url = (
         getattr(settings, "ACCOUNT_FRONTEND_BASE_URL", "http://localhost:3000") or "http://localhost:3000"
     ).rstrip("/")
@@ -322,6 +349,7 @@ def _send_password_changed_email(user: User, *, ip_address: str, changed_at) -> 
                 "changed_at": changed_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
                 "ip_address": ip_address,
                 "reset_link": f"{base_url}/password/reset/request",
+                "was_reset": reset,
             },
         )
     except Exception:

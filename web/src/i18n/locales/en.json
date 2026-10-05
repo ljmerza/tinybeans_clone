@@ -847,6 +847,8 @@
 		"password_required": "Password is required",
 		"password_min_length": "Password must be at least 8 characters",
 		"passwords_match": "Passwords do not match",
+		"passwords_must_match": "Passwords do not match",
+		"confirm_password_required": "Please confirm your password",
 		"confirm_password": "Confirm password",
 		"field_required": "This field is required",
 		"circle_name_min": "Circle name must be at least 2 characters",
