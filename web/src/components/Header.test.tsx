@@ -19,10 +19,10 @@ describe("Header", () => {
 	it("shows the Circles brand linking home", () => {
 		render(<Header isAuthenticated={false} />);
 
-		expect(screen.getByRole("link", { name: "Circles" })).toHaveAttribute(
-			"href",
-			"/",
-		);
+		const brand = screen.getByRole("link", { name: "Circles" });
+		expect(brand).toHaveAttribute("href", "/");
+		// The ring logo sits beside the name and stays out of the link's name.
+		expect(brand.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
 	});
 
 	it("has no Circles link; circles live under Settings", () => {

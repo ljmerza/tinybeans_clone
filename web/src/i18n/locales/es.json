@@ -27,7 +27,6 @@
 		"refresh": "Actualizar"
 	},
 	"nav": {
-		"home": "Inicio",
 		"brand": "Circles",
 		"calendar": "Calendario",
 		"login": "Iniciar sesión",
@@ -481,11 +480,6 @@
 		}
 	},
 	"pages": {
-		"home": {
-			"welcome": "Bienvenido",
-			"authenticated_message": "¡Has iniciado sesión!",
-			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
-		},
 		"landing": {
 			"badge": "Fotos compartidas en privado, para familias",
 			"title": "Los momentos de tu familia, guardados en un círculo privado",

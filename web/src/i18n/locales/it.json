@@ -27,7 +27,6 @@
 		"refresh": "Aggiorna"
 	},
 	"nav": {
-		"home": "Home",
 		"brand": "Circles",
 		"calendar": "Calendario",
 		"login": "Accedi",
@@ -481,11 +480,6 @@
 		}
 	},
 	"pages": {
-		"home": {
-			"welcome": "Ti diamo il benvenuto",
-			"authenticated_message": "Hai effettuato l'accesso!",
-			"guest_message": "Inizia registrandoti o accedendo al tuo account."
-		},
 		"landing": {
 			"badge": "Condivisione privata di foto per le famiglie",
 			"title": "I momenti della tua famiglia, custoditi in una cerchia privata",

@@ -5,6 +5,7 @@
  * @module components/Header
  */
 
+import { CirclesLogo } from "@/components/CirclesLogo";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -83,8 +84,9 @@ export function Header({ isAuthenticated }: HeaderProps) {
 					<div className="flex shrink-0 items-center">
 						<Link
 							to="/"
-							className="text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
+							className="inline-flex items-center gap-2 text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
 						>
+							<CirclesLogo className="size-7" />
 							{t("nav.brand")}
 						</Link>
 					</div>
