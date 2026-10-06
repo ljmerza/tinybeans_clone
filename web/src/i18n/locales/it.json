@@ -290,6 +290,8 @@
 				"scan_complete": "Ho scansionato il codice"
 			},
 			"totp": {
+				"start": "Mostra codice QR",
+				"starting": "Preparazione…",
 				"title": "Configurazione dell'app di autenticazione",
 				"intro": "Usa un'app di autenticazione come Google Authenticator o Authy",
 				"scan": "Scansiona il codice QR",
@@ -939,7 +941,9 @@
 				"leave_confirm_cta": "Sì, lascia la cerchia",
 				"create_own_title": "Crea la tua cerchia",
 				"create_own_description": "Fai parte di alcune cerchie, ma non ne hai ancora creata una tua. Crea la tua cerchia per invitare familiari e amici.",
-				"create_own_action": "Crea cerchia"
+				"create_own_action": "Crea cerchia",
+				"create_dialog_title": "Crea una cerchia",
+				"create_dialog_description": "Crea un'altra cerchia per un altro gruppo di familiari o amici."
 			},
 			"dashboard": {
 				"loading": "Caricamento dei dettagli della cerchia…",

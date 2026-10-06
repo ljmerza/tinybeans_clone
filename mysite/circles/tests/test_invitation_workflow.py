@@ -184,3 +184,7 @@ class InvitationWorkflowTests(TestCase):
         self.assertEqual(response.json()["data"]["circle"]["id"], self.circle.id)
         invitee.refresh_from_db()
         self.assertFalse(invitee.needs_circle_onboarding)
+        invitation.refresh_from_db()
+        self.assertEqual(invitation.status, CircleInvitationStatus.ACCEPTED)
+        self.assertIsNotNone(invitation.archived_at)
+        self.assertEqual(invitation.archived_reason, "accepted")

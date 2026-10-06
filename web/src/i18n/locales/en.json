@@ -290,6 +290,8 @@
 				"scan_complete": "I've scanned the code"
 			},
 			"totp": {
+				"start": "Show QR code",
+				"starting": "Preparing…",
 				"title": "Authenticator App Setup",
 				"intro": "Use an authenticator app like Google Authenticator or Authy",
 				"scan": "Scan QR Code",
@@ -939,7 +941,9 @@
 				"leave_confirm_cta": "Yes, leave the circle",
 				"create_own_title": "Create your own circle",
 				"create_own_description": "You're part of circles, but you haven't created your own yet. Start your own circle to invite family and friends.",
-				"create_own_action": "Create circle"
+				"create_own_action": "Create circle",
+				"create_dialog_title": "Create a circle",
+				"create_dialog_description": "Start another circle for a different group of family or friends."
 			},
 			"dashboard": {
 				"loading": "Loading circle details…",

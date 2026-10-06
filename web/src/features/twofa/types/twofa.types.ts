@@ -90,4 +90,6 @@ export interface TwoFactorVerifyState {
 	partialToken: string;
 	method: TwoFactorMethod;
 	message?: string;
+	/** Where login was headed (e.g. an invitation) before the code was asked for. */
+	redirect?: string;
 }

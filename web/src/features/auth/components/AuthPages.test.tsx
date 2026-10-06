@@ -1,6 +1,6 @@
 import i18n from "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const navigate = vi.fn();
@@ -55,6 +55,7 @@ vi.mock("@/features/auth", async (importOriginal) => ({
 	useResendVerificationMutation: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
+import { twoFactorServices } from "@/features/twofa";
 import VerifyEmailRequiredRoute from "@/route-views/verify-email-required";
 import { Route as TwoFactorVerifyRoute } from "@/routes/profile/2fa/verify";
 import { EmailVerificationHandler } from "./EmailVerificationHandler";
@@ -83,6 +84,8 @@ function expectSplitLayout(title: string) {
 
 afterEach(async () => {
 	location.state = twoFactorState;
+	navigate.mockReset();
+	vi.restoreAllMocks();
 	await act(() => i18n.changeLanguage("en"));
 });
 
@@ -170,6 +173,33 @@ describe("secondary auth pages use the split layout", () => {
 		expect(
 			screen.getByRole("button", { name: "Restablecer contraseña" }),
 		).toBeInTheDocument();
+	});
+
+	it("two-factor verification carries on to an invitation", async () => {
+		location.state = {
+			twoFactor: {
+				...twoFactorState.twoFactor,
+				redirect: "/invitations/accept?token=invite-token&onboarding=ob",
+			},
+		};
+		vi.spyOn(twoFactorServices, "verifyLogin").mockResolvedValue({
+			data: { tokens: { access: "access" } },
+		} as Awaited<ReturnType<typeof twoFactorServices.verifyLogin>>);
+		renderWithQueryClient(<TwoFactorVerifyPage />);
+
+		for (const [index, digit] of [..."123456"].entries()) {
+			fireEvent.change(screen.getByLabelText(`Digit ${index + 1}`), {
+				target: { value: digit },
+			});
+		}
+		fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith({
+				to: "/invitations/accept",
+				search: { token: "invite-token" },
+			}),
+		);
 	});
 
 	it("two-factor verification sends you to login without its state", () => {

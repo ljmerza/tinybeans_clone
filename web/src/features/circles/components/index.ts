@@ -5,3 +5,4 @@ export { CircleInvitationManager } from "./CircleInvitationManager";
 export { CircleMemberList } from "./CircleMemberList";
 export { CircleMemberListItem } from "./CircleMemberListItem";
 export { CircleRecapSetting } from "./CircleRecapSetting";
+export { CreateCircleDialog } from "./CreateCircleDialog";

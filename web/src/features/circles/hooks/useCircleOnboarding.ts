@@ -61,6 +61,7 @@ export function useCreateCircleMutation(): UseMutationResult<
 			response: ApiResponseWithMessages<{ circle: CircleSummary }>,
 		) => {
 			queryClient.invalidateQueries({ queryKey: circleKeys.onboarding() });
+			queryClient.invalidateQueries({ queryKey: circleKeys.list() });
 			queryClient.invalidateQueries({ queryKey: authKeys.session() });
 			if (response.messages?.length) {
 				showAsToast(response.messages, 201);

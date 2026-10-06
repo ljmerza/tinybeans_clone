@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SecureBrandPanel } from "@/features/auth/components/AuthBrandPanel";
 import { AuthSplitLayout } from "@/features/auth/components/AuthSplitLayout";
+import { tryNavigateRedirect } from "@/features/auth/hooks/authHooks";
 import { extractApiError } from "@/features/auth/utils";
+import { consumeInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
 import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
 import { verificationCodeSchema } from "@/lib/validations/schemas/twofa";
@@ -65,6 +67,8 @@ function TwoFactorVerifyPage() {
 			method,
 			message:
 				typeof candidate.message === "string" ? candidate.message : undefined,
+			redirect:
+				typeof candidate.redirect === "string" ? candidate.redirect : undefined,
 		} satisfies TwoFactorVerifyState;
 	});
 
@@ -75,10 +79,13 @@ function TwoFactorVerifyPage() {
 	const verify = useVerify2FALogin();
 
 	useEffect(() => {
-		if (verify.isSuccess) {
+		if (!verify.isSuccess) return;
+		// Pick up where login was headed, e.g. joining a circle from an invite.
+		const target = verifyData?.redirect ?? consumeInviteRedirect();
+		if (!tryNavigateRedirect(navigate, target)) {
 			navigate({ to: "/", replace: true });
 		}
-	}, [verify.isSuccess, navigate]);
+	}, [verify.isSuccess, navigate, verifyData?.redirect]);
 
 	const method = verifyData?.method;
 	const message = verifyData?.message;
