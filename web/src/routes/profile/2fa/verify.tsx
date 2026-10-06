@@ -4,10 +4,12 @@
  */
 
 import { StatusMessage } from "@/components";
-import { AuthCard } from "@/components/AuthCard";
+import { IconTile } from "@/components/IconTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SecureBrandPanel } from "@/features/auth/components/AuthBrandPanel";
+import { AuthSplitLayout } from "@/features/auth/components/AuthSplitLayout";
 import { extractApiError } from "@/features/auth/utils";
 import { VerificationInput, useVerify2FALogin } from "@/features/twofa";
 import type { TwoFactorMethod, TwoFactorVerifyState } from "@/features/twofa";
@@ -18,6 +20,7 @@ import {
 	useLocation,
 	useNavigate,
 } from "@tanstack/react-router";
+import { ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -112,22 +115,11 @@ function TwoFactorVerifyPage() {
 	};
 
 	return (
-		<AuthCard
+		<AuthSplitLayout
+			aside={<SecureBrandPanel />}
+			icon={<IconTile icon={ShieldCheck} tone="sky" size="lg" />}
 			title={t("twofa.verify_title")}
 			description={headerDescription}
-			className="max-w-md"
-			footerClassName="border-t pt-4 text-center space-y-0"
-			footer={
-				<Button
-					type="button"
-					variant="link"
-					onClick={() => navigate({ to: "/login" })}
-					disabled={verify.isPending}
-					className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-				>
-					{t("common.back_to_login")}
-				</Button>
-			}
 		>
 			{!useRecoveryCode ? (
 				<VerificationInput
@@ -175,6 +167,7 @@ function TwoFactorVerifyPage() {
 			</div>
 
 			<Button
+				size="lg"
 				onClick={handleVerify}
 				disabled={
 					verify.isPending ||
@@ -213,7 +206,19 @@ function TwoFactorVerifyPage() {
 						: t("twofa.verify.use_recovery_toggle")}
 				</Button>
 			</div>
-		</AuthCard>
+
+			<div className="border-t border-border pt-4 text-center">
+				<Button
+					type="button"
+					variant="link"
+					onClick={() => navigate({ to: "/login" })}
+					disabled={verify.isPending}
+					className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+				>
+					{t("common.back_to_login")}
+				</Button>
+			</div>
+		</AuthSplitLayout>
 	);
 }
 

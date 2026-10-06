@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { FormActions, FormField } from "@/components";
+import { IconTile } from "@/components/IconTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
@@ -10,8 +11,11 @@ import { zodValidator } from "@/lib/form/index";
 import { passwordResetRequestSchema } from "@/lib/validations/schemas/password-reset";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
+import { KeyRound } from "lucide-react";
 
 import { usePasswordResetRequest } from "../hooks/authHooks";
+import { SecureBrandPanel } from "./AuthBrandPanel";
+import { AuthSplitLayout } from "./AuthSplitLayout";
 
 export function PasswordResetRequestCard() {
 	const { t } = useTranslation();
@@ -54,37 +58,32 @@ export function PasswordResetRequestCard() {
 	});
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background px-4 transition-colors">
-			<div className="w-full max-w-sm bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 space-y-4 transition-colors">
-				<div className="space-y-2 text-center">
-					<h1 className="text-2xl font-semibold">
-						{t("auth.password_reset.request_title")}
-					</h1>
-					<p className="text-sm text-muted-foreground">
-						{t("auth.password_reset.request_description")}
-					</p>
+		<AuthSplitLayout
+			aside={<SecureBrandPanel />}
+			icon={<IconTile icon={KeyRound} tone="amber" size="lg" />}
+			title={t("auth.password_reset.request_title")}
+			description={t("auth.password_reset.request_description")}
+		>
+			{successMessage && (
+				<div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-sm rounded p-3 transition-colors">
+					{successMessage}
 				</div>
+			)}
 
-				{successMessage && (
-					<div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-sm rounded p-3 transition-colors">
-						{successMessage}
-					</div>
-				)}
+			{errorMessage && (
+				<div className="bg-destructive/10 border border-destructive/30 dark:border-destructive/40 text-destructive text-sm rounded p-3 transition-colors">
+					{errorMessage}
+				</div>
+			)}
 
-				{errorMessage && (
-					<div className="bg-destructive/10 border border-destructive/30 dark:border-destructive/40 text-destructive text-sm rounded p-3 transition-colors">
-						{errorMessage}
-					</div>
-				)}
-
-				<form
-					onSubmit={(event) => {
-						event.preventDefault();
-						event.stopPropagation();
-						form.handleSubmit();
-					}}
-					className="space-y-4"
-				>
+			<form
+				onSubmit={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					form.handleSubmit();
+				}}
+				className="space-y-4"
+			>
 				<form.Field
 					name="email"
 					validators={{
@@ -92,49 +91,46 @@ export function PasswordResetRequestCard() {
 					}}
 				>
 					{(field) => (
-						<FormField
-							field={field}
-							label={t("auth.password_reset.email")}
-						>
-								{({ id, field: fieldApi }) => (
-									<Input
-										id={id}
-										autoComplete="email"
-										value={fieldApi.state.value}
-										onChange={(event) =>
-											fieldApi.handleChange(event.target.value)
-										}
-										onBlur={fieldApi.handleBlur}
-										disabled={resetRequest.isPending}
-										required
-									/>
-								)}
-							</FormField>
-						)}
-					</form.Field>
+						<FormField field={field} label={t("auth.password_reset.email")}>
+							{({ id, field: fieldApi }) => (
+								<Input
+									id={id}
+									autoComplete="email"
+									value={fieldApi.state.value}
+									onChange={(event) =>
+										fieldApi.handleChange(event.target.value)
+									}
+									onBlur={fieldApi.handleBlur}
+									disabled={resetRequest.isPending}
+									required
+								/>
+							)}
+						</FormField>
+					)}
+				</form.Field>
 
-					<FormActions>
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={resetRequest.isPending}
-						>
-							{resetRequest.isPending
-								? t("auth.password_reset.sending")
-								: t("auth.password_reset.send_reset_link")}
-						</Button>
-					</FormActions>
-				</form>
-
-				<div className="text-center text-sm">
-					<Link
-						to="/login"
-						className="font-semibold text-primary hover:text-primary/80 transition-colors"
+				<FormActions>
+					<Button
+						type="submit"
+						size="lg"
+						className="w-full"
+						disabled={resetRequest.isPending}
 					>
-						{t("auth.password_reset.back_to_login")}
-					</Link>
-				</div>
+						{resetRequest.isPending
+							? t("auth.password_reset.sending")
+							: t("auth.password_reset.send_reset_link")}
+					</Button>
+				</FormActions>
+			</form>
+
+			<div className="border-t border-border pt-6 text-center text-sm">
+				<Link
+					to="/login"
+					className="font-semibold text-primary hover:text-primary/80 transition-colors"
+				>
+					{t("auth.password_reset.back_to_login")}
+				</Link>
 			</div>
-		</div>
+		</AuthSplitLayout>
 	);
 }

@@ -1,5 +1,5 @@
 import { FormActions, FormField } from "@/components";
-import { AuthCard } from "@/components/AuthCard";
+import { IconTile } from "@/components/IconTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
@@ -9,10 +9,13 @@ import { magicLinkRequestSchema } from "@/lib/validations/schemas/magic-link";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
+import { Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useMagicLinkRequest } from "../hooks/authHooks";
+import { SecureBrandPanel } from "./AuthBrandPanel";
+import { AuthSplitLayout } from "./AuthSplitLayout";
 
 interface MagicLinkRequestCardProps {
 	redirect?: string;
@@ -63,33 +66,11 @@ export function MagicLinkRequestCard({ redirect }: MagicLinkRequestCardProps) {
 	});
 
 	return (
-		<AuthCard
+		<AuthSplitLayout
+			aside={<SecureBrandPanel />}
+			icon={<IconTile icon={Mail} tone="sky" size="lg" />}
 			title={t("auth.magic_link.request_title")}
 			description={t("auth.magic_link.request_description")}
-			footerClassName="space-y-3 text-center text-sm text-muted-foreground"
-			footer={
-				<>
-					<div>
-						<Link
-							to="/login"
-							search={{ redirect }}
-							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-						>
-							{t("auth.magic_link.back_to_login")}
-						</Link>
-					</div>
-					<div>
-						{t("auth.login.no_account")}{" "}
-						<Link
-							to="/signup"
-							search={{ redirect }}
-							className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-						>
-							{t("nav.signup")}
-						</Link>
-					</div>
-				</>
-			}
 		>
 			<form
 				onSubmit={(event) => {
@@ -147,6 +128,7 @@ export function MagicLinkRequestCard({ redirect }: MagicLinkRequestCardProps) {
 				>
 					<Button
 						type="submit"
+						size="lg"
 						className="w-full"
 						disabled={magicLoginRequest.isPending}
 					>
@@ -156,6 +138,28 @@ export function MagicLinkRequestCard({ redirect }: MagicLinkRequestCardProps) {
 					</Button>
 				</FormActions>
 			</form>
-		</AuthCard>
+
+			<div className="space-y-3 border-t border-border pt-6 text-center text-sm text-muted-foreground">
+				<div>
+					<Link
+						to="/login"
+						search={{ redirect }}
+						className="font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
+					>
+						{t("auth.magic_link.back_to_login")}
+					</Link>
+				</div>
+				<div>
+					{t("auth.login.no_account")}{" "}
+					<Link
+						to="/signup"
+						search={{ redirect }}
+						className="font-semibold text-primary hover:text-primary/80 transition-colors"
+					>
+						{t("nav.signup")}
+					</Link>
+				</div>
+			</div>
+		</AuthSplitLayout>
 	);
 }

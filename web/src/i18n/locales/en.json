@@ -81,6 +81,26 @@
 				"hint": "Use 12 or more characters with a mix of letters, numbers and symbols."
 			}
 		},
+		"panels": {
+			"login": {
+				"title": "Welcome back",
+				"subtitle": "Sign in to catch up on what your family has been sharing.",
+				"points": {
+					"media": "New photos and videos from your circles",
+					"calendar": "On this day memories from past years",
+					"albums": "Albums and favorites, right where you left them"
+				}
+			},
+			"secure": {
+				"title": "Your circle stays private",
+				"subtitle": "Only the people you invite can see what you share.",
+				"points": {
+					"invite_only": "Circles are invite-only",
+					"two_factor": "Two-factor sign-in keeps your account safe",
+					"no_ads": "No ads and no public profiles"
+				}
+			}
+		},
 		"password_reset": {
 			"request_title": "Reset Password",
 			"request_description": "Enter your email and we'll send you a link to reset your password.",

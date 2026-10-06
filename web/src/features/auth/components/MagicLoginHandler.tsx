@@ -2,12 +2,17 @@ import type { ApiError } from "@/types";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { StatusMessage, Layout } from "@/components";
+import { LoadingSpinner, StatusMessage } from "@/components";
+import { IconTile } from "@/components/IconTile";
+import { Button } from "@/components/ui/button";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { useApiMessages } from "@/i18n";
 import { useNavigate } from "@tanstack/react-router";
+import { LogIn, MailX } from "lucide-react";
 
 import { useMagicLoginVerify } from "../hooks/authHooks";
+import { SecureBrandPanel } from "./AuthBrandPanel";
+import { AuthSplitLayout } from "./AuthSplitLayout";
 
 type MagicLoginHandlerProps = {
 	token?: string;
@@ -57,37 +62,47 @@ export function MagicLoginHandler({ token, redirect }: MagicLoginHandlerProps) {
 			});
 	}, [token, magicLoginVerify, getGeneral, t]);
 
-	if (status === "verifying") {
-		return (
-			<Layout.Loading
-				showHeader={false}
-				message={t("auth.magic_link.verifying")}
-				spinnerSize="md"
-			/>
-		);
-	}
-
-	if (status === "success") {
-		return (
-			<Layout>
-				<StatusMessage variant="success" align="center">
+	return (
+		<AuthSplitLayout
+			aside={<SecureBrandPanel />}
+			icon={
+				status === "error" ? (
+					<IconTile icon={MailX} tone="rose" size="lg" />
+				) : (
+					<IconTile icon={LogIn} tone="sky" size="lg" />
+				)
+			}
+			title={t("auth.magic_link.request_title")}
+		>
+			{status === "verifying" ? (
+				<div
+					className="flex items-center gap-3 text-muted-foreground"
+					aria-live="polite"
+					aria-busy
+				>
+					<LoadingSpinner size="sm" className="text-primary" />
+					{t("auth.magic_link.verifying")}
+				</div>
+			) : status === "success" ? (
+				<StatusMessage variant="success">
 					{t("auth.magic_link.success")}
 				</StatusMessage>
-			</Layout>
-		);
-	}
-
-	return (
-		<Layout.Error
-			showHeader={false}
-			message={errorMessage}
-			actionLabel={t("auth.password_reset.back_to_login")}
-			onAction={() =>
-				navigate({
-					to: "/login",
-					search: redirect ? { redirect } : undefined,
-				})
-			}
-		/>
+			) : (
+				<div className="space-y-4">
+					<StatusMessage variant="error">{errorMessage}</StatusMessage>
+					<Button
+						variant="outline"
+						onClick={() =>
+							navigate({
+								to: "/login",
+								search: redirect ? { redirect } : undefined,
+							})
+						}
+					>
+						{t("auth.password_reset.back_to_login")}
+					</Button>
+				</div>
+			)}
+		</AuthSplitLayout>
 	);
 }

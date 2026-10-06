@@ -81,6 +81,26 @@
 				"hint": "Usa almeno 12 caratteri, mescolando lettere, numeri e simboli."
 			}
 		},
+		"panels": {
+			"login": {
+				"title": "Ti diamo il bentornato",
+				"subtitle": "Accedi per scoprire cosa ha condiviso la tua famiglia.",
+				"points": {
+					"media": "Nuove foto e nuovi video dalle tue cerchie",
+					"calendar": "Ricordi di questo giorno negli anni passati",
+					"albums": "Album e preferiti, proprio dove li hai lasciati"
+				}
+			},
+			"secure": {
+				"title": "La tua cerchia resta privata",
+				"subtitle": "Solo le persone che inviti possono vedere ciò che condividi.",
+				"points": {
+					"invite_only": "Le cerchie sono solo su invito",
+					"two_factor": "L'accesso in due passaggi protegge il tuo account",
+					"no_ads": "Niente pubblicità né profili pubblici"
+				}
+			}
+		},
 		"password_reset": {
 			"request_title": "Reimposta la password",
 			"request_description": "Inserisci la tua email e ti invieremo un link per reimpostare la password.",

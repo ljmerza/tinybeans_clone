@@ -81,6 +81,26 @@
 				"hint": "Usa 12 caracteres o más, mezclando letras, números y símbolos."
 			}
 		},
+		"panels": {
+			"login": {
+				"title": "Hola de nuevo",
+				"subtitle": "Inicia sesión para ponerte al día con lo que comparte tu familia.",
+				"points": {
+					"media": "Fotos y videos nuevos de tus círculos",
+					"calendar": "Recuerdos de un día como hoy en años anteriores",
+					"albums": "Álbumes y favoritos, donde los dejaste"
+				}
+			},
+			"secure": {
+				"title": "Tu círculo sigue siendo privado",
+				"subtitle": "Solo las personas que invites pueden ver lo que compartes.",
+				"points": {
+					"invite_only": "Los círculos son solo por invitación",
+					"two_factor": "El inicio de sesión en dos pasos protege tu cuenta",
+					"no_ads": "Sin anuncios ni perfiles públicos"
+				}
+			}
+		},
 		"password_reset": {
 			"request_title": "Restablecer contraseña",
 			"request_description": "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
