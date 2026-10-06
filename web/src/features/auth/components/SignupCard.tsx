@@ -1,5 +1,4 @@
 import { FormActions, FormField } from "@/components";
-import { IconTile, type IconTileTone } from "@/components/IconTile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMessages } from "@/i18n";
@@ -9,7 +8,6 @@ import { signupSchemaBase } from "@/lib/validations/schemas/signup";
 import type { ApiError } from "@/types";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
-import { BellRing, Images, Lock, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,41 +15,14 @@ import { useSignup } from "../hooks/authHooks";
 import { AppleOAuthButton } from "../oauth/AppleOAuthButton";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 import { useOAuthProviders } from "../oauth/useOAuthProviders";
+import {
+	BrandPointList,
+	SignupBrandPanel,
+	signupPoints,
+} from "./AuthBrandPanel";
 import { AuthSplitLayout } from "./AuthSplitLayout";
 import { PasswordInput } from "./PasswordInput";
 import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
-
-const panelPoints: { key: string; icon: LucideIcon; tone: IconTileTone }[] = [
-	{ key: "private", icon: Lock, tone: "sky" },
-	{ key: "media", icon: Images, tone: "rose" },
-	{ key: "notify", icon: BellRing, tone: "amber" },
-];
-
-function SignupBrandPanel() {
-	const { t } = useTranslation();
-	return (
-		<div className="max-w-md space-y-8">
-			<div className="space-y-3">
-				<h2 className="text-3xl font-bold tracking-tight text-foreground text-balance">
-					{t("auth.signup.panel_title")}
-				</h2>
-				<p className="text-lg text-muted-foreground text-pretty">
-					{t("auth.signup.panel_subtitle")}
-				</p>
-			</div>
-			<ul className="space-y-4">
-				{panelPoints.map((point) => (
-					<li key={point.key} className="flex items-center gap-4">
-						<IconTile icon={point.icon} tone={point.tone} />
-						<span className="text-foreground">
-							{t(`auth.signup.panel_points.${point.key}`)}
-						</span>
-					</li>
-				))}
-			</ul>
-		</div>
-	);
-}
 
 interface SignupCardProps {
 	redirect?: string;
@@ -114,17 +85,12 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 	});
 
 	return (
-		<AuthSplitLayout aside={<SignupBrandPanel />}>
+		<AuthSplitLayout
+			aside={<SignupBrandPanel />}
+			title={t("auth.signup.title")}
+			description={t("auth.signup.description")}
+		>
 			<div className="space-y-6">
-				<div className="space-y-2">
-					<h1 className="text-3xl font-bold tracking-tight text-foreground">
-						{t("auth.signup.title")}
-					</h1>
-					<p className="text-muted-foreground">
-						{t("auth.signup.description")}
-					</p>
-				</div>
-
 				{hasSocialLogin && (
 					<div className="space-y-4">
 						<GoogleOAuthButton mode="signup" redirect={redirect} />
@@ -362,16 +328,11 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 				</p>
 
 				{/* The brand panel is hidden on small screens; keep its points. */}
-				<ul className="space-y-3 border-t border-border pt-6 lg:hidden">
-					{panelPoints.map((point) => (
-						<li key={point.key} className="flex items-center gap-3 text-sm">
-							<IconTile icon={point.icon} tone={point.tone} size="sm" />
-							<span className="text-muted-foreground">
-								{t(`auth.signup.panel_points.${point.key}`)}
-							</span>
-						</li>
-					))}
-				</ul>
+				<BrandPointList
+					points={signupPoints}
+					size="sm"
+					className="border-t border-border pt-6 lg:hidden"
+				/>
 			</div>
 		</AuthSplitLayout>
 	);

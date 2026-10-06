@@ -7,6 +7,12 @@ import { CirclesLogo } from "@/components/CirclesLogo";
 interface AuthSplitLayoutProps {
 	/** Brand panel content, shown beside the form on large screens. */
 	aside: ReactNode;
+	title: ReactNode;
+	description?: ReactNode;
+	/** Small label above the title, e.g. "Action required". */
+	eyebrow?: ReactNode;
+	/** Decorative icon above the title, usually an IconTile. */
+	icon?: ReactNode;
 	children: ReactNode;
 }
 
@@ -28,7 +34,14 @@ function BrandLink() {
  * Full-height two-column auth layout: a brand panel on the left and the form
  * on the right. Below `lg` the panel is dropped and the form gets a logo row.
  */
-export function AuthSplitLayout({ aside, children }: AuthSplitLayoutProps) {
+export function AuthSplitLayout({
+	aside,
+	title,
+	description,
+	eyebrow,
+	icon,
+	children,
+}: AuthSplitLayoutProps) {
 	return (
 		<div className="grid min-h-screen bg-background text-foreground transition-colors lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 			<aside className="relative hidden overflow-hidden border-r border-border bg-muted/50 lg:flex lg:flex-col lg:justify-between lg:p-12">
@@ -45,7 +58,23 @@ export function AuthSplitLayout({ aside, children }: AuthSplitLayoutProps) {
 				<div className="mx-auto mb-8 w-full max-w-md lg:hidden">
 					<BrandLink />
 				</div>
-				<div className="mx-auto w-full max-w-md">{children}</div>
+				<div className="mx-auto w-full max-w-md space-y-6">
+					<div className="space-y-2">
+						{icon ? <div className="mb-4">{icon}</div> : null}
+						{eyebrow ? (
+							<p className="text-xs font-semibold uppercase tracking-wide text-primary">
+								{eyebrow}
+							</p>
+						) : null}
+						<h1 className="text-3xl font-bold tracking-tight text-foreground">
+							{title}
+						</h1>
+						{description ? (
+							<p className="text-muted-foreground">{description}</p>
+						) : null}
+					</div>
+					{children}
+				</div>
 			</main>
 		</div>
 	);

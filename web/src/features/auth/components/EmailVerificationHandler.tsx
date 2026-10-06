@@ -1,14 +1,19 @@
-import { StatusMessage, Layout } from "@/components";
+import { LoadingSpinner, StatusMessage } from "@/components";
+import { IconTile } from "@/components/IconTile";
+import { Button } from "@/components/ui/button";
 import { useAuthSession, setAccessToken } from "@/features/auth";
 import { useApiMessages } from "@/i18n";
 import { showToast } from "@/lib/toast";
 import { useNavigate } from "@tanstack/react-router";
+import { Mail, MailCheck, MailX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { HttpError } from "@/lib/httpClient";
 import type { EmailVerificationConfirmResponse } from "../types";
 import { authServices } from "../api/services";
+import { SecureBrandPanel } from "./AuthBrandPanel";
+import { AuthSplitLayout } from "./AuthSplitLayout";
 
 type EmailVerificationHandlerProps = {
 	token?: string;
@@ -112,31 +117,46 @@ export function EmailVerificationHandler({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [token]);
 
-	return (
-		<div className="mx-auto max-w-md p-6 space-y-4">
-			<h1 className="heading-3 text-center">
-				{t("auth.email_verification.title")}
-			</h1>
+	const statusIcon =
+		status === "verifying" ? (
+			<IconTile icon={Mail} tone="amber" size="lg" />
+		) : status === "success" ? (
+			<IconTile icon={MailCheck} tone="sky" size="lg" />
+		) : (
+			<IconTile icon={MailX} tone="rose" size="lg" />
+		);
 
+	return (
+		<AuthSplitLayout
+			aside={<SecureBrandPanel />}
+			icon={statusIcon}
+			title={t("auth.email_verification.title")}
+		>
 			{status === "verifying" ? (
-				<Layout.Loading
-					showHeader={false}
-					message={t("auth.email_verification.verifying")}
-					spinnerSize="md"
-				/>
+				<div
+					className="flex items-center gap-3 text-muted-foreground"
+					aria-live="polite"
+					aria-busy
+				>
+					<LoadingSpinner size="sm" className="text-primary" />
+					{t("auth.email_verification.verifying")}
+				</div>
 			) : status === "success" ? (
-				<StatusMessage variant="success" align="center">{message}</StatusMessage>
+				<StatusMessage variant="success">{message}</StatusMessage>
 			) : (
-				<Layout.Error
-					showHeader={false}
-					message={message}
-					actionLabel={t("auth.email_verification.close_tab_error")}
-					onAction={() => {
-						window.close();
-						navigate({ to: "/login" });
-					}}
-				/>
+				<div className="space-y-4">
+					<StatusMessage variant="error">{message}</StatusMessage>
+					<Button
+						variant="outline"
+						onClick={() => {
+							window.close();
+							navigate({ to: "/login" });
+						}}
+					>
+						{t("auth.email_verification.close_tab_error")}
+					</Button>
+				</div>
 			)}
-		</div>
+		</AuthSplitLayout>
 	);
 }
