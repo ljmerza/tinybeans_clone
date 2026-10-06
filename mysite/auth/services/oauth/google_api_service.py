@@ -18,13 +18,11 @@ from google_auth_oauthlib.flow import Flow
 from mysite.auth.log_utils import mask_email, mask_id
 from mysite.auth.models import GoogleOAuthState
 
+# One OAuthError for all OAuth services, so views catching it also catch the
+# account-linking errors (email mismatch, unlink without password).
+from mysite.auth.services.oauth.account_linking_service import OAuthError
+
 logger = logging.getLogger(__name__)
-
-
-class OAuthError(Exception):
-    """Base exception for OAuth errors."""
-
-    pass
 
 
 class GoogleAPIService:

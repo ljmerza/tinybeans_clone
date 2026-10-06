@@ -71,3 +71,18 @@ class GoogleOAuthViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json()["data"]["user"]["email"], "existing@example.com")
+
+    def test_link_with_mismatched_email_is_a_client_error(self):
+        # AccountLinkingService raises its OAuthError for an email mismatch; the
+        # view's `except OAuthError` must catch it (it used to be a second,
+        # unrelated class, so this returned 500).
+        from mysite.auth.services.oauth.account_linking_service import OAuthError
+
+        service = _mock_service(self.user)
+        service.link_google_account.side_effect = OAuthError("Google email doesn't match")
+        self.client.force_authenticate(self.user)
+        with patch("mysite.auth.views.google_oauth.linking.GoogleOAuthService", return_value=service):
+            response = self.client.post(reverse("auth-google-link"), {"code": "c", "state": "s"}, format="json")
+
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json()["error"], "oauth_link_failed")
