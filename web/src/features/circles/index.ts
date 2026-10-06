@@ -12,4 +12,5 @@ export * from "./hooks/useCircleInvitationListController";
 export * from "./hooks/useCircleMemberListController";
 export * from "./hooks/useCircleRecapSetting";
 export * from "./hooks/useInvitationAcceptance";
+export * from "./hooks/usePendingInvitations";
 export * from "./components";

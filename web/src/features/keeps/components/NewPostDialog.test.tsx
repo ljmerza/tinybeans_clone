@@ -8,9 +8,16 @@ import {
 	waitFor,
 	within,
 } from "@testing-library/react";
-import { StrictMode } from "react";
+import { type ReactNode, StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// The no-circles link; outside a router a plain anchor will do.
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tanstack/react-router")>()),
+	Link: ({ children, to }: { children?: ReactNode; to: string }) => (
+		<a href={to}>{children}</a>
+	),
+}));
 vi.mock("../api/uploadMedia", () => ({ uploadMedia: vi.fn() }));
 vi.mock("../utils/exifDate", () => ({ readExifDate: vi.fn() }));
 
@@ -101,6 +108,18 @@ afterEach(() => {
 });
 
 describe("NewPostDialog", () => {
+	it("sends someone with no circles to circle setup instead of a picker", async () => {
+		vi.mocked(circleServices.listMemberships).mockResolvedValue({
+			data: { circles: [] },
+		});
+		renderDialog();
+
+		const setUp = await screen.findByRole("link", { name: "Set up a circle" });
+		expect(setUp).toHaveAttribute("href", "/circles/onboarding");
+		expect(screen.queryByTestId("new-post-files")).toBeNull();
+		expect(screen.queryByRole("button", { name: "Post" })).toBeNull();
+	});
+
 	it("needs at least one photo or video", async () => {
 		renderDialog();
 

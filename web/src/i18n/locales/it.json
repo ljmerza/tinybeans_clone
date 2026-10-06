@@ -752,6 +752,8 @@
 				"retry_failed": "Riprova i caricamenti non riusciti",
 				"skip_failed": "Salta quelli non riusciti",
 				"discard": "Scarta il post",
+				"no_circles": "I post vanno in una cerchia e non fai ancora parte di nessuna. Creane una o chiedi a qualcuno di invitarti nella sua.",
+				"set_up_circle": "Crea una cerchia",
 				"status": {
 					"queued": "In attesa…",
 					"uploading": "Caricamento… {{percent}}%",
@@ -880,7 +882,9 @@
 			"skip": "Salta per ora",
 			"loading": "Caricamento della configurazione iniziale…",
 			"errorTitle": "Impossibile caricare la configurazione iniziale",
-			"errorMessage": "Non siamo riusciti a caricare lo stato della configurazione iniziale. Riprova."
+			"errorMessage": "Non siamo riusciti a caricare lo stato della configurazione iniziale. Riprova.",
+			"invitationsTitle": "Hai ricevuto un invito",
+			"invitationsDescription": "Entra in una cerchia che qualcuno ha già creato per te, oppure creane una tua qui sotto."
 		},
 		"inviteAccept": {
 			"loading": "Verifica dell'invito…",

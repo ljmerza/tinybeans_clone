@@ -752,6 +752,8 @@
 				"retry_failed": "Reintentar los fallidos",
 				"skip_failed": "Omitir fallidos",
 				"discard": "Descartar publicación",
+				"no_circles": "Las publicaciones van a un círculo y todavía no estás en ninguno. Crea uno o pide a alguien que te invite al suyo.",
+				"set_up_circle": "Crear un círculo",
 				"status": {
 					"queued": "En espera…",
 					"uploading": "Subiendo… {{percent}}%",
@@ -880,7 +882,9 @@
 			"skip": "Omitir por ahora",
 			"loading": "Cargando información de onboarding…",
 			"errorTitle": "No se puede cargar el onboarding",
-			"errorMessage": "No pudimos cargar tu estado de onboarding. Intenta de nuevo."
+			"errorMessage": "No pudimos cargar tu estado de onboarding. Intenta de nuevo.",
+			"invitationsTitle": "Te han invitado",
+			"invitationsDescription": "Únete a un círculo que alguien ya creó para ti o crea el tuyo abajo."
 		},
 		"inviteAccept": {
 			"loading": "Verificando invitación…",

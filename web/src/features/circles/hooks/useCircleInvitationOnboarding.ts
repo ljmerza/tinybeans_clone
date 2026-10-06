@@ -12,7 +12,7 @@ import { circleServices } from "../api/services";
 import type {
 	CircleInvitationFinalizeResponse,
 	CircleInvitationOnboardingStart,
-	CircleInvitationSummary,
+	CircleSummary,
 } from "../types";
 import {
 	clearInvitation,
@@ -104,7 +104,7 @@ export function useFinalizeCircleInvitation(): UseMutationResult<
 }
 
 export function useRespondToCircleInvitation(): UseMutationResult<
-	ApiResponseWithMessages<{ invitation: CircleInvitationSummary }>,
+	ApiResponseWithMessages<{ circle: CircleSummary }>,
 	ApiError,
 	{ invitationId: string; action: "accept" | "decline" }
 > {
@@ -122,6 +122,9 @@ export function useRespondToCircleInvitation(): UseMutationResult<
 			queryClient.invalidateQueries({ queryKey: authKeys.session() });
 			queryClient.invalidateQueries({ queryKey: circleKeys.list() });
 			queryClient.invalidateQueries({ queryKey: circleKeys.onboarding() });
+			queryClient.invalidateQueries({
+				queryKey: circleKeys.pendingInvitations(),
+			});
 			trackCircleInviteEvent("invitation_onboarding_responded", {
 				invitationId: variables.invitationId,
 				action: variables.action,

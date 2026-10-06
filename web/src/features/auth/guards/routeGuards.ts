@@ -26,8 +26,9 @@ async function resolveSessionUser(queryClient?: QueryClient) {
 		return null;
 	}
 
+	// Invalidated data predates a change (e.g. finishing onboarding); refetch it.
 	const cached = queryClient.getQueryData<AuthUser>(authKeys.session());
-	if (cached) {
+	if (cached && !queryClient.getQueryState(authKeys.session())?.isInvalidated) {
 		return cached;
 	}
 
@@ -115,19 +116,6 @@ export async function requireCircleOnboardingComplete({
 	if (user?.needs_circle_onboarding) {
 		throw redirect({
 			to: "/circles/onboarding",
-		});
-	}
-}
-
-export async function requireCircleOnboardingIncomplete({
-	context,
-}: {
-	context: GuardContext;
-}) {
-	const user = await resolveSessionUser(context.queryClient);
-	if (!user?.needs_circle_onboarding) {
-		throw redirect({
-			to: "/",
 		});
 	}
 }
