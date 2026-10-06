@@ -27,7 +27,6 @@
 		"refresh": "Refresh"
 	},
 	"nav": {
-		"home": "Home",
 		"brand": "Circles",
 		"calendar": "Calendar",
 		"login": "Login",
@@ -481,11 +480,6 @@
 		}
 	},
 	"pages": {
-		"home": {
-			"welcome": "Welcome",
-			"authenticated_message": "You are signed in!",
-			"guest_message": "Get started by signing up or logging in to your account."
-		},
 		"landing": {
 			"badge": "Private photo sharing for families",
 			"title": "Your family's moments, kept in one private circle",
