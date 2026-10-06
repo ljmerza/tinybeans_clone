@@ -102,7 +102,7 @@ class AppleOAuthService:
 
     @staticmethod
     def is_configured() -> bool:
-        """True once every Apple credential and the return URL are set."""
+        """True once every Apple credential, the return URL and an allowed SPA return URI are set."""
         return all(
             getattr(settings, name, "")
             for name in (
@@ -111,6 +111,7 @@ class AppleOAuthService:
                 "APPLE_OAUTH_KEY_ID",
                 "APPLE_OAUTH_PRIVATE_KEY",
                 "APPLE_OAUTH_REDIRECT_URI",
+                "APPLE_OAUTH_ALLOWED_RETURN_URIS",
             )
         )
 

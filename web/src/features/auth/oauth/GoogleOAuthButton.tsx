@@ -3,6 +3,7 @@ import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useGoogleOAuth } from "./hooks";
+import { useOAuthProviders } from "./useOAuthProviders";
 
 interface GoogleOAuthButtonProps {
 	mode: "signup" | "login" | "link";
@@ -16,6 +17,7 @@ interface GoogleOAuthButtonProps {
  * Google OAuth Button Component
  * Displays "Sign in with Google" button with proper branding
  * Follows Google Identity Guidelines
+ * Renders nothing until the server reports Google credentials are configured.
  */
 export function GoogleOAuthButton({
 	mode,
@@ -25,7 +27,12 @@ export function GoogleOAuthButton({
 	redirect,
 }: GoogleOAuthButtonProps) {
 	const { t } = useTranslation();
+	const { data: providers } = useOAuthProviders();
 	const { initiateOAuth, isLoading } = useGoogleOAuth();
+
+	if (!providers?.google) {
+		return null;
+	}
 
 	const handleClick = () => {
 		rememberInviteRedirect(redirect ?? null);

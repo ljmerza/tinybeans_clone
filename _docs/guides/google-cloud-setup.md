@@ -121,6 +121,11 @@ Set these as environment variables in your production environment:
 - `GOOGLE_OAUTH_CLIENT_SECRET`
 - `GOOGLE_OAUTH_REDIRECT_URI`
 
+The "Sign in with Google" button stays hidden until `GOOGLE_OAUTH_CLIENT_ID`,
+`GOOGLE_OAUTH_CLIENT_SECRET` and `OAUTH_ALLOWED_REDIRECT_URIS` are all set
+(`GET /api/auth/providers/` reports `google: true`). If neither Google nor Apple
+is configured, the login and signup pages also drop the "or" divider.
+
 ⚠️ **Never commit secrets to Git!** Keep `.env.development`, `.env.staging`, and `.env.production` templates in version control only—store real values in your secret manager or local overrides.
 
 ## Step 7: Test OAuth Configuration

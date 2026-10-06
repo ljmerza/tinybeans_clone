@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useLogin } from "../hooks/authHooks";
 import { AppleOAuthButton } from "../oauth/AppleOAuthButton";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
+import { useOAuthProviders } from "../oauth/useOAuthProviders";
 
 interface LoginCardProps {
 	redirect?: string;
@@ -31,6 +32,9 @@ interface LoginCardProps {
 
 export function LoginCard({ redirect }: LoginCardProps) {
 	const { t } = useTranslation();
+	const { data: providers } = useOAuthProviders();
+	// No social buttons, and no "or" divider, unless a provider is configured.
+	const hasSocialLogin = Boolean(providers?.google || providers?.apple);
 	const login = useLogin({ redirect });
 	const { getGeneral } = useApiMessages();
 	const [generalError, setGeneralError] = useState<string>("");
@@ -95,21 +99,23 @@ export function LoginCard({ redirect }: LoginCardProps) {
 				</>
 			}
 		>
-			<div className="space-y-4">
-				<GoogleOAuthButton mode="login" redirect={redirect} />
-				<AppleOAuthButton mode="login" redirect={redirect} />
+			{hasSocialLogin && (
+				<div className="space-y-4">
+					<GoogleOAuthButton mode="login" redirect={redirect} />
+					<AppleOAuthButton mode="login" redirect={redirect} />
 
-				<div className="relative">
-					<div className="absolute inset-0 flex items-center">
-						<div className="w-full border-t border-border/60 dark:border-border/40 transition-colors" />
-					</div>
-					<div className="relative flex justify-center text-sm">
-						<span className="px-2 bg-card text-muted-foreground transition-colors">
-							{t("common.or")}
-						</span>
+					<div className="relative">
+						<div className="absolute inset-0 flex items-center">
+							<div className="w-full border-t border-border/60 dark:border-border/40 transition-colors" />
+						</div>
+						<div className="relative flex justify-center text-sm">
+							<span className="px-2 bg-card text-muted-foreground transition-colors">
+								{t("common.or")}
+							</span>
+						</div>
 					</div>
 				</div>
-			</div>
+			)}
 
 			<form
 				onSubmit={(event) => {
