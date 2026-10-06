@@ -122,6 +122,10 @@
 			"google_signin": "Accedi con Google",
 			"google_signup": "Registrati con Google",
 			"google_link": "Collega l'account Google",
+			"apple_signin": "Accedi con Apple",
+			"apple_signup": "Registrati con Apple",
+			"apple_link": "Collega l'account Apple",
+			"apple_processing": "Accesso con Apple in corso...",
 			"processing": "Accesso con Google in corso...",
 			"processing_description": "Attendi mentre verifichiamo il tuo account.",
 			"callback_error_title": "Accesso non riuscito",
@@ -1000,7 +1004,9 @@
 		},
 		"oauth": {
 			"account_linked": "Account Google collegato",
-			"account_unlinked": "Account Google scollegato"
+			"account_unlinked": "Account Google scollegato",
+			"apple_account_linked": "Account Apple collegato",
+			"apple_account_unlinked": "Account Apple scollegato"
 		},
 		"twofa": {
 			"setup_initiated": "Scansiona il codice QR con la tua app di autenticazione",
@@ -1102,6 +1108,11 @@
 			"cannot_unlink_without_password": "Impossibile scollegare l'account Google. Devi prima impostare una password. {{help_url}}",
 			"invalid_password": "Password non valida",
 			"google_cancelled": "Hai annullato l'accesso con Google",
+			"apple_cancelled": "Hai annullato l'accesso con Apple",
+			"apple_disabled": "L'accesso con Apple non è disponibile al momento.",
+			"apple_account_already_linked": "Questo account Apple è già collegato a un altro account",
+			"apple_link_failed": "Impossibile collegare l'account Apple. Riprova.",
+			"apple_cannot_unlink_without_password": "Impossibile scollegare l'account Apple. Devi prima impostare una password. {{help_url}}",
 			"invalid_callback": "Mancano alcuni parametri OAuth obbligatori. Riprova.",
 			"state_mismatch": "Verifica di sicurezza non riuscita. Prova ad accedere di nuovo."
 		},

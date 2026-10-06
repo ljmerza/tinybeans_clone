@@ -14,6 +14,7 @@ from .magic_login import (
     MagicLoginVerifySerializer,
 )
 from .oauth import (
+    AppleOAuthInitiateResponseSerializer,
     JWTTokenSerializer,
     OAuthCallbackRequestSerializer,
     OAuthCallbackResponseSerializer,
@@ -22,6 +23,7 @@ from .oauth import (
     OAuthInitiateResponseSerializer,
     OAuthLinkRequestSerializer,
     OAuthLinkResponseSerializer,
+    OAuthProvidersResponseSerializer,
     OAuthUnlinkRequestSerializer,
     OAuthUnlinkResponseSerializer,
 )
@@ -39,6 +41,7 @@ from .two_factor import (
 )
 
 __all__ = [
+    "AppleOAuthInitiateResponseSerializer",
     "EmailVerificationConfirmSerializer",
     "EmailVerificationSerializer",
     "JWTTokenSerializer",
@@ -52,6 +55,7 @@ __all__ = [
     "OAuthInitiateResponseSerializer",
     "OAuthLinkRequestSerializer",
     "OAuthLinkResponseSerializer",
+    "OAuthProvidersResponseSerializer",
     "OAuthUnlinkRequestSerializer",
     "OAuthUnlinkResponseSerializer",
     "PasswordChangeSerializer",

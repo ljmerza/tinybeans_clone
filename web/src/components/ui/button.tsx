@@ -33,6 +33,8 @@ const buttonVariants = cva(
 					"bg-emerald-500 text-white hover:bg-emerald-600 focus-visible:ring-emerald-400/40",
 				"brand-google":
 					"border border-[#dadce0] bg-white text-neutral-700 shadow-sm hover:bg-neutral-50 hover:shadow focus-visible:ring-[#4285F4]/40 dark:border-[#3c4043] dark:bg-[#1f1f1f] dark:text-white dark:hover:bg-[#2a2a2a]",
+				"brand-apple":
+					"bg-black text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-neutral-500/40 dark:bg-white dark:text-black dark:hover:bg-neutral-200",
 			},
 			size: {
 				default: "h-9 px-4 py-2 has-[>svg]:px-3",

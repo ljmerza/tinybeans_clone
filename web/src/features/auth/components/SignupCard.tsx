@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSignup } from "../hooks/authHooks";
+import { AppleOAuthButton } from "../oauth/AppleOAuthButton";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 interface SignupCardProps {
@@ -91,6 +92,7 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 		>
 			<div className="space-y-4">
 				<GoogleOAuthButton mode="signup" redirect={redirect} />
+				<AppleOAuthButton mode="signup" redirect={redirect} />
 
 				<div className="relative">
 					<div className="absolute inset-0 flex items-center">

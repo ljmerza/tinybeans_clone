@@ -55,13 +55,15 @@ def cleanup_expired_oauth_states():
 
     from django.utils import timezone
 
-    from .models import GoogleOAuthState
+    from .models import AppleOAuthState, GoogleOAuthState
 
     logger = logging.getLogger(__name__)
 
     # Delete states older than 1 hour
     cutoff_time = timezone.now() - timedelta(hours=1)
     deleted_count, _ = GoogleOAuthState.objects.filter(created_at__lt=cutoff_time).delete()
+    apple_deleted_count, _ = AppleOAuthState.objects.filter(created_at__lt=cutoff_time).delete()
+    deleted_count += apple_deleted_count
 
     logger.info(f"OAuth state cleanup: deleted {deleted_count} expired states")
 

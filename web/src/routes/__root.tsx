@@ -30,6 +30,7 @@ function EmailVerificationRedirect() {
 			"/verify-email-required",
 			"/logout",
 			"/auth/google-callback",
+			"/auth/apple-callback",
 			"/invitations/accept", // Allow invite acceptance for unverified users (email auto-verified on finalize)
 		];
 

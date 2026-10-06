@@ -1,6 +1,10 @@
 from django.urls import path
 
 from .views import (
+    AppleOAuthCallbackView,
+    AppleOAuthInitiateView,
+    AppleOAuthLinkView,
+    AppleOAuthUnlinkView,
     EmailVerificationConfirmView,
     EmailVerificationResendView,
     GoogleOAuthCallbackView,
@@ -11,6 +15,7 @@ from .views import (
     LogoutView,
     MagicLoginRequestView,
     MagicLoginVerifyView,
+    OAuthProvidersView,
     PasswordChangeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
@@ -28,6 +33,7 @@ from .views import (
     TwoFactorStatusView,
     TwoFactorVerifyLoginView,
     TwoFactorVerifySetupView,
+    apple_oauth_return,
     get_csrf_token,
 )
 
@@ -49,6 +55,13 @@ urlpatterns = [
     path("google/callback/", GoogleOAuthCallbackView.as_view(), name="auth-google-callback"),
     path("google/link/", GoogleOAuthLinkView.as_view(), name="auth-google-link"),
     path("google/unlink/", GoogleOAuthUnlinkView.as_view(), name="auth-google-unlink"),
+    # Sign in with Apple endpoints
+    path("providers/", OAuthProvidersView.as_view(), name="auth-oauth-providers"),
+    path("apple/initiate/", AppleOAuthInitiateView.as_view(), name="auth-apple-initiate"),
+    path("apple/return/", apple_oauth_return, name="auth-apple-return"),
+    path("apple/callback/", AppleOAuthCallbackView.as_view(), name="auth-apple-callback"),
+    path("apple/link/", AppleOAuthLinkView.as_view(), name="auth-apple-link"),
+    path("apple/unlink/", AppleOAuthUnlinkView.as_view(), name="auth-apple-unlink"),
 ]
 
 urlpatterns += [

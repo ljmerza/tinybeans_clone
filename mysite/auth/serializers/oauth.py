@@ -78,6 +78,21 @@ class OAuthUnlinkResponseSerializer(serializers.Serializer):
     user = UserSerializer(help_text="Updated user information")
 
 
+class AppleOAuthInitiateResponseSerializer(serializers.Serializer):
+    """Response serializer for Sign in with Apple initiation."""
+
+    apple_oauth_url = serializers.URLField(help_text="The Apple authorize URL to redirect the user to")
+    state = serializers.CharField(help_text="OAuth state token for CSRF protection")
+    expires_in = serializers.IntegerField(help_text="Seconds until state token expires")
+
+
+class OAuthProvidersResponseSerializer(serializers.Serializer):
+    """Which social sign-in providers are configured on this server."""
+
+    google = serializers.BooleanField(help_text="Google sign-in is configured")
+    apple = serializers.BooleanField(help_text="Sign in with Apple is configured")
+
+
 class OAuthErrorSerializer(serializers.Serializer):
     """Error response serializer."""
 
@@ -85,6 +100,7 @@ class OAuthErrorSerializer(serializers.Serializer):
 
 
 __all__ = [
+    "AppleOAuthInitiateResponseSerializer",
     "JWTTokenSerializer",
     "OAuthCallbackRequestSerializer",
     "OAuthCallbackResponseSerializer",
@@ -93,6 +109,7 @@ __all__ = [
     "OAuthInitiateResponseSerializer",
     "OAuthLinkRequestSerializer",
     "OAuthLinkResponseSerializer",
+    "OAuthProvidersResponseSerializer",
     "OAuthUnlinkRequestSerializer",
     "OAuthUnlinkResponseSerializer",
 ]

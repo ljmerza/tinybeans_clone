@@ -63,11 +63,13 @@ class AuthProvider(models.TextChoices):
     - MANUAL: Traditional email/password registration
     - GOOGLE: Google OAuth only
     - HYBRID: Both manual and Google OAuth linked
+    - APPLE: Sign in with Apple only
     """
 
     MANUAL = "manual", "Manual Registration"
     GOOGLE = "google", "Google OAuth Only"
     HYBRID = "hybrid", "Both Manual and Google"
+    APPLE = "apple", "Sign in with Apple Only"
 
 
 class Language(models.TextChoices):
@@ -132,6 +134,9 @@ class User(AbstractUser):
         auth_provider: How the user authenticates (manual, google, hybrid)
         google_linked_at: When Google account was linked (nullable)
         last_google_sync: Last time user info was synced from Google (nullable)
+        apple_id: Apple user ID from Sign in with Apple (unique, nullable)
+        apple_email: Email from Apple, possibly a private relay address (nullable)
+        apple_linked_at: When the Apple account was linked (nullable)
     """
 
     username = None  # Disable the built-in username field
@@ -161,6 +166,17 @@ class User(AbstractUser):
     last_google_sync = models.DateTimeField(
         null=True, blank=True, help_text="Last time user info was synced from Google"
     )
+    # Sign in with Apple fields
+    apple_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Apple user ID (sub) from Sign in with Apple",
+    )
+    apple_email = models.EmailField(null=True, blank=True, help_text="Email from Apple; may be a private relay address")
+    apple_linked_at = models.DateTimeField(null=True, blank=True, help_text="When the Apple account was linked")
     language = models.CharField(
         max_length=10,
         choices=Language.choices,

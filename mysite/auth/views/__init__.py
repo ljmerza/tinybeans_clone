@@ -9,6 +9,14 @@ from .account import (
     TokenRefreshCookieView,
     get_csrf_token,
 )
+from .apple_oauth import (
+    AppleOAuthCallbackView,
+    AppleOAuthInitiateView,
+    AppleOAuthLinkView,
+    AppleOAuthUnlinkView,
+    OAuthProvidersView,
+    apple_oauth_return,
+)
 from .email_verification import (
     EmailVerificationConfirmView,
     EmailVerificationResendView,
@@ -73,4 +81,10 @@ __all__ = [
     "GoogleOAuthCallbackView",
     "GoogleOAuthLinkView",
     "GoogleOAuthUnlinkView",
+    "AppleOAuthInitiateView",
+    "AppleOAuthCallbackView",
+    "AppleOAuthLinkView",
+    "AppleOAuthUnlinkView",
+    "OAuthProvidersView",
+    "apple_oauth_return",
 ]

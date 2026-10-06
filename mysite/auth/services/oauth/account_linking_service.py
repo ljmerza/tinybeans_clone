@@ -189,7 +189,7 @@ class AccountLinkingService:
 
         user.google_id = None
         user.google_email = None
-        user.auth_provider = "manual"
+        user.auth_provider = "hybrid" if user.apple_id else "manual"
         user.google_linked_at = None
         user.save()
 
