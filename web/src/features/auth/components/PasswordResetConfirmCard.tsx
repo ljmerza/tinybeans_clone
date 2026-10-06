@@ -9,6 +9,7 @@ import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { KeyRound, Link2Off } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { usePasswordResetConfirm } from "../hooks/authHooks";
 import { SecureBrandPanel } from "./AuthBrandPanel";
@@ -23,6 +24,7 @@ type PasswordResetConfirmCardProps = {
 export function PasswordResetConfirmCard({
 	token,
 }: PasswordResetConfirmCardProps) {
+	const { t } = useTranslation();
 	const confirmReset = usePasswordResetConfirm();
 	const navigate = useNavigate();
 	const { getGeneral, getFieldErrors, translate } = useApiMessages();
@@ -91,14 +93,14 @@ export function PasswordResetConfirmCard({
 			<AuthSplitLayout
 				aside={<SecureBrandPanel />}
 				icon={<IconTile icon={Link2Off} tone="rose" size="lg" />}
-				title="Invalid or expired link"
-				description="We could not find a valid password reset token. Please request a new reset link."
+				title={t("auth.password_reset.invalid_title")}
+				description={t("auth.password_reset.invalid_description")}
 			>
 				<Link
 					to="/password/reset/request"
 					className="font-semibold text-primary hover:text-primary/80 transition-colors"
 				>
-					Request a new link
+					{t("auth.password_reset.request_new_link")}
 				</Link>
 			</AuthSplitLayout>
 		);
@@ -108,8 +110,8 @@ export function PasswordResetConfirmCard({
 		<AuthSplitLayout
 			aside={<SecureBrandPanel />}
 			icon={<IconTile icon={KeyRound} tone="amber" size="lg" />}
-			title="Set a new password"
-			description="Choose a new password for your account."
+			title={t("auth.password_reset.confirm_title")}
+			description={t("auth.password_reset.confirm_description")}
 		>
 			{/* Display general error */}
 			{generalError && (
@@ -138,7 +140,7 @@ export function PasswordResetConfirmCard({
 					{(field) => (
 						<FormField
 							field={field}
-							label="New password"
+							label={t("auth.password_reset.new_password")}
 							error={fieldErrors.password}
 						>
 							{({ id, field: fieldApi }) => (
@@ -173,7 +175,7 @@ export function PasswordResetConfirmCard({
 					{(field) => (
 						<FormField
 							field={field}
-							label="Confirm password"
+							label={t("auth.password_reset.confirm_new_password")}
 							error={fieldErrors.password_confirm}
 						>
 							{({ id, field: fieldApi }) => (
@@ -201,7 +203,9 @@ export function PasswordResetConfirmCard({
 						className="w-full"
 						disabled={confirmReset.isPending}
 					>
-						{confirmReset.isPending ? "Updating…" : "Update password"}
+						{confirmReset.isPending
+							? t("auth.password_reset.resetting")
+							: t("auth.password_reset.reset_password")}
 					</Button>
 				</FormActions>
 			</form>
@@ -211,7 +215,7 @@ export function PasswordResetConfirmCard({
 					to="/login"
 					className="font-semibold text-primary hover:text-primary/80 transition-colors"
 				>
-					Return to login
+					{t("auth.password_reset.return_to_login")}
 				</Link>
 			</div>
 		</AuthSplitLayout>

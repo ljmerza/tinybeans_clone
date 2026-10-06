@@ -1,12 +1,13 @@
-import "@/i18n/config";
+import i18n from "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const navigate = vi.fn();
-const location = {
-	state: { twoFactor: { partialToken: "partial", method: "totp" } },
+const twoFactorState = {
+	twoFactor: { partialToken: "partial", method: "totp" },
 };
+const location: { state: object } = { state: twoFactorState };
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tanstack/react-router")>()),
@@ -19,7 +20,9 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 			{children}
 		</a>
 	),
-	Navigate: () => null,
+	Navigate: ({ to }: { to: string }) => (
+		<span data-testid="redirect">{to}</span>
+	),
 	useNavigate: () => navigate,
 	useLocation: () => location,
 }));
@@ -77,6 +80,11 @@ function expectSplitLayout(title: string) {
 		expect(link).toHaveAttribute("href", "/");
 	}
 }
+
+afterEach(async () => {
+	location.state = twoFactorState;
+	await act(() => i18n.changeLanguage("en"));
+});
 
 describe("secondary auth pages use the split layout", () => {
 	it("magic link request", () => {
@@ -148,5 +156,27 @@ describe("secondary auth pages use the split layout", () => {
 		expectSplitLayout("Verify your email");
 		expect(screen.getByText("Action required")).toBeInTheDocument();
 		expect(screen.getByText("ada@example.com")).toBeInTheDocument();
+	});
+	it("password reset confirm follows the UI language", async () => {
+		await act(() => i18n.changeLanguage("es"));
+		renderWithQueryClient(<PasswordResetConfirmCard token="reset-token" />);
+
+		expect(
+			screen.getByRole("heading", {
+				level: 1,
+				name: "Establecer nueva contraseña",
+			}),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Restablecer contraseña" }),
+		).toBeInTheDocument();
+	});
+
+	it("two-factor verification sends you to login without its state", () => {
+		location.state = {};
+		renderWithQueryClient(<TwoFactorVerifyPage />);
+
+		expect(screen.getByTestId("redirect")).toHaveTextContent("/login");
+		expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
 	});
 });

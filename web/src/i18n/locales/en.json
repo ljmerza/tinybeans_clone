@@ -110,13 +110,17 @@
 			"success_message": "If an account exists for that email, we'll send password reset instructions.",
 			"failed": "Failed to send reset email",
 			"back_to_login": "← Back to login",
-			"confirm_title": "Set New Password",
-			"confirm_description": "Enter your new password below.",
+			"confirm_title": "Set a new password",
+			"confirm_description": "Choose a new password for your account.",
 			"new_password": "New password",
-			"confirm_new_password": "Confirm new password",
-			"reset_password": "Reset password",
-			"resetting": "Resetting…",
-			"reset_failed": "Failed to reset password"
+			"confirm_new_password": "Confirm password",
+			"reset_password": "Update password",
+			"resetting": "Updating…",
+			"reset_failed": "Failed to reset password",
+			"invalid_title": "Invalid or expired link",
+			"invalid_description": "We could not find a valid password reset token. Please request a new reset link.",
+			"request_new_link": "Request a new link",
+			"return_to_login": "Return to login"
 		},
 		"magic_link": {
 			"request_title": "Login with Magic Link",
