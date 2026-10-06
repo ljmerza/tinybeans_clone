@@ -80,12 +80,10 @@ function TwoFactorVerifyPage() {
 		}
 	}, [verify.isSuccess, navigate]);
 
-	if (!verifyData?.partialToken || !verifyData?.method) {
-		return <Navigate to="/login" />;
-	}
+	const method = verifyData?.method;
+	const message = verifyData?.message;
 
-	const { partialToken, method, message } = verifyData;
-
+	// Before the early return below: hooks must run on every render.
 	const headerDescription = useMemo(() => {
 		if (useRecoveryCode) {
 			return t("twofa.verify.use_recovery");
@@ -93,11 +91,20 @@ function TwoFactorVerifyPage() {
 		if (message) {
 			return message;
 		}
+		if (!method) {
+			return "";
+		}
 
 		return t("twofa.verify.enter_code", {
 			method: t(methodLabelKey[method]),
 		});
 	}, [method, message, t, useRecoveryCode]);
+
+	if (!verifyData?.partialToken || !method) {
+		return <Navigate to="/login" />;
+	}
+
+	const { partialToken } = verifyData;
 
 	const handleVerify = () => {
 		const schema = useRecoveryCode

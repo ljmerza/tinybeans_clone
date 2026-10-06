@@ -116,7 +116,11 @@
 			"confirm_new_password": "Conferma la nuova password",
 			"reset_password": "Reimposta password",
 			"resetting": "Reimpostazione in corso…",
-			"reset_failed": "Impossibile reimpostare la password"
+			"reset_failed": "Impossibile reimpostare la password",
+			"invalid_title": "Link non valido o scaduto",
+			"invalid_description": "Non abbiamo trovato un token valido per reimpostare la password. Richiedi un nuovo link.",
+			"request_new_link": "Richiedi un nuovo link",
+			"return_to_login": "Torna all'accesso"
 		},
 		"magic_link": {
 			"request_title": "Accedi con un link magico",
@@ -483,13 +487,13 @@
 			"guest_message": "Inizia registrandoti o accedendo al tuo account."
 		},
 		"landing": {
-			"badge": "Foto in privato per le famiglie",
+			"badge": "Condivisione privata di foto per le famiglie",
 			"title": "I momenti della tua famiglia, custoditi in una cerchia privata",
 			"subtitle": "Condividi foto e video con le persone più importanti. Solo i familiari e gli amici che inviti possono vederli.",
 			"cta_primary": "Crea la tua cerchia",
 			"cta_secondary": "Accedi",
 			"trust_line": "Solo su invito. Niente pubblicità. Nessun profilo pubblico.",
-			"features_title": "Tutto ciò che serve alla tua famiglia per restare vicina",
+			"features_title": "Tutto ciò che serve alla tua famiglia per restare unita",
 			"features_subtitle": "Pensato per i momenti di ogni giorno con chi ami, non per un pubblico.",
 			"features": {
 				"circles": {
@@ -550,7 +554,7 @@
 			},
 			"final_title": "Crea la tua cerchia oggi",
 			"final_subtitle": "Basta circa un minuto. Hai ricevuto un invito? Usa il link nella tua email per unirti.",
-			"footer_tagline": "Foto in privato per le famiglie"
+			"footer_tagline": "Condivisione privata di foto per le famiglie"
 		},
 		"favorites": {
 			"loading": "Caricamento dei preferiti…",

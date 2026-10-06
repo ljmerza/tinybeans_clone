@@ -116,7 +116,11 @@
 			"confirm_new_password": "Confirmar nueva contraseña",
 			"reset_password": "Restablecer contraseña",
 			"resetting": "Restableciendo…",
-			"reset_failed": "Error al restablecer contraseña"
+			"reset_failed": "Error al restablecer contraseña",
+			"invalid_title": "Enlace no válido o caducado",
+			"invalid_description": "No encontramos un token válido para restablecer la contraseña. Solicita un nuevo enlace.",
+			"request_new_link": "Solicitar un nuevo enlace",
+			"return_to_login": "Volver al inicio de sesión"
 		},
 		"magic_link": {
 			"request_title": "Iniciar sesión con enlace mágico",
@@ -483,7 +487,7 @@
 			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
 		},
 		"landing": {
-			"badge": "Fotos en privado para familias",
+			"badge": "Fotos compartidas en privado, para familias",
 			"title": "Los momentos de tu familia, guardados en un círculo privado",
 			"subtitle": "Comparte fotos y videos con las personas que más te importan. Solo la familia y los amigos que invites pueden verlos.",
 			"cta_primary": "Crea tu círculo",
@@ -502,7 +506,7 @@
 				},
 				"calendar": {
 					"title": "Un calendario de recuerdos",
-					"description": "Recorre día a día, salta a cualquier mes y mira qué pasó en un día como hoy en años anteriores."
+					"description": "Explora día a día, salta a cualquier mes y mira qué pasó en un día como hoy en años anteriores."
 				},
 				"albums": {
 					"title": "Álbumes y resúmenes",
@@ -550,7 +554,7 @@
 			},
 			"final_title": "Crea tu círculo hoy",
 			"final_subtitle": "Configurarlo lleva un minuto. ¿Tienes una invitación? Usa el enlace de tu correo para unirte.",
-			"footer_tagline": "Fotos en privado para familias"
+			"footer_tagline": "Fotos compartidas en privado, para familias"
 		},
 		"favorites": {
 			"loading": "Cargando tus favoritos…",
