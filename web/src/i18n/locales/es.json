@@ -28,6 +28,7 @@
 	},
 	"nav": {
 		"home": "Inicio",
+		"brand": "Circles",
 		"calendar": "Calendario",
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
@@ -59,7 +60,26 @@
 			"create_account": "Crear cuenta",
 			"creating_account": "Creando cuenta…",
 			"already_have_account": "¿Ya tienes una cuenta?",
-			"signup_failed": "Fallo al registrarse"
+			"signup_failed": "Fallo al registrarse",
+			"panel_title": "Empieza a compartir con quienes más importan",
+			"panel_subtitle": "Crea una cuenta para empezar tu propio círculo o para unirte a uno al que te hayan invitado.",
+			"panel_points": {
+				"private": "Solo las personas que invites pueden ver tus publicaciones",
+				"media": "Fotos, videos, álbumes y un calendario de recuerdos",
+				"notify": "Avisos por correo o push cuando hay algo nuevo"
+			},
+			"back_home": "Inicio de Circles",
+			"show_password": "Mostrar contraseña",
+			"hide_password": "Ocultar contraseña",
+			"strength": {
+				"label": "Seguridad de la contraseña: {{level}}",
+				"too_short": "Demasiado corta",
+				"weak": "Débil",
+				"fair": "Aceptable",
+				"good": "Buena",
+				"strong": "Fuerte",
+				"hint": "Usa 12 caracteres o más, mezclando letras, números y símbolos."
+			}
 		},
 		"password_reset": {
 			"request_title": "Restablecer contraseña",
@@ -441,6 +461,76 @@
 			"welcome": "Bienvenido",
 			"authenticated_message": "¡Has iniciado sesión!",
 			"guest_message": "Comienza registrándote o iniciando sesión en tu cuenta."
+		},
+		"landing": {
+			"badge": "Fotos en privado para familias",
+			"title": "Los momentos de tu familia, guardados en un círculo privado",
+			"subtitle": "Comparte fotos y videos con las personas que más te importan. Solo la familia y los amigos que invites pueden verlos.",
+			"cta_primary": "Crea tu círculo",
+			"cta_secondary": "Iniciar sesión",
+			"trust_line": "Solo por invitación. Sin anuncios. Sin perfiles públicos.",
+			"features_title": "Todo lo que tu familia necesita para estar cerca",
+			"features_subtitle": "Pensado para los momentos de cada día con quienes quieres, no para un público.",
+			"features": {
+				"circles": {
+					"title": "Círculos privados",
+					"description": "Invita solo a quien tú elijas. Lo que compartes se queda dentro de tu círculo."
+				},
+				"media": {
+					"title": "Fotos y videos",
+					"description": "Publica fotos y videos y vuelve a verlos en una sola línea de tiempo."
+				},
+				"calendar": {
+					"title": "Un calendario de recuerdos",
+					"description": "Recorre día a día, salta a cualquier mes y mira qué pasó en un día como hoy en años anteriores."
+				},
+				"albums": {
+					"title": "Álbumes y resúmenes",
+					"description": "Reúne viajes y fiestas en álbumes, o deja que Circles cree un álbum resumen cada mes."
+				},
+				"comments": {
+					"title": "Comentarios y menciones",
+					"description": "Comenta publicaciones, @menciona a tus familiares y guarda tus favoritos."
+				},
+				"growth": {
+					"title": "Curvas de crecimiento",
+					"description": "Anota la estatura y el peso y mira crecer a tus hijos en un gráfico."
+				}
+			},
+			"steps_title": "Cómo funciona",
+			"steps": {
+				"create": {
+					"title": "Crea tu círculo",
+					"description": "Regístrate y crea un círculo para tu familia en un minuto."
+				},
+				"invite": {
+					"title": "Invita a los tuyos",
+					"description": "Envía invitaciones por correo a abuelos, tíos y amigos cercanos."
+				},
+				"share": {
+					"title": "Comparte momentos",
+					"description": "Publica fotos y videos. Todos se enteran por correo o notificación push."
+				}
+			},
+			"privacy_title": "Privado desde el principio",
+			"privacy_subtitle": "Tu círculo es tuyo. Nada de lo que compartes es público.",
+			"privacy": {
+				"invite_only": {
+					"title": "Círculos solo por invitación",
+					"description": "Solo los miembros de un círculo pueden ver sus publicaciones, fotos y videos."
+				},
+				"two_factor": {
+					"title": "Inicio de sesión en dos pasos",
+					"description": "Añade un segundo paso al iniciar sesión para proteger tu cuenta."
+				},
+				"no_ads": {
+					"title": "Sin anuncios ni perfiles públicos",
+					"description": "Sin publicaciones de desconocidos y sin nada a la venta. Solo tu familia."
+				}
+			},
+			"final_title": "Crea tu círculo hoy",
+			"final_subtitle": "Configurarlo lleva un minuto. ¿Tienes una invitación? Usa el enlace de tu correo para unirte.",
+			"footer_tagline": "Fotos en privado para familias"
 		},
 		"favorites": {
 			"loading": "Cargando tus favoritos…",
