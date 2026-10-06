@@ -8,6 +8,7 @@ import type { ApiError } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { setAccessToken } from "../store/authStore";
+import { safeRedirectPath } from "../utils/safeRedirect";
 import {
 	clearAppleOAuthState,
 	getAppleRedirectUri,
@@ -57,8 +58,11 @@ export function useAppleOAuth() {
 					});
 					return;
 				}
-				window.location.assign(redirectTarget);
-				return;
+				const path = safeRedirectPath(redirectTarget);
+				if (path) {
+					window.location.assign(path);
+					return;
+				}
 			}
 
 			navigate({ to: "/" });

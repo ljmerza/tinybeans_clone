@@ -22,7 +22,7 @@ import type {
 	SignupRequest,
 	SignupResponse,
 } from "../types";
-import { handleTwoFactorRedirect } from "../utils";
+import { handleTwoFactorRedirect, safeRedirectPath } from "../utils";
 
 type FinalizeResult =
 	| { status: "none" }
@@ -62,7 +62,7 @@ async function finalizeCircleInvitation(
 	}
 }
 
-function tryNavigateRedirect(
+export function tryNavigateRedirect(
 	navigate: ReturnType<typeof useNavigate>,
 	target?: string | null,
 ): boolean {
@@ -84,7 +84,9 @@ function tryNavigateRedirect(
 			return true;
 		}
 
-		window.location.assign(target);
+		const path = safeRedirectPath(target);
+		if (!path) return false;
+		window.location.assign(path);
 		return true;
 	} catch (error) {
 		console.warn("Failed to navigate to redirect target", error);
@@ -115,7 +117,7 @@ export function useLogin(options?: { redirect?: string }) {
 					to: "/profile/2fa/verify",
 					state: (previous) => ({
 						...previous,
-						twoFactor: redirectState,
+						twoFactor: { ...redirectState, redirect: options?.redirect },
 					}),
 				});
 				return;

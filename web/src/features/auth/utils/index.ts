@@ -7,3 +7,4 @@
 export * from "./errorHandling";
 export * from "./twoFactorNavigation";
 export * from "./refreshToken";
+export * from "./safeRedirect";

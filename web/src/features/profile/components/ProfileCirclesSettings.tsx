@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
 import {
+	CreateCircleDialog,
 	useCircleMemberships,
 	useCircleRemoveSelfMutation,
 } from "@/features/circles";
@@ -30,6 +31,7 @@ export function ProfileCirclesSettings() {
 		name: string;
 	} | null>(null);
 	const removeSelfMutation = useCircleRemoveSelfMutation();
+	const [creating, setCreating] = useState(false);
 
 	if (isLoading && !data) {
 		return (
@@ -69,10 +71,13 @@ export function ProfileCirclesSettings() {
 									{t("pages.circles.index.create_own_description")}
 								</p>
 							</div>
-							<Button asChild variant="default" size="sm">
-								<Link to="/circles/onboarding">
-									{t("pages.circles.index.create_own_action")}
-								</Link>
+							{/* Onboarding is for a first circle; members name another here. */}
+							<Button
+								variant="default"
+								size="sm"
+								onClick={() => setCreating(true)}
+							>
+								{t("pages.circles.index.create_own_action")}
 							</Button>
 						</div>
 					</div>
@@ -187,6 +192,7 @@ export function ProfileCirclesSettings() {
 					}
 				}}
 			/>
+			<CreateCircleDialog open={creating} onOpenChange={setCreating} />
 		</>
 	);
 }

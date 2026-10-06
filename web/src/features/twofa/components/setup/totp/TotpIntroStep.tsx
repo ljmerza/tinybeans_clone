@@ -25,8 +25,9 @@ export function TotpIntroStep(props: TotpIntroStepProps) {
 				description: t("twofa.setup.totp.intro"),
 				infoPanelTitle: t("twofa.setup.totp.info_title"),
 				infoPanelItems: infoPanelItems,
-				actionText: t("twofa.setup.actions.start"),
-				loadingText: t("twofa.setup.actions.loading"),
+				// Nothing is sent: starting shows the QR code and secret key.
+				actionText: t("twofa.setup.totp.start"),
+				loadingText: t("twofa.setup.totp.starting"),
 			}}
 			isLoading={props.isInitializing}
 			errorMessage={props.errorMessage}

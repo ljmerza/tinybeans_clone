@@ -1,6 +1,6 @@
 import "@/i18n/config";
 import { renderWithQueryClient } from "@/test-utils";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -50,7 +50,7 @@ vi.mock("@/features/circles", async (importOriginal) => {
 });
 
 import { AuthSessionProvider } from "@/features/auth";
-import { useCircleMemberships } from "@/features/circles";
+import { circleServices, useCircleMemberships } from "@/features/circles";
 import type { ReactNode } from "react";
 import { ProfileCirclesSettings } from "./ProfileCirclesSettings";
 import { ProfileSettingsTabs } from "./ProfileSettingsTabs";
@@ -104,6 +104,36 @@ describe("ProfileCirclesSettings", () => {
 			screen.getByRole("button", { name: "Leave circle" }),
 		).toBeInTheDocument();
 		expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+	});
+
+	it("lets a member who owns no circle create one in place", async () => {
+		mockMemberships([memberships[1]]);
+		const createCircle = vi
+			.spyOn(circleServices, "createCircle")
+			.mockResolvedValue({
+				data: {
+					circle: { id: 42, name: "Cousins", slug: "cousins", member_count: 1 },
+				},
+			});
+		renderWithQueryClient(<ProfileCirclesSettings />, { wrapper: withSession });
+
+		fireEvent.click(screen.getByRole("button", { name: "Create circle" }));
+		const dialog = await screen.findByRole("dialog");
+		fireEvent.change(within(dialog).getByLabelText("Circle name"), {
+			target: { value: "  Cousins " },
+		});
+		fireEvent.click(
+			within(dialog).getByRole("button", { name: "Create circle" }),
+		);
+
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith({
+				to: "/circles/$circleId",
+				params: { circleId: "42" },
+			}),
+		);
+		expect(createCircle.mock.calls[0]?.[0]).toEqual({ name: "Cousins" });
+		createCircle.mockRestore();
 	});
 
 	it("offers to create a circle when there are none", () => {

@@ -124,6 +124,8 @@ class CircleInvitationRespondView(APIView):
 
             invitation.responded_at = timezone.now()
             update_fields = ["status", "responded_at"]
+            if action == "accept":
+                update_fields += ["archived_at", "archived_reason"]
             if invitation.invited_user_id == request.user.id:
                 update_fields.append("invited_user")
             invitation.save(update_fields=update_fields)

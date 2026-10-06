@@ -290,6 +290,8 @@
 				"scan_complete": "Ya escaneé el código"
 			},
 			"totp": {
+				"start": "Mostrar código QR",
+				"starting": "Preparando…",
 				"title": "Configuración de aplicación de autenticación",
 				"intro": "Usa una aplicación de autenticación como Google Authenticator o Authy",
 				"scan": "Escanear código QR",
@@ -939,7 +941,9 @@
 				"leave_confirm_cta": "Sí, salir del círculo",
 				"create_own_title": "Crea tu propio círculo",
 				"create_own_description": "Eres parte de círculos, pero aún no has creado el tuyo. Comienza tu propio círculo para invitar a familiares y amigos.",
-				"create_own_action": "Crear círculo"
+				"create_own_action": "Crear círculo",
+				"create_dialog_title": "Crear un círculo",
+				"create_dialog_description": "Crea otro círculo para otro grupo de familia o amigos."
 			},
 			"dashboard": {
 				"loading": "Cargando detalles del círculo…",
