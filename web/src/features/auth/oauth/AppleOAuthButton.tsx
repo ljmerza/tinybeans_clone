@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { rememberInviteRedirect } from "@/features/circles/utils/inviteAnalytics";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useAppleOAuth, useOAuthProviders } from "./appleHooks";
+import { useAppleOAuth } from "./appleHooks";
+import { useOAuthProviders } from "./useOAuthProviders";
 
 interface AppleOAuthButtonProps {
 	mode: "signup" | "login" | "link";

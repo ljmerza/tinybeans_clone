@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useSignup } from "../hooks/authHooks";
 import { AppleOAuthButton } from "../oauth/AppleOAuthButton";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
+import { useOAuthProviders } from "../oauth/useOAuthProviders";
 
 interface SignupCardProps {
 	redirect?: string;
@@ -23,6 +24,9 @@ interface SignupCardProps {
 
 export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 	const { t } = useTranslation();
+	const { data: providers } = useOAuthProviders();
+	// No social buttons, and no "or" divider, unless a provider is configured.
+	const hasSocialLogin = Boolean(providers?.google || providers?.apple);
 	const signup = useSignup({ redirect });
 	const { getGeneral, getFieldErrors } = useApiMessages();
 	const [generalError, setGeneralError] = useState("");
@@ -90,21 +94,23 @@ export function SignupCard({ redirect, prefillEmail }: SignupCardProps) {
 				</div>
 			}
 		>
-			<div className="space-y-4">
-				<GoogleOAuthButton mode="signup" redirect={redirect} />
-				<AppleOAuthButton mode="signup" redirect={redirect} />
+			{hasSocialLogin && (
+				<div className="space-y-4">
+					<GoogleOAuthButton mode="signup" redirect={redirect} />
+					<AppleOAuthButton mode="signup" redirect={redirect} />
 
-				<div className="relative">
-					<div className="absolute inset-0 flex items-center">
-						<div className="w-full border-t border-border/60 dark:border-border/40 transition-colors" />
-					</div>
-					<div className="relative flex justify-center text-sm">
-						<span className="px-2 bg-card text-muted-foreground transition-colors">
-							{t("common.or")}
-						</span>
+					<div className="relative">
+						<div className="absolute inset-0 flex items-center">
+							<div className="w-full border-t border-border/60 dark:border-border/40 transition-colors" />
+						</div>
+						<div className="relative flex justify-center text-sm">
+							<span className="px-2 bg-card text-muted-foreground transition-colors">
+								{t("common.or")}
+							</span>
+						</div>
 					</div>
 				</div>
-			</div>
+			)}
 
 			<form
 				onSubmit={(event) => {

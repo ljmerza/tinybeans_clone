@@ -283,6 +283,21 @@ class AppleOAuthDisabledTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["data"], {"google": True, "apple": False})
 
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID="")
+    def test_providers_endpoint_hides_google_without_credentials(self):
+        response = APIClient().get(reverse("auth-oauth-providers"))
+        self.assertEqual(response.json()["data"]["google"], False)
+
+    @override_settings(OAUTH_ALLOWED_REDIRECT_URIS=[])
+    def test_providers_endpoint_hides_google_without_allowed_redirect(self):
+        response = APIClient().get(reverse("auth-oauth-providers"))
+        self.assertEqual(response.json()["data"]["google"], False)
+
+    @override_settings(**{**APPLE_SETTINGS, "APPLE_OAUTH_ALLOWED_RETURN_URIS": []})
+    def test_providers_endpoint_hides_apple_without_allowed_return_uri(self):
+        response = APIClient().get(reverse("auth-oauth-providers"))
+        self.assertEqual(response.json()["data"]["apple"], False)
+
     def test_initiate_reports_disabled(self):
         response = APIClient().post(reverse("auth-apple-initiate"), {"redirect_uri": RETURN_URI}, format="json")
         self.assertEqual(response.status_code, 404)

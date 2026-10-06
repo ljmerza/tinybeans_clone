@@ -5,7 +5,7 @@ import {
 import { useApiMessages } from "@/i18n";
 import { getBrowserLanguage } from "@/i18n/browserLanguage";
 import type { ApiError } from "@/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { setAccessToken } from "../store/authStore";
 import {
@@ -13,21 +13,8 @@ import {
 	getAppleRedirectUri,
 	storeAppleOAuthState,
 } from "./appleUtils";
-import { appleOauthApi, getOAuthProviders } from "./client";
+import { appleOauthApi } from "./client";
 import type { OAuthCallbackRequest } from "./types";
-
-/**
- * Which sign-in providers the server is configured for. The Apple button
- * stays hidden until this says `apple: true`.
- */
-export function useOAuthProviders() {
-	return useQuery({
-		queryKey: ["auth", "oauth-providers"],
-		queryFn: getOAuthProviders,
-		staleTime: 1000 * 60 * 30,
-		retry: false,
-	});
-}
 
 /**
  * useAppleOAuth Hook

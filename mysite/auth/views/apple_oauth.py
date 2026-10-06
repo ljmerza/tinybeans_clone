@@ -65,8 +65,17 @@ def _invalid_state_response():
     )
 
 
+def google_oauth_configured() -> bool:
+    """Google sign-in works only with the client credentials and an allowed redirect URI."""
+    return bool(
+        getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
+        and getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "")
+        and getattr(settings, "OAUTH_ALLOWED_REDIRECT_URIS", [])
+    )
+
+
 class OAuthProvidersView(APIView):
-    """Report which social sign-in providers are configured."""
+    """Report which social sign-in providers are configured; the SPA hides the rest."""
 
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -76,7 +85,7 @@ class OAuthProvidersView(APIView):
         """GET /api/auth/providers/"""
         return success_response(
             {
-                "google": bool(settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET),
+                "google": google_oauth_configured(),
                 "apple": AppleOAuthService.is_configured(),
             }
         )
