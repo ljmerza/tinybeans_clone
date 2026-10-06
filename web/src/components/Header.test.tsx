@@ -16,12 +16,23 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 import { Header } from "./Header";
 
 describe("Header", () => {
+	it("shows the Circles brand linking home", () => {
+		render(<Header isAuthenticated={false} />);
+
+		expect(screen.getByRole("link", { name: "Circles" })).toHaveAttribute(
+			"href",
+			"/",
+		);
+	});
+
 	it("has no Circles link; circles live under Settings", () => {
 		render(<Header isAuthenticated />);
 
-		expect(
-			screen.queryByRole("link", { name: "Circles" }),
-		).not.toBeInTheDocument();
+		// The only "Circles" link is the brand, which goes home.
+		expect(screen.getByRole("link", { name: "Circles" })).toHaveAttribute(
+			"href",
+			"/",
+		);
 		expect(
 			screen.queryByRole("link", {
 				name: (_, el) => el.getAttribute("href") === "/circles",

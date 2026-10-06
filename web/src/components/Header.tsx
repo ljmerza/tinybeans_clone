@@ -64,7 +64,7 @@ function GuestHeaderActions() {
 /**
  * Application header with navigation.
  *
- * Displays the site branding (Home link) and authentication-dependent navigation.
+ * Displays the site branding (a "Circles" link home) and authentication-dependent navigation.
  * For authenticated users, shows Calendar, Favorites, Albums, Settings and
  * Logout links.
  * For guest users, shows Login and Sign up links.
@@ -85,7 +85,7 @@ export function Header({ isAuthenticated }: HeaderProps) {
 							to="/"
 							className="text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
 						>
-							{t("nav.home")}
+							{t("nav.brand")}
 						</Link>
 					</div>
 					{/* Scrolls sideways when the links don't fit; py-1 keeps focus rings unclipped. */}

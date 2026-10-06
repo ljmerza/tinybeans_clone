@@ -28,6 +28,7 @@
 	},
 	"nav": {
 		"home": "Home",
+		"brand": "Circles",
 		"calendar": "Calendar",
 		"login": "Login",
 		"signup": "Sign up",
@@ -59,7 +60,26 @@
 			"create_account": "Create account",
 			"creating_account": "Creating account…",
 			"already_have_account": "Already have an account?",
-			"signup_failed": "Signup failed"
+			"signup_failed": "Signup failed",
+			"panel_title": "Start sharing with the people who matter",
+			"panel_subtitle": "Create an account to start your own circle, or to join one you've been invited to.",
+			"panel_points": {
+				"private": "Only people you invite can see your posts",
+				"media": "Photos, videos, albums and a calendar of memories",
+				"notify": "Email or push notifications when something new is posted"
+			},
+			"back_home": "Circles home",
+			"show_password": "Show password",
+			"hide_password": "Hide password",
+			"strength": {
+				"label": "Password strength: {{level}}",
+				"too_short": "Too short",
+				"weak": "Weak",
+				"fair": "Fair",
+				"good": "Good",
+				"strong": "Strong",
+				"hint": "Use 12 or more characters with a mix of letters, numbers and symbols."
+			}
 		},
 		"password_reset": {
 			"request_title": "Reset Password",
@@ -441,6 +461,76 @@
 			"welcome": "Welcome",
 			"authenticated_message": "You are signed in!",
 			"guest_message": "Get started by signing up or logging in to your account."
+		},
+		"landing": {
+			"badge": "Private photo sharing for families",
+			"title": "Your family's moments, kept in one private circle",
+			"subtitle": "Share photos and videos with the people who matter most. Only the family and friends you invite can see them.",
+			"cta_primary": "Create your circle",
+			"cta_secondary": "Sign in",
+			"trust_line": "Invite-only. No ads. No public profiles.",
+			"features_title": "Everything your family needs to stay close",
+			"features_subtitle": "Made for everyday moments with the people you love, not for an audience.",
+			"features": {
+				"circles": {
+					"title": "Private circles",
+					"description": "Invite only the people you choose. What you share stays inside your circle."
+				},
+				"media": {
+					"title": "Photos and videos",
+					"description": "Post photos and videos and scroll back through them in one timeline."
+				},
+				"calendar": {
+					"title": "A calendar of memories",
+					"description": "Browse day by day, jump to any month and see what happened on this day in past years."
+				},
+				"albums": {
+					"title": "Albums and recaps",
+					"description": "Collect trips and holidays into albums, or let Circles make a recap album each month."
+				},
+				"comments": {
+					"title": "Comments and mentions",
+					"description": "Comment on posts, @mention family members and save your favorites."
+				},
+				"growth": {
+					"title": "Growth charts",
+					"description": "Log heights and weights and watch your kids grow on a chart."
+				}
+			},
+			"steps_title": "How it works",
+			"steps": {
+				"create": {
+					"title": "Create your circle",
+					"description": "Sign up and start a circle for your family in about a minute."
+				},
+				"invite": {
+					"title": "Invite your people",
+					"description": "Send email invites to grandparents, aunts, uncles and close friends."
+				},
+				"share": {
+					"title": "Share moments",
+					"description": "Post photos and videos. Everyone hears about it by email or push notification."
+				}
+			},
+			"privacy_title": "Private by design",
+			"privacy_subtitle": "Your circle belongs to you. Nothing you share is public.",
+			"privacy": {
+				"invite_only": {
+					"title": "Invite-only circles",
+					"description": "Only members of a circle can see its posts, photos and videos."
+				},
+				"two_factor": {
+					"title": "Two-factor sign-in",
+					"description": "Add a second step to signing in to keep your account safe."
+				},
+				"no_ads": {
+					"title": "No ads, no public profiles",
+					"description": "No feed of strangers and nothing being sold. Just your family."
+				}
+			},
+			"final_title": "Start your circle today",
+			"final_subtitle": "Setting up takes about a minute. Got an invite? Use the link in your email to join.",
+			"footer_tagline": "Private photo sharing for families"
 		},
 		"favorites": {
 			"loading": "Loading your favorites…",

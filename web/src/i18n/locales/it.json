@@ -28,6 +28,7 @@
 	},
 	"nav": {
 		"home": "Home",
+		"brand": "Circles",
 		"calendar": "Calendario",
 		"login": "Accedi",
 		"signup": "Registrati",
@@ -59,7 +60,26 @@
 			"create_account": "Crea account",
 			"creating_account": "Creazione dell'account…",
 			"already_have_account": "Hai già un account?",
-			"signup_failed": "Registrazione non riuscita"
+			"signup_failed": "Registrazione non riuscita",
+			"panel_title": "Inizia a condividere con le persone che contano",
+			"panel_subtitle": "Crea un account per avviare la tua cerchia o per entrare in una cerchia che ti ha invitato.",
+			"panel_points": {
+				"private": "Solo le persone che inviti possono vedere i tuoi post",
+				"media": "Foto, video, album e un calendario di ricordi",
+				"notify": "Avvisi via email o push quando c'è qualcosa di nuovo"
+			},
+			"back_home": "Home di Circles",
+			"show_password": "Mostra password",
+			"hide_password": "Nascondi password",
+			"strength": {
+				"label": "Sicurezza della password: {{level}}",
+				"too_short": "Troppo corta",
+				"weak": "Debole",
+				"fair": "Discreta",
+				"good": "Buona",
+				"strong": "Forte",
+				"hint": "Usa almeno 12 caratteri, mescolando lettere, numeri e simboli."
+			}
 		},
 		"password_reset": {
 			"request_title": "Reimposta la password",
@@ -441,6 +461,76 @@
 			"welcome": "Ti diamo il benvenuto",
 			"authenticated_message": "Hai effettuato l'accesso!",
 			"guest_message": "Inizia registrandoti o accedendo al tuo account."
+		},
+		"landing": {
+			"badge": "Foto in privato per le famiglie",
+			"title": "I momenti della tua famiglia, custoditi in una cerchia privata",
+			"subtitle": "Condividi foto e video con le persone più importanti. Solo i familiari e gli amici che inviti possono vederli.",
+			"cta_primary": "Crea la tua cerchia",
+			"cta_secondary": "Accedi",
+			"trust_line": "Solo su invito. Niente pubblicità. Nessun profilo pubblico.",
+			"features_title": "Tutto ciò che serve alla tua famiglia per restare vicina",
+			"features_subtitle": "Pensato per i momenti di ogni giorno con chi ami, non per un pubblico.",
+			"features": {
+				"circles": {
+					"title": "Cerchie private",
+					"description": "Invita solo chi scegli tu. Ciò che condividi resta nella tua cerchia."
+				},
+				"media": {
+					"title": "Foto e video",
+					"description": "Pubblica foto e video e ritrovali tutti in un'unica cronologia."
+				},
+				"calendar": {
+					"title": "Un calendario di ricordi",
+					"description": "Sfoglia giorno per giorno, salta a qualsiasi mese e rivedi cosa è successo in questo giorno negli anni passati."
+				},
+				"albums": {
+					"title": "Album e riepiloghi",
+					"description": "Raccogli viaggi e feste in album, oppure lascia che Circles crei un album di riepilogo ogni mese."
+				},
+				"comments": {
+					"title": "Commenti e menzioni",
+					"description": "Commenta i post, @menziona i tuoi familiari e salva i preferiti."
+				},
+				"growth": {
+					"title": "Curve di crescita",
+					"description": "Registra altezza e peso e guarda i tuoi figli crescere su un grafico."
+				}
+			},
+			"steps_title": "Come funziona",
+			"steps": {
+				"create": {
+					"title": "Crea la tua cerchia",
+					"description": "Registrati e crea una cerchia per la tua famiglia in circa un minuto."
+				},
+				"invite": {
+					"title": "Invita i tuoi cari",
+					"description": "Invia inviti via email a nonni, zii e amici stretti."
+				},
+				"share": {
+					"title": "Condividi i momenti",
+					"description": "Pubblica foto e video. Tutti ricevono un avviso via email o notifica push."
+				}
+			},
+			"privacy_title": "Privato per scelta",
+			"privacy_subtitle": "La tua cerchia è tua. Niente di ciò che condividi è pubblico.",
+			"privacy": {
+				"invite_only": {
+					"title": "Cerchie solo su invito",
+					"description": "Solo i membri di una cerchia possono vederne post, foto e video."
+				},
+				"two_factor": {
+					"title": "Accesso in due passaggi",
+					"description": "Aggiungi un secondo passaggio all'accesso per proteggere il tuo account."
+				},
+				"no_ads": {
+					"title": "Niente pubblicità né profili pubblici",
+					"description": "Nessun contenuto di sconosciuti e niente da vendere. Solo la tua famiglia."
+				}
+			},
+			"final_title": "Crea la tua cerchia oggi",
+			"final_subtitle": "Basta circa un minuto. Hai ricevuto un invito? Usa il link nella tua email per unirti.",
+			"footer_tagline": "Foto in privato per le famiglie"
 		},
 		"favorites": {
 			"loading": "Caricamento dei preferiti…",
