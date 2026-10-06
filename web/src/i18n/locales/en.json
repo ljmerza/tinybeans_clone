@@ -752,6 +752,8 @@
 				"retry_failed": "Retry failed uploads",
 				"skip_failed": "Skip failed",
 				"discard": "Discard post",
+				"no_circles": "Posts go to a circle, and you're not in one yet. Set one up, or ask someone to invite you to theirs.",
+				"set_up_circle": "Set up a circle",
 				"status": {
 					"queued": "Waiting…",
 					"uploading": "Uploading… {{percent}}%",
@@ -880,7 +882,9 @@
 			"skip": "Skip for now",
 			"loading": "Loading onboarding details…",
 			"errorTitle": "Can't load onboarding",
-			"errorMessage": "We couldn't load your onboarding status. Please try again."
+			"errorMessage": "We couldn't load your onboarding status. Please try again.",
+			"invitationsTitle": "You've been invited",
+			"invitationsDescription": "Join a circle someone already set up for you, or create your own below."
 		},
 		"inviteAccept": {
 			"loading": "Verifying invitation…",

@@ -6,6 +6,7 @@ export const circleKeys = {
 	all: () => circleKeysFactory.root(),
 	onboarding: () => circleKeysFactory.tag("onboarding"),
 	list: () => circleKeysFactory.tag("list"),
+	pendingInvitations: () => circleKeysFactory.tag("pending-invitations"),
 	detail: (circleId: string | number) =>
 		circleKeysFactory.tag("detail", circleId),
 	members: (circleId: string | number) =>

@@ -53,12 +53,18 @@ class CircleInvitationListView(APIView):
     )
     def get(self, request):
         """List pending invitations for the current user."""
-        invitations = CircleInvitation.objects.filter(
-            email__iexact=request.user.email,
-            status=CircleInvitationStatus.PENDING,
-        ).select_related("circle")
+        invitations = list(
+            CircleInvitation.objects.filter(
+                email__iexact=request.user.email,
+                status=CircleInvitationStatus.PENDING,
+            ).select_related("circle", "invited_by")
+        )
 
         data = CircleInvitationSerializer(invitations, many=True).data
+        # The invitee isn't a member yet, so the circle id alone can't be looked up.
+        for item, invitation in zip(data, invitations, strict=True):
+            item["circle"] = CircleSerializer(invitation.circle).data
+            item["invited_by"] = UserSerializer(invitation.invited_by).data if invitation.invited_by_id else None
         return success_response({"invitations": data})
 
 

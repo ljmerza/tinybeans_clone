@@ -141,3 +141,46 @@ class InvitationWorkflowTests(TestCase):
         sent_again = send_circle_invitation_reminders()
         self.assertEqual(sent_again, 0)
         mock_delay.assert_not_called()
+
+    def test_pending_list_includes_circle_and_inviter(self):
+        """Invitees aren't members yet, so the list carries the circle's name."""
+        CircleInvitation.objects.create(
+            circle=self.circle,
+            email="pending@example.com",
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+        invitee = User.objects.create_user(email="Pending@example.com", password="InviteePass123")
+        invitee.email_verified = True
+        invitee.save()
+        self.client.force_authenticate(user=invitee)
+
+        response = self.client.get(reverse("circle-invitation-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
+        [item] = response.json()["data"]["invitations"]
+        self.assertEqual(item["circle"]["id"], self.circle.id)
+        self.assertEqual(item["circle"]["name"], "Test Circle")
+        self.assertEqual(item["invited_by"]["email"], "admin@example.com")
+
+    def test_accepting_pending_invitation_ends_onboarding(self):
+        invitation = CircleInvitation.objects.create(
+            circle=self.circle,
+            email="joiner@example.com",
+            invited_by=self.admin,
+            role=UserRole.CIRCLE_MEMBER,
+        )
+        invitee = User.objects.create_user(email="joiner@example.com", password="InviteePass123")
+        invitee.email_verified = True
+        invitee.save()
+        self.assertTrue(invitee.needs_circle_onboarding)
+        self.client.force_authenticate(user=invitee)
+
+        response = self.client.post(
+            reverse("circle-invitation-respond", args=[invitation.id]), {"action": "accept"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
+        self.assertEqual(response.json()["data"]["circle"]["id"], self.circle.id)
+        invitee.refresh_from_db()
+        self.assertFalse(invitee.needs_circle_onboarding)

@@ -11,7 +11,7 @@ export default function CircleOnboardingRoute() {
 	const { data, isLoading, isError } = useCircleOnboardingQuery();
 
 	useEffect(() => {
-		if (data && !data.needs_circle_onboarding) {
+		if (data && data.memberships_count > 0) {
 			navigate({ to: "/" });
 		}
 	}, [data, navigate]);

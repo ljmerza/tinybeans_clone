@@ -57,6 +57,15 @@ export interface CircleInvitationSummary {
 	invited_user_id?: number | string | null;
 }
 
+/** An invitation to the viewer, who can't look the circle up until they join. */
+export interface PendingCircleInvitation {
+	id: string;
+	role: string;
+	created_at: string;
+	circle: CircleSummary;
+	invited_by: CircleInvitationMemberSummary | null;
+}
+
 export interface CircleMembershipSummary {
 	membership_id: number;
 	circle: CircleSummary;

@@ -19,6 +19,7 @@ import {
 import type { CircleMembershipSummary } from "@/features/circles";
 import { useCircleMemberships } from "@/features/circles";
 import { showToast } from "@/lib/toast";
+import { Link } from "@tanstack/react-router";
 import { Film, ImagePlus, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -287,6 +288,36 @@ export function NewPostDialog({ open, onOpenChange }: NewPostDialogProps) {
 		if (!next) clear();
 		onOpenChange(next);
 	};
+
+	// Nothing to post to: point the viewer at circle setup instead of a picker.
+	if (memberships !== undefined && circles.length === 0) {
+		return (
+			<Dialog open={open} onOpenChange={handleOpenChange}>
+				<DialogContent closeButtonLabel={t("common.close")}>
+					<DialogHeader>
+						<DialogTitle>{t("pages.feed.new_post.title")}</DialogTitle>
+						<DialogDescription>
+							{t("pages.feed.new_post.no_circles")}
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter className="gap-2">
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={() => handleOpenChange(false)}
+						>
+							{t("common.close")}
+						</Button>
+						<Button asChild>
+							<Link to="/circles/onboarding">
+								{t("pages.feed.new_post.set_up_circle")}
+							</Link>
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		);
+	}
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>

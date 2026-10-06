@@ -7,6 +7,7 @@ import { zodValidator } from "@/lib/form";
 import { circleCreateSchema } from "@/lib/validations/schemas";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { PendingInvitations } from "./PendingInvitations";
 
 interface CircleOnboardingContentProps {
 	status: CircleOnboardingPayload;
@@ -41,6 +42,8 @@ export function CircleOnboardingContent({
 					{t("pages.circleOnboarding.description")}
 				</p>
 			</header>
+
+			<PendingInvitations enabled={Boolean(status.email_verified)} />
 
 		<form
 				onSubmit={(event) => {

@@ -9,6 +9,7 @@ import type {
 	CircleMembershipSummary,
 	CircleOnboardingPayload,
 	CircleSummary,
+	PendingCircleInvitation,
 } from "../types";
 
 const USERS_BASE = "/users";
@@ -92,12 +93,19 @@ export const circleServices = {
 		);
 	},
 
+	listPendingInvitations() {
+		return authApi.get<
+			ApiResponseWithMessages<{ invitations: PendingCircleInvitation[] }>
+		>(`${USERS_BASE}/invitations/pending/`);
+	},
+
 	respondToInvitation(invitationId: string, action: "accept" | "decline") {
-		return authApi.post<
-			ApiResponseWithMessages<{ invitation: CircleInvitationSummary }>
-		>(`${USERS_BASE}/invitations/${invitationId}/respond/`, {
-			action,
-		});
+		return authApi.post<ApiResponseWithMessages<{ circle: CircleSummary }>>(
+			`${USERS_BASE}/invitations/${invitationId}/respond/`,
+			{
+				action,
+			},
+		);
 	},
 
 	listMemberships() {

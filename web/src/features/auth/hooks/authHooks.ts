@@ -149,16 +149,7 @@ export function useLogin(options?: { redirect?: string }) {
 				return;
 			}
 
-			const needsOnboarding =
-				"needs_circle_onboarding" in payload &&
-				Boolean(
-					(payload as typeof payload & { needs_circle_onboarding?: boolean })
-						.needs_circle_onboarding,
-				);
-			if (needsOnboarding) {
-				navigate({ to: "/circles/onboarding" });
-				return;
-			}
+			// Onboarding is decided by the "/" route guard, after any invite joins a circle.
 			if (invitationRedirect) {
 				if (finalizeResult.status === "success") {
 					const finalizeData =
@@ -260,12 +251,7 @@ export function useSignup(options?: { redirect?: string }) {
 				return;
 			}
 
-			const needsOnboarding = Boolean(payload?.needs_circle_onboarding);
-			if (needsOnboarding) {
-				navigate({ to: "/circles/onboarding" });
-				return;
-			}
-
+			// Onboarding is decided by the "/" route guard, after any invite joins a circle.
 			if (invitationRedirect) {
 				if (finalizeResult.status === "success") {
 					const finalizeData =
