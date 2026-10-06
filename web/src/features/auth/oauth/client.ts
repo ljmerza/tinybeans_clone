@@ -1,12 +1,14 @@
 import { apiClient } from "../api/authClient";
 import type {
 	ApiMessage,
+	AppleOAuthInitiateResponse,
 	OAuthCallbackRequest,
 	OAuthCallbackResponse,
 	OAuthInitiateRequest,
 	OAuthInitiateResponse,
 	OAuthLinkRequest,
 	OAuthLinkResponse,
+	OAuthProvidersResponse,
 	OAuthUnlinkRequest,
 	OAuthUnlinkResponse,
 } from "./types";
@@ -58,5 +60,47 @@ export const oauthApi = {
 	unlink: (params: OAuthUnlinkRequest): Promise<OAuthUnlinkResponse> =>
 		apiClient
 			.delete<Envelope<OAuthUnlinkResponse>>("/auth/google/unlink/", params)
+			.then(unwrapOAuthResponse),
+};
+
+/** GET /api/auth/providers/ - which sign-in buttons to show */
+export const getOAuthProviders = (): Promise<OAuthProvidersResponse> =>
+	apiClient
+		.get<Envelope<OAuthProvidersResponse>>("/auth/providers/")
+		.then(unwrapOAuthResponse);
+
+/**
+ * Sign in with Apple API Client
+ * Same shape as oauthApi; Apple's POST lands on /api/auth/apple/return/,
+ * which forwards code and state to the SPA callback page.
+ */
+export const appleOauthApi = {
+	/** POST /api/auth/apple/initiate/ */
+	initiate: (
+		params: OAuthInitiateRequest,
+	): Promise<AppleOAuthInitiateResponse> =>
+		apiClient
+			.post<Envelope<AppleOAuthInitiateResponse>>(
+				"/auth/apple/initiate/",
+				params,
+			)
+			.then(unwrapOAuthResponse),
+
+	/** POST /api/auth/apple/callback/ */
+	callback: (params: OAuthCallbackRequest): Promise<OAuthCallbackResponse> =>
+		apiClient
+			.post<Envelope<OAuthCallbackResponse>>("/auth/apple/callback/", params)
+			.then(unwrapOAuthResponse),
+
+	/** POST /api/auth/apple/link/ */
+	link: (params: OAuthLinkRequest): Promise<OAuthLinkResponse> =>
+		apiClient
+			.post<Envelope<OAuthLinkResponse>>("/auth/apple/link/", params)
+			.then(unwrapOAuthResponse),
+
+	/** DELETE /api/auth/apple/unlink/ */
+	unlink: (params: OAuthUnlinkRequest): Promise<OAuthUnlinkResponse> =>
+		apiClient
+			.delete<Envelope<OAuthUnlinkResponse>>("/auth/apple/unlink/", params)
 			.then(unwrapOAuthResponse),
 };

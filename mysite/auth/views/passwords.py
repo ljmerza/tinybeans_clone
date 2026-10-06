@@ -321,14 +321,14 @@ class PasswordChangeView(APIView):
 def _enable_password_login(user: User) -> list[str]:
     """Let an account that now has a password sign in with it.
 
-    Google sign-ups start with ``password_login_enabled=False``, which also
-    blocks unlinking Google. Returns the fields changed, for ``save()``.
+    Google and Apple sign-ups start with ``password_login_enabled=False``, which
+    also blocks unlinking them. Returns the fields changed, for ``save()``.
     """
     changed = []
     if not user.password_login_enabled:
         user.password_login_enabled = True
         changed.append("password_login_enabled")
-    if user.google_id and user.auth_provider != "hybrid":
+    if (user.google_id or user.apple_id) and user.auth_provider != "hybrid":
         user.auth_provider = "hybrid"
         changed.append("auth_provider")
     return changed

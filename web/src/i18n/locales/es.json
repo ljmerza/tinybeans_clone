@@ -122,6 +122,10 @@
 			"google_signin": "Iniciar sesión con Google",
 			"google_signup": "Registrarse con Google",
 			"google_link": "Vincular cuenta de Google",
+			"apple_signin": "Iniciar sesión con Apple",
+			"apple_signup": "Registrarse con Apple",
+			"apple_link": "Vincular cuenta de Apple",
+			"apple_processing": "Procesando inicio de sesión con Apple...",
 			"processing": "Procesando inicio de sesión con Google...",
 			"processing_description": "Espera mientras verificamos tu cuenta.",
 			"callback_error_title": "Error al iniciar sesión",
@@ -1000,7 +1004,9 @@
 		},
 		"oauth": {
 			"account_linked": "Cuenta de Google vinculada exitosamente",
-			"account_unlinked": "Cuenta de Google desvinculada exitosamente"
+			"account_unlinked": "Cuenta de Google desvinculada exitosamente",
+			"apple_account_linked": "Cuenta de Apple vinculada exitosamente",
+			"apple_account_unlinked": "Cuenta de Apple desvinculada exitosamente"
 		},
 		"twofa": {
 			"setup_initiated": "Escanee el código QR con su aplicación de autenticación",
@@ -1101,6 +1107,11 @@
 			"cannot_unlink_without_password": "No se puede desvincular cuenta de Google. Primero debe establecer una contraseña. {{help_url}}",
 			"invalid_password": "Contraseña inválida",
 			"google_cancelled": "Cancelaste el proceso de inicio de sesión con Google",
+			"apple_cancelled": "Cancelaste el proceso de inicio de sesión con Apple",
+			"apple_disabled": "Iniciar sesión con Apple no está disponible en este momento.",
+			"apple_account_already_linked": "Esta cuenta de Apple ya está vinculada a otra cuenta",
+			"apple_link_failed": "Error al vincular cuenta de Apple. Por favor intente de nuevo.",
+			"apple_cannot_unlink_without_password": "No se puede desvincular cuenta de Apple. Primero debe establecer una contraseña. {{help_url}}",
 			"invalid_callback": "Faltan parámetros OAuth requeridos. Por favor intente de nuevo.",
 			"state_mismatch": "La validación de seguridad falló. Por favor intente iniciar sesión de nuevo."
 		},

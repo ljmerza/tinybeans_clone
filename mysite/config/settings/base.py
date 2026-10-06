@@ -261,6 +261,11 @@ from .auth import (  # noqa
     OAUTH_RATE_LIMIT_MAX_ATTEMPTS,
     OAUTH_RATE_LIMIT_WINDOW,
     GOOGLE_OAUTH_SCOPES,
+    APPLE_OAUTH_CLIENT_ID,
+    APPLE_OAUTH_TEAM_ID,
+    APPLE_OAUTH_KEY_ID,
+    APPLE_OAUTH_PRIVATE_KEY,
+    APPLE_OAUTH_REDIRECT_URI,
     PASSWORD_RESET_RATELIMIT,
     PASSWORD_RESET_CONFIRM_RATELIMIT,
     PASSWORD_CHANGE_RATELIMIT,
@@ -281,6 +286,7 @@ from .auth import (  # noqa
     _get_twofa_encryption_key,
     _get_ratelimit_enable,
     _get_oauth_allowed_redirect_uris,
+    _get_apple_oauth_allowed_return_uris,
 )
 
 # Django REST Framework Configuration
@@ -343,6 +349,7 @@ TRUSTED_PROXY_IPS = _ip_trust_config["TRUSTED_PROXY_IPS"]
 TWOFA_ENCRYPTION_KEY = _get_twofa_encryption_key(DEBUG, SECRET_KEY)
 RATELIMIT_ENABLE = _get_ratelimit_enable(DEBUG)
 OAUTH_ALLOWED_REDIRECT_URIS = _get_oauth_allowed_redirect_uris(DEBUG)
+APPLE_OAUTH_ALLOWED_RETURN_URIS = _get_apple_oauth_allowed_return_uris(DEBUG)
 
 # Celery Configuration
 from .celery import (  # noqa

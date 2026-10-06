@@ -20,6 +20,20 @@ export interface OAuthInitiateResponse {
 	messages?: ApiMessage[];
 }
 
+export interface AppleOAuthInitiateResponse {
+	apple_oauth_url: string;
+	state: string;
+	expires_in: number;
+	messages?: ApiMessage[];
+}
+
+/** Which social sign-in providers the server has credentials for. */
+export interface OAuthProvidersResponse {
+	google: boolean;
+	apple: boolean;
+	messages?: ApiMessage[];
+}
+
 export interface OAuthCallbackRequest {
 	code: string;
 	state: string;
@@ -33,7 +47,7 @@ export interface OAuthUser {
 	first_name?: string;
 	last_name?: string;
 	display_name?: string;
-	auth_provider: "manual" | "google" | "hybrid";
+	auth_provider: "manual" | "google" | "hybrid" | "apple";
 	google_id: string | null;
 	email_verified: boolean;
 	google_email?: string;

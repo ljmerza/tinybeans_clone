@@ -122,6 +122,10 @@
 			"google_signin": "Sign in with Google",
 			"google_signup": "Sign up with Google",
 			"google_link": "Link Google Account",
+			"apple_signin": "Sign in with Apple",
+			"apple_signup": "Sign up with Apple",
+			"apple_link": "Link Apple Account",
+			"apple_processing": "Processing Apple sign-in...",
 			"processing": "Processing Google sign-in...",
 			"processing_description": "Please wait while we verify your account.",
 			"callback_error_title": "Sign-in failed",
@@ -1000,7 +1004,9 @@
 		},
 		"oauth": {
 			"account_linked": "Google account linked successfully",
-			"account_unlinked": "Google account unlinked successfully"
+			"account_unlinked": "Google account unlinked successfully",
+			"apple_account_linked": "Apple account linked successfully",
+			"apple_account_unlinked": "Apple account unlinked successfully"
 		},
 		"twofa": {
 			"setup_initiated": "Scan QR code with your authenticator app",
@@ -1102,6 +1108,11 @@
 			"cannot_unlink_without_password": "Cannot unlink Google account. You must set a password first. {{help_url}}",
 			"invalid_password": "Invalid password",
 			"google_cancelled": "You cancelled the Google sign-in process",
+			"apple_cancelled": "You cancelled the Apple sign-in process",
+			"apple_disabled": "Sign in with Apple is not available right now.",
+			"apple_account_already_linked": "This Apple account is already linked to another account",
+			"apple_link_failed": "Failed to link Apple account. Please try again.",
+			"apple_cannot_unlink_without_password": "Cannot unlink Apple account. You must set a password first. {{help_url}}",
 			"invalid_callback": "Missing required OAuth parameters. Please try again.",
 			"state_mismatch": "Security validation failed. Please try signing in again."
 		},

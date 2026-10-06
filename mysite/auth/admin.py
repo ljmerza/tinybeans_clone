@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    AppleOAuthState,
     GoogleOAuthState,
     MagicLoginToken,
     RecoveryCode,
@@ -125,6 +126,43 @@ class GoogleOAuthStateAdmin(admin.ModelAdmin):
 
     is_expired.boolean = True
     is_expired.short_description = "Expired"
+
+    def has_add_permission(self, request):
+        """Prevent manual creation of OAuth states."""
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Prevent modification of OAuth states."""
+        return False
+
+
+@admin.register(AppleOAuthState)
+class AppleOAuthStateAdmin(admin.ModelAdmin):
+    """Read-only admin for Sign in with Apple state tokens."""
+
+    list_display = ["state_token_preview", "created_at", "expires_at", "used_at", "ip_address", "return_uri"]
+    list_filter = ["created_at", "expires_at", "used_at"]
+    search_fields = ["state_token", "ip_address", "return_uri"]
+    readonly_fields = [
+        "state_token",
+        "nonce",
+        "return_uri",
+        "first_name",
+        "last_name",
+        "created_at",
+        "used_at",
+        "ip_address",
+        "user_agent",
+        "expires_at",
+    ]
+    date_hierarchy = "created_at"
+    ordering = ["-created_at"]
+
+    def state_token_preview(self, obj):
+        """Show first 16 characters of state token for identification."""
+        return f"{obj.state_token[:16]}..." if obj.state_token else "-"
+
+    state_token_preview.short_description = "State Token"
 
     def has_add_permission(self, request):
         """Prevent manual creation of OAuth states."""

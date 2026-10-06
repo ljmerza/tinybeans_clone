@@ -155,6 +155,42 @@ GOOGLE_OAUTH_SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
+# Sign in with Apple Configuration
+# All four credentials come from the Apple Developer account: the Services ID
+# (client id), the 10-character Team ID, and the ID + PEM contents of a
+# "Sign in with Apple" private key (.p8). Newlines in the key may be written as
+# literal "\n". Apple sign-in stays disabled, and the button hidden, until all
+# four are set and APPLE_OAUTH_REDIRECT_URI is set.
+APPLE_OAUTH_CLIENT_ID = os.environ.get("APPLE_OAUTH_CLIENT_ID", "")
+APPLE_OAUTH_TEAM_ID = os.environ.get("APPLE_OAUTH_TEAM_ID", "")
+APPLE_OAUTH_KEY_ID = os.environ.get("APPLE_OAUTH_KEY_ID", "")
+APPLE_OAUTH_PRIVATE_KEY = os.environ.get("APPLE_OAUTH_PRIVATE_KEY", "").replace("\\n", "\n")
+
+# Apple POSTs the authorization response (response_mode=form_post), so it goes
+# to the API, not the SPA: https://<host>/api/auth/apple/return/. It must be
+# HTTPS on a real domain and registered as a Return URL on the Services ID.
+APPLE_OAUTH_REDIRECT_URI = os.environ.get("APPLE_OAUTH_REDIRECT_URI", "")
+
+# Where the API sends the browser after Apple's POST: the SPA's
+# `<browser origin>/auth/apple-callback`. Exact match, one entry per origin.
+_DEV_APPLE_OAUTH_RETURN_URIS = [
+    "http://localhost:3053/auth/apple-callback",
+    "http://127.0.0.1:3053/auth/apple-callback",
+    "http://localhost:3000/auth/apple-callback",
+]
+
+
+def _get_apple_oauth_allowed_return_uris(debug: bool) -> list:
+    """Comma-separated APPLE_OAUTH_ALLOWED_RETURN_URIS; localhost defaults only when DEBUG."""
+    value = os.environ.get("APPLE_OAUTH_ALLOWED_RETURN_URIS")
+    if not value:
+        return list(_DEV_APPLE_OAUTH_RETURN_URIS) if debug else []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+# This will be set by base.py after DEBUG is available
+# APPLE_OAUTH_ALLOWED_RETURN_URIS = _get_apple_oauth_allowed_return_uris(DEBUG)
+
 
 # Rate limiting (django-ratelimit)
 def _get_ratelimit_enable(debug: bool) -> bool:

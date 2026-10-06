@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLogin } from "../hooks/authHooks";
+import { AppleOAuthButton } from "../oauth/AppleOAuthButton";
 import { GoogleOAuthButton } from "../oauth/GoogleOAuthButton";
 
 interface LoginCardProps {
@@ -96,6 +97,7 @@ export function LoginCard({ redirect }: LoginCardProps) {
 		>
 			<div className="space-y-4">
 				<GoogleOAuthButton mode="login" redirect={redirect} />
+				<AppleOAuthButton mode="login" redirect={redirect} />
 
 				<div className="relative">
 					<div className="absolute inset-0 flex items-center">
