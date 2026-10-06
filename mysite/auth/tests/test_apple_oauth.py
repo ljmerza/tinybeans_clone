@@ -251,6 +251,17 @@ class AppleOAuthServiceTests(TestCase):
         self.assertIsNone(user.apple_id)
         self.assertEqual(user.auth_provider, "hybrid")
 
+    def test_google_unlink_keeps_hybrid_when_apple_still_linked(self):
+        from mysite.auth.services.oauth.account_linking_service import AccountLinkingService
+
+        user = User.objects.create_user(
+            email="ada@example.com", password="pw-123456789", apple_id="a1", google_id="g1", auth_provider="hybrid"
+        )
+        AccountLinkingService().unlink_google_account(user)
+        user.refresh_from_db()
+        self.assertIsNone(user.google_id)
+        self.assertEqual(user.auth_provider, "hybrid")
+
     def test_setting_a_password_makes_apple_user_hybrid(self):
         user, _ = self.service.get_or_create_user(self.identity())
         self.assertIn("auth_provider", _enable_password_login(user))
