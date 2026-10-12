@@ -208,14 +208,6 @@ class User(AbstractUser):
         default=MeasurementUnits.IMPERIAL,
         help_text="Units the user enters and reads measurements in",
     )
-    # Superseded by Circle.on_this_day_frequency (set by circle admins); no
-    # longer read or exposed. Kept so no column has to be dropped.
-    on_this_day_frequency = models.CharField(
-        max_length=10,
-        choices=OnThisDayFrequency.choices,
-        default=OnThisDayFrequency.NORMAL,
-        help_text='How often "On this day" memories show in the home feed',
-    )
 
     circle_onboarding_status = models.CharField(
         max_length=20,
