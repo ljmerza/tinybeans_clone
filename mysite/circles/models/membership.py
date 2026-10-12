@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from mysite.users.models.user import UserRole
+from mysite.users.models.user import OnThisDayFrequency, UserRole
 
 from .circle import Circle
 
@@ -37,6 +37,12 @@ class CircleMembership(models.Model):
     is_owner = models.BooleanField(
         default=False,
         help_text="True if this user is the circle owner (creator)",
+    )
+    on_this_day_frequency = models.CharField(
+        max_length=10,
+        choices=OnThisDayFrequency.choices,
+        default=OnThisDayFrequency.NORMAL,
+        help_text='How often this member sees "On this day" memories from this circle in their home feed',
     )
     created_at = models.DateTimeField(default=timezone.now)
 

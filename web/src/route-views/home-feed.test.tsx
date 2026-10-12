@@ -16,39 +16,15 @@ vi.mock("@/components", async (importOriginal) => {
 	return { ...actual, Layout };
 });
 
-import { authKeys } from "@/features/auth/api/queryKeys";
-import { AuthSessionProvider } from "@/features/auth/context/AuthSessionProvider";
-import type { AuthUser } from "@/features/auth/types";
 import {
 	type FeedKeep,
 	ON_THIS_DAY_SEED_KEY,
-	type OnThisDayFrequency,
+	circleSeed,
 	keepServices,
 	localDate,
 	onThisDaySlots,
 } from "@/features/keeps";
-import { createTestQueryClient } from "@/lib/query/queryClient";
 import { HomeFeedView } from "./home-feed";
-
-/**
- * Render the feed for a signed-in viewer. The route guard loads the session
- * user before the feed mounts, so it is cached up front here too.
- */
-function renderFeed(frequency: OnThisDayFrequency = "normal") {
-	const queryClient = createTestQueryClient();
-	const user: AuthUser = {
-		id: 1,
-		email: "a@b.c",
-		on_this_day_frequency: frequency,
-	};
-	queryClient.setQueryData(authKeys.session(), user);
-	return renderWithQueryClient(<HomeFeedView />, {
-		queryClient,
-		wrapper: (children) => (
-			<AuthSessionProvider>{children}</AuthSessionProvider>
-		),
-	});
-}
 
 const keep = (n: number): FeedKeep => ({
 	id: `00000000-0000-0000-0000-00000000000${n}`,
@@ -106,7 +82,7 @@ describe("HomeFeedView", () => {
 						},
 			);
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		expect(
 			await screen.findByRole("heading", { name: "Memory 1" }),
@@ -138,7 +114,7 @@ describe("HomeFeedView", () => {
 			results: Array.from({ length: 30 }, (_, i) => keep(i + 1)),
 		});
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		expect(
 			await screen.findByRole("heading", { name: "Memory 1" }),
@@ -149,7 +125,7 @@ describe("HomeFeedView", () => {
 
 	it("mixes in this day's memories at the session's seeded slot", async () => {
 		window.sessionStorage.setItem(ON_THIS_DAY_SEED_KEY, "1");
-		const [slot] = onThisDaySlots(1, 1);
+		const [slot] = onThisDaySlots(circleSeed(1, 1), 1);
 		const memory = {
 			...keep(9),
 			id: "99999999-0000-0000-0000-000000000000",
@@ -168,7 +144,7 @@ describe("HomeFeedView", () => {
 			})),
 		});
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		const card = await screen.findByRole("region", { name: /on this day/i });
 		expect(card).toHaveTextContent("Years back");
@@ -184,30 +160,6 @@ describe("HomeFeedView", () => {
 		).toBeTruthy();
 	});
 
-	it("leaves out memories when the viewer turned them off", async () => {
-		const getOnThisDay = vi.spyOn(keepServices, "getOnThisDay");
-		vi.spyOn(keepServices, "getFeed").mockResolvedValue({
-			next: null,
-			previous: null,
-			results: Array.from({ length: 12 }, (_, i) => ({
-				...keep(i),
-				id: `00000000-0000-0000-0000-0000000000${10 + i}`,
-				title: `Memory ${i}`,
-			})),
-		});
-
-		renderFeed("off");
-
-		expect(
-			await screen.findByText("You're all caught up."),
-		).toBeInTheDocument();
-		expect(
-			screen.getByRole("heading", { name: "Memory 5" }),
-		).toBeInTheDocument();
-		expect(screen.queryByRole("region", { name: /on this day/i })).toBeNull();
-		expect(getOnThisDay).not.toHaveBeenCalled();
-	});
-
 	it("shows an empty state when there are no photos", async () => {
 		vi.spyOn(keepServices, "getFeed").mockResolvedValue({
 			next: null,
@@ -215,7 +167,7 @@ describe("HomeFeedView", () => {
 			results: [],
 		});
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		expect(await screen.findByText("No photos yet")).toBeInTheDocument();
 	});
@@ -237,7 +189,7 @@ describe("HomeFeedView", () => {
 				};
 			});
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		const retry = await screen.findByRole("button", { name: "Try again" });
 		expect(screen.getByText("Couldn't load more photos.")).toBeInTheDocument();
@@ -265,7 +217,7 @@ describe("HomeFeedView", () => {
 			results: [{ ...keep(1), description: "First steps today!", media: [] }],
 		});
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		expect(await screen.findByText("First steps today!")).toBeInTheDocument();
 		expect(screen.queryByRole("img")).toBeNull();
@@ -283,7 +235,7 @@ describe("HomeFeedView", () => {
 			.spyOn(circleServices, "listMemberships")
 			.mockResolvedValue({ data: { circles: [] } });
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 		await screen.findByText("No photos yet");
 		// The composer (and its circle lookup) only loads once opened.
 		expect(listMemberships).not.toHaveBeenCalled();
@@ -299,7 +251,7 @@ describe("HomeFeedView", () => {
 	it("shows an error state when the first page fails", async () => {
 		vi.spyOn(keepServices, "getFeed").mockRejectedValue(new Error("boom"));
 
-		renderFeed();
+		renderWithQueryClient(<HomeFeedView />);
 
 		expect(
 			await screen.findByText("Couldn't load your feed"),

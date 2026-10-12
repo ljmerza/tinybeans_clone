@@ -455,16 +455,6 @@
 				"measurement_units": {
 					"title": "Unità di misura",
 					"description": "Come vengono mostrati altezze e pesi nei grafici di crescita. Viene salvata nel tuo account e puoi cambiarla anche dalla pagina di un bambino."
-				},
-				"on_this_day": {
-					"title": "Accadde oggi",
-					"description": "Quanto spesso compaiono nel tuo feed i ricordi di questo giorno negli anni passati. Viene salvata nel tuo account.",
-					"options": {
-						"off": "No",
-						"less": "Meno",
-						"normal": "Normale",
-						"more": "Più"
-					}
 				}
 			},
 			"not_enabled_title": "La 2FA non è attiva.",
@@ -979,6 +969,17 @@
 				"recap": {
 					"title": "Album riepilogo del mese",
 					"description": "Il 1° di ogni mese viene creato un album con le 12 foto del mese precedente con più Mi piace e commenti. Tutti nella cerchia possono vederlo.",
+					"save_failed": "Impossibile salvare l'impostazione. Riprova."
+				},
+				"on_this_day": {
+					"title": "Accadde oggi",
+					"description": "Quanto spesso compaiono nel tuo feed i ricordi di questa cerchia di questo giorno negli anni passati. Vale solo per te.",
+					"options": {
+						"off": "No",
+						"less": "Meno",
+						"normal": "Normale",
+						"more": "Più"
+					},
 					"save_failed": "Impossibile salvare l'impostazione. Riprova."
 				}
 			},

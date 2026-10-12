@@ -135,6 +135,13 @@ export interface FeedFilters {
 export interface OnThisDayPayload {
 	date: string;
 	results: FeedKeep[];
+	/** The viewer's frequency per circle id; circles set to off are left out. */
+	frequencies?: Record<string, string>;
+}
+
+/** The on-this-day query's one page: feed posts plus each circle's frequency. */
+export interface OnThisDayPage extends FeedPage {
+	frequencies: Record<string, string>;
 }
 
 /**

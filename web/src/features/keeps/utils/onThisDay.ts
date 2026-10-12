@@ -119,45 +119,88 @@ interface InjectOptions {
 	seed: number;
 	/** Every page of the feed is loaded, so cards past its end go at the end. */
 	complete: boolean;
-	/** How often cards come up; "off" leaves the posts alone. Default "normal". */
-	frequency?: OnThisDayFrequency;
+	/**
+	 * The viewer's choice per circle id, from the on-this-day response. A
+	 * circle that's missing is spaced as "normal"; "off" hides its cards.
+	 */
+	frequencies?: Readonly<Record<string, string>>;
+}
+
+/**
+ * The seed for one circle's cards: derived from the session seed so each
+ * circle gets its own slots (two circles never mirror each other), yet stays
+ * the same for the session.
+ */
+export function circleSeed(seed: number, circleId: number) {
+	return (seed + Math.imul(circleId, 0x9e3779b1)) >>> 0 || 1;
 }
 
 /**
  * The feed's posts with "On this day" cards mixed in at seeded random slots.
  *
+ * Each circle's memories are spaced on their own, by the viewer's frequency
+ * for that circle, and then merged; cards that land on the same slot stay in
+ * the memories' order.
+ *
  * A card shows once the post after its slot is loaded (or the feed is
  * complete), so it is placed in the same render as its neighbours and later
  * pages only ever add rows below it. A card is skipped when the same keep is
  * the post right before or after it, rather than showing it twice in a row.
- * With no memories, or the frequency "off", the posts come back unchanged.
+ * With no memories the posts come back unchanged.
  */
 export function injectOnThisDay(
 	posts: readonly FeedKeep[],
 	memories: readonly FeedKeep[],
-	{ seed, complete, frequency = DEFAULT_ON_THIS_DAY_FREQUENCY }: InjectOptions,
+	{ seed, complete, frequencies = {} }: InjectOptions,
 ): FeedRow[] {
 	const rows: FeedRow[] = posts.map((keep) => ({ kind: "post", keep }));
-	if (memories.length === 0 || frequency === "off") return rows;
+	if (memories.length === 0) return rows;
 
-	const slots = onThisDaySlots(seed, memories.length, frequency);
+	const byCircle = new Map<number, FeedKeep[]>();
+	for (const keep of memories) {
+		const group = byCircle.get(keep.circle.id) ?? [];
+		group.push(keep);
+		byCircle.set(keep.circle.id, group);
+	}
+
+	const order = new Map(memories.map((keep, index) => [keep.id, index]));
+	const candidates: Array<{ slot: number; keep: FeedKeep }> = [];
+	for (const [circleId, group] of byCircle) {
+		const frequency = toOnThisDayFrequency(frequencies[String(circleId)]);
+		if (frequency === "off") continue;
+		const slots = onThisDaySlots(
+			circleSeed(seed, circleId),
+			group.length,
+			frequency,
+		);
+		group.forEach((keep, index) => {
+			candidates.push({ slot: slots[index], keep });
+		});
+	}
+	candidates.sort(
+		(a, b) =>
+			a.slot - b.slot ||
+			(order.get(a.keep.id) ?? 0) - (order.get(b.keep.id) ?? 0),
+	);
+
 	// Insert from the bottom up so earlier slots still index the posts.
 	const placed: Array<{ slot: number; keep: FeedKeep }> = [];
-	memories.forEach((keep, index) => {
-		let slot = slots[index];
+	for (const candidate of candidates) {
+		let { slot } = candidate;
+		const { keep } = candidate;
 		if (slot >= posts.length) {
-			if (!complete) return;
+			if (!complete) continue;
 			slot = posts.length;
 		}
 		const before = posts[slot - 1];
 		const after = posts[slot];
-		if (before?.id === keep.id || after?.id === keep.id) return;
+		if (before?.id === keep.id || after?.id === keep.id) continue;
 		placed.push({ slot, keep });
-	});
+	}
 
 	for (let index = placed.length - 1; index >= 0; index--) {
 		const { slot, keep } = placed[index];
-		// Cards are placed in slot order, so cards sharing the end slot stay in order.
+		// Cards are placed in slot order, so cards sharing a slot stay in order.
 		rows.splice(slot, 0, { kind: "on-this-day", keep });
 	}
 	return rows;

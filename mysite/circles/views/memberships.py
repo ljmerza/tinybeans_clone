@@ -17,6 +17,8 @@ from ..models import Circle, CircleMembership
 from ..serializers import (
     CircleMemberAddSerializer,
     CircleMemberSerializer,
+    CircleMembershipSerializer,
+    CircleMembershipSettingsSerializer,
     CircleSerializer,
 )
 
@@ -72,6 +74,42 @@ class CircleMemberListView(APIView):
             messages=[create_message("notifications.circle.member_added")],
             status_code=status.HTTP_201_CREATED,
         )
+
+
+class CircleMyMembershipView(APIView):
+    """The viewer's own membership in a circle, and the settings they can change on it."""
+
+    permission_classes = [permissions.IsAuthenticated, IsEmailVerified]
+    serializer_class = CircleMembershipSettingsSerializer
+
+    def get_membership(self, request, circle_id):
+        return get_object_or_404(
+            CircleMembership.objects.select_related("circle"), circle_id=circle_id, user=request.user
+        )
+
+    @extend_schema(
+        description="The viewer's membership in this circle, including their own settings for it.",
+        responses={200: OpenApiResponse(response=OpenApiTypes.OBJECT, description="`{membership}`")},
+    )
+    def get(self, request, circle_id):
+        membership = self.get_membership(request, circle_id)
+        return success_response({"membership": CircleMembershipSerializer(membership).data})
+
+    @extend_schema(
+        description="Change the viewer's own settings for this circle, e.g. how often its "
+        '"On this day" memories show in their home feed. Any member may change their own.',
+        request=CircleMembershipSettingsSerializer,
+        responses={
+            200: OpenApiResponse(response=OpenApiTypes.OBJECT, description="`{membership}`"),
+            404: OpenApiResponse(description="Not a member of this circle"),
+        },
+    )
+    def patch(self, request, circle_id):
+        membership = self.get_membership(request, circle_id)
+        serializer = CircleMembershipSettingsSerializer(membership, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return success_response({"membership": CircleMembershipSerializer(membership).data})
 
 
 class CircleMemberRemoveView(APIView):

@@ -19,6 +19,7 @@ import type {
 	FeedPage,
 	KeepCommentRecord,
 	KeepPerson,
+	OnThisDayPage,
 	UpdateKeepInput,
 } from "../types";
 
@@ -89,15 +90,15 @@ export function usePersonKeeps(personId: string) {
  *
  * Cached as a one-page infinite query under the feed key, so likes,
  * favorites, comments and deletes made on a card patch it like any feed post.
- * Pass `enabled: false` to skip the request (e.g. the viewer turned them off).
+ * `frequencies` carries the viewer's spacing choice for each circle.
  */
-export function useOnThisDayKeeps(date: string, { enabled = true } = {}) {
+export function useOnThisDayKeeps(date: string) {
 	return useInfiniteQuery({
 		queryKey: keepKeys.feedOnThisDay(date),
-		enabled,
-		queryFn: async (): Promise<FeedPage> => {
-			const { results } = await keepServices.getOnThisDay(date);
-			return { next: null, previous: null, results };
+		queryFn: async (): Promise<OnThisDayPage> => {
+			const { results, frequencies = {} } =
+				await keepServices.getOnThisDay(date);
+			return { next: null, previous: null, results, frequencies };
 		},
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: () => undefined,

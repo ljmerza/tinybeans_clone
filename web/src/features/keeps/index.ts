@@ -3,7 +3,6 @@ export { keepKeys } from "./api/queryKeys";
 export { keepServices } from "./api/services";
 export * from "./hooks/useCalendarMonth";
 export * from "./hooks/useKeepFeed";
-export * from "./hooks/useOnThisDayFrequency";
 export * from "./hooks/useCreatePost";
 export * from "./hooks/usePeople";
 export * from "./hooks/useUploadLimits";
@@ -21,10 +20,6 @@ export {
 	OnThisDayCard,
 	type OnThisDayCardProps,
 } from "./components/OnThisDayCard";
-export {
-	OnThisDayFrequencyToggle,
-	type OnThisDayFrequencyToggleProps,
-} from "./components/OnThisDayFrequencyToggle";
 export {
 	NewPostDialog,
 	type NewPostDialogProps,
