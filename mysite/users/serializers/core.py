@@ -12,7 +12,7 @@ class CircleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Circle
-        fields = ["id", "name", "slug", "member_count", "monthly_recap_enabled"]
+        fields = ["id", "name", "slug", "member_count", "monthly_recap_enabled", "on_this_day_frequency"]
 
     def get_member_count(self, obj):
         return obj.memberships.count()

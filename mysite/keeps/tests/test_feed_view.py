@@ -480,11 +480,11 @@ class TestKeepFeedOnThisDayView:
         assert response.status_code == status.HTTP_200_OK
         assert response.data == {"date": "2026-10-02", "results": [], "frequencies": {str(circle.id): "normal"}}
 
-    def test_leaves_out_circles_the_viewer_turned_off(self, api_client, user, other_user, circle):
-        quiet = Circle.objects.create(name="Grandparents", created_by=other_user)
-        CircleMembership.objects.create(user=user, circle=quiet, on_this_day_frequency="off")
-        busy = Circle.objects.create(name="Cousins", created_by=other_user)
-        CircleMembership.objects.create(user=user, circle=busy, on_this_day_frequency="more")
+    def test_leaves_out_circles_set_to_off(self, api_client, user, other_user, circle):
+        quiet = Circle.objects.create(name="Grandparents", created_by=other_user, on_this_day_frequency="off")
+        CircleMembership.objects.create(user=user, circle=quiet)
+        busy = Circle.objects.create(name="Cousins", created_by=other_user, on_this_day_frequency="more")
+        CircleMembership.objects.create(user=user, circle=busy)
         shown = make_keep(circle, user, utc(2025, 10, 2, 12, 0))
         make_keep(quiet, other_user, utc(2024, 10, 2, 12, 0))
         also_shown = make_keep(busy, other_user, utc(2023, 10, 2, 12, 0))

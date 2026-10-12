@@ -7,6 +7,8 @@ export interface CircleSummary {
 	member_count: number;
 	/** Admins turn on the album of last month's most-liked photos made on the 1st. */
 	monthly_recap_enabled?: boolean;
+	/** Admins pick how often this circle's "On this day" cards show for everyone. */
+	on_this_day_frequency?: string;
 }
 
 export interface CircleOnboardingPayload {
@@ -71,8 +73,6 @@ export interface CircleMembershipSummary {
 	circle: CircleSummary;
 	role: string;
 	is_owner: boolean;
-	/** The viewer's own "On this day" frequency for this circle. */
-	on_this_day_frequency?: string;
 	created_at: string;
 }
 

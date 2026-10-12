@@ -16,7 +16,7 @@ from rest_framework.pagination import CursorPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from mysite.circles.models import CircleMembership
+from mysite.circles.models import Circle, CircleMembership
 from mysite.users.models import UserRole
 
 from ..models import Keep, KeepComment, KeepFavorite, KeepMedia, KeepPerson, KeepReaction, KeepType, Person
@@ -261,8 +261,8 @@ class KeepFeedOnThisDayView(generics.GenericAPIView):
         "earlier year, from every circle the user belongs to, newest first. `date` is the viewer's local "
         f"today. At most {ON_THIS_DAY_LIMIT} posts, up to {ON_THIS_DAY_PER_YEAR} from each year, spread "
         "across as many years as possible. In a non-leap year, Feb 28 also includes Feb 29 memories. "
-        "Circles the viewer set to `off` are left out; `frequencies` maps each other circle's id to the "
-        "viewer's `less`/`normal`/`more` choice for it.",
+        "Circles whose admins set On this day to `off` are left out; `frequencies` maps each other circle's "
+        "id to its `less`/`normal`/`more` setting.",
         parameters=[
             OpenApiParameter(
                 name="date",
@@ -285,7 +285,7 @@ class KeepFeedOnThisDayView(generics.GenericAPIView):
         day = request.query_params.get("date", "")
         start, _ = parse_day(day)
         frequencies = dict(
-            CircleMembership.objects.filter(user=request.user).values_list("circle_id", "on_this_day_frequency")
+            Circle.objects.filter(memberships__user=request.user).values_list("id", "on_this_day_frequency")
         )
         hidden = [circle_id for circle_id, frequency in frequencies.items() if frequency == "off"]
         keeps = self.get_queryset().exclude(circle_id__in=hidden)

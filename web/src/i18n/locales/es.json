@@ -973,7 +973,7 @@
 				},
 				"on_this_day": {
 					"title": "Un día como hoy",
-					"description": "Con qué frecuencia aparecen en tu inicio los recuerdos de este círculo de este mismo día en años anteriores. Solo te afecta a ti.",
+					"description": "Con qué frecuencia aparecen en el inicio de todos los recuerdos de este círculo de este mismo día en años anteriores.",
 					"options": {
 						"off": "No",
 						"less": "Menos",

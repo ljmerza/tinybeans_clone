@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from mysite.users.models.user import OnThisDayFrequency
 from mysite.users.models.utils import generate_unique_slug
 
 
@@ -21,6 +22,15 @@ class Circle(models.Model):
     monthly_recap_enabled = models.BooleanField(
         default=False,
         help_text="On the 1st of each month, make an album of last month's most-liked photos",
+    )
+    on_this_day_frequency = models.CharField(
+        max_length=10,
+        choices=OnThisDayFrequency.choices,
+        default=OnThisDayFrequency.NORMAL,
+        # Also a database default, so rows inserted by older code or historical
+        # migration models still get one.
+        db_default=OnThisDayFrequency.NORMAL,
+        help_text="How often this circle's \"On this day\" memories show in its members' home feeds",
     )
 
     class Meta:
