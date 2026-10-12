@@ -7,6 +7,7 @@ import { OnThisDayCard } from "../components/OnThisDayCard";
 import type { FeedKeep } from "../types";
 import {
 	type FeedRow,
+	circleSeed,
 	injectOnThisDay,
 	localDate,
 	onThisDaySeed,
@@ -114,27 +115,57 @@ describe("toOnThisDayFrequency", () => {
 });
 
 describe("injectOnThisDay", () => {
-	it("leaves the feed unchanged when turned off", () => {
-		const feed = posts(20);
-		const rows = injectOnThisDay(feed, memories(3), {
+	it("leaves out circles the viewer turned off", () => {
+		const rows = injectOnThisDay(posts(20), memories(3), {
 			seed: 1,
 			complete: true,
-			frequency: "off",
+			frequencies: { "1": "off" },
 		});
-		expect(rows.every((row) => row.kind === "post")).toBe(true);
+		expect(cardIndexes(rows)).toEqual([]);
 		expect(rows).toHaveLength(20);
 	});
 
-	it("uses the frequency's slots", () => {
-		const feed = posts(40);
-		const memory = memories(2);
-		const slots = onThisDaySlots(3, 2, "less");
-		const rows = injectOnThisDay(feed, memory, {
-			seed: 3,
+	it("spaces each circle's cards by that circle's frequency", () => {
+		const feed = posts(120);
+		const family = memories(2);
+		const cousins = [0, 1, 2].map((index) => ({
+			...makeKeep(`cousins-${index}`, `${2024 - index}-10-02T12:00:00Z`),
+			circle: { id: 2, name: "Cousins", slug: "cousins" },
+		}));
+		const rows = injectOnThisDay(feed, [...family, ...cousins], {
+			seed: 4,
 			complete: false,
-			frequency: "less",
+			frequencies: { "1": "less", "2": "more" },
 		});
-		expect(cardIndexes(rows)).toEqual(slots.map((slot, index) => slot + index));
+
+		const expected = [
+			...onThisDaySlots(circleSeed(4, 1), 2, "less"),
+			...onThisDaySlots(circleSeed(4, 2), 3, "more"),
+		].sort((a, b) => a - b);
+		// Each card sits after `slot` posts, plus the cards before it.
+		expect(cardIndexes(rows)).toEqual(
+			expected.map((slot, index) => slot + index),
+		);
+	});
+
+	it("spaces a circle missing from the frequencies as normal", () => {
+		const rows = injectOnThisDay(posts(80), memories(3), {
+			seed: 6,
+			complete: false,
+			frequencies: { "9": "off" },
+		});
+		expect(cardIndexes(rows)).toEqual(
+			onThisDaySlots(circleSeed(6, 1), 3).map((slot, index) => slot + index),
+		);
+	});
+
+	it("gives each circle its own slots", () => {
+		const layouts = new Set(
+			[1, 2, 3, 4].map((circleId) =>
+				onThisDaySlots(circleSeed(1, circleId), 4).join(","),
+			),
+		);
+		expect(layouts.size).toBeGreaterThan(1);
 	});
 
 	it("leaves the feed unchanged with no memories", () => {
@@ -147,7 +178,7 @@ describe("injectOnThisDay", () => {
 	it("puts the cards at the seeded slots, in order", () => {
 		const feed = posts(80);
 		const memory = memories(3);
-		const slots = onThisDaySlots(9, 3);
+		const slots = onThisDaySlots(circleSeed(9, 1), 3);
 
 		const rows = injectOnThisDay(feed, memory, { seed: 9, complete: false });
 
@@ -177,7 +208,7 @@ describe("injectOnThisDay", () => {
 	});
 
 	it("waits for the post after a slot before showing its card", () => {
-		const [slot] = onThisDaySlots(5, 1);
+		const [slot] = onThisDaySlots(circleSeed(5, 1), 1);
 		const memory = memories(1);
 
 		const short = injectOnThisDay(posts(slot), memory, {
@@ -208,7 +239,7 @@ describe("injectOnThisDay", () => {
 	});
 
 	it("skips a card whose keep is the post right before or after it", () => {
-		const [slot] = onThisDaySlots(11, 1);
+		const [slot] = onThisDaySlots(circleSeed(11, 1), 1);
 		const feed = posts(30);
 		const memory = [feed[slot - 1]];
 		expect(

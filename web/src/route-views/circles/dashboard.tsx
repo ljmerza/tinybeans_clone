@@ -4,6 +4,7 @@ import { useAuthSession } from "@/features/auth";
 import {
 	CircleInvitationManager,
 	CircleMemberList,
+	CircleOnThisDaySetting,
 	CircleRecapSetting,
 	useCircleMembers,
 } from "@/features/circles";
@@ -99,12 +100,15 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 					</div>
 				</div>
 
-				{isAdmin && (
-					<CircleRecapSetting
-						circleId={circleId}
-						enabled={circle?.monthly_recap_enabled ?? false}
-					/>
-				)}
+				<div className="grid gap-6 md:grid-cols-2">
+					{isAdmin && (
+						<CircleRecapSetting
+							circleId={circleId}
+							enabled={circle?.monthly_recap_enabled ?? false}
+						/>
+					)}
+					<CircleOnThisDaySetting circleId={circleId} />
+				</div>
 
 				<CircleInvitationManager circleId={circleId} />
 

@@ -208,6 +208,8 @@ class User(AbstractUser):
         default=MeasurementUnits.IMPERIAL,
         help_text="Units the user enters and reads measurements in",
     )
+    # Superseded by CircleMembership.on_this_day_frequency (copied there by
+    # users.0015); no longer read or exposed. Kept so no column has to be dropped.
     on_this_day_frequency = models.CharField(
         max_length=10,
         choices=OnThisDayFrequency.choices,

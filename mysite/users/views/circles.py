@@ -17,6 +17,7 @@ from mysite.circles.views.invitations import (  # noqa: F401
 from mysite.circles.views.memberships import (  # noqa: F401
     CircleMemberListView,
     CircleMemberRemoveView,
+    CircleMyMembershipView,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "CircleInvitationFinalizeView",
     "CircleMemberListView",
     "CircleMemberRemoveView",
+    "CircleMyMembershipView",
 ]

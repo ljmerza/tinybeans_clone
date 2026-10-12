@@ -114,6 +114,16 @@ export const circleServices = {
 		>(`${USERS_BASE}/circles/`);
 	},
 
+	/** Change the viewer's own settings for a circle they belong to. */
+	updateMyMembership(
+		circleId: number | string,
+		body: { on_this_day_frequency?: string },
+	) {
+		return authApi.patch<
+			ApiResponseWithMessages<{ membership: CircleMembershipSummary }>
+		>(`${USERS_BASE}/circles/${circleId}/membership/`, body);
+	},
+
 	getCircleMembers(circleId: number | string) {
 		return authApi.get<
 			ApiResponseWithMessages<{

@@ -10,12 +10,14 @@ from .circles import (  # noqa: F401
     CircleMemberAddSerializer,
     CircleMemberSerializer,
     CircleMembershipSerializer,
+    CircleMembershipSettingsSerializer,
     CircleSerializer,
     UserSerializer,
 )
 
 __all__ = [
     "CircleMembershipSerializer",
+    "CircleMembershipSettingsSerializer",
     "CircleMemberSerializer",
     "CircleCreateSerializer",
     "CircleMemberAddSerializer",

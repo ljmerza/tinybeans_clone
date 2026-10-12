@@ -455,16 +455,6 @@
 				"measurement_units": {
 					"title": "Measurement units",
 					"description": "How heights and weights show on growth charts. It’s saved to your account, and you can also switch it on a child’s page."
-				},
-				"on_this_day": {
-					"title": "On this day",
-					"description": "How often memories from this day in earlier years show up in your home feed. It’s saved to your account.",
-					"options": {
-						"off": "Off",
-						"less": "Less",
-						"normal": "Normal",
-						"more": "More"
-					}
 				}
 			},
 			"not_enabled_title": "2FA is not enabled.",
@@ -979,6 +969,17 @@
 				"recap": {
 					"title": "Monthly recap album",
 					"description": "On the 1st of each month, make an album of last month's 12 photos with the most likes and comments. Everyone in the circle can see it.",
+					"save_failed": "Couldn't save the setting. Please try again."
+				},
+				"on_this_day": {
+					"title": "On this day",
+					"description": "How often this circle’s memories from this day in earlier years show up in your home feed. This is just for you.",
+					"options": {
+						"off": "Off",
+						"less": "Less",
+						"normal": "Normal",
+						"more": "More"
+					},
 					"save_failed": "Couldn't save the setting. Please try again."
 				}
 			},

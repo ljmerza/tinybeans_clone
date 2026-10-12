@@ -10,6 +10,7 @@ export * from "./hooks/useCircleMemberships";
 export * from "./hooks/useCircleRemoveSelfMutation";
 export * from "./hooks/useCircleInvitationListController";
 export * from "./hooks/useCircleMemberListController";
+export * from "./hooks/useCircleOnThisDayFrequency";
 export * from "./hooks/useCircleRecapSetting";
 export * from "./hooks/useInvitationAcceptance";
 export * from "./hooks/usePendingInvitations";

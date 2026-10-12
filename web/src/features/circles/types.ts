@@ -71,6 +71,8 @@ export interface CircleMembershipSummary {
 	circle: CircleSummary;
 	role: string;
 	is_owner: boolean;
+	/** The viewer's own "On this day" frequency for this circle. */
+	on_this_day_frequency?: string;
 	created_at: string;
 }
 

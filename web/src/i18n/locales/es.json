@@ -455,16 +455,6 @@
 				"measurement_units": {
 					"title": "Unidades de medida",
 					"description": "Cómo se muestran las alturas y los pesos en las gráficas de crecimiento. Se guarda en tu cuenta y también puedes cambiarlo en la página de un niño."
-				},
-				"on_this_day": {
-					"title": "Un día como hoy",
-					"description": "Con qué frecuencia aparecen en tu inicio los recuerdos de este mismo día en años anteriores. Se guarda en tu cuenta.",
-					"options": {
-						"off": "No",
-						"less": "Menos",
-						"normal": "Normal",
-						"more": "Más"
-					}
 				}
 			},
 			"not_enabled_title": "2FA no está habilitado.",
@@ -979,6 +969,17 @@
 				"recap": {
 					"title": "Álbum resumen del mes",
 					"description": "El día 1 de cada mes, se crea un álbum con las 12 fotos del mes anterior con más me gusta y comentarios. Todos en el círculo pueden verlo.",
+					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo."
+				},
+				"on_this_day": {
+					"title": "Un día como hoy",
+					"description": "Con qué frecuencia aparecen en tu inicio los recuerdos de este círculo de este mismo día en años anteriores. Solo te afecta a ti.",
+					"options": {
+						"off": "No",
+						"less": "Menos",
+						"normal": "Normal",
+						"more": "Más"
+					},
 					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo."
 				}
 			},

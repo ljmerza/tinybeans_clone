@@ -478,7 +478,22 @@ class TestKeepFeedOnThisDayView:
         response = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data == {"date": "2026-10-02", "results": []}
+        assert response.data == {"date": "2026-10-02", "results": [], "frequencies": {str(circle.id): "normal"}}
+
+    def test_leaves_out_circles_the_viewer_turned_off(self, api_client, user, other_user, circle):
+        quiet = Circle.objects.create(name="Grandparents", created_by=other_user)
+        CircleMembership.objects.create(user=user, circle=quiet, on_this_day_frequency="off")
+        busy = Circle.objects.create(name="Cousins", created_by=other_user)
+        CircleMembership.objects.create(user=user, circle=busy, on_this_day_frequency="more")
+        shown = make_keep(circle, user, utc(2025, 10, 2, 12, 0))
+        make_keep(quiet, other_user, utc(2024, 10, 2, 12, 0))
+        also_shown = make_keep(busy, other_user, utc(2023, 10, 2, 12, 0))
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(ON_THIS_DAY_URL, {"date": "2026-10-02"})
+
+        assert feed_ids(response) == [str(shown.id), str(also_shown.id)]
+        assert response.data["frequencies"] == {str(circle.id): "normal", str(busy.id): "more"}
 
     @pytest.mark.parametrize(
         "params", [{}, {"date": ""}, {"date": "2026-10-2"}, {"date": "2026-02-30"}, {"date": "today"}]

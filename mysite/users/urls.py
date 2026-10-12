@@ -14,6 +14,7 @@ from .views import (
     CircleInvitationRespondView,
     CircleMemberListView,
     CircleMemberRemoveView,
+    CircleMyMembershipView,
     CircleOnboardingSkipView,
     CircleOnboardingStatusView,
     CirclePetListView,
@@ -50,6 +51,7 @@ urlpatterns = [
         name="circle-invitation-resend",
     ),
     path("circles/<int:circle_id>/members/", CircleMemberListView.as_view(), name="circle-member-list"),
+    path("circles/<int:circle_id>/membership/", CircleMyMembershipView.as_view(), name="circle-my-membership"),
     path(
         "circles/<int:circle_id>/members/<int:user_id>/", CircleMemberRemoveView.as_view(), name="circle-member-remove"
     ),
