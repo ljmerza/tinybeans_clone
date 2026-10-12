@@ -110,6 +110,19 @@ class MeasurementUnits(models.TextChoices):
     METRIC = "metric", "Metric (kg, cm)"
 
 
+class OnThisDayFrequency(models.TextChoices):
+    """How often "On this day" memory cards come up in the home feed.
+
+    The web feed maps each choice to how many posts sit between cards; OFF
+    hides them.
+    """
+
+    OFF = "off", "Off"
+    LESS = "less", "Less often"
+    NORMAL = "normal", "Normal"
+    MORE = "more", "More often"
+
+
 class CircleOnboardingStatus(models.TextChoices):
     """Onboarding status choices for first-circle flow."""
 
@@ -194,6 +207,12 @@ class User(AbstractUser):
         choices=MeasurementUnits.choices,
         default=MeasurementUnits.IMPERIAL,
         help_text="Units the user enters and reads measurements in",
+    )
+    on_this_day_frequency = models.CharField(
+        max_length=10,
+        choices=OnThisDayFrequency.choices,
+        default=OnThisDayFrequency.NORMAL,
+        help_text='How often "On this day" memories show in the home feed',
     )
 
     circle_onboarding_status = models.CharField(

@@ -89,10 +89,12 @@ export function usePersonKeeps(personId: string) {
  *
  * Cached as a one-page infinite query under the feed key, so likes,
  * favorites, comments and deletes made on a card patch it like any feed post.
+ * Pass `enabled: false` to skip the request (e.g. the viewer turned them off).
  */
-export function useOnThisDayKeeps(date: string) {
+export function useOnThisDayKeeps(date: string, { enabled = true } = {}) {
 	return useInfiniteQuery({
 		queryKey: keepKeys.feedOnThisDay(date),
+		enabled,
 		queryFn: async (): Promise<FeedPage> => {
 			const { results } = await keepServices.getOnThisDay(date);
 			return { next: null, previous: null, results };

@@ -455,6 +455,16 @@
 				"measurement_units": {
 					"title": "Unidades de medida",
 					"description": "Cómo se muestran las alturas y los pesos en las gráficas de crecimiento. Se guarda en tu cuenta y también puedes cambiarlo en la página de un niño."
+				},
+				"on_this_day": {
+					"title": "Un día como hoy",
+					"description": "Con qué frecuencia aparecen en tu inicio los recuerdos de este mismo día en años anteriores. Se guarda en tu cuenta.",
+					"options": {
+						"off": "No",
+						"less": "Menos",
+						"normal": "Normal",
+						"more": "Más"
+					}
 				}
 			},
 			"not_enabled_title": "2FA no está habilitado.",

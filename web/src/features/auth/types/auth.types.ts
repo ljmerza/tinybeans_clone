@@ -19,6 +19,8 @@ export interface AuthUser {
 	color_theme?: string;
 	/** "imperial" (default) or "metric", for growth measurements. */
 	measurement_units?: string;
+	/** "off", "less", "normal" (default) or "more": home feed memory cards. */
+	on_this_day_frequency?: string;
 	role?: string;
 	circle_onboarding_status?: CircleOnboardingStatus;
 	circle_onboarding_updated_at?: string | null;

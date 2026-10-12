@@ -35,6 +35,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "language",
             "color_theme",
             "measurement_units",
+            "on_this_day_frequency",
             "circle_onboarding_status",
             "circle_onboarding_updated_at",
             "needs_circle_onboarding",
