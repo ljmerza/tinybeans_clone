@@ -455,6 +455,16 @@
 				"measurement_units": {
 					"title": "Measurement units",
 					"description": "How heights and weights show on growth charts. It’s saved to your account, and you can also switch it on a child’s page."
+				},
+				"on_this_day": {
+					"title": "On this day",
+					"description": "How often memories from this day in earlier years show up in your home feed. It’s saved to your account.",
+					"options": {
+						"off": "Off",
+						"less": "Less",
+						"normal": "Normal",
+						"more": "More"
+					}
 				}
 			},
 			"not_enabled_title": "2FA is not enabled.",

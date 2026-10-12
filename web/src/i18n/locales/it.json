@@ -455,6 +455,16 @@
 				"measurement_units": {
 					"title": "Unità di misura",
 					"description": "Come vengono mostrati altezze e pesi nei grafici di crescita. Viene salvata nel tuo account e puoi cambiarla anche dalla pagina di un bambino."
+				},
+				"on_this_day": {
+					"title": "Accadde oggi",
+					"description": "Quanto spesso compaiono nel tuo feed i ricordi di questo giorno negli anni passati. Viene salvata nel tuo account.",
+					"options": {
+						"off": "No",
+						"less": "Meno",
+						"normal": "Normale",
+						"more": "Più"
+					}
 				}
 			},
 			"not_enabled_title": "La 2FA non è attiva.",

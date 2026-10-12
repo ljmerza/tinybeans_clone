@@ -9,6 +9,7 @@ import {
 	localDate,
 	onThisDaySeed,
 	useKeepFeed,
+	useOnThisDayFrequency,
 	useOnThisDayKeeps,
 	yearsAgo,
 } from "@/features/keeps";
@@ -45,15 +46,18 @@ export function HomeFeedView() {
 	// the memory cards keep their places while scrolling and paging.
 	const [today] = useState(() => localDate(new Date()));
 	const [seed] = useState(onThisDaySeed);
-	const { data: memoryData } = useOnThisDayKeeps(today);
+	const { frequency } = useOnThisDayFrequency();
+	const { data: memoryData } = useOnThisDayKeeps(today, {
+		enabled: frequency !== "off",
+	});
 	const rows = useMemo(
 		() =>
 			injectOnThisDay(
 				keeps,
 				memoryData?.pages.flatMap((page) => page.results) ?? [],
-				{ seed, complete: data !== undefined && !hasNextPage },
+				{ seed, complete: data !== undefined && !hasNextPage, frequency },
 			),
-		[keeps, memoryData, seed, data, hasNextPage],
+		[keeps, memoryData, seed, data, hasNextPage, frequency],
 	);
 
 	const loadMore = useCallback(() => {

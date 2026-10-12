@@ -11,6 +11,7 @@ import {
 	localDate,
 	onThisDaySeed,
 	onThisDaySlots,
+	toOnThisDayFrequency,
 	yearsAgo,
 } from "./onThisDay";
 
@@ -77,9 +78,65 @@ describe("onThisDaySlots", () => {
 	it("doesn't move earlier slots when there are more cards", () => {
 		expect(onThisDaySlots(7, 6).slice(0, 3)).toEqual(onThisDaySlots(7, 3));
 	});
+
+	it.each([
+		["less", 8, 15, 12, 20],
+		["normal", 3, 8, 4, 10],
+		["more", 2, 4, 2, 5],
+	] as const)(
+		"spaces %s cards by that preset's ranges",
+		(frequency, firstMin, firstMax, gapMin, gapMax) => {
+			for (let seed = 1; seed <= 200; seed++) {
+				const slots = onThisDaySlots(seed, 5, frequency);
+				expect(slots[0]).toBeGreaterThanOrEqual(firstMin);
+				expect(slots[0]).toBeLessThanOrEqual(firstMax);
+				for (let index = 1; index < slots.length; index++) {
+					const gap = slots[index] - slots[index - 1];
+					expect(gap).toBeGreaterThanOrEqual(gapMin);
+					expect(gap).toBeLessThanOrEqual(gapMax);
+				}
+			}
+		},
+	);
+
+	it("defaults to normal spacing", () => {
+		expect(onThisDaySlots(7, 4)).toEqual(onThisDaySlots(7, 4, "normal"));
+	});
+});
+
+describe("toOnThisDayFrequency", () => {
+	it("keeps known values and falls back to normal", () => {
+		expect(toOnThisDayFrequency("off")).toBe("off");
+		expect(toOnThisDayFrequency("more")).toBe("more");
+		expect(toOnThisDayFrequency(undefined)).toBe("normal");
+		expect(toOnThisDayFrequency("always")).toBe("normal");
+	});
 });
 
 describe("injectOnThisDay", () => {
+	it("leaves the feed unchanged when turned off", () => {
+		const feed = posts(20);
+		const rows = injectOnThisDay(feed, memories(3), {
+			seed: 1,
+			complete: true,
+			frequency: "off",
+		});
+		expect(rows.every((row) => row.kind === "post")).toBe(true);
+		expect(rows).toHaveLength(20);
+	});
+
+	it("uses the frequency's slots", () => {
+		const feed = posts(40);
+		const memory = memories(2);
+		const slots = onThisDaySlots(3, 2, "less");
+		const rows = injectOnThisDay(feed, memory, {
+			seed: 3,
+			complete: false,
+			frequency: "less",
+		});
+		expect(cardIndexes(rows)).toEqual(slots.map((slot, index) => slot + index));
+	});
+
 	it("leaves the feed unchanged with no memories", () => {
 		const feed = posts(12);
 		const rows = injectOnThisDay(feed, [], { seed: 1, complete: true });
