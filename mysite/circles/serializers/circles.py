@@ -23,16 +23,7 @@ class CircleMembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CircleMembership
-        fields = ["membership_id", "circle", "role", "is_owner", "on_this_day_frequency", "created_at"]
-        read_only_fields = ["on_this_day_frequency"]
-
-
-class CircleMembershipSettingsSerializer(serializers.ModelSerializer):
-    """The viewer's own settings for a circle they belong to."""
-
-    class Meta:
-        model = CircleMembership
-        fields = ["on_this_day_frequency"]
+        fields = ["membership_id", "circle", "role", "is_owner", "created_at"]
 
 
 class CircleMemberSerializer(serializers.ModelSerializer):
@@ -48,7 +39,7 @@ class CircleMemberSerializer(serializers.ModelSerializer):
 class CircleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Circle
-        fields = ["id", "name", "slug", "created_at", "monthly_recap_enabled"]
+        fields = ["id", "name", "slug", "created_at", "monthly_recap_enabled", "on_this_day_frequency"]
         read_only_fields = ["id", "slug", "created_at"]
 
     def validate(self, attrs):
@@ -195,7 +186,6 @@ class CircleInvitationFinalizeSerializer(serializers.Serializer):
 
 __all__ = [
     "CircleMembershipSerializer",
-    "CircleMembershipSettingsSerializer",
     "CircleMemberSerializer",
     "CircleCreateSerializer",
     "CircleMemberAddSerializer",

@@ -16,7 +16,6 @@ from .circles import (
     CircleInvitationRespondView,
     CircleMemberListView,
     CircleMemberRemoveView,
-    CircleMyMembershipView,
     UserCircleListView,
 )
 from .notification_channels import (
@@ -43,7 +42,6 @@ __all__ = [
     "CircleInvitationFinalizeView",
     "CircleMemberListView",
     "CircleMemberRemoveView",
-    "CircleMyMembershipView",
     "UserCircleListView",
     "CirclePetListView",
     "PetProfileDetailView",

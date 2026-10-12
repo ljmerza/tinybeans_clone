@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
 import {
 	CreateCircleDialog,
-	OnThisDayFrequencyToggle,
 	useCircleMemberships,
 	useCircleRemoveSelfMutation,
 } from "@/features/circles";
@@ -159,12 +158,6 @@ export function ProfileCirclesSettings() {
 												{t("pages.circles.members.cannot_remove_owner")}
 											</span>
 										)}
-									</CardContent>
-									<CardContent className="space-y-2 border-t border-border pt-4">
-										<p className="text-sm font-medium">
-											{t("pages.circles.dashboard.on_this_day.title")}
-										</p>
-										<OnThisDayFrequencyToggle circleId={membership.circle.id} />
 									</CardContent>
 								</Card>
 							);

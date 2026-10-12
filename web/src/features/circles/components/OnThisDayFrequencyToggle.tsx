@@ -1,28 +1,30 @@
-import { ON_THIS_DAY_FREQUENCIES } from "@/features/keeps/utils/onThisDay";
+import {
+	ON_THIS_DAY_FREQUENCIES,
+	type OnThisDayFrequency,
+} from "@/features/keeps/utils/onThisDay";
 import { cn } from "@/lib/utils";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCircleOnThisDayFrequency } from "../hooks/useCircleOnThisDayFrequency";
-
 export interface OnThisDayFrequencyToggleProps {
-	circleId: number | string;
+	value: OnThisDayFrequency;
+	onChange: (next: OnThisDayFrequency) => void;
+	disabled?: boolean;
 	className?: string;
 }
 
 /**
- * A segmented switch for how often one circle's "On this day" cards show in
- * the viewer's home feed: off, less, normal or more. Each member picks their
- * own for each circle.
+ * A segmented switch for how often a circle's "On this day" cards show in
+ * its members' home feeds: off, less, normal or more.
  */
 export function OnThisDayFrequencyToggle({
-	circleId,
+	value,
+	onChange,
+	disabled = false,
 	className,
 }: OnThisDayFrequencyToggleProps) {
 	const { t } = useTranslation();
 	const name = useId();
-	const { frequency, setFrequency, isSaving } =
-		useCircleOnThisDayFrequency(circleId);
 
 	return (
 		<div
@@ -39,9 +41,9 @@ export function OnThisDayFrequencyToggle({
 						type="radio"
 						name={name}
 						value={option}
-						checked={frequency === option}
-						disabled={isSaving}
-						onChange={() => setFrequency(option)}
+						checked={value === option}
+						disabled={disabled}
+						onChange={() => onChange(option)}
 						className="peer sr-only"
 					/>
 					<span

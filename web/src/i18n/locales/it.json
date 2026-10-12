@@ -973,7 +973,7 @@
 				},
 				"on_this_day": {
 					"title": "Accadde oggi",
-					"description": "Quanto spesso compaiono nel tuo feed i ricordi di questa cerchia di questo giorno negli anni passati. Vale solo per te.",
+					"description": "Quanto spesso compaiono nel feed di tutti i ricordi di questa cerchia di questo giorno negli anni passati.",
 					"options": {
 						"off": "No",
 						"less": "Meno",

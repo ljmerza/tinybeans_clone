@@ -100,15 +100,18 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 					</div>
 				</div>
 
-				<div className="grid gap-6 md:grid-cols-2">
-					{isAdmin && (
+				{isAdmin && (
+					<div className="grid gap-6 md:grid-cols-2">
 						<CircleRecapSetting
 							circleId={circleId}
 							enabled={circle?.monthly_recap_enabled ?? false}
 						/>
-					)}
-					<CircleOnThisDaySetting circleId={circleId} />
-				</div>
+						<CircleOnThisDaySetting
+							circleId={circleId}
+							frequency={circle?.on_this_day_frequency}
+						/>
+					</div>
+				)}
 
 				<CircleInvitationManager circleId={circleId} />
 

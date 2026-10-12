@@ -1,37 +1,28 @@
 import "@/i18n/config";
 import { createTestQueryClient } from "@/lib/query/queryClient";
 import { renderWithQueryClient } from "@/test-utils";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { circleKeys } from "../api/queryKeys";
 import { circleServices } from "../api/services";
-import type { CircleMembershipSummary } from "../types";
+import type { CircleMembersPayload } from "../hooks/useCircleMemberships";
 import { CircleOnThisDaySetting } from "./CircleOnThisDaySetting";
 
-const membership = (
-	circleId: number,
-	on_this_day_frequency: string,
-): CircleMembershipSummary => ({
-	membership_id: circleId * 10,
-	circle: {
-		id: circleId,
-		name: `Circle ${circleId}`,
-		slug: `c${circleId}`,
-		member_count: 2,
-	},
-	role: "member",
-	is_owner: false,
-	on_this_day_frequency,
-	created_at: "2026-01-01T00:00:00Z",
-});
+const circle = {
+	id: 7,
+	name: "Family",
+	slug: "family",
+	member_count: 2,
+	on_this_day_frequency: "normal",
+};
 
 function seededClient() {
 	const queryClient = createTestQueryClient();
-	queryClient.setQueryData<CircleMembershipSummary[]>(circleKeys.list(), [
-		membership(7, "normal"),
-		membership(8, "less"),
-	]);
+	queryClient.setQueryData<CircleMembersPayload>(circleKeys.members(7), {
+		circle,
+		members: [],
+	});
 	return queryClient;
 }
 
@@ -40,48 +31,52 @@ afterEach(() => {
 });
 
 describe("CircleOnThisDaySetting", () => {
-	it("shows the viewer's frequency for this circle", () => {
-		renderWithQueryClient(<CircleOnThisDaySetting circleId={8} />, {
-			queryClient: seededClient(),
-		});
+	it("shows the circle's frequency", () => {
+		renderWithQueryClient(
+			<CircleOnThisDaySetting circleId={7} frequency="less" />,
+		);
 
 		expect(screen.getByText("On this day")).toBeInTheDocument();
 		expect(screen.getByRole("radio", { name: "Less" })).toBeChecked();
 	});
 
-	it("saves a new frequency for just this circle", async () => {
-		const update = vi
-			.spyOn(circleServices, "updateMyMembership")
-			.mockResolvedValue({ data: { membership: membership(7, "more") } });
-		const queryClient = seededClient();
-		renderWithQueryClient(<CircleOnThisDaySetting circleId={7} />, {
-			queryClient,
+	it("treats a missing setting as normal", () => {
+		renderWithQueryClient(<CircleOnThisDaySetting circleId={7} />);
+
+		expect(screen.getByRole("radio", { name: "Normal" })).toBeChecked();
+	});
+
+	it("saves a new frequency and updates the circle", async () => {
+		const update = vi.spyOn(circleServices, "updateCircle").mockResolvedValue({
+			data: { circle: { ...circle, on_this_day_frequency: "more" } },
 		});
+		const queryClient = seededClient();
+		renderWithQueryClient(
+			<CircleOnThisDaySetting circleId={7} frequency="normal" />,
+			{ queryClient },
+		);
 
-		fireEvent.click(screen.getByRole("radio", { name: "More" }));
+		await act(async () =>
+			fireEvent.click(screen.getByRole("radio", { name: "More" })),
+		);
 
+		expect(update).toHaveBeenCalledWith(7, { on_this_day_frequency: "more" });
 		await waitFor(() =>
-			expect(screen.getByRole("radio", { name: "More" })).toBeChecked(),
+			expect(
+				queryClient.getQueryData<CircleMembersPayload>(circleKeys.members(7))
+					?.circle.on_this_day_frequency,
+			).toBe("more"),
 		);
-		await waitFor(() =>
-			expect(update).toHaveBeenCalledWith(7, { on_this_day_frequency: "more" }),
-		);
-		const cached = queryClient.getQueryData<CircleMembershipSummary[]>(
-			circleKeys.list(),
-		);
-		expect(cached?.map((item) => item.on_this_day_frequency)).toEqual([
-			"more",
-			"less",
-		]);
 	});
 
 	it("goes back when the save fails", async () => {
-		vi.spyOn(circleServices, "updateMyMembership").mockRejectedValue(
+		vi.spyOn(circleServices, "updateCircle").mockRejectedValue(
 			new Error("nope"),
 		);
-		renderWithQueryClient(<CircleOnThisDaySetting circleId={7} />, {
-			queryClient: seededClient(),
-		});
+		renderWithQueryClient(
+			<CircleOnThisDaySetting circleId={7} frequency="normal" />,
+			{ queryClient: seededClient() },
+		);
 
 		fireEvent.click(screen.getByRole("radio", { name: "Off" }));
 
