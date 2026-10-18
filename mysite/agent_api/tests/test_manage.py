@@ -287,6 +287,8 @@ class TestCreate:
 
         assert [r.status_code for r in responses] == [400] * 5 + [429]
         assert responses[-1].json()["error"] == "rate_limit_exceeded"
+        # Not errors.rate_limit, whose {{retry_after}} would show unfilled.
+        assert responses[-1].json()["messages"][0]["i18n_key"] == "errors.rate_limit_later"
 
 
 @pytest.mark.django_db

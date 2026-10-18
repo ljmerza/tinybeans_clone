@@ -37,6 +37,7 @@ import { aiAssistServices } from "@/features/aiAssist";
 import { apiTokenServices } from "@/features/apiTokens";
 import { AuthSessionProvider, authKeys, setAccessToken } from "@/features/auth";
 import { useCircleMembers } from "@/features/circles";
+import { milestoneSuggestionServices } from "@/features/milestoneSuggestions";
 import { createTestQueryClient } from "@/lib/query/queryClient";
 import { CircleDashboard } from "./dashboard";
 
@@ -56,6 +57,12 @@ describe("CircleDashboard", () => {
 			agent_api_enabled: true,
 			tokens: [],
 		});
+		vi.spyOn(milestoneSuggestionServices, "list").mockResolvedValue({
+			count: 0,
+			next: null,
+			previous: null,
+			results: [],
+		});
 	});
 
 	afterEach(() => {
@@ -63,6 +70,7 @@ describe("CircleDashboard", () => {
 		// Not restoreAllMocks: that would also undo the useCircleMembers mock.
 		vi.mocked(aiAssistServices.getSettings).mockRestore();
 		vi.mocked(apiTokenServices.list).mockRestore();
+		vi.mocked(milestoneSuggestionServices.list).mockRestore();
 	});
 
 	it("renders without hook errors", () => {
@@ -191,5 +199,62 @@ describe("CircleDashboard", () => {
 		expect(screen.queryByRole("heading", { name: "API tokens" })).toBeNull();
 		expect(aiAssistServices.getSettings).not.toHaveBeenCalled();
 		expect(apiTokenServices.list).not.toHaveBeenCalled();
+		expect(milestoneSuggestionServices.list).not.toHaveBeenCalled();
+	});
+
+	it("lets admins review pending picks before any Milestones album exists", async () => {
+		// Operator AI off: the AI card is hidden, so this is the only sign of them.
+		vi.mocked(aiAssistServices.getSettings).mockResolvedValue({
+			available: false,
+		});
+		vi.mocked(milestoneSuggestionServices.list).mockResolvedValue({
+			count: 1,
+			next: null,
+			previous: null,
+			results: [
+				{
+					id: "bbbbbbbb-0000-0000-0000-000000000001",
+					status: "pending",
+					source: "agent",
+					label: "First steps",
+					reason: "Walked across the room",
+					model_name: "",
+					source_token_prefix: "circ_abc1234",
+					created_at: "2026-10-18T01:00:00Z",
+					decided_at: null,
+					keep: {
+						id: "00000000-0000-0000-0000-000000000001",
+						circle: { id: 3, name: "Family", slug: "family" },
+						created_by: 1,
+						created_by_display_name: "Leo",
+						title: "Post 1",
+						description: "",
+						date_of_memory: "2026-07-01T00:00:00Z",
+						created_at: "2026-07-01T00:00:00Z",
+						media: [],
+						reaction_count: 0,
+						comment_count: 0,
+						viewer_reaction: null,
+						favorited: false,
+						can_delete: false,
+						recent_comments: [],
+					},
+				},
+			],
+		});
+		renderAs("admin");
+
+		const section = await screen.findByRole("region", { name: /Suggested/ });
+		expect(section).toHaveTextContent("Post 1");
+		expect(
+			screen.getByRole("button", { name: "Add to Milestones" }),
+		).toBeInTheDocument();
+		expect(milestoneSuggestionServices.list).toHaveBeenCalledWith("3", {
+			status: "pending",
+			offset: 0,
+		});
+		expect(
+			screen.queryByRole("switch", { name: "AI milestone suggestions" }),
+		).toBeNull();
 	});
 });

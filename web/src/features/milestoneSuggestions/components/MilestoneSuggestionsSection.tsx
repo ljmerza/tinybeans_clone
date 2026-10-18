@@ -3,27 +3,34 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { KeepFeedPost } from "@/features/keeps/components/KeepFeedPost";
+import type { FeedKeep } from "@/features/keeps/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, X } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { type ReactNode, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PostAction } from "react-social-feed";
 
 import {
+	invalidateMilestoneSuggestions,
 	useApproveSuggestion,
 	useDismissSuggestion,
+	useMilestoneSuggestionCount,
 	useMilestoneSuggestions,
+	useSuggestedKeep,
 } from "../hooks/useMilestoneSuggestions";
 import type { MilestoneSuggestion } from "../types";
 
 export interface MilestoneSuggestionsSectionProps {
-	circleId: number;
+	circleId: number | string;
 }
 
 /**
- * The "Suggested" row at the top of a circle's Milestones album: posts AI or
- * an API token picked while the circle reviews picks first, each with Add and
- * Dismiss. Hidden while nothing is pending; "Show dismissed" lists turned-down
- * ones so they can still be added. Only render it for circle admins.
+ * The "Suggested" row: posts AI or an API token picked while the circle
+ * reviews picks first, each with Add and Dismiss. It sits at the top of the
+ * circle's Milestones album and on the circle's settings page, which works
+ * before the album exists. While nothing is pending only the "Show dismissed"
+ * switch shows (if anything was dismissed), so turned-down picks can still be
+ * added. Only render it for circle admins.
  */
 export function MilestoneSuggestionsSection({
 	circleId,
@@ -44,8 +51,36 @@ export function MilestoneSuggestionsSection({
 		[suggestions.data],
 	);
 	const count = suggestions.data?.pages[0]?.count ?? 0;
+	const nothingPending =
+		!showDismissed && !suggestions.isPending && count === 0;
+	// Only asked once nothing is pending, to keep the way back to dismissed picks.
+	const dismissedCount = useMilestoneSuggestionCount(circleId, "dismissed", {
+		enabled: nothingPending,
+	});
 
-	if (!showDismissed && (suggestions.isPending || count === 0)) return null;
+	if (!showDismissed && suggestions.isPending) return null;
+
+	const dismissedSwitch = (
+		<div className="flex items-center gap-2">
+			<Switch
+				id={`${ids}-dismissed`}
+				checked={showDismissed}
+				onCheckedChange={setShowDismissed}
+			/>
+			<Label htmlFor={`${ids}-dismissed`}>
+				{t("pages.circles.milestone_suggestions.show_dismissed")}
+			</Label>
+		</div>
+	);
+
+	if (nothingPending) {
+		if (!dismissedCount.data) return null;
+		return (
+			<div className="mx-auto flex max-w-[var(--rsf-post-max-width)] justify-end">
+				{dismissedSwitch}
+			</div>
+		);
+	}
 
 	const busy = (item: MilestoneSuggestion) =>
 		(approve.isPending && approve.variables === item.id) ||
@@ -73,16 +108,7 @@ export function MilestoneSuggestionsSection({
 							: t("pages.circles.milestone_suggestions.description")}
 					</p>
 				</div>
-				<div className="flex items-center gap-2">
-					<Switch
-						id={`${ids}-dismissed`}
-						checked={showDismissed}
-						onCheckedChange={setShowDismissed}
-					/>
-					<Label htmlFor={`${ids}-dismissed`}>
-						{t("pages.circles.milestone_suggestions.show_dismissed")}
-					</Label>
-				</div>
+				{dismissedSwitch}
 			</div>
 
 			{suggestions.isPending ? (
@@ -102,8 +128,10 @@ export function MilestoneSuggestionsSection({
 					{items.map((item) => (
 						<li key={item.id} className="space-y-2">
 							<SuggestionNote suggestion={item} />
-							<KeepFeedPost
-								keep={item.keep as NonNullable<MilestoneSuggestion["keep"]>}
+							<SuggestedPost
+								circleId={circleId}
+								keep={item.keep as FeedKeep}
+								loadedAt={suggestions.dataUpdatedAt}
 								extraActions={
 									<>
 										<PostAction
@@ -158,6 +186,33 @@ export function MilestoneSuggestionsSection({
 				</div>
 			)}
 		</section>
+	);
+}
+
+/**
+ * The suggested post, kept in step with likes, comments and edits made on it
+ * here or elsewhere. Deleting it also deletes its suggestion.
+ */
+function SuggestedPost({
+	circleId,
+	keep,
+	loadedAt,
+	extraActions,
+}: {
+	circleId: number | string;
+	keep: FeedKeep;
+	loadedAt: number;
+	extraActions: ReactNode;
+}) {
+	const queryClient = useQueryClient();
+	const current = useSuggestedKeep(keep, loadedAt);
+
+	return (
+		<KeepFeedPost
+			keep={current}
+			extraActions={extraActions}
+			onDeleted={() => invalidateMilestoneSuggestions(queryClient, circleId)}
+		/>
 	);
 }
 

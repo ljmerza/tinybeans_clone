@@ -15,10 +15,15 @@ export const milestoneSuggestionServices = {
 	/** Newest first, each with its post. */
 	list(
 		circleId: number | string,
-		{ status, offset }: { status: ListedSuggestionStatus; offset?: number },
+		{
+			status,
+			offset,
+			limit,
+		}: { status: ListedSuggestionStatus; offset?: number; limit?: number },
 	) {
 		const params = new URLSearchParams({ status });
 		if (offset) params.set("offset", String(offset));
+		if (limit) params.set("limit", String(limit));
 		return authApi.get<MilestoneSuggestionPage>(
 			`${suggestionsPath(circleId)}?${params}`,
 		);

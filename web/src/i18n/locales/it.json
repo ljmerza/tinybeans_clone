@@ -1205,7 +1205,7 @@
 			},
 			"milestone_suggestions": {
 				"title": "Suggeriti",
-				"description": "Post scelti come traguardi dall'IA o da un token API. Aggiungi quelli adatti a questo album.",
+				"description": "Post scelti come traguardi dall'IA o da un token API. Aggiungi quelli adatti all'album Milestones.",
 				"dismissed_title": "Scartati",
 				"dismissed_description": "Suggerimenti che hai rifiutato. Aggiungine uno se cambi idea.",
 				"dismissed_empty": "Nessun suggerimento scartato.",
@@ -1334,6 +1334,7 @@
 		"invalid_credentials": "Email o password non validi",
 		"rate_limit": "Troppe richieste. Riprova tra {{retry_after}} secondi.",
 		"rate_limit_2fa": "Troppe richieste 2FA. Riprova più tardi.",
+		"rate_limit_later": "Troppe richieste. Riprova più tardi.",
 		"account_locked_2fa": "Account bloccato temporaneamente per troppi tentativi 2FA non riusciti. Riprova {{retry_after}}.",
 		"token_invalid_expired": "Token non valido o scaduto",
 		"user_not_found": "Utente non trovato",

@@ -11,4 +11,12 @@ export const milestoneSuggestionKeys = {
 		milestoneSuggestionKeysFactory.tag("list", String(circleId)),
 	list: (circleId: number | string, status: string) =>
 		milestoneSuggestionKeysFactory.tag("list", String(circleId), status),
+	/** Just the total; under `circle` so the same invalidations refresh it. */
+	count: (circleId: number | string, status: string) =>
+		milestoneSuggestionKeysFactory.tag(
+			"list",
+			String(circleId),
+			status,
+			"count",
+		),
 };

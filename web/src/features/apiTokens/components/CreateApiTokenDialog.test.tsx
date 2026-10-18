@@ -1,8 +1,10 @@
 import "@/i18n/config";
 import * as reauthApi from "@/features/auth/reauth/api";
 import { createHttpError } from "@/lib/httpClient";
+import { createQueryPersistOptions } from "@/lib/query/persister";
 import { createTestQueryClient } from "@/lib/query/queryClient";
 import { renderWithQueryClient } from "@/test-utils";
+import { persistQueryClientSave } from "@tanstack/react-query-persist-client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -84,9 +86,11 @@ describe("CreateApiTokenDialog", () => {
 		});
 		const onOpenChange = vi.fn();
 		const before = Date.now();
+		const queryClient = createTestQueryClient();
 
 		renderWithQueryClient(
 			<CreateApiTokenDialog circleId={7} onOpenChange={onOpenChange} />,
+			{ queryClient },
 		);
 		await fillAndEnterCode();
 
@@ -108,8 +112,22 @@ describe("CreateApiTokenDialog", () => {
 		expect(
 			screen.getByRole("heading", { name: "Your new API token" }),
 		).toBeInTheDocument();
-		// Never in localStorage, whatever is persisted.
-		expect(JSON.stringify({ ...localStorage })).not.toContain("circ_");
+		// Never in localStorage: save the cache the way the app persists it
+		// while the token is on screen, and look at what was written.
+		const savedAfter = Date.now();
+		await persistQueryClientSave({
+			queryClient,
+			...createQueryPersistOptions(),
+		});
+		const persisted = () => localStorage.getItem("circles-query-cache");
+		await waitFor(
+			() =>
+				expect(
+					JSON.parse(persisted() ?? "{}").timestamp,
+				).toBeGreaterThanOrEqual(savedAfter),
+			{ timeout: 3000 },
+		);
+		expect(persisted()).not.toContain("circ_");
 	});
 
 	it("can't be dismissed except by \"I've copied it\", which drops the plaintext", async () => {
@@ -193,6 +211,24 @@ describe("CreateApiTokenDialog", () => {
 				"This circle already has the most API tokens allowed (10). Revoke one first.",
 			),
 		).toBeInTheDocument();
+	});
+
+	it("says to try again later when rate limited", async () => {
+		vi.spyOn(apiTokenServices, "create").mockRejectedValue(
+			createHttpError("Too many", 429, {}, [
+				{ i18n_key: "errors.rate_limit_later", context: {} },
+			]),
+		);
+
+		renderWithQueryClient(
+			<CreateApiTokenDialog circleId={7} onOpenChange={vi.fn()} />,
+		);
+		await fillAndEnterCode();
+
+		expect(
+			await screen.findByText("Too many requests. Please try again later."),
+		).toBeInTheDocument();
+		expect(screen.queryByText(/\{\{/)).toBeNull();
 	});
 });
 

@@ -307,9 +307,10 @@ class TestConnectionTest:
         provider.return_value = verdict(True)
         client = as_user(api_client, admin)
 
-        codes = [client.post(connection_test_url(circle.id)).status_code for _ in range(11)]
+        responses = [client.post(connection_test_url(circle.id)) for _ in range(11)]
 
-        assert codes == [status.HTTP_200_OK] * 10 + [status.HTTP_429_TOO_MANY_REQUESTS]
+        assert [r.status_code for r in responses] == [status.HTTP_200_OK] * 10 + [status.HTTP_429_TOO_MANY_REQUESTS]
+        assert responses[-1].json()["messages"][0]["i18n_key"] == "errors.rate_limit_later"
         assert provider.call_count == 10
 
 
@@ -346,9 +347,12 @@ class TestScanNow:
         turn_on(circle, admin)
         client = as_user(api_client, admin)
 
-        codes = [client.post(scan_url(circle.id)).status_code for _ in range(4)]
+        responses = [client.post(scan_url(circle.id)) for _ in range(4)]
 
-        assert codes == [status.HTTP_202_ACCEPTED] * 3 + [status.HTTP_429_TOO_MANY_REQUESTS]
+        assert [r.status_code for r in responses] == [status.HTTP_202_ACCEPTED] * 3 + [
+            status.HTTP_429_TOO_MANY_REQUESTS
+        ]
+        assert responses[-1].json()["messages"][0]["i18n_key"] == "errors.rate_limit_later"
         assert delay.call_count == 3
 
     def test_eager_task_runs_the_scan(self, api_client, circle, admin, ai_on, provider):

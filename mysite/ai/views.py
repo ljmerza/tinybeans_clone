@@ -172,7 +172,7 @@ class CircleAiSettingsTestView(APIView):
     @method_decorator(ratelimit(key="user", rate=TEST_RATE_PER_USER, method="POST", block=False))
     def post(self, request, circle_id):
         if getattr(request, "limited", False):
-            return rate_limit_response("errors.rate_limit")
+            return rate_limit_response("errors.rate_limit_later")
         require_ai_admin(request.user, circle_id)
         config = require_provider()
         config = dataclasses.replace(config, timeout_seconds=min(config.timeout_seconds, TEST_TIMEOUT_SECONDS))
@@ -210,7 +210,7 @@ class CircleMilestoneScanView(APIView):
     @method_decorator(ratelimit(key="user", rate=SCAN_RATE_PER_USER, method="POST", block=False))
     def post(self, request, circle_id):
         if getattr(request, "limited", False):
-            return rate_limit_response("errors.rate_limit")
+            return rate_limit_response("errors.rate_limit_later")
         require_ai_admin(request.user, circle_id)
         require_provider()
         if not CircleAiSettings.objects.filter(circle_id=circle_id, enabled=True).exists():

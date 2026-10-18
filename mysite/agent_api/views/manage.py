@@ -85,7 +85,7 @@ class CircleApiTokenListView(APIView):
                 "API token creation rate limited",
                 extra={"event": "agent_api.token_create.rate_limited", "extra": {"user_id": request.user.id}},
             )
-            return rate_limit_response("errors.rate_limit")
+            return rate_limit_response("errors.rate_limit_later")
         require_token_admin(request.user, circle_id)
 
         # Validate first, so a typo doesn't use up the emailed code.

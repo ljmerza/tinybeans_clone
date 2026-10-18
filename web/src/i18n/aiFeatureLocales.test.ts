@@ -17,6 +17,7 @@ const ERROR_KEYS = [
 	"errors.api_token_limit",
 	"errors.reauth_invalid_code",
 	"errors.reauth_rate_limited",
+	"errors.rate_limit_later",
 ];
 
 type Tree = { [key: string]: Tree | string };

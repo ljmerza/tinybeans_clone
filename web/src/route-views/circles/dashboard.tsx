@@ -12,9 +12,11 @@ import {
 	CircleRecapSetting,
 	useCircleMembers,
 } from "@/features/circles";
+import { MilestoneSuggestionsSection } from "@/features/milestoneSuggestions";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import "react-social-feed/styles.css";
 
 interface CircleDashboardProps {
 	circleId: number | string;
@@ -126,6 +128,9 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 						<CircleApiTokensCard circleId={circleId} />
 					</div>
 				)}
+
+				{/* Also here so picks can be reviewed before the Milestones album exists. */}
+				{isAdmin && <MilestoneSuggestionsSection circleId={circleId} />}
 
 				<CircleInvitationManager circleId={circleId} />
 

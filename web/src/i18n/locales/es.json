@@ -1205,7 +1205,7 @@
 			},
 			"milestone_suggestions": {
 				"title": "Sugeridas",
-				"description": "Publicaciones que la IA o un token de API eligieron como hitos. Añade las que corresponden a este álbum.",
+				"description": "Publicaciones que la IA o un token de API eligieron como hitos. Añade las que corresponden al álbum Milestones.",
 				"dismissed_title": "Descartadas",
 				"dismissed_description": "Sugerencias que rechazaste. Añade alguna si cambias de opinión.",
 				"dismissed_empty": "No hay sugerencias descartadas.",
@@ -1334,6 +1334,7 @@
 		"invalid_credentials": "Correo electrónico o contraseña inválidos",
 		"rate_limit": "Demasiadas solicitudes. Por favor intente de nuevo en {{retry_after}} segundos.",
 		"rate_limit_2fa": "Demasiadas solicitudes 2FA. Por favor intente de nuevo más tarde.",
+		"rate_limit_later": "Demasiadas solicitudes. Por favor intente de nuevo más tarde.",
 		"account_locked_2fa": "Cuenta bloqueada temporalmente debido a demasiados intentos fallidos de 2FA. Por favor intente de nuevo {{retry_after}}.",
 		"token_invalid_expired": "Token inválido o expirado",
 		"user_not_found": "Usuario no encontrado",

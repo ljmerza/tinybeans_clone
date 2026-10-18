@@ -1,11 +1,17 @@
 import {
+	type QueryClient,
 	useInfiniteQuery,
 	useMutation,
+	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
 
+import { aiAssistKeys } from "@/features/aiAssist/api/queryKeys";
 import { albumKeys } from "@/features/albums/api/queryKeys";
 import { offsetFromNextUrl } from "@/features/albums/hooks/useAlbums";
+import { keepKeys } from "@/features/keeps/api/queryKeys";
+import { keepServices } from "@/features/keeps/api/services";
+import type { FeedKeep } from "@/features/keeps/types";
 import { milestoneSuggestionKeys } from "../api/queryKeys";
 import { milestoneSuggestionServices } from "../api/services";
 import type { ListedSuggestionStatus, MilestoneSuggestionPage } from "../types";
@@ -28,6 +34,52 @@ export function useMilestoneSuggestions(
 			offsetFromNextUrl(lastPage.next),
 		enabled,
 		staleTime: 0,
+	});
+}
+
+/** How many pending or dismissed suggestions the circle has (circle admins only). */
+export function useMilestoneSuggestionCount(
+	circleId: number | string,
+	status: ListedSuggestionStatus,
+	{ enabled = true }: { enabled?: boolean } = {},
+) {
+	return useQuery({
+		queryKey: milestoneSuggestionKeys.count(circleId, status),
+		queryFn: async () =>
+			(await milestoneSuggestionServices.list(circleId, { status, limit: 1 }))
+				.count,
+		enabled,
+		staleTime: 0,
+	});
+}
+
+/**
+ * A suggested post as the rest of the app has it cached. Seeded from the
+ * suggestion list, then read from the post's single-keep query, which every
+ * like, comment, edit and delete patches.
+ */
+export function useSuggestedKeep(keep: FeedKeep, loadedAt: number): FeedKeep {
+	return useQuery({
+		queryKey: keepKeys.feedKeep(keep.id),
+		queryFn: () => keepServices.getFeedKeep(keep.id),
+		initialData: keep,
+		initialDataUpdatedAt: loadedAt,
+	}).data;
+}
+
+/**
+ * Refetch the circle's suggestion lists and counts, and the AI card's
+ * "waiting for review" count.
+ */
+export function invalidateMilestoneSuggestions(
+	queryClient: QueryClient,
+	circleId: number | string,
+) {
+	void queryClient.invalidateQueries({
+		queryKey: milestoneSuggestionKeys.circle(circleId),
+	});
+	void queryClient.invalidateQueries({
+		queryKey: aiAssistKeys.settings(circleId),
 	});
 }
 
@@ -54,11 +106,7 @@ export function useApproveSuggestion(circleId: number | string) {
 			});
 			void queryClient.invalidateQueries({ queryKey: albumKeys.list() });
 		},
-		onSettled: () => {
-			void queryClient.invalidateQueries({
-				queryKey: milestoneSuggestionKeys.circle(circleId),
-			});
-		},
+		onSettled: () => invalidateMilestoneSuggestions(queryClient, circleId),
 	});
 }
 
@@ -74,10 +122,6 @@ export function useDismissSuggestion(circleId: number | string) {
 				error: { key: "pages.circles.milestone_suggestions.dismiss_failed" },
 			},
 		},
-		onSettled: () => {
-			void queryClient.invalidateQueries({
-				queryKey: milestoneSuggestionKeys.circle(circleId),
-			});
-		},
+		onSettled: () => invalidateMilestoneSuggestions(queryClient, circleId),
 	});
 }
