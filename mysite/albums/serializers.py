@@ -5,9 +5,9 @@ from rest_framework import serializers
 
 from mysite.circles.models import Circle
 from mysite.keeps.models import Keep
-from mysite.keeps.serializers.feed import FEED_URL_EXPIRES_IN
+from mysite.keeps.serializers.feed import FEED_URL_EXPIRES_IN, KeepFeedSerializer
 
-from .models import Album, AlbumKeep
+from .models import Album, AlbumKeep, MilestoneSuggestion
 
 
 def cover_url(media):
@@ -20,8 +20,9 @@ def cover_url(media):
 class AlbumSerializer(serializers.ModelSerializer):
     """An album card: name, cover and how many posts it holds.
 
-    ``post_count``, ``can_edit``, ``cover_media_id``, ``recap_month`` and (when
-    filtering by a keep) ``has_keep`` are annotated by ``views.visible_albums``,
+    ``post_count``, ``can_edit``, ``cover_media_id``, ``recap_month``,
+    ``is_milestone_album`` and (when filtering by a keep) ``has_keep`` are
+    annotated by ``views.visible_albums``,
     and the cover media rows are attached in bulk, so a page costs a fixed
     number of queries.
     """
@@ -36,6 +37,9 @@ class AlbumSerializer(serializers.ModelSerializer):
     has_keep = serializers.SerializerMethodField()
     recap_month = serializers.DateField(
         read_only=True, allow_null=True, help_text="First day of the month a monthly recap covers; null otherwise"
+    )
+    is_milestone_album = serializers.BooleanField(
+        read_only=True, help_text="Whether it is the circle's Milestones album, where milestone suggestions go"
     )
 
     class Meta:
@@ -53,6 +57,7 @@ class AlbumSerializer(serializers.ModelSerializer):
             "can_edit",
             "has_keep",
             "recap_month",
+            "is_milestone_album",
             "created_at",
             "updated_at",
         ]
@@ -158,3 +163,38 @@ class AlbumUpdateSerializer(serializers.ModelSerializer):
         album = super().update(instance, validated_data)
         album.touch()
         return album
+
+
+class AlbumKeepAdminSerializer(KeepFeedSerializer):
+    """An album post for a circle admin: the feed shape plus ``ai_added``.
+
+    ``ai_added`` is annotated by ``views.AlbumKeepsView`` and only sent to
+    circle admins; members get plain ``KeepFeedSerializer`` posts.
+    """
+
+    ai_added = serializers.BooleanField(
+        read_only=True, help_text="Whether AI or an API token put this post in the Milestones album without review"
+    )
+
+    class Meta(KeepFeedSerializer.Meta):
+        fields = [*KeepFeedSerializer.Meta.fields, "ai_added"]
+        read_only_fields = fields
+
+
+class MilestoneSuggestionSerializer(serializers.ModelSerializer):
+    """A milestone suggestion row. ``label`` and ``reason`` are untrusted text, for display as plain text only."""
+
+    class Meta:
+        model = MilestoneSuggestion
+        fields = [
+            "id",
+            "status",
+            "source",
+            "label",
+            "reason",
+            "model_name",
+            "source_token_prefix",
+            "created_at",
+            "decided_at",
+        ]
+        read_only_fields = fields

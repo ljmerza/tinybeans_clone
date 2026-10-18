@@ -25,6 +25,8 @@ TWOFA_ENABLED_TEMPLATE = "twofa.enabled"
 TWOFA_DISABLED_TEMPLATE = "twofa.disabled"
 TWOFA_TRUSTED_DEVICE_ADDED_TEMPLATE = "twofa.trusted_device_added"
 TWOFA_RECOVERY_CODE_USED_TEMPLATE = "twofa.recovery_code_used"
+REAUTH_LOCKED_TEMPLATE = "auth.reauth.locked"
+API_TOKEN_CREATED_TEMPLATE = "api_token.created"
 
 # Mapping of template IDs to Django template filenames within `email_templates/`.
 EMAIL_TEMPLATE_FILES = {
@@ -47,6 +49,8 @@ EMAIL_TEMPLATE_FILES = {
     TWOFA_DISABLED_TEMPLATE: "twofa_disabled.email.html",
     TWOFA_TRUSTED_DEVICE_ADDED_TEMPLATE: "trusted_device_added.email.html",
     TWOFA_RECOVERY_CODE_USED_TEMPLATE: "recovery_code_used.email.html",
+    REAUTH_LOCKED_TEMPLATE: "reauth_locked.email.html",
+    API_TOKEN_CREATED_TEMPLATE: "api_token_created.email.html",
 }
 
 __all__ = [
@@ -67,5 +71,7 @@ __all__ = [
     "TWOFA_DISABLED_TEMPLATE",
     "TWOFA_TRUSTED_DEVICE_ADDED_TEMPLATE",
     "TWOFA_RECOVERY_CODE_USED_TEMPLATE",
+    "REAUTH_LOCKED_TEMPLATE",
+    "API_TOKEN_CREATED_TEMPLATE",
     "EMAIL_TEMPLATE_FILES",
 ]

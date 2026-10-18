@@ -38,6 +38,13 @@ class Circle(models.Model):
         db_default=False,
         help_text='Keep a "Birthdays" album of the posts around each child\'s birthday (needs their birthdate)',
     )
+    review_ai_milestones = models.BooleanField(
+        default=False,
+        # Also a database default, like on_this_day_frequency.
+        db_default=False,
+        help_text="Hold AI and API token milestone picks for an admin's approval instead of adding them to the "
+        '"Milestones" album straight away',
+    )
 
     class Meta:
         # Keep legacy ownership under the users app until migrations relocate.

@@ -44,6 +44,7 @@ export const circleServices = {
 			monthly_recap_enabled?: boolean;
 			on_this_day_frequency?: string;
 			birthday_album_enabled?: boolean;
+			review_ai_milestones?: boolean;
 		},
 	) {
 		return authApi.patch<ApiResponseWithMessages<{ circle: CircleSummary }>>(

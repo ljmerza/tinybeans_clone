@@ -177,6 +177,14 @@
 		"logout": {
 			"logging_out": "Logging out...",
 			"message": "You have been logged out"
+		},
+		"reauth": {
+			"title": "Confirm it's you",
+			"sending": "Sending a code to your email…",
+			"sent": "We sent a 6-digit code to your email. It expires in 10 minutes.",
+			"resent": "We sent a new code to your email. Use the newest one.",
+			"send_failed": "Couldn't send the code. Please try again.",
+			"resend": "Resend code"
 		}
 	},
 	"twofa": {
@@ -996,6 +1004,120 @@
 					"load_failed": "Couldn't load the children. Please try again.",
 					"save_failed": "Couldn't save the setting. Please try again.",
 					"birthdate_save_failed": "Couldn't save the birthdate. Please try again."
+				},
+				"milestone_review": {
+					"title": "Review AI milestone picks",
+					"description": "When on, posts picked by AI or an API token wait in the Milestones album's Suggested row until an admin adds them. When off, they go straight into the album, and admins see an \"Added by AI\" tag on them.",
+					"save_failed": "Couldn't save the setting. Please try again."
+				},
+				"ai_assist": {
+					"title": "AI milestone suggestions",
+					"description": "Every night, AI reads the captions of new posts and picks milestones for the Milestones album.",
+					"confirm_title": "Turn on AI milestone suggestions?",
+					"disclosure": "Captions from this circle will be sent to the AI service this site's operator has set up, to suggest milestones. Comments, names and photos are not sent.",
+					"acknowledge": "I understand that this circle's captions will be sent to that AI service.",
+					"confirm": "Turn on",
+					"save_failed": "Couldn't save the setting. Please try again.",
+					"last_success": "Last successful scan: {{when}}",
+					"never_succeeded": "No successful scan yet.",
+					"last_error": "The last scan stopped: {{error}}",
+					"pending": "{{count}} suggestions waiting for review",
+					"pending_one": "{{count}} suggestion waiting for review",
+					"pending_other": "{{count}} suggestions waiting for review",
+					"test": "Test connection",
+					"test_ok": "The connection works ({{ms}} ms).",
+					"test_error": "The connection failed: {{error}}",
+					"test_failed": "Couldn't test the connection. Please try again.",
+					"scan_now": "Scan now",
+					"scan_queued": "Scan started. New picks show up in the Milestones album.",
+					"scan_failed": "Couldn't start a scan. Please try again.",
+					"codes": {
+						"ok": "It worked.",
+						"timeout": "The AI service took too long to answer.",
+						"unreachable": "The AI service couldn't be reached.",
+						"auth_failed": "The AI service refused the server's key.",
+						"model_missing": "The AI model isn't available.",
+						"http_error": "The AI service returned an error.",
+						"bad_response": "The AI service's answer couldn't be used.",
+						"provider_unavailable": "The AI service isn't available right now.",
+						"pending_cap": "Too many suggestions are waiting for review.",
+						"time_limit": "The scan ran out of time. It carries on next night.",
+						"disabled": "AI was turned off during the scan.",
+						"unknown": "Something went wrong."
+					}
+				},
+				"api_tokens": {
+					"title": "API tokens",
+					"description": "Let AI assistants such as Claude read this circle with a token of its own. Tokens can only read posts, unless they may also suggest milestones.",
+					"create_action": "Create token",
+					"disabled": "Disabled by the server operator",
+					"loading": "Loading tokens…",
+					"load_failed": "Couldn't load the tokens. Please try again.",
+					"empty": "No tokens yet.",
+					"status": {
+						"active": "Active",
+						"expired": "Expired",
+						"revoked": "Revoked"
+					},
+					"can_suggest_badge": "Can suggest",
+					"revoked_reasons": {
+						"manual": "Revoked by an admin",
+						"creator_not_admin": "Revoked: its creator is no longer a circle admin",
+						"creator_removed": "Revoked: its creator left the circle",
+						"creator_inactive": "Revoked: its creator's account was deactivated",
+						"creator_unverified": "Revoked: its creator's email isn't verified",
+						"password_changed": "Revoked: its creator changed their password"
+					},
+					"created": "Created by {{name}} on {{when}}",
+					"last_used": "Last used {{when}}",
+					"last_used_from": "Last used {{when}} from {{ip}}",
+					"never_used": "Never used",
+					"expires": "Expires {{when}}",
+					"expires_never": "Never expires",
+					"revoke": "Revoke",
+					"revoke_label": "Revoke {{name}}",
+					"revoke_title": "Revoke this token?",
+					"revoke_description": "\"{{name}}\" stops working at once. This can't be undone.",
+					"revoke_confirm": "Revoke token",
+					"revoked": "Token revoked.",
+					"revoke_failed": "Couldn't revoke the token. Please try again.",
+					"show_older": "Show {{count}} older tokens",
+					"show_older_one": "Show {{count}} older token",
+					"show_older_other": "Show {{count}} older tokens",
+					"hide_older": "Hide older tokens",
+					"create_failed": "Couldn't create the token. Please try again.",
+					"create": {
+						"title": "Create an API token",
+						"description": "Name it after where you'll use it. The name, permission and expiry can't be changed later.",
+						"code_description": "To create the token, enter the code we emailed you.",
+						"name": "Name",
+						"name_placeholder": "e.g. Claude Code on my laptop",
+						"can_suggest": "Can suggest milestones",
+						"can_suggest_hint": "Lets it propose posts for the Milestones album. Without this it can only read.",
+						"expiry": "Expires",
+						"expiry_options": {
+							"30": "In 30 days",
+							"90": "In 90 days",
+							"365": "In a year",
+							"custom": "On a date…",
+							"never": "Never"
+						},
+						"expiry_day": "Expiry date",
+						"continue": "Continue",
+						"submit": "Create token"
+					},
+					"reveal": {
+						"title": "Your new API token",
+						"description": "Use it to connect an AI assistant to this circle.",
+						"warning_title": "Copy it now",
+						"warning_body": "This is the only time the token is shown. Keep it somewhere safe. If you lose it, revoke it and create a new one.",
+						"copy": "Copy token",
+						"copied": "Copied",
+						"copy_failed": "Couldn't copy. Select the token and copy it yourself.",
+						"mcp_title": "MCP client config",
+						"mcp_hint": "Put the token in the CIRCLES_TOKEN environment variable, not in the file.",
+						"done": "I've copied it"
+					}
 				}
 			},
 			"invites": {
@@ -1080,6 +1202,27 @@
 			"removing": "Removing…",
 			"joined_at": "Joined {{joinedAt}}",
 			"cannot_remove_owner": "Cannot be removed"
+		},
+		"milestone_suggestions": {
+			"title": "Suggested",
+			"description": "Posts picked as milestones by AI or an API token. Add the ones that belong in the Milestones album.",
+			"dismissed_title": "Dismissed",
+			"dismissed_description": "Suggestions you turned down. Add one if you change your mind.",
+			"dismissed_empty": "No dismissed suggestions.",
+			"show_dismissed": "Show dismissed",
+			"loading": "Loading suggestions…",
+			"load_failed": "Couldn't load the suggestions. Please try again.",
+			"load_more": "Load more",
+			"add": "Add to Milestones",
+			"add_short": "Add",
+			"dismiss": "Dismiss suggestion",
+			"dismiss_short": "Dismiss",
+			"added": "Added to the Milestones album.",
+			"add_failed": "Couldn't add the post. Please try again.",
+			"dismiss_failed": "Couldn't dismiss the suggestion. Please try again.",
+			"ai_note": "AI note",
+			"token_note": "Suggested by API token {{prefix}}",
+			"ai_added": "Added by AI"
 		}
 	}
 	},
@@ -1191,6 +1334,7 @@
 		"invalid_credentials": "Invalid email or password",
 		"rate_limit": "Too many requests. Please try again in {{retry_after}} seconds.",
 		"rate_limit_2fa": "Too many 2FA requests. Please try again later.",
+		"rate_limit_later": "Too many requests. Please try again later.",
 		"account_locked_2fa": "Account temporarily locked due to too many failed 2FA attempts. Please try again {{retry_after}}.",
 		"token_invalid_expired": "Invalid or expired token",
 		"user_not_found": "User not found",
@@ -1285,7 +1429,10 @@
 			"partial_token_invalid": "Invalid or expired partial token. Please login again",
 			"not_configured_for_account": "2FA not configured for this account",
 			"must_be_enabled_for_recovery": "2FA must be enabled to generate recovery codes"
-		}
+		},
+		"api_token_limit": "This circle already has the most API tokens allowed ({{max}}). Revoke one first.",
+		"reauth_invalid_code": "That code is wrong or has expired. Check the newest email, or send a new code.",
+		"reauth_rate_limited": "Too many codes requested. Please wait a few minutes and try again."
 	},
 	"profile": {
 		"notifications": {
@@ -1398,5 +1545,10 @@
 			"link_sent": "Check {{email}} for a link to set your password.",
 			"link_failed": "We couldn't send the email. Please try again."
 		}
+	},
+	"ai": {
+		"acknowledgement_required": "Accept the data-sharing notice to turn on AI milestone suggestions.",
+		"not_enabled": "Turn on AI milestone suggestions for this circle first.",
+		"scan_running": "A scan is already running. Please try again later."
 	}
 }

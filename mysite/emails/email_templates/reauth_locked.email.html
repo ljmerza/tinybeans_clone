@@ -1,0 +1,27 @@
+{% block subject %}Too many wrong verification codes on your Circles account{% endblock %}
+
+{% block text_body %}
+Hello {{ full_name|default:email }},
+
+Someone signed in to your account entered too many wrong verification codes while confirming a sensitive change.
+To protect your account, confirmation codes are blocked for the next {{ lock_hours }} hours.
+Date: {{ locked_at }}
+
+If this wasn't you, please secure your account immediately:
+1) Change your password
+2) Review your trusted devices
+{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title="Verification codes blocked" intro_text="Security alert" email_tag="Security" %}
+<p>Hello {{ full_name|default:email }},</p>
+<p>Someone signed in to your account entered too many wrong verification codes while confirming a sensitive change.</p>
+<p>To protect your account, confirmation codes are blocked for the next {{ lock_hours }} hours.</p>
+<p><strong>Date:</strong> {{ locked_at }}</p>
+<p>If this wasn't you, please secure your account immediately:</p>
+<ol>
+  <li>Change your password</li>
+  <li>Review your trusted devices</li>
+</ol>
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

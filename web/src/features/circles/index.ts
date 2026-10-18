@@ -11,6 +11,7 @@ export * from "./hooks/useCircleRemoveSelfMutation";
 export * from "./hooks/useCircleInvitationListController";
 export * from "./hooks/useCircleMemberListController";
 export * from "./hooks/useCircleBirthdayAlbumSetting";
+export * from "./hooks/useCircleMilestoneReviewSetting";
 export * from "./hooks/useCircleOnThisDaySetting";
 export * from "./hooks/useCircleRecapSetting";
 export * from "./hooks/useInvitationAcceptance";

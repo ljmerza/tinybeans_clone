@@ -96,6 +96,8 @@ INSTALLED_APPS = [
     "mysite.circles.apps.CirclesConfig",
     "mysite.keeps.apps.KeepsConfig",
     "mysite.albums.apps.AlbumsConfig",
+    "mysite.agent_api.apps.AgentApiConfig",
+    "mysite.ai.apps.AiConfig",
 ]
 
 MIDDLEWARE = [
@@ -234,6 +236,9 @@ from .email import *  # noqa
 
 # Storage and Media Configuration
 from .storage import *  # noqa
+
+# In-app AI (milestone suggestions): the operator's provider settings
+from .ai import *  # noqa
 
 # Authentication and Authorization Configuration - import settings and helper functions
 from .auth import (  # noqa
@@ -380,3 +385,19 @@ CELERY_TIMEZONE = os.environ.get("CELERY_TIMEZONE") or TIME_ZONE
 # Bearer token Prometheus sends to GET /metrics (see mysite/metrics.py). Empty
 # disables the endpoint, which then answers 404.
 METRICS_TOKEN = os.environ.get("METRICS_TOKEN", "").strip()
+
+# Most pending milestone suggestions a circle can have (posts already in its
+# Milestones album don't count). New picks that would wait for review are
+# refused at the cap, so the queue grows only as fast as admins review it.
+MILESTONE_MAX_PENDING = _env_int("MILESTONE_MAX_PENDING", 200)
+
+# Agent API (/api/agent/v1/): per-circle API tokens for MCP clients (see
+# _docs/guides/agent-api.md). Off unless enabled; the switch is read on every
+# request, and with it off every agent endpoint answers 404. Admins can still
+# list, create and revoke tokens.
+AGENT_API_ENABLED = _env_flag("AGENT_API_ENABLED", default=False)
+# Per token. Read here rather than DEFAULT_THROTTLE_RATES, which local.py empties.
+AGENT_API_READ_RATE = os.environ.get("AGENT_API_READ_RATE", "1200/hour")
+AGENT_API_SUGGEST_RATE = os.environ.get("AGENT_API_SUGGEST_RATE", "200/day")
+# Most active (not revoked, not expired) tokens a circle can have.
+AGENT_API_MAX_TOKENS_PER_CIRCLE = _env_int("AGENT_API_MAX_TOKENS_PER_CIRCLE", 10)

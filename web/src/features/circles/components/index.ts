@@ -5,6 +5,7 @@ export { CircleInvitationListItem } from "./CircleInvitationListItem";
 export { CircleInvitationManager } from "./CircleInvitationManager";
 export { CircleMemberList } from "./CircleMemberList";
 export { CircleMemberListItem } from "./CircleMemberListItem";
+export { CircleMilestoneReviewSetting } from "./CircleMilestoneReviewSetting";
 export { CircleOnThisDaySetting } from "./CircleOnThisDaySetting";
 export { CircleRecapSetting } from "./CircleRecapSetting";
 export { CreateCircleDialog } from "./CreateCircleDialog";

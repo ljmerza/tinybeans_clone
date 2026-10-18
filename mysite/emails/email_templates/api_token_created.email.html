@@ -1,0 +1,28 @@
+{% block subject %}New API token for {{ circle_name }}{% endblock %}
+
+{% block text_body %}
+Hello {{ full_name|default:email }},
+
+{{ created_by_name }} created an API token for the circle "{{ circle_name }}". Apps holding it can read the circle's posts{% if can_suggest %} and suggest milestones{% endif %}.
+
+Name: {{ token_name }}
+Token: {{ token_prefix }}...
+Created: {{ created_at }}
+Expires: {% if expires_at %}{{ expires_at }}{% else %}Never{% endif %}
+
+Every admin of the circle gets this email. If nobody in your circle made this token, revoke it under API tokens on the circle's page and change your password.
+{% endblock %}
+
+{% block html_body %}
+{% include 'emails/partials/header.html' with title="New API token" intro_text="Security update" email_tag="Security" %}
+<p>Hello {{ full_name|default:email }},</p>
+<p>{{ created_by_name }} created an API token for the circle "{{ circle_name }}". Apps holding it can read the circle's posts{% if can_suggest %} and suggest milestones{% endif %}.</p>
+<ul>
+  <li><strong>Name:</strong> {{ token_name }}</li>
+  <li><strong>Token:</strong> {{ token_prefix }}&hellip;</li>
+  <li><strong>Created:</strong> {{ created_at }}</li>
+  <li><strong>Expires:</strong> {% if expires_at %}{{ expires_at }}{% else %}Never{% endif %}</li>
+</ul>
+<p>Every admin of the circle gets this email. If nobody in your circle made this token, revoke it under API tokens on the circle's page and change your password.</p>
+{% include 'emails/partials/footer.html' %}
+{% endblock %}

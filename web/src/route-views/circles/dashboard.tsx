@@ -1,17 +1,22 @@
 import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
+import { CircleAiSetting } from "@/features/aiAssist";
+import { CircleApiTokensCard } from "@/features/apiTokens";
 import { useAuthSession } from "@/features/auth";
 import {
 	CircleBirthdayAlbumSetting,
 	CircleInvitationManager,
 	CircleMemberList,
+	CircleMilestoneReviewSetting,
 	CircleOnThisDaySetting,
 	CircleRecapSetting,
 	useCircleMembers,
 } from "@/features/circles";
+import { MilestoneSuggestionsSection } from "@/features/milestoneSuggestions";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import "react-social-feed/styles.css";
 
 interface CircleDashboardProps {
 	circleId: number | string;
@@ -115,8 +120,17 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 							circleId={circleId}
 							enabled={circle?.birthday_album_enabled ?? false}
 						/>
+						<CircleMilestoneReviewSetting
+							circleId={circleId}
+							enabled={circle?.review_ai_milestones ?? false}
+						/>
+						<CircleAiSetting circleId={circleId} />
+						<CircleApiTokensCard circleId={circleId} />
 					</div>
 				)}
+
+				{/* Also here so picks can be reviewed before the Milestones album exists. */}
+				{isAdmin && <MilestoneSuggestionsSection circleId={circleId} />}
 
 				<CircleInvitationManager circleId={circleId} />
 

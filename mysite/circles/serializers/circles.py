@@ -47,6 +47,7 @@ class CircleCreateSerializer(serializers.ModelSerializer):
             "monthly_recap_enabled",
             "on_this_day_frequency",
             "birthday_album_enabled",
+            "review_ai_milestones",
         ]
         read_only_fields = ["id", "slug", "created_at"]
 

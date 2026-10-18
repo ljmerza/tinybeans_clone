@@ -87,7 +87,7 @@ def healthy(monkeypatch):
     monkeypatch.setattr(metrics.psycopg, "connect", mock.Mock(return_value=FakeConnection(cursor)))
 
     redis_client = mock.Mock()
-    redis_client.pipeline.return_value.execute.return_value = [0, 0, 7, 0]
+    redis_client.pipeline.return_value.execute.return_value = [0, 0, 7, 0, 0]  # email, sms, media, maintenance, ai
     monkeypatch.setattr(metrics.redis.Redis, "from_url", mock.Mock(return_value=redis_client))
 
     minio_client = mock.Mock()

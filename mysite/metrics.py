@@ -1,4 +1,4 @@
-"""Prometheus metrics for the backend: dependency health and Postgres connection use.
+"""Prometheus metrics for the backend: dependency health, Postgres connection use and AI milestone scans.
 
 ``GET /metrics`` returns the Prometheus text format (version 0.0.4). Only the host's
 Prometheus should read it, so it needs ``Authorization: Bearer <METRICS_TOKEN>``. While
@@ -30,9 +30,12 @@ import psycopg
 import redis
 import urllib3
 from django.conf import settings
+from django.db import connections
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound
 from django.views.decorators.cache import never_cache
 from minio import Minio
+
+from mysite.ai.providers import ai_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +75,11 @@ METRICS = {
     ),
     "circles_postgres_max_connections": "The Postgres max_connections setting.",
     "circles_celery_queue_length": "Messages waiting in a Celery queue on the Redis broker.",
+    "circles_milestone_scan_last_success_timestamp_seconds": (
+        "Unix time of the circle's last AI milestone scan that ended without a provider error "
+        "(or when AI was last turned on, if that is later). Only circles with AI on."
+    ),
+    "circles_milestone_suggestions_pending": "Milestone suggestions waiting for a circle admin's review.",
     "circles_app_info": "Backend runtime versions. Always 1.",
     "circles_metrics_scrape_duration_seconds": "Seconds taken to build this metrics response.",
 }
@@ -170,6 +178,44 @@ def check_object_storage() -> list[Sample]:
     return []
 
 
+def check_milestone_scans() -> list[Sample]:
+    """Per circle with in-app AI on: when its scan last worked, and how many suggestions wait for review.
+
+    Unlike the dependency checks this reads through the ORM; ``_closing_db_connections``
+    closes the check thread's connection afterwards.
+    """
+    from mysite.ai.models import CircleAiSettings
+    from mysite.albums.milestones import pending_suggestions
+
+    samples: list[Sample] = []
+    for ai_settings in CircleAiSettings.objects.filter(enabled=True).order_by("circle_id"):
+        labels = {"circle_id": str(ai_settings.circle_id)}
+        # The latest of the two: turning AI back on restarts the clock even after an old success.
+        since = max(filter(None, (ai_settings.last_success_at, ai_settings.acknowledged_at)), default=None)
+        since = since or ai_settings.updated_at
+        samples.append(("circles_milestone_scan_last_success_timestamp_seconds", labels, since.timestamp()))
+        samples.append(
+            ("circles_milestone_suggestions_pending", labels, pending_suggestions(ai_settings.circle_id).count())
+        )
+    return samples
+
+
+def _closing_db_connections(check: Callable[[], list[Sample]]) -> Callable[[], list[Sample]]:
+    """Run an ORM-based check, then close the connection Django opened for its thread.
+
+    Checks run in their own threads, and a thread's connection would otherwise stay
+    open after the thread ends (the 2026-10-02 leak).
+    """
+
+    def run() -> list[Sample]:
+        try:
+            return check()
+        finally:
+            connections.close_all()
+
+    return run
+
+
 def _is_redis_url(url: str) -> bool:
     return urlparse(url or "").scheme in {"redis", "rediss", "unix"}
 
@@ -189,6 +235,8 @@ def build_checks() -> dict[str, Callable[[], list[Sample]]]:
         checks["celery_broker"] = lambda: check_celery_broker(broker_url, queues)
     if getattr(settings, "MINIO_ENDPOINT", ""):
         checks["object_storage"] = check_object_storage
+    if ai_enabled():
+        checks["milestone_scans"] = _closing_db_connections(check_milestone_scans)
     return checks
 
 

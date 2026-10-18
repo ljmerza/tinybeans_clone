@@ -1,5 +1,13 @@
 from django.urls import path
 
+from mysite.agent_api.views import CircleApiTokenDetailView, CircleApiTokenListView
+from mysite.ai.views import CircleAiSettingsTestView, CircleAiSettingsView, CircleMilestoneScanView
+from mysite.albums.views_milestones import (
+    MilestoneSuggestionApproveView,
+    MilestoneSuggestionDismissView,
+    MilestoneSuggestionListView,
+)
+
 from .views import (
     ChildBirthdateView,
     ChildProfileUpgradeConfirmView,
@@ -58,6 +66,34 @@ urlpatterns = [
     path("circles/<int:circle_id>/activity/", CircleActivityView.as_view(), name="circle-activity"),
     path("circles/<int:circle_id>/pets/", CirclePetListView.as_view(), name="circle-pet-list"),
     path("circles/<int:circle_id>/children/", CircleChildListView.as_view(), name="circle-child-list"),
+    path(
+        "circles/<int:circle_id>/milestone-suggestions/",
+        MilestoneSuggestionListView.as_view(),
+        name="circle-milestone-suggestion-list",
+    ),
+    path(
+        "circles/<int:circle_id>/milestone-suggestions/<uuid:suggestion_id>/approve/",
+        MilestoneSuggestionApproveView.as_view(),
+        name="circle-milestone-suggestion-approve",
+    ),
+    path(
+        "circles/<int:circle_id>/milestone-suggestions/<uuid:suggestion_id>/dismiss/",
+        MilestoneSuggestionDismissView.as_view(),
+        name="circle-milestone-suggestion-dismiss",
+    ),
+    path("circles/<int:circle_id>/api-tokens/", CircleApiTokenListView.as_view(), name="circle-api-token-list"),
+    path(
+        "circles/<int:circle_id>/api-tokens/<uuid:token_id>/",
+        CircleApiTokenDetailView.as_view(),
+        name="circle-api-token-detail",
+    ),
+    path("circles/<int:circle_id>/ai-settings/", CircleAiSettingsView.as_view(), name="circle-ai-settings"),
+    path(
+        "circles/<int:circle_id>/ai-settings/test/",
+        CircleAiSettingsTestView.as_view(),
+        name="circle-ai-settings-test",
+    ),
+    path("circles/<int:circle_id>/milestones/scan/", CircleMilestoneScanView.as_view(), name="circle-milestone-scan"),
     path("invitations/accept/", CircleInvitationAcceptView.as_view(), name="circle-invitation-accept"),
     path("invitations/finalize/", CircleInvitationFinalizeView.as_view(), name="circle-invitation-finalize"),
     path("invitations/pending/", CircleInvitationListView.as_view(), name="circle-invitation-list"),

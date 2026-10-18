@@ -19,8 +19,8 @@ from mysite.keeps.serializers.feed import KeepFeedSerializer
 from mysite.keeps.views.feed import KeepFeedPagination, feed_queryset, get_visible_keep_or_404
 from mysite.users.models import UserRole
 
-from .models import ALBUM_KEEP_ORDERING, Album, AlbumKeep
-from .serializers import AlbumCreateSerializer, AlbumSerializer, AlbumUpdateSerializer
+from .models import ALBUM_KEEP_ORDERING, Album, AlbumKeep, MilestoneAlbum, MilestoneSuggestion
+from .serializers import AlbumCreateSerializer, AlbumKeepAdminSerializer, AlbumSerializer, AlbumUpdateSerializer
 
 
 def _displayable_media():
@@ -36,7 +36,8 @@ def visible_albums(user, *, keep=None):
     the chosen ``cover_keep``'s first displayable photo while that post is still
     in the album, else the first displayable photo of the album's first post.
     With ``keep``, ``has_keep`` says whether that keep is in each album.
-    ``recap_month`` is set on monthly recap albums (see ``recaps``).
+    ``recap_month`` is set on monthly recap albums (see ``recaps``), and
+    ``is_milestone_album`` on the circle's linked Milestones album.
     """
     displayable = _displayable_media()
     visible_entries = AlbumKeep.objects.filter(album=OuterRef("pk")).filter(
@@ -71,6 +72,7 @@ def visible_albums(user, *, keep=None):
             ),
             can_edit=Exists(circle_admin),
             recap_month=F("recap__month"),
+            is_milestone_album=Exists(MilestoneAlbum.objects.filter(album=OuterRef("pk"))),
         )
     )
     if keep is not None:
@@ -259,10 +261,17 @@ class AlbumKeepsPagination(KeepFeedPagination):
 
 
 class AlbumKeepsView(generics.ListAPIView):
-    """An album's posts in feed shape, oldest memory first."""
+    """An album's posts in feed shape, oldest memory first.
+
+    Circle admins also get ``ai_added`` on each post (``AlbumKeepAdminSerializer``).
+    """
 
     serializer_class = KeepFeedSerializer
     pagination_class = AlbumKeepsPagination
+    viewer_is_admin = False
+
+    def get_serializer_class(self):
+        return AlbumKeepAdminSerializer if self.viewer_is_admin else KeepFeedSerializer
 
     def get_queryset(self):
         # Avoid queryset evaluation during schema generation
@@ -270,15 +279,32 @@ class AlbumKeepsView(generics.ListAPIView):
             return Keep.objects.none()
         user = self.request.user
         album_id = self.kwargs["album_id"]
-        if not Album.objects.filter(pk=album_id, circle__memberships__user=user).exists():
+        circle_id = (
+            Album.objects.filter(pk=album_id, circle__memberships__user=user)
+            .values_list("circle_id", flat=True)
+            .first()
+        )
+        if circle_id is None:
             raise Http404
         # Built on the feed, so a post shows here exactly when it shows there.
-        return feed_queryset(user).filter(album_memberships__album_id=album_id)
+        keeps = feed_queryset(user).filter(album_memberships__album_id=album_id)
+        self.viewer_is_admin = is_circle_admin(user, circle_id)
+        if self.viewer_is_admin:
+            # Only in the circle's Milestones album, and only for picks added without review.
+            auto_added = MilestoneSuggestion.objects.filter(
+                keep=OuterRef("pk"),
+                status=MilestoneSuggestion.Status.AUTO_ADDED,
+                circle__milestone_album__album_id=album_id,
+            )
+            keeps = keeps.annotate(ai_added=Exists(auto_added))
+        return keeps
 
     @extend_schema(
         summary="Album posts",
         description="The album's posts in the same shape as the feed, oldest memory first. Only posts the feed "
-        "would show are listed. Cursor-paginated: follow `next`. 404 unless the user belongs to its circle.",
+        "would show are listed. Cursor-paginated: follow `next`. 404 unless the user belongs to its circle. "
+        "For circle admins each post also has `ai_added`: AI or an API token put it in the Milestones album "
+        "without review.",
         parameters=[
             OpenApiParameter(
                 name="page_size",

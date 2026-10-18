@@ -20,6 +20,7 @@ class CircleSerializer(serializers.ModelSerializer):
             "monthly_recap_enabled",
             "on_this_day_frequency",
             "birthday_album_enabled",
+            "review_ai_milestones",
         ]
 
     def get_member_count(self, obj):

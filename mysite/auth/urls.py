@@ -19,6 +19,7 @@ from .views import (
     PasswordChangeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
+    ReauthCodeView,
     RecoveryCodeDownloadView,
     RecoveryCodeGenerateView,
     SignupView,
@@ -48,6 +49,7 @@ urlpatterns = [
     path("password/change/", PasswordChangeView.as_view(), name="auth-password-change"),
     path("password/reset/confirm/", PasswordResetConfirmView.as_view(), name="auth-password-reset-confirm"),
     path("password/reset/request/", PasswordResetRequestView.as_view(), name="auth-password-reset-request"),
+    path("reauth/code/", ReauthCodeView.as_view(), name="auth-reauth-code"),
     path("magic-login/request/", MagicLoginRequestView.as_view(), name="auth-magic-login-request"),
     path("magic-login/verify/", MagicLoginVerifyView.as_view(), name="auth-magic-login-verify"),
     # Google OAuth endpoints

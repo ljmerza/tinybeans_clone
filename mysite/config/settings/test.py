@@ -66,6 +66,12 @@ EMAIL_VERIFICATION_ENFORCED = False
 
 TWOFA_LOCKOUT_THRESHOLD = 999999
 
+# In-app AI off whatever the shell env says, so no test reaches a real model.
+# Tests turn it on with the `settings` fixture and mock every HTTP call.
+AI_BASE_URL = ""
+AI_API_KEY = ""
+AI_MODEL = ""
+
 # Google OAuth test settings
 GOOGLE_OAUTH_CLIENT_ID = "test-client-id.apps.googleusercontent.com"
 GOOGLE_OAUTH_CLIENT_SECRET = "test-client-secret"

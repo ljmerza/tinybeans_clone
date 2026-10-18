@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Album, AlbumKeep, BirthdayAlbum, MonthlyRecap
+from .models import Album, AlbumKeep, BirthdayAlbum, MilestoneAlbum, MilestoneSuggestion, MonthlyRecap
 
 
 class AlbumKeepInline(admin.TabularInline):
@@ -36,3 +36,22 @@ class BirthdayAlbumAdmin(admin.ModelAdmin):
 
     list_display = ["circle", "album", "created_at"]
     raw_id_fields = ["album"]
+
+
+@admin.register(MilestoneAlbum)
+class MilestoneAlbumAdmin(admin.ModelAdmin):
+    """Fix which album is a circle's Milestones album; with no row, the next approval makes one."""
+
+    list_display = ["circle", "album", "created_at"]
+    raw_id_fields = ["album"]
+
+
+@admin.register(MilestoneSuggestion)
+class MilestoneSuggestionAdmin(admin.ModelAdmin):
+    """Deleting a row lets the post be suggested again."""
+
+    list_display = ["keep", "circle", "status", "source", "label", "created_at", "decided_by", "decided_at"]
+    list_filter = ["status", "source", "circle"]
+    search_fields = ["label", "source_token_prefix"]
+    raw_id_fields = ["keep", "decided_by"]
+    readonly_fields = ["created_at"]

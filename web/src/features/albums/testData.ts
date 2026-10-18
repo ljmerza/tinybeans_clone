@@ -15,6 +15,7 @@ export function makeAlbum(overrides: Partial<Album> = {}): Album {
 		can_edit: true,
 		has_keep: null,
 		recap_month: null,
+		is_milestone_album: false,
 		created_at: "2026-07-01T00:00:00Z",
 		updated_at: "2026-07-01T00:00:00Z",
 		...overrides,

@@ -17,6 +17,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 
 from mysite import project_logging
+from mysite.agent_api.models import RevokeReason
+from mysite.agent_api.services import revoke_tokens_for_user
 from mysite.audit import AuditEvent, log_audit_event, log_security_event
 from mysite.emails.tasks import send_email_task
 from mysite.emails.templates import PASSWORD_CHANGED_TEMPLATE, PASSWORD_RESET_TEMPLATE
@@ -188,6 +190,7 @@ class PasswordResetConfirmView(APIView):
             user.set_password(serializer.validated_data["password"])
             user.save(update_fields=["password", *_enable_password_login(user)])
             revoked = revoke_refresh_tokens(user)
+            revoke_tokens_for_user(user, reason=RevokeReason.PASSWORD_CHANGED)
 
         _send_password_changed_email(user, ip_address=get_client_ip(request), changed_at=timezone.now(), reset=True)
 
@@ -280,6 +283,7 @@ class PasswordChangeView(APIView):
             user.set_password(serializer.validated_data["password"])
             user.save(update_fields=["password"])
             revoked = revoke_refresh_tokens(user)
+            revoke_tokens_for_user(user, reason=RevokeReason.PASSWORD_CHANGED)
             tokens = get_tokens_for_user(user)
 
         changed_at = timezone.now()

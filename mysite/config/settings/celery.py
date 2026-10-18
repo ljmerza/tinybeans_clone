@@ -42,6 +42,8 @@ CELERY_TASK_QUEUES = (
     Queue("sms"),
     Queue("media"),
     Queue("maintenance"),
+    # The nightly AI milestone scan: long calls to the operator's model, kept off the other queues.
+    Queue("ai"),
 )
 
 # Task Routing
@@ -61,6 +63,7 @@ CELERY_TASK_ROUTES = {
     "mysite.auth.tasks.cleanup_expired_oauth_states": {"queue": "maintenance"},
     "mysite.auth.tasks.cleanup_expired_magic_login_tokens": {"queue": "maintenance"},
     "mysite.celery.debug_task": {"queue": "maintenance"},
+    "mysite.albums.tasks.scan_milestones": {"queue": "ai"},
 }
 
 # Worker Configuration
@@ -103,5 +106,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "mysite.albums.tasks.sync_birthday_albums",
         # Daily at 7:30 AM in CELERY_TIMEZONE, after the midnight journal import
         "schedule": crontab(hour=7, minute=30),
+    },
+    "scan-milestones": {
+        "task": "mysite.albums.tasks.scan_milestones",
+        # Daily at 1 AM in CELERY_TIMEZONE: after the midnight journal import, before the 7 AM jobs
+        "schedule": crontab(hour=1, minute=0),
     },
 }

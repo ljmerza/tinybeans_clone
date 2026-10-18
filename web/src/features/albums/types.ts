@@ -2,6 +2,8 @@
  * Albums feature types
  */
 
+import type { FeedKeep } from "@/features/keeps/types";
+
 /** The cover rendition: a photo, or a video's poster frame. */
 export interface AlbumCover {
 	keep_id: string;
@@ -31,8 +33,18 @@ export interface Album {
 	has_keep: boolean | null;
 	/** Monthly recap albums: first day (YYYY-MM-DD) of the month; otherwise null. */
 	recap_month: string | null;
+	/** The circle's Milestones album, where milestone suggestions go. */
+	is_milestone_album: boolean;
 	created_at: string;
 	updated_at: string;
+}
+
+/**
+ * An album post: the feed shape, plus `ai_added` for circle admins (true when
+ * AI or an API token put it in the Milestones album without review).
+ */
+export interface AlbumFeedKeep extends FeedKeep {
+	ai_added?: boolean;
 }
 
 /**

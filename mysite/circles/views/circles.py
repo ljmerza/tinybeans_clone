@@ -11,6 +11,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 
 from mysite.albums.birthdays import queue_sync as queue_birthday_album_sync
+from mysite.albums.views import is_circle_admin
+from mysite.audit import AuditEvent, log_audit_event
 from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, success_response
 from mysite.users.models import UserRole
@@ -22,6 +24,9 @@ from ..serializers import (
     CircleSerializer,
     UserSerializer,
 )
+
+# Circle settings for the AI milestone features; changes are audit-logged.
+AI_SETTING_FIELDS = ("review_ai_milestones",)
 
 
 class UserCircleListView(APIView):
@@ -73,8 +78,9 @@ class CircleDetailView(APIView):
     serializer_class = CircleCreateSerializer
 
     @extend_schema(
-        description="Update circle metadata (name, slug) or the monthly recap, On this day and Birthdays album "
-        "settings for an owned circle. Turning the Birthdays album on fills it in the background.",
+        description="Update circle metadata (name, slug) or the monthly recap, On this day, Birthdays album and "
+        "AI milestone review settings for an owned circle. Turning the Birthdays album on fills it in the "
+        "background.",
         request=CircleCreateSerializer,
         responses={
             200: OpenApiResponse(
@@ -88,14 +94,33 @@ class CircleDetailView(APIView):
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
             raise PermissionDenied(_("Only circle admins can update circle details"))
+        # The AI settings have no superuser bypass: superusers change them in Django admin only.
+        if any(field in request.data for field in AI_SETTING_FIELDS) and not is_circle_admin(request.user, circle.id):
+            raise PermissionDenied(_("Only circle admins can update circle details"))
 
         serializer = CircleCreateSerializer(circle, data=request.data, partial=True, context={"user": request.user})
         serializer.is_valid(raise_exception=True)
         was_birthday_album_enabled = circle.birthday_album_enabled
+        ai_settings_before = {field: getattr(circle, field) for field in AI_SETTING_FIELDS}
         serializer.save()
         if circle.birthday_album_enabled and not was_birthday_album_enabled:
             # Fill the Birthdays album now rather than at the next nightly run.
             queue_birthday_album_sync(circle.id)
+        changed_ai_settings = [
+            field for field in AI_SETTING_FIELDS if getattr(circle, field) != ai_settings_before[field]
+        ]
+        if changed_ai_settings:
+            log_audit_event(
+                AuditEvent(
+                    action="circle.ai_settings.update",
+                    actor_type="user",
+                    actor_id=str(request.user.pk),
+                    target_type="circle",
+                    target_id=str(circle.id),
+                    # Field names only, never values.
+                    metadata={"fields": changed_ai_settings},
+                )
+            )
         return success_response(
             {"circle": CircleSerializer(circle).data},
             messages=[create_message("notifications.circle.updated")],

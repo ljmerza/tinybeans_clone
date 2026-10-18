@@ -44,3 +44,29 @@ def sync_birthday_albums(self, circle_id: int | None = None):
         if failed:
             raise self.retry(kwargs={"circle_id": circle_id})
         return added
+
+
+@shared_task(bind=True, soft_time_limit=50 * 60, time_limit=55 * 60, max_retries=4, default_retry_delay=15 * 60)
+def scan_milestones(self, circle_id: int | None = None):
+    """Ask the operator's AI model which new posts are milestones, in every circle that turned AI on (run by beat).
+
+    ``circle_id`` limits it to one circle; that is the admin's "Scan now". It
+    runs on the ``ai`` queue under a global lock, so only one scan talks to the
+    model at a time. A failed post is simply tried again next run. The one
+    retry: when the nightly run finds an admin's scan holding the lock, it
+    tries again every 15 minutes (4 times, longer than a scan can run), so one
+    circle's "Scan now" can't cost every other circle its night. The limits
+    override the 30s/40s defaults; a soft time limit stops it cleanly and
+    keeps what it wrote (see ``mysite.ai.scan``).
+    """
+    from mysite.ai.scan import run_scan
+
+    trigger = "beat" if circle_id is None else "admin"
+    with project_logging.log_context(task="albums.scan_milestones", circle_id=circle_id):
+        results = run_scan(circle_id, trigger=trigger)
+        if results.get("skipped") == "running" and circle_id is None:
+            if self.request.retries < self.max_retries:
+                raise self.retry()
+            logger.warning("Milestone scan gave up: another scan held the lock all night")
+        logger.info("Milestone scan done for %s circles", len(results) if "skipped" not in results else 0)
+        return results
