@@ -202,9 +202,10 @@ class BirthdayAlbumMatch(models.Model):
 class MilestoneAlbum(models.Model):
     """Links a circle to its "Milestones" album, where approved milestone suggestions go.
 
-    One per circle. Made with the album on the first approval (or AI pick, with
-    review off) unless migration 0005 linked an existing "Milestones" album.
-    Deleting the album deletes this row; the next approval makes a new one.
+    One per circle. Made on the first approval (or AI pick, with review off)
+    unless migration 0005 linked an existing "Milestones" album; that links the
+    circle's only album named "Milestones" if it has one, else makes the album.
+    Deleting the album deletes this row; the next approval links or makes one again.
 
     Attributes:
         circle: The circle the album belongs to

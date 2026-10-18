@@ -153,6 +153,34 @@ class TestPropose:
         assert list(album.album_keeps.values_list("keep_id", flat=True)) == [keep.id]
         assert Album.objects.count() == 1
 
+    def test_review_off_links_the_only_existing_milestones_album(self, circle, admin, keep):
+        album = make_album(circle, admin, name="milestones")
+
+        propose(circle, keep)
+
+        assert milestones_album(circle) == album
+        assert list(album.album_keeps.values_list("keep_id", flat=True)) == [keep.id]
+        assert Album.objects.count() == 1
+
+    def test_several_milestones_albums_get_a_new_linked_one(self, circle, admin, other_circle, outsider, keep):
+        first, second = make_album(circle, admin, name="Milestones"), make_album(circle, admin, name="MILESTONES")
+        make_album(other_circle, outsider, name="Milestones")
+
+        propose(circle, keep)
+
+        album = milestones_album(circle)
+        assert album not in (first, second)
+        assert album.circle == circle
+        assert in_milestones_album(circle, keep)
+
+    def test_another_circles_milestones_album_is_not_linked(self, circle, other_circle, outsider, keep):
+        foreign = make_album(other_circle, outsider, name="Milestones")
+
+        propose(circle, keep)
+
+        assert milestones_album(circle) != foreign
+        assert not foreign.album_keeps.exists()
+
     def test_review_on_waits_for_an_admin(self, circle, keep):
         review_on(circle)
 
@@ -639,6 +667,36 @@ class TestReviewSetting:
         assert response.status_code == status.HTTP_403_FORBIDDEN
         circle.refresh_from_db()
         assert circle.review_ai_milestones is False
+
+    def test_superusers_who_are_not_circle_admins_cannot_change_it(self, api_client, circle, member):
+        superuser = User.objects.create_superuser(email="root@example.com", password="rootpass123")
+        User.objects.filter(pk=superuser.pk).update(email_verified=True)
+        superuser.refresh_from_db()
+        url = reverse("circle-detail", args=[circle.id])
+
+        for user in (superuser, member):
+            if user is member:
+                # A superuser who is only a member of the circle is no admin either.
+                User.objects.filter(pk=member.pk).update(is_superuser=True, is_staff=True)
+                user.refresh_from_db()
+            api_client.force_authenticate(user)
+            response = api_client.patch(url, {"review_ai_milestones": True}, format="json")
+            assert response.status_code == status.HTTP_403_FORBIDDEN
+
+        circle.refresh_from_db()
+        assert circle.review_ai_milestones is False
+
+    def test_superusers_can_still_change_other_details(self, api_client, circle):
+        superuser = User.objects.create_superuser(email="root@example.com", password="rootpass123")
+        User.objects.filter(pk=superuser.pk).update(email_verified=True)
+        superuser.refresh_from_db()
+        api_client.force_authenticate(superuser)
+
+        response = api_client.patch(reverse("circle-detail", args=[circle.id]), {"name": "Renamed"}, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        circle.refresh_from_db()
+        assert circle.name == "Renamed"
 
     def test_shown_on_the_circle_settings_page(self, api_client, circle, admin):
         review_on(circle)

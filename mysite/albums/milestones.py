@@ -97,14 +97,20 @@ def _truncate(field: str, value: str) -> str:
 
 
 def _milestone_album(circle: Circle, created_by=None) -> Album:
-    """The circle's Milestones album, making it (and the link) if there is none.
+    """The circle's Milestones album, linking or making one if there is none.
 
+    With no link, a single existing album named "Milestones" (any case) is
+    linked, as migration 0005 does; with none or several, a new one is made.
     Callers hold the circle row lock, so two calls can't both make one.
     """
     link = MilestoneAlbum.objects.filter(circle=circle).select_related("album").first()
     if link is not None:
         return link.album
-    album = Album.objects.create(circle=circle, name=ALBUM_NAME, created_by=created_by)
+    matches = list(Album.objects.filter(circle=circle, name__iexact=ALBUM_NAME)[:2])
+    if len(matches) == 1:
+        album = matches[0]
+    else:
+        album = Album.objects.create(circle=circle, name=ALBUM_NAME, created_by=created_by)
     MilestoneAlbum.objects.create(circle=circle, album=album)
     return album
 

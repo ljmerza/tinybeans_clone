@@ -11,6 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 
 from mysite.albums.birthdays import queue_sync as queue_birthday_album_sync
+from mysite.albums.views import is_circle_admin
 from mysite.audit import AuditEvent, log_audit_event
 from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, success_response
@@ -92,6 +93,9 @@ class CircleDetailView(APIView):
         circle = get_object_or_404(Circle, id=circle_id)
         membership = CircleMembership.objects.filter(circle=circle, user=request.user).first()
         if not (request.user.is_superuser or (membership and membership.role == UserRole.CIRCLE_ADMIN)):
+            raise PermissionDenied(_("Only circle admins can update circle details"))
+        # The AI settings have no superuser bypass: superusers change them in Django admin only.
+        if any(field in request.data for field in AI_SETTING_FIELDS) and not is_circle_admin(request.user, circle.id):
             raise PermissionDenied(_("Only circle admins can update circle details"))
 
         serializer = CircleCreateSerializer(circle, data=request.data, partial=True, context={"user": request.user})
