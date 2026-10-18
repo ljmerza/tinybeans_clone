@@ -93,6 +93,25 @@ describe("CalendarRouteView month jump", () => {
 		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
+	it("returns focus to the jump button without scrolling the page", async () => {
+		const dialog = await openMonthJump();
+		const trigger = screen.getByRole("button", {
+			name: /Jump to month, showing July 2026/,
+			hidden: true,
+		});
+		const focus = vi.spyOn(trigger, "focus");
+
+		fireEvent.click(dialog.getByRole("button", { name: "Previous year" }));
+		fireEvent.click(dialog.getByRole("button", { name: "March 2025" }));
+
+		// The button sits above the timeline. A plain focus() scrolls the page
+		// back to the newest month, and the scroll sync then undoes the jump.
+		await waitFor(() => expect(focus).toHaveBeenCalled());
+		for (const [options] of focus.mock.calls) {
+			expect(options).toEqual({ preventScroll: true });
+		}
+	});
+
 	it("does not offer future months", async () => {
 		const dialog = await openMonthJump();
 

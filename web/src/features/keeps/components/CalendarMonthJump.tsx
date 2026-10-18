@@ -6,7 +6,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 /** Month keys are `YYYY-MM`. Returns the key `delta` months away. */
@@ -62,6 +62,7 @@ export function CalendarMonthJump({
 		if (openProp === undefined) setUncontrolledOpen(nextOpen);
 		onOpenChange?.(nextOpen);
 	};
+	const triggerRef = useRef<HTMLButtonElement>(null);
 	const openOnMonthKey = focusMonthKey ?? monthKey;
 	const [viewYear, setViewYear] = useState(() => yearOf(openOnMonthKey));
 	// Open on the year being viewed (or the tapped month's), not wherever the picker was left.
@@ -101,6 +102,7 @@ export function CalendarMonthJump({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button
+					ref={triggerRef}
 					variant="outline"
 					size="sm"
 					className={className}
@@ -116,6 +118,13 @@ export function CalendarMonthJump({
 				className="max-w-xs rounded-lg"
 				closeButtonLabel={t("common.close")}
 				aria-describedby={undefined}
+				// Radix refocuses the button with a plain focus(), which scrolls the
+				// page up to it, back to the newest month. The timeline's scroll
+				// sync would then undo the jump, so refocus without scrolling.
+				onCloseAutoFocus={(event) => {
+					event.preventDefault();
+					triggerRef.current?.focus({ preventScroll: true });
+				}}
 			>
 				<DialogTitle>{t("pages.calendar.jump_to_month")}</DialogTitle>
 				<div className="flex items-center justify-between">
