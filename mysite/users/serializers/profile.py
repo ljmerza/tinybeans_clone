@@ -40,8 +40,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "needs_circle_onboarding",
             "has_usable_password",
         ]
+        # Email is read-only: changing it here would skip proving the new address,
+        # and email controls magic links and password resets.
         read_only_fields = [
             "id",
+            "email",
             "role",
             "email_verified",
             "date_joined",
