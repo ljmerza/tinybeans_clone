@@ -1,9 +1,11 @@
 from django.urls import path
 
 from .views import (
+    ChildBirthdateView,
     ChildProfileUpgradeConfirmView,
     ChildProfileUpgradeRequestView,
     CircleActivityView,
+    CircleChildListView,
     CircleDetailView,
     CircleInvitationAcceptView,
     CircleInvitationCancelView,
@@ -55,6 +57,7 @@ urlpatterns = [
     ),
     path("circles/<int:circle_id>/activity/", CircleActivityView.as_view(), name="circle-activity"),
     path("circles/<int:circle_id>/pets/", CirclePetListView.as_view(), name="circle-pet-list"),
+    path("circles/<int:circle_id>/children/", CircleChildListView.as_view(), name="circle-child-list"),
     path("invitations/accept/", CircleInvitationAcceptView.as_view(), name="circle-invitation-accept"),
     path("invitations/finalize/", CircleInvitationFinalizeView.as_view(), name="circle-invitation-finalize"),
     path("invitations/pending/", CircleInvitationListView.as_view(), name="circle-invitation-list"),
@@ -68,6 +71,7 @@ urlpatterns = [
         ChildProfileUpgradeRequestView.as_view(),
         name="child-upgrade-request",
     ),
+    path("child-profiles/<uuid:child_id>/", ChildBirthdateView.as_view(), name="child-birthdate"),
     path("child-profiles/upgrade/confirm/", ChildProfileUpgradeConfirmView.as_view(), name="child-upgrade-confirm"),
     path("pets/<uuid:pet_id>/", PetProfileDetailView.as_view(), name="pet-detail"),
 ]

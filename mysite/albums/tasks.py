@@ -7,6 +7,7 @@ from celery.utils.log import get_task_logger
 
 from mysite import project_logging
 
+from .birthdays import sync_enabled_circles
 from .recaps import beat_today, create_recaps_for_enabled_circles, previous_month
 
 logger = get_task_logger(__name__)
@@ -27,3 +28,19 @@ def create_monthly_recaps(self, month: str | None = None):
         if failed:
             raise self.retry(kwargs={"month": target.isoformat()})
         return made
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=15 * 60)
+def sync_birthday_albums(self, circle_id: int | None = None):
+    """Add new birthday posts to the Birthdays album of every circle that turned it on (run by beat nightly).
+
+    ``circle_id`` limits it to one circle; that is how turning the setting on
+    or setting a child's birthdate backfills right away. A retry redoes only
+    what is missing, since posts already added are skipped.
+    """
+    with project_logging.log_context(task="albums.sync_birthday_albums", circle_id=circle_id):
+        added, failed = sync_enabled_circles(circle_id)
+        logger.info("Added %s posts to birthdays albums", added)
+        if failed:
+            raise self.retry(kwargs={"circle_id": circle_id})
+        return added

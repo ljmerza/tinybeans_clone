@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from mysite.notification_utils import create_message
@@ -28,6 +29,20 @@ class ChildProfileSerializer(serializers.ModelSerializer):
             "linked_user",
         ]
         read_only_fields = ["upgrade_status", "pending_invite_email", "linked_user"]
+
+
+class ChildBirthdateSerializer(serializers.ModelSerializer):
+    """A child's name and birthdate, for the circle settings page; only the birthdate can be changed."""
+
+    class Meta:
+        model = ChildProfile
+        fields = ["id", "display_name", "birthdate"]
+        read_only_fields = ["id", "display_name"]
+
+    def validate_birthdate(self, value):
+        if value and value > timezone.localdate():
+            raise serializers.ValidationError(create_message("errors.birthdate_in_future"))
+        return value
 
 
 class ChildProfileUpgradeRequestSerializer(serializers.Serializer):
@@ -68,6 +83,7 @@ class ChildProfileUpgradeConfirmSerializer(serializers.Serializer):
 
 
 __all__ = [
+    "ChildBirthdateSerializer",
     "ChildProfileSerializer",
     "ChildProfileUpgradeRequestSerializer",
     "ChildProfileUpgradeConfirmSerializer",

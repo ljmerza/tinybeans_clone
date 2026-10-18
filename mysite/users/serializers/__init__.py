@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Set
 
 from .children import (
+    ChildBirthdateSerializer,
     ChildProfileSerializer,
     ChildProfileUpgradeConfirmSerializer,
     ChildProfileUpgradeRequestSerializer,
@@ -42,6 +43,7 @@ def __dir__() -> list[str]:
 
 
 __all__ = [
+    "ChildBirthdateSerializer",
     "ChildProfileSerializer",
     "ChildProfileUpgradeConfirmSerializer",
     "ChildProfileUpgradeRequestSerializer",

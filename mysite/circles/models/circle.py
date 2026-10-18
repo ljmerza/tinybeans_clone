@@ -32,6 +32,12 @@ class Circle(models.Model):
         db_default=OnThisDayFrequency.NORMAL,
         help_text="How often this circle's \"On this day\" memories show in its members' home feeds",
     )
+    birthday_album_enabled = models.BooleanField(
+        default=False,
+        # Also a database default, like on_this_day_frequency.
+        db_default=False,
+        help_text='Keep a "Birthdays" album of the posts around each child\'s birthday (needs their birthdate)',
+    )
 
     class Meta:
         # Keep legacy ownership under the users app until migrations relocate.
