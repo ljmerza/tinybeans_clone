@@ -11,6 +11,8 @@ export interface CircleSummary {
 	on_this_day_frequency?: string;
 	/** Admins turn on the Birthdays album, filled from each child's birthdate. */
 	birthday_album_enabled?: boolean;
+	/** Admins hold AI and API token milestone picks for review instead of adding them at once. */
+	review_ai_milestones?: boolean;
 }
 
 /** A child profile in a circle, as circle admins see it on the settings page. */

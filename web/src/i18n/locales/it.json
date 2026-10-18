@@ -177,6 +177,14 @@
 		"logout": {
 			"logging_out": "Disconnessione in corso...",
 			"message": "Disconnessione effettuata"
+		},
+		"reauth": {
+			"title": "Conferma che sei tu",
+			"sending": "Invio di un codice alla tua email…",
+			"sent": "Ti abbiamo inviato un codice di 6 cifre via email. Scade tra 10 minuti.",
+			"resent": "Ti abbiamo inviato un nuovo codice via email. Usa il più recente.",
+			"send_failed": "Impossibile inviare il codice. Riprova.",
+			"resend": "Invia di nuovo il codice"
 		}
 	},
 	"twofa": {
@@ -996,6 +1004,120 @@
 					"load_failed": "Impossibile caricare i bambini. Riprova.",
 					"save_failed": "Impossibile salvare l'impostazione. Riprova.",
 					"birthdate_save_failed": "Impossibile salvare la data di nascita. Riprova."
+				},
+				"milestone_review": {
+					"title": "Rivedi i traguardi scelti dall'IA",
+					"description": "Se attivo, i post scelti dall'IA o da un token API aspettano nella riga Suggeriti dell'album Milestones finché un amministratore non li aggiunge. Se disattivo, entrano subito nell'album e gli amministratori li vedono con l'etichetta \"Aggiunto dall'IA\".",
+					"save_failed": "Impossibile salvare l'impostazione. Riprova."
+				},
+				"ai_assist": {
+					"title": "Traguardi suggeriti dall'IA",
+					"description": "Ogni notte l'IA legge le didascalie dei nuovi post e sceglie i traguardi per l'album Milestones.",
+					"confirm_title": "Attivare i traguardi suggeriti dall'IA?",
+					"disclosure": "Le didascalie di questa cerchia verranno inviate al servizio di IA configurato da chi gestisce questo sito, per suggerire traguardi. Commenti, nomi e foto non vengono inviati.",
+					"acknowledge": "Ho capito che le didascalie di questa cerchia verranno inviate a quel servizio di IA.",
+					"confirm": "Attiva",
+					"save_failed": "Impossibile salvare l'impostazione. Riprova.",
+					"last_success": "Ultima analisi riuscita: {{when}}",
+					"never_succeeded": "Ancora nessuna analisi riuscita.",
+					"last_error": "L'ultima analisi si è fermata: {{error}}",
+					"pending": "{{count}} suggerimenti in attesa di revisione",
+					"pending_one": "{{count}} suggerimento in attesa di revisione",
+					"pending_other": "{{count}} suggerimenti in attesa di revisione",
+					"test": "Prova la connessione",
+					"test_ok": "La connessione funziona ({{ms}} ms).",
+					"test_error": "Connessione non riuscita: {{error}}",
+					"test_failed": "Impossibile provare la connessione. Riprova.",
+					"scan_now": "Analizza ora",
+					"scan_queued": "Analisi avviata. Le scelte compariranno nell'album Milestones.",
+					"scan_failed": "Impossibile avviare l'analisi. Riprova.",
+					"codes": {
+						"ok": "Ha funzionato.",
+						"timeout": "Il servizio di IA ha impiegato troppo a rispondere.",
+						"unreachable": "Impossibile raggiungere il servizio di IA.",
+						"auth_failed": "Il servizio di IA ha rifiutato la chiave del server.",
+						"model_missing": "Il modello di IA non è disponibile.",
+						"http_error": "Il servizio di IA ha restituito un errore.",
+						"bad_response": "La risposta del servizio di IA non era utilizzabile.",
+						"provider_unavailable": "Il servizio di IA non è disponibile al momento.",
+						"pending_cap": "Ci sono troppi suggerimenti in attesa di revisione.",
+						"time_limit": "L'analisi ha esaurito il tempo. Continuerà la prossima notte.",
+						"disabled": "L'IA è stata disattivata durante l'analisi.",
+						"unknown": "Qualcosa è andato storto."
+					}
+				},
+				"api_tokens": {
+					"title": "Token API",
+					"description": "Permetti ad assistenti IA come Claude di leggere questa cerchia con un token dedicato. I token possono solo leggere i post, a meno che non possano anche suggerire traguardi.",
+					"create_action": "Crea token",
+					"disabled": "Disattivato da chi gestisce il server",
+					"loading": "Caricamento token…",
+					"load_failed": "Impossibile caricare i token. Riprova.",
+					"empty": "Ancora nessun token.",
+					"status": {
+						"active": "Attivo",
+						"expired": "Scaduto",
+						"revoked": "Revocato"
+					},
+					"can_suggest_badge": "Può suggerire",
+					"revoked_reasons": {
+						"manual": "Revocato da un amministratore",
+						"creator_not_admin": "Revocato: chi l'ha creato non è più amministratore della cerchia",
+						"creator_removed": "Revocato: chi l'ha creato ha lasciato la cerchia",
+						"creator_inactive": "Revocato: l'account di chi l'ha creato è stato disattivato",
+						"creator_unverified": "Revocato: l'email di chi l'ha creato non è verificata",
+						"password_changed": "Revocato: chi l'ha creato ha cambiato la password"
+					},
+					"created": "Creato da {{name}} il {{when}}",
+					"last_used": "Ultimo uso: {{when}}",
+					"last_used_from": "Ultimo uso: {{when}} da {{ip}}",
+					"never_used": "Mai usato",
+					"expires": "Scade il {{when}}",
+					"expires_never": "Non scade mai",
+					"revoke": "Revoca",
+					"revoke_label": "Revoca {{name}}",
+					"revoke_title": "Revocare questo token?",
+					"revoke_description": "\"{{name}}\" smetterà subito di funzionare. Non si può annullare.",
+					"revoke_confirm": "Revoca token",
+					"revoked": "Token revocato.",
+					"revoke_failed": "Impossibile revocare il token. Riprova.",
+					"show_older": "Mostra {{count}} token meno recenti",
+					"show_older_one": "Mostra {{count}} token meno recente",
+					"show_older_other": "Mostra {{count}} token meno recenti",
+					"hide_older": "Nascondi i token meno recenti",
+					"create_failed": "Impossibile creare il token. Riprova.",
+					"create": {
+						"title": "Crea un token API",
+						"description": "Dagli il nome del posto in cui lo userai. Nome, permesso e scadenza non si possono cambiare in seguito.",
+						"code_description": "Per creare il token, inserisci il codice che ti abbiamo inviato via email.",
+						"name": "Nome",
+						"name_placeholder": "es. Claude Code sul mio portatile",
+						"can_suggest": "Può suggerire traguardi",
+						"can_suggest_hint": "Gli permette di proporre post per l'album Milestones. Senza, può solo leggere.",
+						"expiry": "Scadenza",
+						"expiry_options": {
+							"30": "Tra 30 giorni",
+							"90": "Tra 90 giorni",
+							"365": "Tra un anno",
+							"custom": "In una data…",
+							"never": "Mai"
+						},
+						"expiry_day": "Data di scadenza",
+						"continue": "Continua",
+						"submit": "Crea token"
+					},
+					"reveal": {
+						"title": "Il tuo nuovo token API",
+						"description": "Usalo per collegare un assistente IA a questa cerchia.",
+						"warning_title": "Copialo ora",
+						"warning_body": "È l'unica volta in cui il token viene mostrato. Conservalo in un posto sicuro. Se lo perdi, revocalo e creane uno nuovo.",
+						"copy": "Copia token",
+						"copied": "Copiato",
+						"copy_failed": "Impossibile copiare. Seleziona il token e copialo tu.",
+						"mcp_title": "Configurazione del client MCP",
+						"mcp_hint": "Metti il token nella variabile d'ambiente CIRCLES_TOKEN, non nel file.",
+						"done": "L'ho copiato"
+					}
 				}
 			},
 			"invites": {
@@ -1080,6 +1202,27 @@
 				"removing": "Rimozione…",
 				"joined_at": "Membro dal {{joinedAt}}",
 				"cannot_remove_owner": "Non può essere rimosso"
+			},
+			"milestone_suggestions": {
+				"title": "Suggeriti",
+				"description": "Post scelti come traguardi dall'IA o da un token API. Aggiungi quelli adatti a questo album.",
+				"dismissed_title": "Scartati",
+				"dismissed_description": "Suggerimenti che hai rifiutato. Aggiungine uno se cambi idea.",
+				"dismissed_empty": "Nessun suggerimento scartato.",
+				"show_dismissed": "Mostra scartati",
+				"loading": "Caricamento suggerimenti…",
+				"load_failed": "Impossibile caricare i suggerimenti. Riprova.",
+				"load_more": "Carica altri",
+				"add": "Aggiungi a Milestones",
+				"add_short": "Aggiungi",
+				"dismiss": "Scarta suggerimento",
+				"dismiss_short": "Scarta",
+				"added": "Aggiunto all'album Milestones.",
+				"add_failed": "Impossibile aggiungere il post. Riprova.",
+				"dismiss_failed": "Impossibile scartare il suggerimento. Riprova.",
+				"ai_note": "Nota dell'IA",
+				"token_note": "Suggerito dal token API {{prefix}}",
+				"ai_added": "Aggiunto dall'IA"
 			}
 		}
 	},
@@ -1285,7 +1428,10 @@
 			"partial_token_invalid": "Token parziale non valido o scaduto. Accedi di nuovo",
 			"not_configured_for_account": "2FA non configurata per questo account",
 			"must_be_enabled_for_recovery": "Per generare i codici di recupero la 2FA deve essere attiva"
-		}
+		},
+		"api_token_limit": "Questa cerchia ha già il numero massimo di token API consentiti ({{max}}). Revocane prima uno.",
+		"reauth_invalid_code": "Il codice è sbagliato o scaduto. Controlla l'email più recente o richiedi un nuovo codice.",
+		"reauth_rate_limited": "Troppi codici richiesti. Attendi qualche minuto e riprova."
 	},
 	"profile": {
 		"notifications": {
@@ -1398,5 +1544,10 @@
 			"link_sent": "Controlla {{email}}: ti abbiamo inviato un link per impostare la password.",
 			"link_failed": "Non siamo riusciti a inviare l'email. Riprova."
 		}
+	},
+	"ai": {
+		"acknowledgement_required": "Accetta l'avviso sulla condivisione dei dati per attivare i traguardi suggeriti dall'IA.",
+		"not_enabled": "Attiva prima i traguardi suggeriti dall'IA per questa cerchia.",
+		"scan_running": "C'è già un'analisi in corso. Riprova più tardi."
 	}
 }

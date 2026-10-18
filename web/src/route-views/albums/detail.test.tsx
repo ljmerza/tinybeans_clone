@@ -37,6 +37,7 @@ import { albumKeys, albumServices } from "@/features/albums";
 import { albumPage, makeAlbum } from "@/features/albums/testData";
 import { circleServices } from "@/features/circles";
 import type { FeedKeep } from "@/features/keeps";
+import { milestoneSuggestionServices } from "@/features/milestoneSuggestions";
 import type { HttpError } from "@/lib/httpClient";
 import { createTestQueryClient } from "@/lib/query/queryClient";
 import { toast } from "sonner";
@@ -385,6 +386,100 @@ describe("AlbumRouteView", () => {
 				await screen.findByRole("heading", { name: "Day 1" }),
 			).toBeInTheDocument();
 			expect(screen.queryByRole("button", { name: /album cover/i })).toBeNull();
+		});
+	});
+
+	describe("Milestones album", () => {
+		const pendingPick = {
+			id: "bbbbbbbb-0000-0000-0000-000000000001",
+			status: "pending" as const,
+			source: "ai" as const,
+			label: "First steps",
+			reason: "Walked across the room",
+			model_name: "qwen3:14b",
+			source_token_prefix: "",
+			created_at: "2026-10-18T01:00:00Z",
+			decided_at: null,
+			keep: { ...keep(5), title: "Suggested post" },
+		};
+
+		function renderMilestones(
+			albumOverrides: Parameters<typeof makeAlbum>[0],
+			keeps: FeedKeep[] = [keep(1)],
+		) {
+			vi.spyOn(albumServices, "get").mockResolvedValue(
+				makeAlbum({
+					id: ALBUM_ID,
+					name: "Milestones",
+					is_milestone_album: true,
+					...albumOverrides,
+				}),
+			);
+			vi.spyOn(albumServices, "getKeeps").mockResolvedValue({
+				next: null,
+				previous: null,
+				results: keeps,
+			});
+			vi.spyOn(circleServices, "listMemberships").mockResolvedValue({
+				data: { circles: [] },
+			});
+			const list = vi
+				.spyOn(milestoneSuggestionServices, "list")
+				.mockResolvedValue({
+					count: 1,
+					next: null,
+					previous: null,
+					results: [pendingPick],
+				});
+			renderWithQueryClient(<AlbumRouteView />);
+			return list;
+		}
+
+		it("shows circle admins the Suggested row", async () => {
+			const list = renderMilestones({ can_edit: true });
+
+			expect(
+				await screen.findByRole("region", { name: /Suggested/ }),
+			).toBeInTheDocument();
+			expect(
+				await screen.findByRole("heading", { name: "Suggested post" }),
+			).toBeInTheDocument();
+			expect(list).toHaveBeenCalledWith(7, { status: "pending", offset: 0 });
+		});
+
+		it("never asks for suggestions for members", async () => {
+			const list = renderMilestones({ can_edit: false });
+
+			expect(
+				await screen.findByRole("heading", { name: "Day 1" }),
+			).toBeInTheDocument();
+			expect(list).not.toHaveBeenCalled();
+			expect(screen.queryByRole("region", { name: /Suggested/ })).toBeNull();
+		});
+
+		it("has no Suggested row in other albums", async () => {
+			const list = renderMilestones({
+				can_edit: true,
+				name: "Beach trip 2026",
+				is_milestone_album: false,
+			});
+
+			expect(
+				await screen.findByRole("heading", { name: "Day 1" }),
+			).toBeInTheDocument();
+			expect(list).not.toHaveBeenCalled();
+		});
+
+		it("tags posts AI added without review, for admins", async () => {
+			renderMilestones({ can_edit: true }, [
+				{ ...keep(1), ai_added: true } as FeedKeep,
+				{ ...keep(2), ai_added: false } as FeedKeep,
+			]);
+
+			expect(
+				await screen.findByRole("heading", { name: "Day 2" }),
+			).toBeInTheDocument();
+			expect(screen.getAllByTitle("Added by AI")).toHaveLength(1);
 		});
 	});
 });

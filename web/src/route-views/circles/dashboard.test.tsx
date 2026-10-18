@@ -33,6 +33,8 @@ vi.mock("@/features/circles", async (importOriginal) => {
 	};
 });
 
+import { aiAssistServices } from "@/features/aiAssist";
+import { apiTokenServices } from "@/features/apiTokens";
 import { AuthSessionProvider, authKeys, setAccessToken } from "@/features/auth";
 import { useCircleMembers } from "@/features/circles";
 import { createTestQueryClient } from "@/lib/query/queryClient";
@@ -41,10 +43,26 @@ import { CircleDashboard } from "./dashboard";
 describe("CircleDashboard", () => {
 	beforeEach(() => {
 		(useCircleMembers as unknown as Mock).mockReset();
+		vi.spyOn(aiAssistServices, "getSettings").mockResolvedValue({
+			available: true,
+			enabled: false,
+			acknowledged_at: null,
+			last_run_at: null,
+			last_success_at: null,
+			last_error: "",
+			pending_count: 0,
+		});
+		vi.spyOn(apiTokenServices, "list").mockResolvedValue({
+			agent_api_enabled: true,
+			tokens: [],
+		});
 	});
 
 	afterEach(() => {
 		setAccessToken(null);
+		// Not restoreAllMocks: that would also undo the useCircleMembers mock.
+		vi.mocked(aiAssistServices.getSettings).mockRestore();
+		vi.mocked(apiTokenServices.list).mockRestore();
 	});
 
 	it("renders without hook errors", () => {
@@ -147,5 +165,31 @@ describe("CircleDashboard", () => {
 		expect(
 			screen.queryByRole("switch", { name: "Birthdays album" }),
 		).toBeNull();
+	});
+
+	it("shows circle admins the AI and API token settings", async () => {
+		renderAs("admin");
+
+		expect(
+			screen.getByRole("switch", { name: "Review AI milestone picks" }),
+		).not.toBeChecked();
+		expect(
+			await screen.findByRole("switch", { name: "AI milestone suggestions" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "API tokens" }),
+		).toBeInTheDocument();
+		expect(await screen.findByText("No tokens yet.")).toBeInTheDocument();
+	});
+
+	it("hides the AI and API token settings from members", () => {
+		renderAs("member");
+
+		expect(
+			screen.queryByRole("switch", { name: "Review AI milestone picks" }),
+		).toBeNull();
+		expect(screen.queryByRole("heading", { name: "API tokens" })).toBeNull();
+		expect(aiAssistServices.getSettings).not.toHaveBeenCalled();
+		expect(apiTokenServices.list).not.toHaveBeenCalled();
 	});
 });

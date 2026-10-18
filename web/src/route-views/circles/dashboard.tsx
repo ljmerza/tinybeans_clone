@@ -1,10 +1,13 @@
 import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
+import { CircleAiSetting } from "@/features/aiAssist";
+import { CircleApiTokensCard } from "@/features/apiTokens";
 import { useAuthSession } from "@/features/auth";
 import {
 	CircleBirthdayAlbumSetting,
 	CircleInvitationManager,
 	CircleMemberList,
+	CircleMilestoneReviewSetting,
 	CircleOnThisDaySetting,
 	CircleRecapSetting,
 	useCircleMembers,
@@ -115,6 +118,12 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 							circleId={circleId}
 							enabled={circle?.birthday_album_enabled ?? false}
 						/>
+						<CircleMilestoneReviewSetting
+							circleId={circleId}
+							enabled={circle?.review_ai_milestones ?? false}
+						/>
+						<CircleAiSetting circleId={circleId} />
+						<CircleApiTokensCard circleId={circleId} />
 					</div>
 				)}
 

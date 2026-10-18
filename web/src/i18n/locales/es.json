@@ -177,6 +177,14 @@
 		"logout": {
 			"logging_out": "Cerrando sesión...",
 			"message": "Has cerrado sesión"
+		},
+		"reauth": {
+			"title": "Confirma que eres tú",
+			"sending": "Enviando un código a tu correo…",
+			"sent": "Te enviamos un código de 6 dígitos por correo. Caduca en 10 minutos.",
+			"resent": "Te enviamos un código nuevo por correo. Usa el más reciente.",
+			"send_failed": "No se pudo enviar el código. Inténtalo de nuevo.",
+			"resend": "Reenviar código"
 		}
 	},
 	"twofa": {
@@ -996,6 +1004,120 @@
 					"load_failed": "No se pudieron cargar los niños. Inténtalo de nuevo.",
 					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo.",
 					"birthdate_save_failed": "No se pudo guardar la fecha de nacimiento. Inténtalo de nuevo."
+				},
+				"milestone_review": {
+					"title": "Revisar los hitos elegidos por IA",
+					"description": "Si está activado, las publicaciones que elijan la IA o un token de API esperan en la fila Sugeridas del álbum Milestones hasta que un administrador las añada. Si está desactivado, entran directamente en el álbum y los administradores las ven con la etiqueta \"Añadida por IA\".",
+					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo."
+				},
+				"ai_assist": {
+					"title": "Sugerencias de hitos con IA",
+					"description": "Cada noche, la IA lee los textos de las publicaciones nuevas y elige hitos para el álbum Milestones.",
+					"confirm_title": "¿Activar las sugerencias de hitos con IA?",
+					"disclosure": "Los textos de las publicaciones de este círculo se enviarán al servicio de IA que configuró quien administra este sitio, para sugerir hitos. No se envían comentarios, nombres ni fotos.",
+					"acknowledge": "Entiendo que los textos de este círculo se enviarán a ese servicio de IA.",
+					"confirm": "Activar",
+					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo.",
+					"last_success": "Último análisis correcto: {{when}}",
+					"never_succeeded": "Todavía no hay ningún análisis correcto.",
+					"last_error": "El último análisis se detuvo: {{error}}",
+					"pending": "{{count}} sugerencias esperan revisión",
+					"pending_one": "{{count}} sugerencia espera revisión",
+					"pending_other": "{{count}} sugerencias esperan revisión",
+					"test": "Probar conexión",
+					"test_ok": "La conexión funciona ({{ms}} ms).",
+					"test_error": "La conexión falló: {{error}}",
+					"test_failed": "No se pudo probar la conexión. Inténtalo de nuevo.",
+					"scan_now": "Analizar ahora",
+					"scan_queued": "Análisis iniciado. Lo que elija aparecerá en el álbum Milestones.",
+					"scan_failed": "No se pudo iniciar el análisis. Inténtalo de nuevo.",
+					"codes": {
+						"ok": "Funcionó.",
+						"timeout": "El servicio de IA tardó demasiado en responder.",
+						"unreachable": "No se pudo conectar con el servicio de IA.",
+						"auth_failed": "El servicio de IA rechazó la clave del servidor.",
+						"model_missing": "El modelo de IA no está disponible.",
+						"http_error": "El servicio de IA devolvió un error.",
+						"bad_response": "No se pudo usar la respuesta del servicio de IA.",
+						"provider_unavailable": "El servicio de IA no está disponible ahora.",
+						"pending_cap": "Hay demasiadas sugerencias esperando revisión.",
+						"time_limit": "El análisis se quedó sin tiempo. Seguirá la próxima noche.",
+						"disabled": "La IA se desactivó durante el análisis.",
+						"unknown": "Algo salió mal."
+					}
+				},
+				"api_tokens": {
+					"title": "Tokens de API",
+					"description": "Permite que asistentes de IA como Claude lean este círculo con un token propio. Los tokens solo pueden leer publicaciones, salvo que también puedan sugerir hitos.",
+					"create_action": "Crear token",
+					"disabled": "Desactivado por quien administra el servidor",
+					"loading": "Cargando tokens…",
+					"load_failed": "No se pudieron cargar los tokens. Inténtalo de nuevo.",
+					"empty": "Todavía no hay tokens.",
+					"status": {
+						"active": "Activo",
+						"expired": "Caducado",
+						"revoked": "Revocado"
+					},
+					"can_suggest_badge": "Puede sugerir",
+					"revoked_reasons": {
+						"manual": "Revocado por un administrador",
+						"creator_not_admin": "Revocado: quien lo creó ya no es administrador del círculo",
+						"creator_removed": "Revocado: quien lo creó dejó el círculo",
+						"creator_inactive": "Revocado: se desactivó la cuenta de quien lo creó",
+						"creator_unverified": "Revocado: el correo de quien lo creó no está verificado",
+						"password_changed": "Revocado: quien lo creó cambió su contraseña"
+					},
+					"created": "Creado por {{name}} el {{when}}",
+					"last_used": "Último uso: {{when}}",
+					"last_used_from": "Último uso: {{when}} desde {{ip}}",
+					"never_used": "Nunca usado",
+					"expires": "Caduca el {{when}}",
+					"expires_never": "No caduca",
+					"revoke": "Revocar",
+					"revoke_label": "Revocar {{name}}",
+					"revoke_title": "¿Revocar este token?",
+					"revoke_description": "\"{{name}}\" dejará de funcionar de inmediato. No se puede deshacer.",
+					"revoke_confirm": "Revocar token",
+					"revoked": "Token revocado.",
+					"revoke_failed": "No se pudo revocar el token. Inténtalo de nuevo.",
+					"show_older": "Mostrar {{count}} tokens anteriores",
+					"show_older_one": "Mostrar {{count}} token anterior",
+					"show_older_other": "Mostrar {{count}} tokens anteriores",
+					"hide_older": "Ocultar tokens anteriores",
+					"create_failed": "No se pudo crear el token. Inténtalo de nuevo.",
+					"create": {
+						"title": "Crear un token de API",
+						"description": "Ponle el nombre del lugar donde lo usarás. El nombre, el permiso y la caducidad no se pueden cambiar después.",
+						"code_description": "Para crear el token, escribe el código que te enviamos por correo.",
+						"name": "Nombre",
+						"name_placeholder": "p. ej., Claude Code en mi portátil",
+						"can_suggest": "Puede sugerir hitos",
+						"can_suggest_hint": "Le permite proponer publicaciones para el álbum Milestones. Sin esto solo puede leer.",
+						"expiry": "Caduca",
+						"expiry_options": {
+							"30": "En 30 días",
+							"90": "En 90 días",
+							"365": "En un año",
+							"custom": "En una fecha…",
+							"never": "Nunca"
+						},
+						"expiry_day": "Fecha de caducidad",
+						"continue": "Continuar",
+						"submit": "Crear token"
+					},
+					"reveal": {
+						"title": "Tu nuevo token de API",
+						"description": "Úsalo para conectar un asistente de IA a este círculo.",
+						"warning_title": "Cópialo ahora",
+						"warning_body": "Es la única vez que se muestra el token. Guárdalo en un lugar seguro. Si lo pierdes, revócalo y crea uno nuevo.",
+						"copy": "Copiar token",
+						"copied": "Copiado",
+						"copy_failed": "No se pudo copiar. Selecciona el token y cópialo tú.",
+						"mcp_title": "Configuración del cliente MCP",
+						"mcp_hint": "Pon el token en la variable de entorno CIRCLES_TOKEN, no en el archivo.",
+						"done": "Ya lo copié"
+					}
 				}
 			},
 			"invites": {
@@ -1080,6 +1202,27 @@
 				"removing": "Eliminando…",
 				"joined_at": "Se unió el {{joinedAt}}",
 				"cannot_remove_owner": "No se puede eliminar"
+			},
+			"milestone_suggestions": {
+				"title": "Sugeridas",
+				"description": "Publicaciones que la IA o un token de API eligieron como hitos. Añade las que corresponden a este álbum.",
+				"dismissed_title": "Descartadas",
+				"dismissed_description": "Sugerencias que rechazaste. Añade alguna si cambias de opinión.",
+				"dismissed_empty": "No hay sugerencias descartadas.",
+				"show_dismissed": "Mostrar descartadas",
+				"loading": "Cargando sugerencias…",
+				"load_failed": "No se pudieron cargar las sugerencias. Inténtalo de nuevo.",
+				"load_more": "Cargar más",
+				"add": "Añadir a Milestones",
+				"add_short": "Añadir",
+				"dismiss": "Descartar sugerencia",
+				"dismiss_short": "Descartar",
+				"added": "Añadida al álbum Milestones.",
+				"add_failed": "No se pudo añadir la publicación. Inténtalo de nuevo.",
+				"dismiss_failed": "No se pudo descartar la sugerencia. Inténtalo de nuevo.",
+				"ai_note": "Nota de la IA",
+				"token_note": "Sugerida por el token de API {{prefix}}",
+				"ai_added": "Añadida por IA"
 			}
 		}
 	},
@@ -1285,7 +1428,10 @@
 			"not_configured_for_account": "2FA no configurado para esta cuenta",
 			"must_be_enabled_for_recovery": "2FA debe estar habilitado para generar códigos de recuperación"
 		},
-		"cannot_remove_owner": "No se puede eliminar al propietario del círculo. La persona que creó el círculo no puede ser eliminada."
+		"cannot_remove_owner": "No se puede eliminar al propietario del círculo. La persona que creó el círculo no puede ser eliminada.",
+		"api_token_limit": "Este círculo ya tiene el máximo de tokens de API permitidos ({{max}}). Revoca uno primero.",
+		"reauth_invalid_code": "Ese código es incorrecto o ha caducado. Revisa el correo más reciente o envía un código nuevo.",
+		"reauth_rate_limited": "Se pidieron demasiados códigos. Espera unos minutos e inténtalo de nuevo."
 	},
 	"profile": {
 	"notifications": {
@@ -1398,5 +1544,10 @@
 		"link_sent": "Revisa {{email}}: te enviamos un enlace para crear tu contraseña.",
 		"link_failed": "No pudimos enviar el correo. Inténtalo de nuevo."
 	}
+},
+"ai": {
+	"acknowledgement_required": "Acepta el aviso sobre el envío de datos para activar las sugerencias de hitos con IA.",
+	"not_enabled": "Primero activa las sugerencias de hitos con IA en este círculo.",
+	"scan_running": "Ya hay un análisis en curso. Inténtalo más tarde."
 }
 }

@@ -3,12 +3,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	AlbumCoverAction,
+	type AlbumFeedKeep,
 	AlbumFormDialog,
 	useAlbum,
 	useAlbumKeeps,
 	useDeleteAlbum,
 } from "@/features/albums";
 import { KeepFeedPost } from "@/features/keeps";
+import {
+	AiAddedTag,
+	MilestoneSuggestionsSection,
+} from "@/features/milestoneSuggestions";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
@@ -22,6 +27,8 @@ const route = getRouteApi("/albums/$albumId");
  * One album's posts, oldest memory first. Just a compact line with the
  * album's name and count above the posts; circle admins also get edit and
  * delete buttons there, and can pick any post with a photo as the cover.
+ * On the circle's Milestones album, admins also get the Suggested row above
+ * the posts and an "Added by AI" tag on posts added without review.
  */
 export function AlbumRouteView() {
 	const { t } = useTranslation();
@@ -116,6 +123,7 @@ export function AlbumRouteView() {
 		post_count: postCount,
 		can_edit,
 		recap_month: recapMonth,
+		is_milestone_album: isMilestoneAlbum,
 	} = current;
 
 	return (
@@ -164,6 +172,11 @@ export function AlbumRouteView() {
 					)}
 				</div>
 
+				{/* can_edit is exactly "admin of the album's circle". */}
+				{isMilestoneAlbum && can_edit && (
+					<MilestoneSuggestionsSection circleId={current.circle.id} />
+				)}
+
 				{error && !data ? (
 					<div className="space-y-3 py-6 text-center">
 						<p className="text-sm text-muted-foreground">
@@ -181,7 +194,12 @@ export function AlbumRouteView() {
 							<KeepFeedPost
 								keep={keep}
 								extraActions={
-									can_edit && <AlbumCoverAction album={current} keep={keep} />
+									can_edit && (
+										<>
+											{(keep as AlbumFeedKeep).ai_added && <AiAddedTag />}
+											<AlbumCoverAction album={current} keep={keep} />
+										</>
+									)
 								}
 							/>
 						)}
