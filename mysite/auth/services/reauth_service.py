@@ -108,7 +108,11 @@ def verify_reauth(user, code) -> bool:
     submitted = code.strip() if isinstance(code, str) else ""
     stored_hash = cache.get(_code_key(user.pk))
     if stored_hash and submitted and hmac.compare_digest(stored_hash, _hash_code(submitted)):
-        cache.delete_many([_code_key(user.pk), _attempts_key(user.pk)])
+        # The delete is what consumes the code: of two concurrent requests that
+        # both read the hash, only the one whose delete removed the key wins.
+        if not cache.delete(_code_key(user.pk)):
+            return False
+        cache.delete(_attempts_key(user.pk))
         return True
 
     if stored_hash:

@@ -100,6 +100,27 @@ def test_code_is_single_use(user):
     assert verify_reauth(user, code) is False
 
 
+def test_concurrent_uses_of_one_code_succeed_only_once(user):
+    send_reauth_code(user)
+    code = _latest_code()
+    results = []
+    raced = []
+    real_get = cache.get
+
+    def get_then_race(key, *args, **kwargs):
+        value = real_get(key, *args, **kwargs)
+        if key == f"reauth:code:{user.pk}" and not raced:
+            raced.append(True)
+            # A second request reads and consumes the code before this one deletes it.
+            results.append(("inner", verify_reauth(user, code)))
+        return value
+
+    with patch.object(reauth_service.cache, "get", side_effect=get_then_race):
+        results.append(("outer", verify_reauth(user, code)))
+
+    assert results == [("inner", True), ("outer", False)]
+
+
 def test_new_send_replaces_the_previous_code(user):
     send_reauth_code(user)
     first = _latest_code()
