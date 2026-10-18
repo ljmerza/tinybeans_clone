@@ -380,3 +380,8 @@ CELERY_TIMEZONE = os.environ.get("CELERY_TIMEZONE") or TIME_ZONE
 # Bearer token Prometheus sends to GET /metrics (see mysite/metrics.py). Empty
 # disables the endpoint, which then answers 404.
 METRICS_TOKEN = os.environ.get("METRICS_TOKEN", "").strip()
+
+# Most pending milestone suggestions a circle can have (posts already in its
+# Milestones album don't count). New picks that would wait for review are
+# refused at the cap, so the queue grows only as fast as admins review it.
+MILESTONE_MAX_PENDING = _env_int("MILESTONE_MAX_PENDING", 200)

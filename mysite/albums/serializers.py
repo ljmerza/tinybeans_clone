@@ -5,9 +5,9 @@ from rest_framework import serializers
 
 from mysite.circles.models import Circle
 from mysite.keeps.models import Keep
-from mysite.keeps.serializers.feed import FEED_URL_EXPIRES_IN
+from mysite.keeps.serializers.feed import FEED_URL_EXPIRES_IN, KeepFeedSerializer
 
-from .models import Album, AlbumKeep
+from .models import Album, AlbumKeep, MilestoneSuggestion
 
 
 def cover_url(media):
@@ -158,3 +158,38 @@ class AlbumUpdateSerializer(serializers.ModelSerializer):
         album = super().update(instance, validated_data)
         album.touch()
         return album
+
+
+class AlbumKeepAdminSerializer(KeepFeedSerializer):
+    """An album post for a circle admin: the feed shape plus ``ai_added``.
+
+    ``ai_added`` is annotated by ``views.AlbumKeepsView`` and only sent to
+    circle admins; members get plain ``KeepFeedSerializer`` posts.
+    """
+
+    ai_added = serializers.BooleanField(
+        read_only=True, help_text="Whether AI or an API token put this post in the Milestones album without review"
+    )
+
+    class Meta(KeepFeedSerializer.Meta):
+        fields = [*KeepFeedSerializer.Meta.fields, "ai_added"]
+        read_only_fields = fields
+
+
+class MilestoneSuggestionSerializer(serializers.ModelSerializer):
+    """A milestone suggestion row. ``label`` and ``reason`` are untrusted text, for display as plain text only."""
+
+    class Meta:
+        model = MilestoneSuggestion
+        fields = [
+            "id",
+            "status",
+            "source",
+            "label",
+            "reason",
+            "model_name",
+            "source_token_prefix",
+            "created_at",
+            "decided_at",
+        ]
+        read_only_fields = fields

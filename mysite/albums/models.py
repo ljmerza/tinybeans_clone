@@ -197,3 +197,94 @@ class BirthdayAlbumMatch(models.Model):
 
     def __str__(self):
         return f"{self.keep_id} matched for {self.birthday_album}"
+
+
+class MilestoneAlbum(models.Model):
+    """Links a circle to its "Milestones" album, where approved milestone suggestions go.
+
+    One per circle. Made with the album on the first approval (or AI pick, with
+    review off) unless migration 0005 linked an existing "Milestones" album.
+    Deleting the album deletes this row; the next approval makes a new one.
+
+    Attributes:
+        circle: The circle the album belongs to
+        album: The album; renaming or editing it is fine
+        created_at: When the link was made
+    """
+
+    circle = models.OneToOneField("users.Circle", on_delete=models.CASCADE, related_name="milestone_album")
+    album = models.OneToOneField(Album, on_delete=models.CASCADE, related_name="milestone_album")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Milestones album of {self.circle}"
+
+
+class MilestoneSuggestion(models.Model):
+    """A post the in-app AI or an API token picked as a possible milestone (see ``milestones``).
+
+    One row per post, ever: a dismissed or approved row is never reopened, so
+    a post an admin turned down (or took out of the album) is not suggested
+    again. ``not_milestone`` also marks a post the in-app AI already scanned.
+
+    Attributes:
+        circle: The post's circle; ``save`` checks it matches
+        keep: The post
+        status: Where the suggestion is (see ``Status``)
+        source: Who suggested it: the in-app AI or an API token
+        label: Short name for the milestone, e.g. "First steps"
+        reason: Why it was suggested; untrusted text, shown as plain text only
+        model_name: The AI model that picked it (``source=ai``)
+        source_token_prefix: Display prefix of the API token that suggested it
+            (``source=agent``); a prefix rather than a foreign key, so albums
+            doesn't depend on the tokens app
+        created_at: When it was suggested
+        decided_by: The admin who approved or dismissed it
+        decided_at: When that happened
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        DISMISSED = "dismissed", "Dismissed"
+        # The in-app AI said no; also marks the post as already scanned.
+        NOT_MILESTONE = "not_milestone", "Not a milestone"
+        # Review is off: put straight into the album with no human decision.
+        AUTO_ADDED = "auto_added", "Added automatically"
+
+    class Source(models.TextChoices):
+        AI = "ai", "In-app AI"
+        AGENT = "agent", "API token"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    circle = models.ForeignKey("users.Circle", on_delete=models.CASCADE, related_name="milestone_suggestions")
+    keep = models.OneToOneField("keeps.Keep", on_delete=models.CASCADE, related_name="milestone_suggestion")
+    status = models.CharField(max_length=16, choices=Status.choices)
+    source = models.CharField(max_length=8, choices=Source.choices)
+    label = models.CharField(max_length=80, blank=True)
+    reason = models.CharField(max_length=500, blank=True)
+    model_name = models.CharField(max_length=160, blank=True)
+    source_token_prefix = models.CharField(max_length=12, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["circle", "status", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.keep_id} {self.status} in {self.circle}"
+
+    def save(self, *args, **kwargs):
+        # A database check can't compare two tables' columns, as in AlbumKeep.
+        if self.keep.circle_id != self.circle_id:
+            raise ValidationError({"keep": "The post is in another circle."})
+        super().save(*args, **kwargs)
