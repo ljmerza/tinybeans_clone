@@ -36,6 +36,7 @@ from .passwords import (
     PasswordResetConfirmView,
     PasswordResetRequestView,
 )
+from .reauth import ReauthCodeView
 from .two_factor import (
     RecoveryCodeDownloadView,
     RecoveryCodeGenerateView,
@@ -63,6 +64,7 @@ __all__ = [
     "PasswordResetRequestView",
     "PasswordResetConfirmView",
     "PasswordChangeView",
+    "ReauthCodeView",
     "MagicLoginRequestView",
     "MagicLoginVerifyView",
     "TwoFactorSetupView",

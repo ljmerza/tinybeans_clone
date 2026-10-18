@@ -90,6 +90,7 @@ def send_via_mailjet(
 
 
 from mysite.emails.templates import (  # noqa: E402
+    REAUTH_LOCKED_TEMPLATE,
     TWOFA_CODE_TEMPLATE,
     TWOFA_DISABLED_TEMPLATE,
     TWOFA_ENABLED_TEMPLATE,
@@ -211,3 +212,23 @@ class TwoFactorMailer:
             )
         except Exception as e:
             logger.error(f"Failed to send recovery code alert: {e}")
+
+    @staticmethod
+    def send_reauth_locked_alert(user, lock_hours=24):
+        """Alert user that re-auth codes are blocked after too many wrong guesses (template)"""
+        from django.utils import timezone
+
+        context = {
+            "email": user.email,
+            "full_name": user.display_name,
+            "lock_hours": lock_hours,
+            "locked_at": timezone.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+        }
+        try:
+            TwoFactorMailer._enqueue_email(
+                to_email=user.email,
+                template_id=REAUTH_LOCKED_TEMPLATE,
+                context=context,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send re-auth lock alert: {e}")
