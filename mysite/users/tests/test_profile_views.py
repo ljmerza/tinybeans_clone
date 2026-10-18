@@ -57,6 +57,25 @@ class UserProfileViewTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.color_theme, "default")
 
+    def test_patch_cannot_change_email(self):
+        # Email is the account's root (magic links, password resets). Changing it
+        # here would skip proving the new address, so a stolen session could take
+        # over the account.
+        self.user.email_verified = True
+        self.user.save(update_fields=["email_verified"])
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("user-profile"),
+            {"email": "attacker@example.com", "color_theme": "sage"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "profile@example.com")
+        self.assertTrue(self.user.email_verified)
+        self.assertEqual(self.user.color_theme, "sage")
+
 
 class NotificationPreferencesViewTests(TestCase):
     def setUp(self):
