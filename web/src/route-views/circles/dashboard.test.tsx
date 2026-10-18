@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // The dashboard renders <Link>, which needs a RouterProvider this suite has no
 // reason to build. Render it as a plain anchor instead.
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+	const actual =
+		await importOriginal<typeof import("@tanstack/react-router")>();
 	return {
 		...actual,
 		Link: ({
