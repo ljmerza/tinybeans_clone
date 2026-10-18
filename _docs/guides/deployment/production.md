@@ -70,6 +70,7 @@ interpolates it.
 | `MAILJET_API_KEY` / `MAILJET_API_SECRET` | Mailjet dashboard. Mailjet is used only when both are set; otherwise mail goes to `EMAIL_BACKEND`. |
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | Google Cloud console, Web OAuth client. Only if Google sign-in is wanted. |
 | `FLOWER_BASIC_AUTH` | `<user>:<password>`. Flower reads it itself; without it Flower has no login. |
+| `AI_API_KEY` | Only for a hosted AI endpoint; leave empty for local Ollama. Sent as a bearer token and never stored in the database. |
 
 ### Settings
 
@@ -149,6 +150,17 @@ OAUTH_ALLOWED_REDIRECT_URIS=https://<app host>/auth/google-callback
 # Monitoring and Flower
 METRICS_TOKEN=<secret>
 FLOWER_BASIC_AUTH=<user>:<password>
+
+# Agent API for circle API tokens and circles-mcp (off by default; off = every
+# /api/agent/v1/ endpoint answers 404). See ../agent-api.md. Keep /api/agent/
+# LAN-only at the host nginx; Django can't tell LAN clients apart reliably.
+AGENT_API_ENABLED=0
+
+# In-app AI milestone scan. Empty AI_BASE_URL or AI_MODEL turns it off for every
+# circle. Circle admins can only switch it on; they never see the URL, key or model.
+# http is allowed only without a key.
+AI_BASE_URL=http://192.168.1.76:11434/v1
+AI_MODEL=qwen3:14b
 ```
 
 The compose file sets `UPLOAD_TEMP_DIR=/upload-tmp` (shared by web and worker) and `RUN_MIGRATIONS=0`
