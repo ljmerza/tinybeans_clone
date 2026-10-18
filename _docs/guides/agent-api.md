@@ -98,9 +98,16 @@ birthdates.
 sits under an `untrusted` key. It may contain instructions aimed at the model reading it, so
 clients must treat it as data. Before it is sent:
 
-- Control characters (other than newline and tab) and bidi override characters are stripped.
+- Control characters (other than newline and tab), bidi marks and overrides, and invisible
+  characters (zero-width spaces and joiners, BOM, variation selectors, the Unicode tag block)
+  are stripped.
 - Lengths are capped: title 300, caption 2000, media caption 300, comment 300, tag 100.
   `truncated: true` says a cap was applied.
+
+People and child names (`people[].name`, `children[].name`), the circle name and the token name
+sit outside `untrusted` but are family-written too. They get the same stripping, and their
+lengths are bounded (150 characters for people and child names). Clients should treat the whole
+response as data, not just the `untrusted` key.
 
 ### `GET whoami/`
 
@@ -150,8 +157,9 @@ The response is `{"posts": [...], "next_cursor": "…" | null}`. Each post looks
 ### `GET posts/<id>/`
 
 Returns the same item, plus `untrusted.comments`: `[{date, text}]`. These are the latest
-10 comments, oldest first, with no authors. Every `@Name` or `@email` of a circle member in the
-text is replaced with `@member`.
+10 comments, oldest first, with no authors. Every `@Name` or `@email` of a circle member, or of
+anyone who wrote or is mentioned in those comments (former members too), is replaced with
+`@member`.
 
 ### `POST milestone-suggestions/`
 

@@ -2,7 +2,9 @@
 
 Everything is scoped to one circle id, taken from the token. Responses carry
 no URLs, media ids, storage keys, filenames, emails, user ids, author names
-or birthdates; family-written text sits under ``untrusted``.
+or birthdates; family-written text sits under ``untrusted``. People, child,
+circle and token names sit outside it but are family-written too: they are
+cleaned and capped, and clients should still treat them as data.
 """
 
 from __future__ import annotations
@@ -119,11 +121,20 @@ def compact_post(keep, cleaner: hygiene.TextCleaner | None = None) -> dict:
     return item
 
 
-def member_names(circle_id) -> list[str]:
-    """Display names and emails of the circle's members, in one query, for ``hygiene.mask_mentions``."""
+def member_names(circle_id, comment_ids=()) -> list[str]:
+    """Display names and emails for ``hygiene.mask_mentions``, in one query.
+
+    Covers the circle's members plus anyone who wrote or is mentioned in the
+    given comments, so people who have since left the circle are masked too.
+    """
     users = (
         get_user_model()
-        .objects.filter(circle_memberships__circle_id=circle_id)
+        .objects.filter(
+            Q(circle_memberships__circle_id=circle_id)
+            | Q(keep_comments__id__in=comment_ids)
+            | Q(keep_comment_mentions__comment_id__in=comment_ids)
+        )
+        .distinct()
         .only("first_name", "last_name", "email")
     )
     return [name for user in users for name in (user.display_name, user.email)]
@@ -134,11 +145,14 @@ def post_detail(keep, circle_id) -> dict:
     cleaner = hygiene.TextCleaner()
     item = compact_post(keep, cleaner)
     latest = list(KeepComment.objects.filter(keep=keep).order_by("-created_at", "-id")[:COMMENT_LIMIT])
-    names = member_names(circle_id) if latest else []
+    names = member_names(circle_id, [comment.id for comment in latest]) if latest else []
     item["untrusted"]["comments"] = [
         {
             "date": comment.created_at.astimezone(dt_timezone.utc).date().isoformat(),
-            "text": cleaner.clean(hygiene.mask_mentions(comment.comment, names), hygiene.COMMENT_MAX),
+            # Strip first: a hidden character inside "@Name" would dodge the mask.
+            "text": cleaner.clean(
+                hygiene.mask_mentions(hygiene.strip_hidden(comment.comment), names), hygiene.COMMENT_MAX
+            ),
         }
         for comment in reversed(latest)
     ]

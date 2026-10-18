@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from mysite.agent_api import services
+from mysite.agent_api import services, signals
 from mysite.agent_api.models import CircleApiToken, RevokeReason
 from mysite.auth.token_utils import store_token
 from mysite.circles.models import CircleMembership
@@ -63,6 +63,23 @@ class TestMembershipSignals:
 
         assert "api_token.auto_revoke" not in audit_actions(caplog)
         assert not CircleApiToken.objects.exists()
+
+    def test_removal_during_a_circle_delete_skips_the_revoke(self, admin, circle, token, caplog):
+        # Django deletes the tokens before the memberships, so the delete above can't
+        # show the guard; call the receiver as that cascade would.
+        membership = CircleMembership.objects.get(user=admin, circle=circle)
+        with captured_logs(caplog, "mysite.audit"):
+            signals.revoke_tokens_on_removal(CircleMembership, membership, origin=circle)
+
+        assert reload(token).revoked_at is None
+        assert "api_token.auto_revoke" not in audit_actions(caplog)
+
+    def test_removal_outside_a_circle_delete_revokes(self, admin, circle, token):
+        membership = CircleMembership.objects.get(user=admin, circle=circle)
+
+        signals.revoke_tokens_on_removal(CircleMembership, membership, origin=membership)
+
+        assert reload(token).revoked_reason == RevokeReason.CREATOR_REMOVED
 
     def test_auto_revoke_is_audited(self, admin, circle, token, caplog):
         membership = CircleMembership.objects.get(user=admin, circle=circle)

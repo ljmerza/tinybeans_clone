@@ -342,3 +342,15 @@ class TestDjangoAdmin:
 
         token.refresh_from_db()
         assert (token.revoked_reason, token.revoked_by) == (RevokeReason.MANUAL, boss)
+
+    def test_revoke_action_on_the_changelist(self, token, client):
+        boss = User.objects.create_superuser(email="boss@example.com", password="x")
+        client.force_login(boss)
+        url = reverse("admin:agent_api_circleapitoken_changelist")
+
+        assert client.get(url).status_code == status.HTTP_200_OK
+        response = client.post(url, {"action": "revoke_selected", "_selected_action": [token.pk]})
+
+        assert response.status_code == status.HTTP_302_FOUND
+        token.refresh_from_db()
+        assert (token.revoked_reason, token.revoked_by) == (RevokeReason.MANUAL, boss)

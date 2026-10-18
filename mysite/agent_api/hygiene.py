@@ -17,9 +17,16 @@ TAG_MAX = 100
 NAME_MAX = 150
 LABEL_MAX = 80
 
-# C0/C1 control characters except tab and newline, plus the bidi overrides and
-# isolates that can make text read differently from what it says.
-_HIDDEN_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]")
+# C0/C1 control characters except tab and newline; the bidi marks, overrides and
+# isolates that can make text read differently from what it says; and the
+# invisible characters a model still reads: soft hyphen, zero-width spaces and
+# joiners, word joiner and invisible operators, BOM, variation selectors and
+# the tag block (which a model decodes as ASCII though the app shows nothing).
+# Emoji lose their joiners and variation selectors, which is fine for an agent.
+_HIDDEN_RE = re.compile(
+    r"[\x00-\x08\x0b-\x1f\x7f-\x9f\xad\u061c\u180e\u200b-\u200f\u202a-\u202e\u2060-\u206f"
+    r"\ufe00-\ufe0f\ufeff\U000e0000-\U000e007f\U000e0100-\U000e01ef]"
+)
 
 
 def strip_hidden(value) -> str:
@@ -46,7 +53,7 @@ def mask_mentions(text: str, member_names) -> str:
     The comment composer writes mentions as ``@Display Name`` (the email for
     members without a name); this keeps both out of the response.
     """
-    names = sorted({name for name in member_names if name}, key=len, reverse=True)
+    names = sorted({strip_hidden(name) for name in member_names if name} - {""}, key=len, reverse=True)
     if not names or "@" not in text:
         return text
     pattern = re.compile("@(?:" + "|".join(re.escape(name) for name in names) + ")", re.IGNORECASE)
