@@ -39,7 +39,15 @@ class CircleMemberSerializer(serializers.ModelSerializer):
 class CircleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Circle
-        fields = ["id", "name", "slug", "created_at", "monthly_recap_enabled", "on_this_day_frequency"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "created_at",
+            "monthly_recap_enabled",
+            "on_this_day_frequency",
+            "birthday_album_enabled",
+        ]
         read_only_fields = ["id", "slug", "created_at"]
 
     def validate(self, attrs):

@@ -149,3 +149,51 @@ class MonthlyRecap(models.Model):
 
     def __str__(self):
         return f"{self.month:%Y-%m} recap of {self.circle}"
+
+
+class BirthdayAlbum(models.Model):
+    """Links a circle to the "Birthdays" album that ``birthdays`` keeps up to date.
+
+    One per circle, made with the album when the first birthday post is found.
+    Deleting the album deletes this row (and its ``BirthdayAlbumMatch`` rows)
+    and turns the circle's ``birthday_album_enabled`` off (see ``signals``), so
+    it is not made again unless an admin turns the setting back on.
+
+    Attributes:
+        circle: The circle the album belongs to
+        album: The album; renaming or editing it is fine
+        created_at: When the album was made
+    """
+
+    circle = models.OneToOneField("users.Circle", on_delete=models.CASCADE, related_name="birthday_album")
+    album = models.OneToOneField(Album, on_delete=models.CASCADE, related_name="birthday_album")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Birthdays album of {self.circle}"
+
+
+class BirthdayAlbumMatch(models.Model):
+    """A post the birthdays sync has put in a circle's Birthdays album.
+
+    The row stays when an admin takes the post out of the album, so the next
+    sync knows not to put it back.
+
+    Attributes:
+        birthday_album: The circle's birthdays album link
+        keep: The post that was added
+        matched_at: When it was added
+    """
+
+    birthday_album = models.ForeignKey(BirthdayAlbum, on_delete=models.CASCADE, related_name="matches")
+    keep = models.ForeignKey("keeps.Keep", on_delete=models.CASCADE, related_name="+")
+    matched_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["birthday_album", "keep"], name="albums_unique_birthday_album_match"),
+        ]
+        verbose_name_plural = "birthday album matches"
+
+    def __str__(self):
+        return f"{self.keep_id} matched for {self.birthday_album}"

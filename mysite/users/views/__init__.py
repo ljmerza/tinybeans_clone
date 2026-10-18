@@ -1,5 +1,6 @@
 """Public interface for the users.views package."""
 
+from .child_birthdates import ChildBirthdateView, CircleChildListView
 from .children import (
     ChildProfileUpgradeConfirmView,
     ChildProfileUpgradeRequestView,
@@ -29,6 +30,8 @@ from .pets import CirclePetListView, PetProfileDetailView
 from .profile import EmailPreferencesView, UserProfileView
 
 __all__ = [
+    "ChildBirthdateView",
+    "CircleChildListView",
     "ChildProfileUpgradeConfirmView",
     "ChildProfileUpgradeRequestView",
     "CircleActivityView",

@@ -9,6 +9,16 @@ export interface CircleSummary {
 	monthly_recap_enabled?: boolean;
 	/** Admins pick how often this circle's "On this day" cards show for everyone. */
 	on_this_day_frequency?: string;
+	/** Admins turn on the Birthdays album, filled from each child's birthdate. */
+	birthday_album_enabled?: boolean;
+}
+
+/** A child profile in a circle, as circle admins see it on the settings page. */
+export interface CircleChild {
+	id: string;
+	display_name: string;
+	/** YYYY-MM-DD; null until someone sets it. */
+	birthdate: string | null;
 }
 
 export interface CircleOnboardingPayload {

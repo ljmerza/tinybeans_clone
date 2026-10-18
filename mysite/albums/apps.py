@@ -7,3 +7,6 @@ class AlbumsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "mysite.albums"
     verbose_name = "Albums"
+
+    def ready(self):
+        from . import signals  # noqa: F401

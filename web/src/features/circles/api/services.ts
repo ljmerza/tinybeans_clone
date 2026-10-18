@@ -2,6 +2,7 @@ import { apiClient as authApi } from "@/features/auth/api/authClient";
 import { createApiClient } from "@/lib/api/client";
 import type { ApiResponseWithMessages } from "@/types";
 import type {
+	CircleChild,
 	CircleInvitationFinalizeResponse,
 	CircleInvitationOnboardingStart,
 	CircleInvitationSummary,
@@ -42,11 +43,25 @@ export const circleServices = {
 			name?: string;
 			monthly_recap_enabled?: boolean;
 			on_this_day_frequency?: string;
+			birthday_album_enabled?: boolean;
 		},
 	) {
 		return authApi.patch<ApiResponseWithMessages<{ circle: CircleSummary }>>(
 			`${USERS_BASE}/circles/${circleId}/`,
 			body,
+		);
+	},
+
+	listChildren(circleId: number | string) {
+		return authApi.get<ApiResponseWithMessages<{ children: CircleChild[] }>>(
+			`${USERS_BASE}/circles/${circleId}/children/`,
+		);
+	},
+
+	updateChildBirthdate(childId: string, birthdate: string | null) {
+		return authApi.patch<ApiResponseWithMessages<{ child: CircleChild }>>(
+			`${USERS_BASE}/child-profiles/${childId}/`,
+			{ birthdate },
 		);
 	},
 

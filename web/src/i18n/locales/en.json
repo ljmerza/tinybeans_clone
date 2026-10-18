@@ -981,6 +981,21 @@
 						"more": "More"
 					},
 					"save_failed": "Couldn't save the setting. Please try again."
+				},
+				"birthdays": {
+					"title": "Birthdays album",
+					"description": "Keep an album of the posts from the week before to two weeks after each child's birthday that mention a birthday. New ones are added every night; posts you take out stay out. Everyone in the circle can see it.",
+					"children_title": "Children's birthdates",
+					"children_hint": "Birthdays are found from each child's birthdate. Children without one are skipped.",
+					"no_children": "This circle has no children yet.",
+					"missing": "No birthdate yet, so their birthdays are skipped",
+					"birthdate_label": "{{name}}'s birthdate",
+					"save": "Save",
+					"saving": "Saving…",
+					"loading": "Loading children…",
+					"load_failed": "Couldn't load the children. Please try again.",
+					"save_failed": "Couldn't save the setting. Please try again.",
+					"birthdate_save_failed": "Couldn't save the birthdate. Please try again."
 				}
 			},
 			"invites": {
@@ -1215,6 +1230,7 @@
 		"invitation_pending_for_email": "An invitation is already pending for this email",
 		"user_missing_email": "User must have an email address to receive invitations",
 		"pet_name_required": "Pet name cannot be empty",
+		"birthdate_in_future": "Birthdate can't be in the future",
 		"circle_membership_required": "You must be a member of this circle to create keeps.",
 		"milestone_required": "Milestone data is required for milestone keeps.",
 		"milestone_not_allowed": "Milestone data should only be provided for milestone keeps.",

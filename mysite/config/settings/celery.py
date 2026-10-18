@@ -99,4 +99,9 @@ CELERY_BEAT_SCHEDULE = {
         # 8 AM on the 1st in CELERY_TIMEZONE, after the midnight Tinybeans import
         "schedule": crontab(day_of_month=1, hour=8, minute=0),
     },
+    "sync-birthday-albums": {
+        "task": "mysite.albums.tasks.sync_birthday_albums",
+        # Daily at 7:30 AM in CELERY_TIMEZONE, after the midnight journal import
+        "schedule": crontab(hour=7, minute=30),
+    },
 }

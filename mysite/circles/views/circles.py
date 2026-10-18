@@ -10,6 +10,7 @@ from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 
+from mysite.albums.birthdays import queue_sync as queue_birthday_album_sync
 from mysite.auth.permissions import IsEmailVerified
 from mysite.notification_utils import create_message, success_response
 from mysite.users.models import UserRole
@@ -72,8 +73,8 @@ class CircleDetailView(APIView):
     serializer_class = CircleCreateSerializer
 
     @extend_schema(
-        description="Update circle metadata (name, slug) or the monthly recap and On this day settings for an "
-        "owned circle.",
+        description="Update circle metadata (name, slug) or the monthly recap, On this day and Birthdays album "
+        "settings for an owned circle. Turning the Birthdays album on fills it in the background.",
         request=CircleCreateSerializer,
         responses={
             200: OpenApiResponse(
@@ -90,7 +91,11 @@ class CircleDetailView(APIView):
 
         serializer = CircleCreateSerializer(circle, data=request.data, partial=True, context={"user": request.user})
         serializer.is_valid(raise_exception=True)
+        was_birthday_album_enabled = circle.birthday_album_enabled
         serializer.save()
+        if circle.birthday_album_enabled and not was_birthday_album_enabled:
+            # Fill the Birthdays album now rather than at the next nightly run.
+            queue_birthday_album_sync(circle.id)
         return success_response(
             {"circle": CircleSerializer(circle).data},
             messages=[create_message("notifications.circle.updated")],

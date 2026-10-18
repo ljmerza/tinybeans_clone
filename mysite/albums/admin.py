@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Album, AlbumKeep, MonthlyRecap
+from .models import Album, AlbumKeep, BirthdayAlbum, MonthlyRecap
 
 
 class AlbumKeepInline(admin.TabularInline):
@@ -27,4 +27,12 @@ class MonthlyRecapAdmin(admin.ModelAdmin):
 
     list_display = ["month", "circle", "album", "created_at"]
     list_filter = ["circle"]
+    raw_id_fields = ["album"]
+
+
+@admin.register(BirthdayAlbum)
+class BirthdayAlbumAdmin(admin.ModelAdmin):
+    """Deleting a row (or its album) turns the circle's birthdays album off."""
+
+    list_display = ["circle", "album", "created_at"]
     raw_id_fields = ["album"]
