@@ -112,6 +112,8 @@ services:
     build:
       context: .
       target: development
+    # No -Q: the worker consumes every queue in CELERY_TASK_QUEUES
+    # (email, sms, media, maintenance, ai).
     command: celery -A mysite worker
     working_dir: /app
     volumes:

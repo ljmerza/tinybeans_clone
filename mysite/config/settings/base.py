@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     "mysite.keeps.apps.KeepsConfig",
     "mysite.albums.apps.AlbumsConfig",
     "mysite.agent_api.apps.AgentApiConfig",
+    "mysite.ai.apps.AiConfig",
 ]
 
 MIDDLEWARE = [
@@ -235,6 +236,9 @@ from .email import *  # noqa
 
 # Storage and Media Configuration
 from .storage import *  # noqa
+
+# In-app AI (milestone suggestions): the operator's provider settings
+from .ai import *  # noqa
 
 # Authentication and Authorization Configuration - import settings and helper functions
 from .auth import (  # noqa

@@ -64,7 +64,7 @@ services:
   circles-worker:
     <<: *app
     # No -Q: the worker consumes every queue in CELERY_TASK_QUEUES
-    # (email, sms, media, maintenance).
+    # (email, sms, media, maintenance, ai).
     command: celery -A mysite worker --concurrency 4 -l INFO
 
   circles-beat:

@@ -28,12 +28,13 @@ from dataclasses import dataclass
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, ValidationError
 
 from mysite.audit import AuditEvent, log_audit_event
 from mysite.circles.models import Circle
+from mysite.keeps.models import Keep, KeepMedia, KeepType
 
 from .birthdays import BIRTHDAY_RE
 from .models import Album, AlbumKeep, MilestoneAlbum, MilestoneSuggestion
@@ -72,6 +73,29 @@ def keep_in_album(circle_id: int, keep) -> bool:
 def pending_suggestions(circle_id: int):
     """The circle's pending rows, minus any whose post is already in the album (e.g. added by hand)."""
     return MilestoneSuggestion.objects.filter(circle_id=circle_id, status=Status.PENDING).exclude(in_album_q(circle_id))
+
+
+def scan_candidates(circle_id: int, *, include_album: bool = False, include_not_milestone: bool = False):
+    """The circle's posts the in-app AI hasn't looked at yet, newest first.
+
+    Leaves out posts with a suggestion row (any status: scanned, picked or
+    turned down), posts already in the Milestones album, and posts the feed
+    wouldn't show (media still processing). Birthday and empty captions are
+    left to the caller, which skips them without a row.
+
+    ``include_album`` and ``include_not_milestone`` are for the
+    ``scan_milestones`` command: a recall check against the album, and a rescan.
+    """
+    displayable = KeepMedia.objects.filter(keep=OuterRef("pk")).filter(
+        Q(media_type="photo") | Q(media_type="video", thumbnails_generated=True)
+    )
+    unscanned = Q(milestone_suggestion__isnull=True)
+    if include_not_milestone:
+        unscanned |= Q(milestone_suggestion__status=Status.NOT_MILESTONE)
+    keeps = Keep.objects.filter(unscanned, circle_id=circle_id).filter(Q(keep_type=KeepType.NOTE) | Exists(displayable))
+    if not include_album:
+        keeps = keeps.exclude(album_memberships__album__milestone_album__isnull=False)
+    return keeps.order_by("-date_of_memory", "-created_at")
 
 
 @dataclass(frozen=True)
