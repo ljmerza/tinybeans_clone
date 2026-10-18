@@ -77,7 +77,7 @@ METRICS = {
     "circles_celery_queue_length": "Messages waiting in a Celery queue on the Redis broker.",
     "circles_milestone_scan_last_success_timestamp_seconds": (
         "Unix time of the circle's last AI milestone scan that ended without a provider error "
-        "(when AI was turned on, before the first). Only circles with AI on."
+        "(or when AI was last turned on, if that is later). Only circles with AI on."
     ),
     "circles_milestone_suggestions_pending": "Milestone suggestions waiting for a circle admin's review.",
     "circles_app_info": "Backend runtime versions. Always 1.",
@@ -190,7 +190,9 @@ def check_milestone_scans() -> list[Sample]:
     samples: list[Sample] = []
     for ai_settings in CircleAiSettings.objects.filter(enabled=True).order_by("circle_id"):
         labels = {"circle_id": str(ai_settings.circle_id)}
-        since = ai_settings.last_success_at or ai_settings.acknowledged_at or ai_settings.updated_at
+        # The latest of the two: turning AI back on restarts the clock even after an old success.
+        since = max(filter(None, (ai_settings.last_success_at, ai_settings.acknowledged_at)), default=None)
+        since = since or ai_settings.updated_at
         samples.append(("circles_milestone_scan_last_success_timestamp_seconds", labels, since.timestamp()))
         samples.append(
             ("circles_milestone_suggestions_pending", labels, pending_suggestions(ai_settings.circle_id).count())

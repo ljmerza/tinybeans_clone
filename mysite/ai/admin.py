@@ -1,6 +1,7 @@
 """Admin configuration for in-app AI: read-only, except that a superuser can turn a circle off."""
 
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 
 from mysite.audit import AuditEvent, log_audit_event
 
@@ -9,7 +10,7 @@ from .models import CircleAiSettings
 
 @admin.register(CircleAiSettings)
 class CircleAiSettingsAdmin(admin.ModelAdmin):
-    """Circle admins turn AI on in the app (accepting the data-sharing notice); here it can only be switched."""
+    """Circle admins turn AI on in the app (accepting the data-sharing notice); here it can only be switched off."""
 
     list_display = ["circle", "enabled", "last_run_at", "last_success_at", "last_error", "updated_at"]
     list_filter = ["enabled", "last_error"]
@@ -27,6 +28,12 @@ class CircleAiSettingsAdmin(admin.ModelAdmin):
     ]
     readonly_fields = [field for field in fields if field != "enabled"]
 
+    def get_readonly_fields(self, request, obj=None):
+        # Off stays off here: turning it on needs a circle admin's data-sharing acknowledgement.
+        if obj is None or not obj.enabled:
+            return self.fields
+        return self.readonly_fields
+
     def has_add_permission(self, request):
         return False
 
@@ -34,8 +41,11 @@ class CircleAiSettingsAdmin(admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
+        if obj.enabled and "enabled" in form.changed_data:
+            raise PermissionDenied("Only a circle admin can turn AI on.")
         obj.updated_by = request.user
-        super().save_model(request, obj, form, change)
+        # Only these, so a scan's status written since the page loaded isn't overwritten.
+        obj.save(update_fields=["enabled", "updated_by", "updated_at"])
         if "enabled" in form.changed_data:
             log_audit_event(
                 AuditEvent(

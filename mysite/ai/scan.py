@@ -15,9 +15,11 @@ Per post (each written on its own, so a stop keeps what was done):
 
 A circle's run stops at ``AI_MAX_CALLS_PER_RUN`` calls, when its pending
 queue is full (``pending_cap``), at once on ``auth_failed``,
-``model_missing`` or ``provider_unavailable``, and after 3 failed calls in a
-row. Prompts, captions and model answers are never logged; the run summary
-has counts only.
+``model_missing`` or ``provider_unavailable``, after 3 failed calls in a
+row, and as soon as AI is turned off for the circle (``disabled``; checked
+before every call, so turning it off mid-run stops captions going out).
+Prompts, captions and model answers are never logged; the run summary has
+counts only.
 """
 
 from __future__ import annotations
@@ -49,6 +51,7 @@ LOCK_TIMEOUT_SECONDS = 56 * 60
 
 PENDING_CAP = "pending_cap"
 TIME_LIMIT = "time_limit"
+DISABLED = "disabled"
 # Stop the circle's run at once: every further call would fail the same way.
 ABORT_CODES = {client.AUTH_FAILED, client.MODEL_MISSING, client.PROVIDER_UNAVAILABLE}
 # Stop after this many in a row.
@@ -88,14 +91,18 @@ class ScanSummary:
     failed: int = 0
     skipped_birthday: int = 0
     skipped_empty: int = 0
-    # Why the run stopped early: an ``AiError`` code, ``pending_cap`` or ``time_limit``.
+    # Why the run stopped early: an ``AiError`` code, ``pending_cap``, ``time_limit`` or ``disabled``.
     stopped: str = ""
     # The last failed call's code, if any.
     last_failure: str = ""
 
     @property
     def succeeded(self) -> bool:
-        """The provider worked: no stop on an error, and not every call failed."""
+        """The provider worked: no stop on an error, and not every call failed.
+
+        A run stopped because AI was turned off isn't a success either, so
+        ``last_success_at`` keeps the last real one.
+        """
         if self.stopped and self.stopped != PENDING_CAP:
             return False
         return self.calls == 0 or self.failed < self.calls
@@ -108,6 +115,11 @@ class ScanSummary:
 # Called for each post sent to the model with (keep, verdict, error code): the verdict is None
 # for a failed call (code set) or an invalid answer (code empty).
 ResultCallback = Callable[..., None]
+
+
+def _still_enabled(circle_id: int) -> bool:
+    # Re-read every time: an admin (or a superuser in Django admin) may turn AI off while a run is going.
+    return CircleAiSettings.objects.filter(circle_id=circle_id, enabled=True).exists()
 
 
 def _pending_full(circle_id: int, review: bool) -> bool:
@@ -140,8 +152,10 @@ def scan_circle(
 ) -> ScanSummary:
     """Scan one circle's new posts (see the module docstring). The caller holds the lock.
 
-    ``dry_run`` calls the model but writes nothing. ``summary`` is filled in
-    as it goes, so a caller that catches a soft time limit still has the counts.
+    ``dry_run`` calls the model but writes nothing; it is the operator's
+    command, so it doesn't need AI on for the circle. Otherwise the run stops
+    (``disabled``) before the next call once AI is off. ``summary`` is filled
+    in as it goes, so a caller that catches a soft time limit still has the counts.
     """
     summary = summary if summary is not None else ScanSummary()
     limit = config.max_calls_per_run if limit is None else limit
@@ -159,6 +173,9 @@ def scan_circle(
             summary.skipped_empty += 1  # left for photo analysis (phase 2)
             continue
         if summary.calls >= limit:
+            break
+        if not dry_run and not _still_enabled(circle_id):
+            summary.stopped = DISABLED
             break
         if _pending_full(circle_id, review):
             summary.stopped = PENDING_CAP
@@ -230,7 +247,8 @@ def record_run(ai_settings: CircleAiSettings, summary: ScanSummary, *, trigger: 
             actor_type="system",
             target_type="circle",
             target_id=str(ai_settings.circle_id),
-            status="success" if summary.succeeded else "failure",
+            # Turned off mid-run says nothing about the provider: not a failure.
+            status="success" if summary.succeeded or summary.stopped == DISABLED else "failure",
             metadata={**asdict(summary), "trigger": trigger, "prompt_version": prompts.PROMPT_VERSION},
         )
     )
@@ -256,6 +274,8 @@ def run_scan(circle_id: int | None = None, *, trigger: str = "beat") -> dict:
     try:
         with scan_lock():
             for ai_settings in enabled:
+                if not _still_enabled(ai_settings.circle_id):
+                    continue  # turned off while an earlier circle was being scanned
                 summary = ScanSummary()
                 try:
                     scan_circle(ai_settings.circle_id, config, summary=summary)

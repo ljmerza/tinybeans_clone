@@ -9,7 +9,9 @@ it may echo the prompt, i.e. a family's caption.
 - ``model_missing``: 404, no such model (or path) on the endpoint
 - ``provider_unavailable``: 429/503, the endpoint is busy or overloaded
 - ``http_error``: any other non-2xx, including a redirect (never followed)
-- ``bad_response``: a 2xx that isn't a chat completion
+- ``bad_response``: a 2xx that isn't a chat completion, or one cut off at
+  ``max_tokens`` (``finish_reason: length``, e.g. a reasoning model that
+  thought too long): a transport-style failure, so no row is written
 
 ``InvalidOutput`` is different: the endpoint worked but the model's answer
 doesn't fit the verdict schema. Ollama silently ignores a ``response_format``
@@ -110,9 +112,13 @@ def chat_json(config: ProviderConfig, messages: list[dict], *, schema_name: str,
     if not 200 <= response.status_code < 300:
         raise AiError(_STATUS_CODES.get(response.status_code, HTTP_ERROR))
     try:
-        content = response.json()["choices"][0]["message"]["content"]
-    except (ValueError, KeyError, IndexError, TypeError):
+        choice = response.json()["choices"][0]
+        content = choice["message"]["content"]
+        finish_reason = choice.get("finish_reason")
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
         raise AiError(BAD_RESPONSE) from None
+    if finish_reason == "length":
+        raise AiError(BAD_RESPONSE)
     if not isinstance(content, str):
         raise AiError(BAD_RESPONSE)
     return parse_json_content(content)

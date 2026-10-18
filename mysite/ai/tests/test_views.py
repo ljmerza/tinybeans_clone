@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from django.core.cache import cache
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -196,6 +197,25 @@ class TestSettings:
         assert response.status_code == status.HTTP_200_OK
         assert CircleAiSettings.objects.get(circle=circle).enabled is False
 
+    def test_turning_off_keeps_scan_status_written_meanwhile(self, api_client, circle, admin, ai_on):
+        turn_on(circle, admin)
+        finished = timezone.now()
+        get_or_create = CircleAiSettings.objects.get_or_create
+
+        def load_then_scan_records(**kwargs):
+            # A scan's record_run lands between the view's load and its save.
+            loaded = get_or_create(**kwargs)
+            CircleAiSettings.objects.filter(circle=circle).update(last_run_at=finished, last_error="timeout")
+            return loaded
+
+        with patch.object(CircleAiSettings.objects, "get_or_create", side_effect=load_then_scan_records):
+            response = as_user(api_client, admin).put(settings_url(circle.id), {"enabled": False}, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        ai_settings = CircleAiSettings.objects.get(circle=circle)
+        assert ai_settings.enabled is False
+        assert (ai_settings.last_run_at, ai_settings.last_error) == (finished, "timeout")
+
     def test_no_change_is_not_audited(self, api_client, circle, admin, ai_on, caplog):
         turn_on(circle, admin)
 
@@ -270,6 +290,17 @@ class TestConnectionTest:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["ok"] is False
         assert response.json()["code"] == code
+
+    @pytest.mark.parametrize(("configured", "sent"), [(120, 30), (10, 10)])
+    def test_read_timeout_ends_before_the_web_worker_is_killed(
+        self, api_client, circle, admin, ai_on, provider, configured, sent
+    ):
+        ai_on.AI_REQUEST_TIMEOUT_SECONDS = configured
+        provider.return_value = verdict(True)
+
+        as_user(api_client, admin).post(connection_test_url(circle.id))
+
+        assert provider.call_args.kwargs["timeout"] == (5, sent)
 
     def test_rate_limited(self, api_client, circle, admin, ai_on, provider, settings):
         settings.RATELIMIT_ENABLE = True

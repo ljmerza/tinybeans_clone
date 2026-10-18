@@ -9,6 +9,7 @@ accepted. While the operator hasn't configured AI, GET answers
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import time
 
@@ -39,6 +40,9 @@ logger = logging.getLogger(__name__)
 
 TEST_RATE_PER_USER = "10/h"
 SCAN_RATE_PER_USER = "3/h"
+# The test runs inside the web request: give up well before gunicorn's 60s worker timeout and nginx's
+# 60s proxy read timeout, so the admin gets a ``timeout`` code instead of a 502/504.
+TEST_TIMEOUT_SECONDS = 30
 
 
 def require_ai_admin(user, circle_id):
@@ -140,7 +144,10 @@ class CircleAiSettingsView(APIView):
         if enabled != ai_settings.enabled:
             ai_settings.enabled = enabled
             ai_settings.updated_by = request.user
-            ai_settings.save()
+            # Only these, so a running scan's status written since the load isn't overwritten.
+            ai_settings.save(
+                update_fields=["enabled", "acknowledged_by", "acknowledged_at", "updated_by", "updated_at"]
+            )
             # Field names only, never values.
             _audit("circle.ai_settings.update", request.user, circle_id, fields=["enabled"])
         return Response(settings_payload(circle_id))
@@ -168,6 +175,7 @@ class CircleAiSettingsTestView(APIView):
             return rate_limit_response("errors.rate_limit")
         require_ai_admin(request.user, circle_id)
         config = require_provider()
+        config = dataclasses.replace(config, timeout_seconds=min(config.timeout_seconds, TEST_TIMEOUT_SECONDS))
 
         started = time.monotonic()
         code = client.OK

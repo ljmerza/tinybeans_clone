@@ -1,13 +1,15 @@
 """The milestone scan: candidates, verdicts, caps and stops, the lock, the task and its schedule."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 import requests
-from celery.exceptions import SoftTimeLimitExceeded
+from celery.exceptions import Retry, SoftTimeLimitExceeded
 from celery.schedules import crontab
 from django.conf import settings as django_settings
 from django.core.cache import cache
+from django.utils import timezone
 
 from mysite.agent_api.tests.helpers import audit_actions, captured_logs
 from mysite.ai import scan
@@ -70,6 +72,10 @@ class TestCandidates:
 
 @pytest.mark.django_db
 class TestScanCircle:
+    @pytest.fixture(autouse=True)
+    def _turned_on(self, circle, admin):
+        turn_on(circle, admin)
+
     def test_birthday_and_empty_posts_are_skipped_without_a_call(self, circle, admin, ai_on, provider):
         post(circle, admin, "Happy birthday!", days=1)
         post(circle, admin, "", "Happy 1 month birthday little man", days=2)
@@ -202,6 +208,33 @@ class TestScanCircle:
         assert summary.failed == 4
         assert MilestoneSuggestion.objects.count() == 1
 
+    def test_turning_ai_off_stops_the_run_before_the_next_call(self, circle, admin, ai_on, provider):
+        for day in range(1, 4):
+            post(circle, admin, f"post {day}", days=day)
+
+        def answer_then_turn_off(*args, **kwargs):
+            CircleAiSettings.objects.filter(circle=circle).update(enabled=False)
+            return verdict(False)
+
+        provider.side_effect = answer_then_turn_off
+
+        summary = scan.scan_circle(circle.id, config())
+
+        assert provider.call_count == 1
+        assert summary.calls == 1
+        assert summary.stopped == scan.DISABLED
+        assert summary.succeeded is False
+        assert MilestoneSuggestion.objects.count() == 1  # the answer already given is kept
+
+    def test_dry_run_does_not_need_ai_on(self, circle, admin, ai_on, provider):
+        CircleAiSettings.objects.filter(circle=circle).update(enabled=False)
+        post(circle, admin, "First steps")
+        provider.return_value = verdict(True)
+
+        summary = scan.scan_circle(circle.id, config(), dry_run=True)
+
+        assert (summary.calls, summary.stopped) == (1, "")
+
     def test_dry_run_writes_nothing(self, circle, admin, ai_on, provider):
         post(circle, admin, "First steps", days=1)
         post(circle, admin, "Park", days=2)
@@ -324,6 +357,36 @@ class TestRunScan:
         assert ai_settings.last_success_at is None
         assert cache.get(scan.LOCK_KEY) is None
 
+    def test_turned_off_mid_run_skips_later_circles_and_keeps_last_success(
+        self, circle, other_circle, admin, outsider, ai_on, provider, caplog
+    ):
+        earlier = timezone.now() - timedelta(days=3)
+        ai_settings = turn_on(circle, admin)
+        CircleAiSettings.objects.filter(circle=circle).update(last_success_at=earlier)
+        turn_on(other_circle, outsider)
+        post(circle, admin, "first", days=2)
+        post(circle, admin, "second", days=1)
+        post(other_circle, outsider, "other")
+
+        def answer_then_turn_both_off(*args, **kwargs):
+            CircleAiSettings.objects.update(enabled=False)
+            return verdict(False)
+
+        provider.side_effect = answer_then_turn_both_off
+
+        with captured_logs(caplog, "mysite.audit"):
+            results = scan.run_scan()
+
+        assert provider.call_count == 1
+        assert results[circle.id]["stopped"] == scan.DISABLED
+        assert other_circle.id not in results
+        assert not MilestoneSuggestion.objects.filter(circle=other_circle).exists()
+        ai_settings.refresh_from_db()
+        assert ai_settings.last_success_at == earlier
+        assert ai_settings.last_error == scan.DISABLED
+        run = next(record for record in caplog.records if record.extra.get("action") == "milestone_scan.run")
+        assert run.extra["status"] == "success"  # not the provider's fault
+
     def test_run_is_audited_with_counts_only(self, circle, admin, ai_on, provider, caplog):
         turn_on(circle, admin)
         secret_caption = "CAPTION-SECRET she walked to Grandma"
@@ -364,6 +427,39 @@ class TestTask:
         assert scan_milestones.time_limit == 3300
         assert scan_milestones.time_limit < scan.LOCK_TIMEOUT_SECONDS
         assert not getattr(scan_milestones, "autoretry_for", ())
+        # Retrying a nightly run blocked by the lock outlasts any scan holding it.
+        assert scan_milestones.max_retries * scan_milestones.default_retry_delay > scan_milestones.time_limit
+
+    def test_nightly_run_retries_while_another_scan_holds_the_lock(self, circle, admin, ai_on, provider):
+        turn_on(circle, admin)
+        post(circle, admin, "x")
+
+        with (
+            scan.scan_lock(),
+            patch.object(scan_milestones, "retry", side_effect=Retry()) as retry,
+            pytest.raises(Retry),
+        ):
+            scan_milestones()
+        retry.assert_called_once_with()
+        provider.assert_not_called()
+
+    def test_nightly_run_gives_up_after_its_retries(self, circle, admin, ai_on, provider):
+        turn_on(circle, admin)
+
+        with scan.scan_lock(), patch.object(scan_milestones, "retry") as retry:
+            result = scan_milestones.apply(retries=scan_milestones.max_retries).get()
+
+        assert result == {"skipped": "running"}
+        retry.assert_not_called()
+
+    def test_scan_now_does_not_retry(self, circle, admin, ai_on, provider):
+        turn_on(circle, admin)
+
+        with scan.scan_lock(), patch.object(scan_milestones, "retry") as retry:
+            result = scan_milestones.apply(kwargs={"circle_id": circle.id}).get()
+
+        assert result == {"skipped": "running"}
+        retry.assert_not_called()
 
     def test_queue_route_and_schedule(self):
         assert "ai" in {queue.name for queue in django_settings.CELERY_TASK_QUEUES}
@@ -387,5 +483,6 @@ def test_every_last_error_code_fits_the_column():
         client.PROVIDER_UNAVAILABLE,
         scan.PENDING_CAP,
         scan.TIME_LIMIT,
+        scan.DISABLED,
     }
     assert max(len(code) for code in codes) <= CircleAiSettings._meta.get_field("last_error").max_length

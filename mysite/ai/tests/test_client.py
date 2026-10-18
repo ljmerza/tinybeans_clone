@@ -104,6 +104,17 @@ class TestErrors:
 
         assert excinfo.value.code == client.BAD_RESPONSE
 
+    def test_cut_off_at_max_tokens_is_a_bad_response(self, provider):
+        # A reasoning model that thinks past max_tokens: a failed call (no row), not an invalid answer.
+        provider.return_value = chat_response(
+            '{"is_milestone": true, "label": "First steps", "reason": "Walked."}', finish_reason="length"
+        )
+
+        with pytest.raises(client.AiError) as excinfo:
+            classify()
+
+        assert excinfo.value.code == client.BAD_RESPONSE
+
     def test_non_json_body(self, provider):
         response = status_response(200)
         response.json.side_effect = ValueError(SECRET_BODY)

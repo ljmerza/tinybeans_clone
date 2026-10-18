@@ -11,12 +11,14 @@ BASE_URL = "http://ai.test:11434/v1"
 MODEL = "qwen3:14b"
 
 
-def chat_response(content, status_code=200):
+def chat_response(content, status_code=200, finish_reason="stop"):
     """A fake ``requests`` response carrying ``content`` as the model's answer (a dict is JSON-encoded)."""
     if isinstance(content, dict):
         content = json.dumps(content)
     response = Mock(status_code=status_code)
-    response.json.return_value = {"choices": [{"message": {"role": "assistant", "content": content}}]}
+    response.json.return_value = {
+        "choices": [{"message": {"role": "assistant", "content": content}, "finish_reason": finish_reason}]
+    }
     return response
 
 

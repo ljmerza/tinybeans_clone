@@ -53,6 +53,21 @@ class TestMilestoneScanGauges:
         assert ("circles_milestone_suggestions_pending", {"circle_id": str(other_circle.id)}, 0) in samples
         assert "# TYPE circles_milestone_suggestions_pending gauge" in body
 
+    def test_turning_ai_back_on_restarts_the_clock(self, circle, admin, ai_on):
+        old_success = timezone.now() - timedelta(days=30)
+        turned_back_on = timezone.now() - timedelta(hours=1)
+        CircleAiSettings.objects.create(
+            circle=circle, enabled=True, last_success_at=old_success, acknowledged_at=turned_back_on
+        )
+
+        samples = metrics.check_milestone_scans()
+
+        assert (
+            "circles_milestone_scan_last_success_timestamp_seconds",
+            {"circle_id": str(circle.id)},
+            turned_back_on.timestamp(),
+        ) in samples
+
     def test_circles_with_ai_off_have_no_series(self, circle, admin, ai_on):
         CircleAiSettings.objects.create(circle=circle, enabled=False)
 
