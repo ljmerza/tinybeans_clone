@@ -617,6 +617,25 @@ class TestAiAddedTag:
 
 
 @pytest.mark.django_db
+class TestMilestoneAlbumFlag:
+    def test_albums_say_which_is_the_milestones_album(self, api_client, circle, member, admin, keep):
+        propose(circle, keep)
+        linked = milestones_album(circle)
+        # Named like it, but not the linked one.
+        other = make_album(circle, admin, name="Milestones")
+        api_client.force_authenticate(member)
+
+        listed = api_client.get(reverse("albums:album-list-create"))
+        detail = api_client.get(reverse("albums:album-detail", args=[linked.id]))
+
+        assert {item["id"]: item["is_milestone_album"] for item in listed.data["results"]} == {
+            str(linked.id): True,
+            str(other.id): False,
+        }
+        assert detail.data["is_milestone_album"] is True
+
+
+@pytest.mark.django_db
 class TestReviewSetting:
     @pytest.fixture
     def admin(self, admin):

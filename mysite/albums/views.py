@@ -19,7 +19,7 @@ from mysite.keeps.serializers.feed import KeepFeedSerializer
 from mysite.keeps.views.feed import KeepFeedPagination, feed_queryset, get_visible_keep_or_404
 from mysite.users.models import UserRole
 
-from .models import ALBUM_KEEP_ORDERING, Album, AlbumKeep, MilestoneSuggestion
+from .models import ALBUM_KEEP_ORDERING, Album, AlbumKeep, MilestoneAlbum, MilestoneSuggestion
 from .serializers import AlbumCreateSerializer, AlbumKeepAdminSerializer, AlbumSerializer, AlbumUpdateSerializer
 
 
@@ -36,7 +36,8 @@ def visible_albums(user, *, keep=None):
     the chosen ``cover_keep``'s first displayable photo while that post is still
     in the album, else the first displayable photo of the album's first post.
     With ``keep``, ``has_keep`` says whether that keep is in each album.
-    ``recap_month`` is set on monthly recap albums (see ``recaps``).
+    ``recap_month`` is set on monthly recap albums (see ``recaps``), and
+    ``is_milestone_album`` on the circle's linked Milestones album.
     """
     displayable = _displayable_media()
     visible_entries = AlbumKeep.objects.filter(album=OuterRef("pk")).filter(
@@ -71,6 +72,7 @@ def visible_albums(user, *, keep=None):
             ),
             can_edit=Exists(circle_admin),
             recap_month=F("recap__month"),
+            is_milestone_album=Exists(MilestoneAlbum.objects.filter(album=OuterRef("pk"))),
         )
     )
     if keep is not None:
