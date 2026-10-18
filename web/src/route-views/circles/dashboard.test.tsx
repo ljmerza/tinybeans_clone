@@ -132,4 +132,20 @@ describe("CircleDashboard", () => {
 			screen.queryByRole("switch", { name: "Monthly recap album" }),
 		).toBeNull();
 	});
+
+	it("shows circle admins the Birthdays album switch", () => {
+		renderAs("admin");
+
+		expect(
+			screen.getByRole("switch", { name: "Birthdays album" }),
+		).not.toBeChecked();
+	});
+
+	it("hides the Birthdays album switch from members", () => {
+		renderAs("member");
+
+		expect(
+			screen.queryByRole("switch", { name: "Birthdays album" }),
+		).toBeNull();
+	});
 });

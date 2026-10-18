@@ -2,6 +2,7 @@ import { Layout } from "@/components";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/features/auth";
 import {
+	CircleBirthdayAlbumSetting,
 	CircleInvitationManager,
 	CircleMemberList,
 	CircleOnThisDaySetting,
@@ -109,6 +110,10 @@ export function CircleDashboard({ circleId }: CircleDashboardProps) {
 						<CircleOnThisDaySetting
 							circleId={circleId}
 							frequency={circle?.on_this_day_frequency}
+						/>
+						<CircleBirthdayAlbumSetting
+							circleId={circleId}
+							enabled={circle?.birthday_album_enabled ?? false}
 						/>
 					</div>
 				)}

@@ -11,6 +11,8 @@ export const circleKeys = {
 		circleKeysFactory.tag("detail", circleId),
 	members: (circleId: string | number) =>
 		circleKeysFactory.tag("members", circleId),
+	children: (circleId: string | number) =>
+		circleKeysFactory.tag("children", circleId),
 	invitations: (circleId: string | number) =>
 		circleKeysFactory.tag("invitations", circleId),
 	invitation: (circleId: string | number, invitationId: string) =>

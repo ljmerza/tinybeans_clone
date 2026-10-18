@@ -981,6 +981,21 @@
 						"more": "Más"
 					},
 					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo."
+				},
+				"birthdays": {
+					"title": "Álbum de cumpleaños",
+					"description": "Guarda un álbum con las publicaciones que mencionan un cumpleaños, desde una semana antes hasta dos semanas después del cumpleaños de cada niño. Las nuevas se añaden cada noche; las que quites no vuelven. Todos en el círculo pueden verlo.",
+					"children_title": "Fechas de nacimiento de los niños",
+					"children_hint": "Los cumpleaños se buscan a partir de la fecha de nacimiento de cada niño. Los niños sin fecha se omiten.",
+					"no_children": "Este círculo aún no tiene niños.",
+					"missing": "Aún sin fecha de nacimiento, así que sus cumpleaños se omiten",
+					"birthdate_label": "Fecha de nacimiento de {{name}}",
+					"save": "Guardar",
+					"saving": "Guardando…",
+					"loading": "Cargando niños…",
+					"load_failed": "No se pudieron cargar los niños. Inténtalo de nuevo.",
+					"save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo.",
+					"birthdate_save_failed": "No se pudo guardar la fecha de nacimiento. Inténtalo de nuevo."
 				}
 			},
 			"invites": {
@@ -1214,6 +1229,7 @@
 		"invitation_pending_for_email": "Ya hay una invitación pendiente para este correo electrónico",
 		"user_missing_email": "El usuario debe tener un correo electrónico para recibir invitaciones",
 		"pet_name_required": "El nombre de la mascota no puede estar vacío",
+		"birthdate_in_future": "La fecha de nacimiento no puede estar en el futuro",
 		"circle_membership_required": "Debes ser miembro de este círculo para crear recuerdos.",
 		"milestone_required": "Se requieren datos de hito para los recuerdos de tipo hito.",
 		"milestone_not_allowed": "Los datos de hito solo deben proporcionarse para recuerdos de tipo hito.",

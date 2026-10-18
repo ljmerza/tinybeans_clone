@@ -981,6 +981,21 @@
 						"more": "Più"
 					},
 					"save_failed": "Impossibile salvare l'impostazione. Riprova."
+				},
+				"birthdays": {
+					"title": "Album dei compleanni",
+					"description": "Tieni un album con i post che parlano di un compleanno, da una settimana prima a due settimane dopo il compleanno di ogni bambino. I nuovi vengono aggiunti ogni notte; quelli che togli non tornano. Tutti nella cerchia possono vederlo.",
+					"children_title": "Date di nascita dei bambini",
+					"children_hint": "I compleanni si trovano dalla data di nascita di ogni bambino. I bambini senza data vengono saltati.",
+					"no_children": "Questa cerchia non ha ancora bambini.",
+					"missing": "Nessuna data di nascita, quindi i suoi compleanni vengono saltati",
+					"birthdate_label": "Data di nascita di {{name}}",
+					"save": "Salva",
+					"saving": "Salvataggio…",
+					"loading": "Caricamento bambini…",
+					"load_failed": "Impossibile caricare i bambini. Riprova.",
+					"save_failed": "Impossibile salvare l'impostazione. Riprova.",
+					"birthdate_save_failed": "Impossibile salvare la data di nascita. Riprova."
 				}
 			},
 			"invites": {
@@ -1215,6 +1230,7 @@
 		"invitation_pending_for_email": "C'è già un invito in sospeso per questa email",
 		"user_missing_email": "Per ricevere inviti l'utente deve avere un indirizzo email",
 		"pet_name_required": "Il nome dell'animale non può essere vuoto",
+		"birthdate_in_future": "La data di nascita non può essere nel futuro",
 		"circle_membership_required": "Devi far parte di questa cerchia per creare ricordi.",
 		"milestone_required": "I ricordi di tipo traguardo richiedono i dati del traguardo.",
 		"milestone_not_allowed": "I dati del traguardo vanno indicati solo per i ricordi di tipo traguardo.",

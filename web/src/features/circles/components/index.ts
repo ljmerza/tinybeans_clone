@@ -1,3 +1,4 @@
+export { CircleBirthdayAlbumSetting } from "./CircleBirthdayAlbumSetting";
 export { CircleInvitationForm } from "./CircleInvitationForm";
 export { CircleInvitationList } from "./CircleInvitationList";
 export { CircleInvitationListItem } from "./CircleInvitationListItem";
