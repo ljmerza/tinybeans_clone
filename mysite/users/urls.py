@@ -1,5 +1,6 @@
 from django.urls import path
 
+from mysite.agent_api.views import CircleApiTokenDetailView, CircleApiTokenListView
 from mysite.albums.views_milestones import (
     MilestoneSuggestionApproveView,
     MilestoneSuggestionDismissView,
@@ -78,6 +79,12 @@ urlpatterns = [
         "circles/<int:circle_id>/milestone-suggestions/<uuid:suggestion_id>/dismiss/",
         MilestoneSuggestionDismissView.as_view(),
         name="circle-milestone-suggestion-dismiss",
+    ),
+    path("circles/<int:circle_id>/api-tokens/", CircleApiTokenListView.as_view(), name="circle-api-token-list"),
+    path(
+        "circles/<int:circle_id>/api-tokens/<uuid:token_id>/",
+        CircleApiTokenDetailView.as_view(),
+        name="circle-api-token-detail",
     ),
     path("invitations/accept/", CircleInvitationAcceptView.as_view(), name="circle-invitation-accept"),
     path("invitations/finalize/", CircleInvitationFinalizeView.as_view(), name="circle-invitation-finalize"),

@@ -34,6 +34,8 @@ urlpatterns = [
     path("api/users/", include("mysite.users.urls")),
     path("api/keeps/", include("mysite.keeps.urls")),
     path("api/albums/", include("mysite.albums.urls")),
+    # Per-circle API tokens only; off unless AGENT_API_ENABLED (checked in the views).
+    path("api/agent/v1/", include("mysite.agent_api.urls")),
     path("health/", include("health_check.urls")),
     # Prometheus scrape target; token-protected. The prod image's nginx proxies it
     # for loopback, Docker and private addresses only (docker/nginx.conf).

@@ -90,6 +90,7 @@ def send_via_mailjet(
 
 
 from mysite.emails.templates import (  # noqa: E402
+    API_TOKEN_CREATED_TEMPLATE,
     REAUTH_LOCKED_TEMPLATE,
     TWOFA_CODE_TEMPLATE,
     TWOFA_DISABLED_TEMPLATE,
@@ -232,3 +233,36 @@ class TwoFactorMailer:
             )
         except Exception as e:
             logger.error(f"Failed to send re-auth lock alert: {e}")
+
+
+class TokenMailer:
+    """Mailer for API token notices (template)"""
+
+    @staticmethod
+    def send_api_token_created(token, recipients):
+        """Tell every circle admin that an API token was created. Never includes the token itself."""
+        from datetime import timezone as dt_timezone
+
+        expires_at = (
+            token.expires_at.astimezone(dt_timezone.utc).strftime("%Y-%m-%d %H:%M UTC") if token.expires_at else ""
+        )
+        for user in recipients:
+            context = {
+                "email": user.email,
+                "full_name": user.display_name,
+                "circle_name": token.circle.name,
+                "token_name": token.name,
+                "token_prefix": token.display_prefix,
+                "created_by_name": token.created_by.display_name,
+                "can_suggest": token.can_suggest,
+                "expires_at": expires_at,
+                "created_at": token.created_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            }
+            try:
+                TwoFactorMailer._enqueue_email(
+                    to_email=user.email,
+                    template_id=API_TOKEN_CREATED_TEMPLATE,
+                    context=context,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send API token created notice: {e}")
