@@ -6,7 +6,7 @@ import { KeepFeedPost } from "@/features/keeps/components/KeepFeedPost";
 import type { FeedKeep } from "@/features/keeps/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, X } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { type ReactNode, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -131,33 +131,35 @@ export function MilestoneSuggestionsSection({
 								circleId={circleId}
 								keep={item.keep as FeedKeep}
 								loadedAt={suggestions.dataUpdatedAt}
-							/>
-							{/* Its own row under the post, not icons squeezed into the post's like/comment bar. */}
-							<div className="flex gap-2 px-1">
-								<Button
-									className="flex-1 sm:flex-none"
-									aria-label={t("pages.circles.milestone_suggestions.add")}
-									disabled={busy(item)}
-									onClick={() => approve.mutate(item.id)}
-								>
-									<Check aria-hidden="true" />
-									{t("pages.circles.milestone_suggestions.add")}
-								</Button>
-								{item.status === "pending" && (
-									<Button
-										variant="outline"
-										className="flex-1 sm:flex-none"
-										aria-label={t(
-											"pages.circles.milestone_suggestions.dismiss",
+								// Inside the post's card, at its bottom: its own row, not icons in the like/comment bar.
+								footer={
+									<div className="flex gap-2">
+										<Button
+											className="flex-1 sm:flex-none"
+											aria-label={t("pages.circles.milestone_suggestions.add")}
+											disabled={busy(item)}
+											onClick={() => approve.mutate(item.id)}
+										>
+											<Check aria-hidden="true" />
+											{t("pages.circles.milestone_suggestions.add")}
+										</Button>
+										{item.status === "pending" && (
+											<Button
+												variant="outline"
+												className="flex-1 sm:flex-none"
+												aria-label={t(
+													"pages.circles.milestone_suggestions.dismiss",
+												)}
+												disabled={busy(item)}
+												onClick={() => dismiss.mutate(item.id)}
+											>
+												<X aria-hidden="true" />
+												{t("pages.circles.milestone_suggestions.dismiss_short")}
+											</Button>
 										)}
-										disabled={busy(item)}
-										onClick={() => dismiss.mutate(item.id)}
-									>
-										<X aria-hidden="true" />
-										{t("pages.circles.milestone_suggestions.dismiss_short")}
-									</Button>
-								)}
-							</div>
+									</div>
+								}
+							/>
 						</li>
 					))}
 				</ul>
@@ -190,10 +192,12 @@ function SuggestedPost({
 	circleId,
 	keep,
 	loadedAt,
+	footer,
 }: {
 	circleId: number | string;
 	keep: FeedKeep;
 	loadedAt: number;
+	footer: ReactNode;
 }) {
 	const queryClient = useQueryClient();
 	const current = useSuggestedKeep(keep, loadedAt);
@@ -201,6 +205,7 @@ function SuggestedPost({
 	return (
 		<KeepFeedPost
 			keep={current}
+			footer={footer}
 			onDeleted={() => invalidateMilestoneSuggestions(queryClient, circleId)}
 		/>
 	);

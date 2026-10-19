@@ -160,7 +160,7 @@ describe("MilestoneSuggestionsSection", () => {
 		).toHaveLength(2);
 	});
 
-	it("puts labelled Add and Dismiss buttons on their own row, outside the post", async () => {
+	it("puts labelled Add and Dismiss buttons on their own row at the bottom of the post card", async () => {
 		mockLists({ pending: [suggestion(1)] });
 
 		renderWithQueryClient(<MilestoneSuggestionsSection circleId={7} />);
@@ -172,9 +172,18 @@ describe("MilestoneSuggestionsSection", () => {
 		// Visible words, not icon-only buttons in the post's like/comment bar.
 		expect(add).toHaveTextContent("Add to Milestones");
 		expect(dismiss).toHaveTextContent("Dismiss");
-		expect(add.closest("article")).toBeNull();
-		expect(dismiss.closest("article")).toBeNull();
+		// Inside the post's card, at its bottom, on one row of their own.
+		const card = add.closest("article");
+		expect(card).not.toBeNull();
+		expect(dismiss.closest("article")).toBe(card);
 		expect(add.parentElement).toBe(dismiss.parentElement);
+		expect(card?.lastElementChild?.contains(add)).toBe(true);
+		expect(
+			within(card as HTMLElement)
+				.queryByRole("button", { name: /like/i })
+				?.closest("[class*=rsf-post__actions]")
+				?.contains(add),
+		).toBeFalsy();
 	});
 
 	it("shows untrusted text as plain text", async () => {
