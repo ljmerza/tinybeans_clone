@@ -64,6 +64,8 @@ export interface KeepFeedPostProps {
 	onDeleted?: () => void;
 	/** Page-specific actions, shown after the post's own actions and before Share. */
 	extraActions?: ReactNode;
+	/** Page-specific content at the bottom of the post's card, below the comments. */
+	footer?: ReactNode;
 }
 
 /**
@@ -74,6 +76,7 @@ export function KeepFeedPost({
 	defaultCommentsExpanded = false,
 	onDeleted,
 	extraActions,
+	footer,
 }: KeepFeedPostProps) {
 	const { t, i18n } = useTranslation();
 	const setLiked = useSetKeepLiked();
@@ -295,6 +298,11 @@ export function KeepFeedPost({
 						/>
 					</div>
 				</div>
+				{footer && (
+					<div className="border-t border-border px-[var(--rsf-spacing)] py-3">
+						{footer}
+					</div>
+				)}
 			</PostRoot>
 			{photoViewer.viewer}
 			{albumsOpen && (
