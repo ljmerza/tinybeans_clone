@@ -20,7 +20,11 @@ def test_system_prompt_rules():
     assert "birthday" in text
     assert "half birthdays" in text
     assert "Reply only with JSON" in text
-    assert prompts.PROMPT_VERSION == 2
+    assert prompts.PROMPT_VERSION == 3
+    # Life firsts and big steps count; age-in-months posts never do.
+    assert "first bath" in text
+    assert "big kid bed" in text
+    assert '"Happy 9 months"' in text
     # Short posts are judged on what they say, and "First" isn't guessed.
     assert "practicing sitting up" in text
     assert "a short post is not missing evidence" in text
@@ -40,6 +44,9 @@ def test_few_shot_answers_fit_the_schema():
     by_text = {example: verdict for example, verdict in prompts.FEW_SHOT}
     assert by_text["Caption: Working on sitting up without the pillow"]["is_milestone"] is True
     assert by_text["Caption: All smiles this morning"]["is_milestone"] is False
+    assert by_text["Caption: First time seeing snow! She wasn't sure about it"]["is_milestone"] is True
+    monthly = next(example for example in by_text if example.startswith("Title: 6 months old"))
+    assert "Rolling" in monthly and by_text[monthly]["is_milestone"] is False
     for example, verdict in prompts.FEW_SHOT:
         if verdict["label"].startswith("First"):
             assert "first" in example.lower() or "steps" in example.lower()

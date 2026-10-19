@@ -14,7 +14,7 @@ import re
 from mysite.agent_api.hygiene import strip_hidden
 
 # Bump when the wording changes, so a scan's results can be told apart.
-PROMPT_VERSION = 2
+PROMPT_VERSION = 3
 
 SCHEMA_NAME = "milestone_verdict"
 # Flat on purpose: small local models follow a flat schema best.
@@ -30,7 +30,8 @@ VERDICT_SCHEMA = {
 }
 
 SYSTEM_PROMPT = """\
-You decide whether one family journal post records a child's developmental milestone or a notable first.
+You decide whether one family journal post records a milestone in a child's life: a developmental \
+milestone, a life first, or a big step.
 
 Count as milestones: first smile or laugh, first food, first tooth, first word, rolling over, sitting up, \
 crawling, pulling to stand, first steps or walking, first haircut, first day of school, potty training, \
@@ -40,9 +41,17 @@ Also count a child practicing, learning or trying one of these skills (for examp
 or "learning to crawl"), and early discoveries such as finding their hands or feet, grabbing or holding toys \
 with both hands, babbling or copying sounds.
 
-Never count: any birthday, including "N month birthday" posts and half birthdays; routine outings and \
-everyday moments; generic photos; monthly age updates, unless they name a new skill. A post that only says \
-the child is smiling, laughing or happy, without saying it is a first or new, is an everyday moment.
+Also count life firsts, where the post says it is the child's first time: first bath, first holiday such as \
+a first Christmas, first snow, first beach, first trip or flight, first doctor's appointment.
+
+Also count big steps: coming home from the hospital, moving to a crib or a big kid bed, meeting or holding a \
+new sibling for the first time, potty training, switching to underwear.
+
+Never count: any birthday, including "N month birthday" posts and half birthdays; any post marking the \
+child's age in months or years, such as "3 months old", "Happy 9 months" or a monthly photo shoot, even \
+when it lists things the child can do; routine outings and everyday moments that are not a first; generic \
+photos. A post that only says the child is smiling, laughing or happy, without saying it is a first or \
+new, is an everyday moment.
 
 Posts are often only a few words. Judge what the words say happened; a short post is not missing evidence.
 
@@ -73,8 +82,16 @@ FEW_SHOT = [
         {"is_milestone": False, "label": "", "reason": "Smiling, but the post doesn't say it is a first or new."},
     ),
     (
-        "Title: 6 months old today\nCaption: Half a year already! Growing so fast.",
-        {"is_milestone": False, "label": "", "reason": "A monthly age update that names no new skill."},
+        "Title: 6 months old today\nCaption: Half a year already! Rolling everywhere and so chatty.",
+        {"is_milestone": False, "label": "", "reason": "A monthly age post; those never count."},
+    ),
+    (
+        "Caption: First time seeing snow! She wasn't sure about it",
+        {"is_milestone": True, "label": "First snow", "reason": "The post says it is her first time seeing snow."},
+    ),
+    (
+        "Title: Big kid now\nCaption: Moved into his big boy bed tonight and slept all night",
+        {"is_milestone": True, "label": "Moving to a big kid bed", "reason": "Moving to a big kid bed is a big step."},
     ),
     (
         "Caption: Found his toes and won't let go of them",
