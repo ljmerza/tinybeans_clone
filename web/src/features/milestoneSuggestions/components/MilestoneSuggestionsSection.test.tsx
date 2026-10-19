@@ -160,6 +160,23 @@ describe("MilestoneSuggestionsSection", () => {
 		).toHaveLength(2);
 	});
 
+	it("puts labelled Add and Dismiss buttons on their own row, outside the post", async () => {
+		mockLists({ pending: [suggestion(1)] });
+
+		renderWithQueryClient(<MilestoneSuggestionsSection circleId={7} />);
+
+		const add = await screen.findByRole("button", {
+			name: "Add to Milestones",
+		});
+		const dismiss = screen.getByRole("button", { name: "Dismiss suggestion" });
+		// Visible words, not icon-only buttons in the post's like/comment bar.
+		expect(add).toHaveTextContent("Add to Milestones");
+		expect(dismiss).toHaveTextContent("Dismiss");
+		expect(add.closest("article")).toBeNull();
+		expect(dismiss.closest("article")).toBeNull();
+		expect(add.parentElement).toBe(dismiss.parentElement);
+	});
+
 	it("shows untrusted text as plain text", async () => {
 		const payload = '<img src=x onerror="alert(1)">';
 		mockLists({
