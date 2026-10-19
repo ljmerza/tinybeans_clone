@@ -20,7 +20,11 @@ def test_system_prompt_rules():
     assert "birthday" in text
     assert "half birthdays" in text
     assert "Reply only with JSON" in text
-    assert prompts.PROMPT_VERSION == 1
+    assert prompts.PROMPT_VERSION == 2
+    # Short posts are judged on what they say, and "First" isn't guessed.
+    assert "practicing sitting up" in text
+    assert "a short post is not missing evidence" in text
+    assert 'Only put "First" in the label' in text
 
 
 def test_few_shot_answers_fit_the_schema():
@@ -32,6 +36,21 @@ def test_few_shot_answers_fit_the_schema():
     assert {verdict["is_milestone"] for _, verdict in prompts.FEW_SHOT} == {True, False}
     assert any("birthday" in example and not verdict["is_milestone"] for example, verdict in prompts.FEW_SHOT)
     assert json.loads(prompts.build_messages("a", "b", 100)[2]["content"]) == prompts.FEW_SHOT[0][1]
+    # Practicing a skill counts; plain smiling doesn't; a label says "First" only when the post does.
+    by_text = {example: verdict for example, verdict in prompts.FEW_SHOT}
+    assert by_text["Caption: Working on sitting up without the pillow"]["is_milestone"] is True
+    assert by_text["Caption: All smiles this morning"]["is_milestone"] is False
+    for example, verdict in prompts.FEW_SHOT:
+        if verdict["label"].startswith("First"):
+            assert "first" in example.lower() or "steps" in example.lower()
+
+
+def test_an_empty_field_is_left_out():
+    # An empty "Caption:" line made the model call short posts unproven.
+    assert prompts.post_text("Practicing sitting up", "", 1500) == "Caption: Practicing sitting up"
+    assert prompts.post_text("", "Smiles", 1500) == "Caption: Smiles"
+    assert prompts.post_text("  ", "Smiles", 1500) == "Caption: Smiles"
+    assert prompts.post_text("Big day", "She walked!", 1500) == "Title: Big day\nCaption: She walked!"
 
 
 def test_post_is_truncated():
